@@ -36,8 +36,10 @@ namespace PaymentService
             services.AddSingleton<PayService>();
             services.AddSingleton<CustInfoService>();
 
+
             /*BLL*/
             services.AddSingleton<PayBLL>();
+            services.AddSingleton<CustInfoBLL>();
 
             services.AddControllers();
         }

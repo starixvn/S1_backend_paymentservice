@@ -21,7 +21,7 @@ namespace PaymentService.Service.DAL
         public IEnumerable<BankInfoPay> GetOnlineBankList()
         {
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BankInfoPay>("Payment_Get", new { Type = 1 }, commandType: CommandType.StoredProcedure);
+            return conn.Query<BankInfoPay>("BankInfoPay_Get", commandType: CommandType.StoredProcedure);
         }
         public IEnumerable<PayCurrency> GetPayCurrency()
         {

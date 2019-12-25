@@ -53,7 +53,7 @@ namespace PaymentService.Controllers
             var custId = reqDeposit.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
             var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-            var onlineBank = payBLL.GetOnlineBankList().Where(x => x.PayId == reqDeposit.PayId && reqDeposit.SysId == x.SysId && x.UserLevel <= vipLevel).FirstOrDefault();
+            var onlineBank = payBLL.GetOnlineBankList().Where(x => x.PayId == reqDeposit.PayId && reqDeposit.SysId == x.SysId && x.PointLevel <= vipLevel).FirstOrDefault();
             //var PayCurrency = payBLL.GetPayCurrency().;
             if (onlineBank == null)
             {
@@ -108,6 +108,13 @@ namespace PaymentService.Controllers
             }
 
             return apiResult;
+        }
+
+        [Route("Payment/DepositCallBack/{TransId}")]
+        [HttpPost]
+        public IActionResult DepositCallBack(string transId)
+        {
+            return Content("test!");
         }
     }
 }
