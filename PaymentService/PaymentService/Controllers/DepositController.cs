@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using PaymentCore;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
+using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
 
@@ -26,14 +27,20 @@ namespace PaymentService.Controllers
         private readonly IConfiguration configuration;
         private readonly ILogger<DepositController> logger;
         private readonly PaymentBLL paymentBLL;
+        private readonly int mainWalletType;
+        private readonly string apiUrl;
+        private readonly CourierAdapter courierAdapter;
 
-        public DepositController(IConfiguration configuration, ILogger<DepositController> logger, PayBLL payBLL, CustInfoBLL custInfoBLL, PaymentBLL paymentBLL)
+        public DepositController(IConfiguration configuration, ILogger<DepositController> logger, CourierAdapter courierAdapter, PayBLL payBLL, CustInfoBLL custInfoBLL, PaymentBLL paymentBLL)
         {
             this.payBLL = payBLL;
             this.custInfoBLL = custInfoBLL;
             this.configuration = configuration;
             this.logger = logger;
             this.paymentBLL = paymentBLL;
+            mainWalletType = configuration.GetValue<int>("MainWalletType");
+            apiUrl = configuration.GetValue<string>("TpService");
+            this.courierAdapter = courierAdapter;
         }
 
         public class ReqDeposit
@@ -160,10 +167,10 @@ namespace PaymentService.Controllers
             }
 
             logger.LogInformation($"Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
-            var responseToPay = CallBackHandler(transId, dicParam, "", isFormData);
+            var responseToPay = await CallBackHandlerAsync(transId, dicParam, "", isFormData);
             return Content(responseToPay);
         }
-        private string CallBackHandler(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
+        private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
         {
             var sbody = string.Join("&", dicParam.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
@@ -252,6 +259,17 @@ namespace PaymentService.Controllers
                         return "Update UserMoney error(Other)";
                     }
                     #endregion
+                    /*Temp will be Removed*/
+                    if (mainWalletType == 2)
+                    {
+                        var input = new TpTransfer();
+                        input.Amount = custInfoBLL.GetBalance(depositRequest.CustId);
+                        input.CustId = depositRequest.CustId;
+                        input.direction = TpDirection.ToTp;
+                        input.TpId = 1;
+                        var transferToSabaResult = await TransferToSabaAsync(input);
+                    }
+                    /*Temp*/
                 }
                 else if (rNotifyDepositResult.TransStatus == TransStatus.Fail)
                 {
@@ -275,6 +293,55 @@ namespace PaymentService.Controllers
                 //dblogger.Write(SerialId, $"SerialId={SerialId} is not exist");
                 return $"SerialId={transId} is not exist";
             }
+        }
+        public class TpTransfer
+        {
+            public int TpId { set; get; }
+            public int CustId { set; get; }
+            public decimal Amount { set; get; }
+            public TpDirection direction { set; get; }
+            public Dictionary<string, string> inputs { set; get; }
+        }
+
+        public enum TpDirection
+        {
+            ToTp = 1,
+            ToMain = 2
+        }
+        private async Task<ApiResult<TransferResult>> TransferToSabaAsync(TpTransfer inTpTransfer)
+        {
+            decimal amount = inTpTransfer.Amount;
+            if (amount.ToString().IndexOf(".") > -1)
+            {
+                decimal.TryParse(amount.ToString("#.##"), out amount);
+            }
+
+            var tpTransfer = new TpTransfer
+            {
+                TpId = inTpTransfer.TpId,
+                CustId = inTpTransfer.CustId,
+                Amount = amount,
+                direction = inTpTransfer.direction,
+                inputs = null
+            };
+            var myUrl = $"{apiUrl}Transfer";
+            var data = await courierAdapter.MyPostAsync<TransferResult, TpTransfer>(myUrl, tpTransfer);
+
+            return data;
+        }
+        public class TransferResult
+        {
+            public TransferResult()
+            {
+                Status = TransferStatus.Pending;
+            }
+            public TransferStatus Status { get; set; }
+            public string ThirdId { get; set; }
+            public decimal Difference { get; set; }
+        }
+        public enum TransferStatus
+        {
+            Success = 0, Fail = 1, Pending = 2, PendingD = 3
         }
     }
 }

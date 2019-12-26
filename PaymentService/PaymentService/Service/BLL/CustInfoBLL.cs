@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using PaymentService.Service.DAL;
+using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 using System;
 using System.Collections.Generic;
@@ -12,10 +13,13 @@ namespace PaymentService.Service.BLL
     {
         private readonly IMemoryCache cache;
         private readonly CustInfoService custInfoService;
-        public CustInfoBLL(IMemoryCache cache, CustInfoService custInfoService)
+        private readonly Common common;
+
+        public CustInfoBLL(IMemoryCache cache, CustInfoService custInfoService, Common common)
         {
             this.cache = cache;
             this.custInfoService = custInfoService;
+            this.common = common;
         }
         public int GetVipLevelWithCache(int custId)
         {
@@ -53,6 +57,11 @@ namespace PaymentService.Service.BLL
             }
 
             return customer;
+        }
+
+        public decimal GetBalance(int custId)
+        {
+            return common.Floor(custInfoService.GetBalance(custId), 2);
         }
     }
 }

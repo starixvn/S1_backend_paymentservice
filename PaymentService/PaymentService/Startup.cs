@@ -30,6 +30,7 @@ namespace PaymentService
             services.AddMemoryCache();
             /*Library*/
             services.AddSingleton<Common>();
+            services.AddSingleton<CourierAdapter>();
             //services.AddSingleton<IBCDBLibrary>();
 
             /*DAL*/
