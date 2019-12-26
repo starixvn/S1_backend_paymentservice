@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Model;
@@ -18,12 +20,14 @@ namespace PaymentService.Controllers
         private readonly PayBLL payBLL;
         private readonly CustInfoBLL custInfoBLL;
         private readonly IConfiguration configuration;
+        private readonly ILogger<DepositController> logger;
 
-        public DepositController(IConfiguration configuration, PayBLL payBLL, CustInfoBLL custInfoBLL)
+        public DepositController(IConfiguration configuration, ILogger<DepositController> logger, PayBLL payBLL, CustInfoBLL custInfoBLL)
         {
             this.payBLL = payBLL;
             this.custInfoBLL = custInfoBLL;
             this.configuration = configuration;
+            this.logger = logger;
         }
 
         public class ReqDeposit
@@ -68,7 +72,7 @@ namespace PaymentService.Controllers
             }
             var payLangId = payBLL.GetPayLanguage().Where(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase)).FirstOrDefault()?.PayLangId;
             var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqDeposit.PayId).FirstOrDefault();
-            var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == onlineBank.CurrencyId).FirstOrDefault();
+            var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
             if (pay == null)
             {
                 apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
@@ -101,8 +105,8 @@ namespace PaymentService.Controllers
                 apiResult.ErrorCode = 0;
                 PayResult payResult = new PayResult();
                 payResult.Url = result.Url;
-                payResult.FormData = payResult.FormData;
-                payResult.ThirdId = payResult.ThirdId;
+                payResult.FormData = result.FormData;
+                payResult.ThirdId = result.ThirdId;
                 payResult.Mode = onlineBank.Mode;
                 apiResult.Data = payResult;
             }
@@ -114,6 +118,13 @@ namespace PaymentService.Controllers
         [HttpPost]
         public IActionResult DepositCallBack(string transId)
         {
+            string bodyText = "";
+            using (StreamReader reader = new StreamReader(Request.Body))
+            {
+                bodyText = reader.ReadToEnd();
+            }
+
+            logger.LogDebug(bodyText);
             return Content("test!");
         }
     }
