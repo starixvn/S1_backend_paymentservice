@@ -46,7 +46,7 @@ namespace Payment.Help2Pay
             formData.Add("Customer", "");
             //formData.Add("key", inputs["key"]);
             //var dicP = FromJson<Dictionary<string, string>>(ToJson(oDebitReq)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = $"{formData["Merchant"]}{formData["Reference"]}{""}{formData["Amount"]}{formData["Currency"]}{time.ToString("yyyyMMddHHmmss")}{inputs["key"]}{formData["ClientIP"]}";
+            string p = $"{formData["Merchant"]}{formData["Reference"]}{""}{formData["Amount"]}{formData["Currency"]}{time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss")}{inputs["key"]}{formData["ClientIP"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 
             DepositResult oDepositResult = new DepositResult();
