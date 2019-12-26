@@ -12,9 +12,72 @@ namespace Payment.Help2Pay
             throw new NotImplementedException();
         }
 
+        public class CallBackDebitReq
+        {
+            public string ID { get; set; }
+            public string Amount { get; set; }
+            public string Currency { get; set; }
+            public string Customer { get; set; }
+            public string Language { get; set; }
+            public string Merchant { get; set; }
+            public string Reference { get; set; }
+            public string Datetime { get; set; }
+            public string Status { get; set; }
+            public string Key { get; set; }
+            public string Note { get; set; }
+            public string StatementDate { get; set; }
+            public string DepositFee { get; set; }
+        }
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            //new DateTimeOffset()
+            var data = FromJson<CallBackDebitReq>(ToJson(formData));
+            //var json = FromJson<Dictionary<string, string>>(payResource["JSONstr"]);
+            string merchant_no = payResource["merchant_no"];
+            string key = payResource["key"];
+            string p = $"{merchant_no}{data.Reference}{data.Customer}{data.Amount}{data.Currency}{data.Status}{key}";
+            string sign = ToMD5(p).ToUpper();
+
+            NotifyDepositResult oNotify = new NotifyDepositResult();
+            if (sign == data.Key)
+            {
+                if (data.Status == "000" || data.Status == "006")
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = decimal.Parse(data.Amount);
+                    oNotify.ActualAmount = decimal.Parse(data.Amount) - decimal.Parse(data.DepositFee);
+                    oNotify.DepositId = data.Reference;
+                    oNotify.ThirdId = data.ID;
+                    oNotify.Comment = data.Status;
+                    oNotify.Message = data.Status;
+                    oNotify.Response = "OK";
+                }
+                else if (data.Status == "001" || data.Status == "007" || data.Status == "008")
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.ThirdId = data.ID;
+                    oNotify.Comment = data.Status;
+                    oNotify.Message = data.Status;
+                    oNotify.Response = "Fail";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Pending;
+                    oNotify.ThirdId = data.ID;
+                    oNotify.Comment = data.Status;
+                    oNotify.Message = data.Status;
+                    oNotify.Response = "Pending";
+                }
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Comment = "Signature error";
+                oNotify.Message = "Signature error";
+                oNotify.Response = "Signature error";
+            }
+
+            return oNotify;
         }
 
         public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)

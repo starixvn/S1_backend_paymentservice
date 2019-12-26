@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
+using PaymentCore;
 using PaymentService.Service.BLL;
+using PaymentService.Service.DAL;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
 
@@ -21,13 +25,15 @@ namespace PaymentService.Controllers
         private readonly CustInfoBLL custInfoBLL;
         private readonly IConfiguration configuration;
         private readonly ILogger<DepositController> logger;
+        private readonly PaymentBLL paymentBLL;
 
-        public DepositController(IConfiguration configuration, ILogger<DepositController> logger, PayBLL payBLL, CustInfoBLL custInfoBLL)
+        public DepositController(IConfiguration configuration, ILogger<DepositController> logger, PayBLL payBLL, CustInfoBLL custInfoBLL, PaymentBLL paymentBLL)
         {
             this.payBLL = payBLL;
             this.custInfoBLL = custInfoBLL;
             this.configuration = configuration;
             this.logger = logger;
+            this.paymentBLL = paymentBLL;
         }
 
         public class ReqDeposit
@@ -116,16 +122,159 @@ namespace PaymentService.Controllers
 
         [Route("Payment/DepositCallBack/{TransId}")]
         [HttpPost]
-        public IActionResult DepositCallBack(string transId)
+        public async Task<IActionResult> DepositCallBackAsync(string transId)
         {
             string bodyText = "";
             using (StreamReader reader = new StreamReader(Request.Body))
             {
-                bodyText = reader.ReadToEnd();
+                bodyText = await reader.ReadToEndAsync();
             }
 
-            logger.LogDebug(bodyText);
-            return Content("test!");
+            var absoluteUri = string.Concat(
+                        Request.Scheme,
+                        "://",
+                        Request.Host.ToUriComponent(),
+                        Request.PathBase.ToUriComponent(),
+                        Request.Path.ToUriComponent(),
+                        Request.QueryString.ToUriComponent());
+
+            logger.LogInformation(bodyText);
+
+
+            Dictionary<string, string> dicParam = new Dictionary<string, string>();
+            bool isFormData = false;
+            if (Request.ContentType == null)
+            {
+                logger.LogError($"DepositCallBack_POST Request.ContentType is null");
+                return Content("Request data is null");
+            }
+
+            if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) || Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var vFormData in Request.Form)
+                {
+                    dicParam.Add(vFormData.Key, vFormData.Value);
+                }
+
+                isFormData = true;
+            }
+
+            logger.LogInformation($"Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
+            var responseToPay = CallBackHandler(transId, dicParam, "", isFormData);
+            return Content(responseToPay);
+        }
+        private string CallBackHandler(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
+        {
+            var sbody = string.Join("&", dicParam.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            DepositRequest depositRequest = null;
+            //查詢訂單在不在db
+            depositRequest = paymentBLL.GetDepositRequest(transId);
+            //根據訂單的廠商決定要用那家金流去解讀回傳的資料
+            if (depositRequest != null && depositRequest.depositInfo is IPay)
+            {
+                var custId = depositRequest.CustId;
+                var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
+                IPay pay = (IPay)depositRequest.depositInfo;
+                var paySetting = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == pay.PayId).FirstOrDefault();
+                var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
+                DepReq.Add("TransID", depositRequest.TransId);
+
+                //檢查namespace是否存在 
+                if (!DepReq.ContainsKey("PayName"))
+                {
+                    logger.LogError($"PayName of TransId={transId} is not exist");
+                    //dblogger.Write(SerialId, $"PayName of SerialId={depositRequest.SerialId} is not exist");
+                    return $"PayName of TransId={transId} is not exist";
+                }
+
+                var payHelper = payBLL.GetPayHelper(paySetting.PayName);
+                //((PayHelperBase)payHelper).AddPaymentLog(InsertPaymentLog);
+
+                //取得每家金流的成果 
+                var rNotifyDepositResult = payHelper.CallBackDebit(dicParam, bodyText, DepReq);
+                string sInput = "";
+                if (isFormData)
+                {
+                    sInput = JsonConvert.SerializeObject(dicParam);
+                }
+                else
+                {
+                    sInput = bodyText;
+                }
+
+                //oDBLog.InsertPaymentLog("", sInput, JsonConvert.SerializeObject(rNotifyDepositResult));
+
+                if (!String.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogError($"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}");
+                    //dblogger.Write(SerialId, $"{SerialId} is not equal {rNotifyDepositResult.DepositID} with PayName={DepReq["PayName"]}");
+                    return $"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}";
+                }
+
+                if (rNotifyDepositResult.RequestAmount == 0)
+                    rNotifyDepositResult.RequestAmount = depositRequest.Amount;
+
+                if (rNotifyDepositResult.RequestAmount != depositRequest.Amount)
+                {
+                    logger.LogError($"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}");
+                    //dblogger.Write(transId, $"OrderAmount{rNotifyDepositResult.OrderAmount} is not equal {depositRequest.UserMoney}");
+                    return $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
+                }
+
+                IDepositResult iDepositResult = rNotifyDepositResult;
+                if (rNotifyDepositResult.TransStatus == TransStatus.Success && depositRequest.Amount > 0)
+                {
+                    #region Transaction is Success
+                    try
+                    {
+                        paymentBLL.DepositSuccess(depositRequest, rNotifyDepositResult);
+                    }
+                    catch (MySqlException SqlEx)
+                    {
+                        /*Need Check Transaction Status*/
+                        StringBuilder errorMessages = new StringBuilder();
+                        //errorMessages.AppendLine(Newtonsoft.Json.JsonConvert.SerializeObject(dataParam));
+
+                        errorMessages.AppendLine($"Message: {SqlEx.Message}");
+                        errorMessages.AppendLine($"Error Number: {SqlEx.Number}");
+                        errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
+                        errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
+                        errorMessages.AppendLine($"Source: {SqlEx.Source}");
+                        logger.LogError(errorMessages.ToString());
+                        //dblogger.Write(SerialId, errorMessages.ToString());
+                        return "Update UserMoney error(SQL)";
+                    }
+                    catch (Exception exForEachTransaction)
+                    {
+                        logger.LogError(exForEachTransaction.Message);
+                        //dblogger.Write(SerialId, exForEachTransaction.Message);
+                        return "Update UserMoney error(Other)";
+                    }
+                    #endregion
+                }
+                else if (rNotifyDepositResult.TransStatus == TransStatus.Fail)
+                {
+                    try
+                    {
+                        paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex.Message);
+                        //dblogger.Write(SerialId, ex.Message);
+                        return "Update DepositFail error";
+                    }
+                }
+
+                return rNotifyDepositResult.Response;
+            }
+            else
+            {
+                logger.LogError($"SerialId={transId} is not exist");
+                //dblogger.Write(SerialId, $"SerialId={SerialId} is not exist");
+                return $"SerialId={transId} is not exist";
+            }
         }
     }
 }

@@ -61,7 +61,7 @@ namespace PaymentCore
         decimal RequestAmount { get; set; }
         decimal ActualAmount { get; set; }
         decimal Fee { get; }
-        string Memo { get; set; }
+        string Comment { get; set; }
     }
     public class EnquiryDepositResult : IDepositResult
     {
@@ -72,7 +72,7 @@ namespace PaymentCore
         public decimal RequestAmount { get; set; }
         public decimal ActualAmount { get; set; }
         public decimal Fee { get { return RequestAmount - ActualAmount; } }
-        public string Memo { get; set; }
+        public string Comment { get; set; }
         public string RawContent { get; set; }
     }
     public class EnquiryWithdrawResult
@@ -93,7 +93,7 @@ namespace PaymentCore
         public decimal RequestAmount { get; set; }
         public decimal ActualAmount { get; set; }
         public decimal Fee { get { return RequestAmount - ActualAmount; } }
-        public string Memo { get; set; }
+        public string Comment { get; set; }
         public string Response { get; set; }
     }
     public class NotifyWithdrawResult

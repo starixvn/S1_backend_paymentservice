@@ -35,11 +35,14 @@ namespace PaymentService
             /*DAL*/
             services.AddSingleton<PayService>();
             services.AddSingleton<CustInfoService>();
+            services.AddSingleton<DepoistService>();
+            services.AddSingleton<WalletService>();
 
 
             /*BLL*/
             services.AddSingleton<PayBLL>();
             services.AddSingleton<CustInfoBLL>();
+            services.AddSingleton<PaymentBLL>();
 
             services.AddControllers();
         }
