@@ -30,8 +30,9 @@ namespace PaymentService.Controllers
         private readonly int mainWalletType;
         private readonly string apiUrl;
         private readonly CourierAdapter courierAdapter;
+        private readonly Common common;
 
-        public DepositController(IConfiguration configuration, ILogger<DepositController> logger, CourierAdapter courierAdapter, PayBLL payBLL, CustInfoBLL custInfoBLL, PaymentBLL paymentBLL)
+        public DepositController(IConfiguration configuration, ILogger<DepositController> logger, CourierAdapter courierAdapter, PayBLL payBLL, CustInfoBLL custInfoBLL, PaymentBLL paymentBLL, Common common)
         {
             this.payBLL = payBLL;
             this.custInfoBLL = custInfoBLL;
@@ -41,6 +42,7 @@ namespace PaymentService.Controllers
             mainWalletType = configuration.GetValue<int>("MainWalletType");
             apiUrl = configuration.GetValue<string>("TpService");
             this.courierAdapter = courierAdapter;
+            this.common = common;
         }
 
         public class ReqDeposit
@@ -152,7 +154,7 @@ namespace PaymentService.Controllers
             bool isFormData = false;
             if (Request.ContentType == null)
             {
-                logger.LogError($"DepositCallBack_POST Request.ContentType is null");
+                logger.LogError($"IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
                 return Content("Request data is null");
             }
 
@@ -166,7 +168,7 @@ namespace PaymentService.Controllers
                 isFormData = true;
             }
 
-            logger.LogInformation($"Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
+            logger.LogInformation($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
             var responseToPay = await CallBackHandlerAsync(transId, dicParam, "", isFormData);
             return Content(responseToPay);
         }
