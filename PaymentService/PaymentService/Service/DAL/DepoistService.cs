@@ -16,7 +16,7 @@ namespace PaymentService.Service.DAL
     {
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
-        private int typePosition = 100;
+        private int payTypePosition = 100;
 
         public DepoistService(IConfiguration configuration, WalletService walletService)
         {
@@ -31,7 +31,7 @@ namespace PaymentService.Service.DAL
         public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string thirdId, DepositStatus forStatus, DepositStatus status)
         {
             int depositId = 0;
-            int type = typePosition + pay.PayId;
+            int type = payTypePosition + pay.PayId;
             Match m = Regex.Match(transId, @"\d+");
             int.TryParse(m.Value, out depositId);
 
