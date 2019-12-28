@@ -39,6 +39,7 @@ namespace Payment.Help2Pay
             string sign = ToMD5(p).ToUpper();
 
             NotifyDepositResult oNotify = new NotifyDepositResult();
+            oNotify.DepositId = data.Reference;
             if (sign == data.Key)
             {
                 if (data.Status == "000" || data.Status == "006")
@@ -46,7 +47,6 @@ namespace Payment.Help2Pay
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = decimal.Parse(data.Amount);
                     oNotify.ActualAmount = decimal.Parse(data.Amount) - decimal.Parse(data.DepositFee);
-                    oNotify.DepositId = data.Reference;
                     oNotify.ThirdId = data.ID;
                     oNotify.Comment = data.Status;
                     oNotify.Message = data.Status;
