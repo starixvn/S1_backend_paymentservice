@@ -214,9 +214,9 @@ namespace PaymentService.Controllers
 
                 //oDBLog.InsertPaymentLog("", sInput, JsonConvert.SerializeObject(rNotifyDepositResult));
 
-                if (!String.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.LogError($"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}");
+                    logger.LogError($"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
                     //dblogger.Write(SerialId, $"{SerialId} is not equal {rNotifyDepositResult.DepositID} with PayName={DepReq["PayName"]}");
                     return $"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}";
                 }
