@@ -85,6 +85,7 @@ namespace PaymentService.Controllers
                 apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
                 return apiResult;
             }
+
             var payLangId = payBLL.GetPayLanguage().Where(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase)).FirstOrDefault()?.PayLangId;
             var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqDeposit.PayId).FirstOrDefault();
             var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();

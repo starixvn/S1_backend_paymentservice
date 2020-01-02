@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Xml.Serialization;
 
 namespace Payment.Help2Pay
 {
@@ -85,9 +87,66 @@ namespace Payment.Help2Pay
             throw new NotImplementedException();
         }
 
+        private class CreditReq
+        {
+            public string ClientIP { get; set; }
+            public string ReturnURI { get; set; }
+            public string MerchantCode { get; set; }
+            public string TransactionID { get; set; }
+            public string CurrencyCode { get; set; }
+            public string MemberCode { get; set; }
+            public string Amount { get; set; }
+            public string TransactionDateTime { get; set; }
+            public string BankCode { get; set; }
+            public string toBankAccountName { get; set; }
+            public string toBankAccountNumber { get; set; }
+        }
+
+        public class Payout
+        {
+            public string statusCode { set; get; }
+            public string message { set; get; }
+        }
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            string sUrl = inputs["PayOut"];
+            CreditReq creditReq = new CreditReq();
+            creditReq.ClientIP = inputs["OutgoingIp"];
+            creditReq.ReturnURI = inputs["CallBackUrl"];
+            creditReq.MerchantCode = inputs["merchant_no"];
+            creditReq.TransactionID = inputs["TransID"];
+            creditReq.CurrencyCode = inputs["PayCurrencyId"];
+            creditReq.MemberCode = inputs["CustId"];
+            creditReq.Amount = decimal.Parse(inputs["Amount"]).ToString("#.00");
+            var time = new DateTimeOffset(DateTime.Now);
+            creditReq.TransactionDateTime = time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd hh:mm:sstt", CultureInfo.InvariantCulture);
+            creditReq.BankCode = inputs["BankCode"];
+            creditReq.toBankAccountName = inputs["AccountName"];
+            creditReq.toBankAccountNumber = inputs["AccountNo"];
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
+            string P = $"{creditReq.MerchantCode}{creditReq.TransactionID}{creditReq.MemberCode}{creditReq.Amount}{creditReq.CurrencyCode}{time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss")}{creditReq.toBankAccountNumber}{inputs["key"]}";
+            dicP.Add("Key", ToMD5(P).ToUpper());
+            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.TransactionID);
+
+            WithdrawResult withdrawResult = new WithdrawResult();
+
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(Payout));
+            using var reader = new System.IO.StringReader(sResponse);
+            var payout = (Payout)xmlSerializer.Deserialize(reader);
+            if (payout.statusCode == "000")
+            {
+                withdrawResult.Success = true;
+                withdrawResult.Message = payout.message;
+            }
+            else
+            {
+                withdrawResult.Success = false;
+                withdrawResult.Message = payout.message;
+            }
+
+            return withdrawResult;
         }
 
         public override DepositResult Debit(Dictionary<string, string> inputs)

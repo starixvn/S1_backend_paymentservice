@@ -121,7 +121,7 @@ namespace PaymentCore
         /// 1. 會夾帶Content-Type
         /// 2. 簡體字會變成亂碼，且無法還原
         /// </summary>
-        protected string HttpPost(string url, string parameters, string contentType, string SerialID)
+        protected string HttpPost(string url, string parameters, string contentType, string transID)
         {
             WebRequest request = WebRequest.Create(url);
             request.Method = "POST";
@@ -132,17 +132,17 @@ namespace PaymentCore
             Stream dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);
             dataStream.Close();
-            WebResponse response = request.GetResponse();
+            using WebResponse response = request.GetResponse();
 
             dataStream = response.GetResponseStream();
-            StreamReader reader = new StreamReader(dataStream);
+            using StreamReader reader = new StreamReader(dataStream);
             string responseFromServer = reader.ReadToEnd();
             reader.Close();
             dataStream.Close();
             response.Close();
             if (InsertPaymentLog != null)
             {
-                InsertPaymentLog(url, parameters, responseFromServer, SerialID);
+                InsertPaymentLog(url, parameters, responseFromServer, transID);
             }
 
             return responseFromServer;
