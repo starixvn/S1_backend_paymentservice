@@ -5,6 +5,12 @@ using System.Threading.Tasks;
 
 namespace PaymentService.Service.Model
 {
+    public interface IPay
+    {
+        int PayId { get; set; }
+        int ChannelId { get; set; }
+        int CurrencyId { get; set; }
+    }
     public class PayResult
     {
         public string Url { get; set; }

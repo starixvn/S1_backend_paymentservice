@@ -93,4 +93,16 @@ namespace PaymentService.Service.Model.enums
         Suspend = 2,
         Closed = 3,
     }
+    public enum WithdrawalStatus
+    {
+        Draft = 0,
+        Pending = 1,
+        OnHold = 2,
+        Verify = 3,
+        Process = 4,
+        Cancelled = 5,
+        Approved = 6,
+        Rejected = 7,
+        Error = 99
+    }
 }

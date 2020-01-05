@@ -67,7 +67,7 @@ namespace PaymentService.Service.DAL
                                 }
                                 if (result > 0)
                                 {
-                                    result = SetPayDummy(siteId, pay.PayId, pay.CurrencyId, actualDeposit, conn, trans);
+                                    result = walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, actualDeposit, conn, trans);
                                 }
                             }
 
@@ -95,11 +95,6 @@ namespace PaymentService.Service.DAL
         {
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Execute("DepositLog_Ins", new { DepositId = depositId, SiteId = siteId, Comment = comment, Action = status, ActualDeposit = actualDeposit, Operator = "Payment Service" }, commandType: CommandType.StoredProcedure);
-        }
-
-        private int SetPayDummy(int siteId, int payId, int currencyId, decimal amount, MySqlConnection conn, MySqlTransaction trans)
-        {
-            return conn.Execute("PayDummy_Set", new { SiteId = siteId, PayId = payId, CurrencyId = currencyId, Amount = amount }, trans, commandType: CommandType.StoredProcedure);
         }
     }
 }

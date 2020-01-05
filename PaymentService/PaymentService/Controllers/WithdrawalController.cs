@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
+using PaymentCore;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -24,8 +27,9 @@ namespace PaymentService.Controllers
         private readonly IConfiguration configuration;
         private readonly ILogger<WithdrawalController> logger;
         private readonly Common common;
+        private readonly PaymentBLL paymentBLL;
 
-        public WithdrawalController(IConfiguration configuration, ILogger<WithdrawalController> logger, CustInfoBLL custInfoBLL, PayBLL payBLL, Common common)
+        public WithdrawalController(IConfiguration configuration, ILogger<WithdrawalController> logger, CustInfoBLL custInfoBLL, PayBLL payBLL, Common common, PaymentBLL paymentBLL)
         {
             this.custInfoBLL = custInfoBLL;
             this.payBLL = payBLL;
@@ -33,6 +37,7 @@ namespace PaymentService.Controllers
             this.configuration = configuration;
             this.logger = logger;
             this.common = common;
+            this.paymentBLL = paymentBLL;
         }
         public class ReqWithdrawal
         {
@@ -149,7 +154,106 @@ namespace PaymentService.Controllers
             }
 
             logger.LogInformation($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
-            throw new Exception("xxx");
+            var responseToPay = CallBackHandler(transId, dicParam, "", isFormData);
+            return Content(responseToPay);
+        }
+
+        private string CallBackHandler(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
+        {
+            var sbody = string.Join("&", dicParam.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            //查詢訂單在不在db
+            var withdrawalRequest = paymentBLL.GetWithdrawalRequest(transId);
+            //根據訂單的廠商決定要用那家金流去解讀回傳的資料
+            if (withdrawalRequest != null)
+            {
+                var WithReq = withdrawalRequest.ISetting;
+
+                //檢查namespace是否存在 
+                if (!WithReq.ContainsKey("PayName"))
+                {
+                    logger.LogError($"PayName of TransId={transId} is not exist");
+                    //dblogger.Write(SerialId, $"PayName of SerialId={depositRequest.SerialId} is not exist");
+                    return $"PayName of TransId={transId} is not exist";
+                }
+
+                var payHelper = payBLL.GetPayHelper(withdrawalRequest.PayName);
+                //((PayHelperBase)payHelper).AddPaymentLog(InsertPaymentLog);
+
+                //取得每家金流的成果 
+                var rNotifyWithdrawalResult = payHelper.CallBackCredit(dicParam, bodyText, WithReq);
+                string sInput = "";
+                if (isFormData)
+                {
+                    sInput = JsonConvert.SerializeObject(dicParam);
+                }
+                else
+                {
+                    sInput = bodyText;
+                }
+
+                //oDBLog.InsertPaymentLog("", sInput, JsonConvert.SerializeObject(rNotifyDepositResult));
+
+                if (!string.Equals(transId, rNotifyWithdrawalResult.WithdrawId, StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogError($"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
+                    //dblogger.Write(SerialId, $"{SerialId} is not equal {rNotifyDepositResult.DepositID} with PayName={DepReq["PayName"]}");
+                    return $"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}";
+                }
+
+                NotifyWithdrawResult notifyWithdrawResult = rNotifyWithdrawalResult;
+                if (rNotifyWithdrawalResult.TransStatus == TransStatus.Success)
+                {
+                    #region Transaction is Success
+                    try
+                    {
+                        paymentBLL.WithdrawalSuccess(withdrawalRequest, rNotifyWithdrawalResult);
+                    }
+                    catch (MySqlException SqlEx)
+                    {
+                        /*Need Check Transaction Status*/
+                        StringBuilder errorMessages = new StringBuilder();
+                        //errorMessages.AppendLine(Newtonsoft.Json.JsonConvert.SerializeObject(dataParam));
+
+                        errorMessages.AppendLine($"Message: {SqlEx.Message}");
+                        errorMessages.AppendLine($"Error Number: {SqlEx.Number}");
+                        errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
+                        errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
+                        errorMessages.AppendLine($"Source: {SqlEx.Source}");
+                        logger.LogError(errorMessages.ToString());
+                        //dblogger.Write(SerialId, errorMessages.ToString());
+                        return "Update UserMoney error(SQL)";
+                    }
+                    catch (Exception exForEachTransaction)
+                    {
+                        logger.LogError(exForEachTransaction.Message);
+                        //dblogger.Write(SerialId, exForEachTransaction.Message);
+                        return "Update UserMoney error(Other)";
+                    }
+                    #endregion
+                }
+                else if (rNotifyWithdrawalResult.TransStatus == TransStatus.Fail)
+                {
+                    try
+                    {
+                        paymentBLL.WithdrawalFail(withdrawalRequest, rNotifyWithdrawalResult);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex.Message);
+                        //dblogger.Write(SerialId, ex.Message);
+                        return "Update DepositFail error";
+                    }
+                }
+
+                return rNotifyWithdrawalResult.Response;
+            }
+            else
+            {
+                logger.LogError($"SerialId={transId} is not exist");
+                //dblogger.Write(SerialId, $"SerialId={SerialId} is not exist");
+                return $"SerialId={transId} is not exist";
+            }
         }
 
         [Route("Payment/verifytransaction")]
@@ -157,7 +261,20 @@ namespace PaymentService.Controllers
         public IActionResult verifytransaction(string transId, string key)
         {
             logger.LogInformation($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n transId={transId},\r\n key={key}");
-            return Content(true.ToString());
+            var withdrawalRequest = paymentBLL.GetWithdrawalRequest(transId);
+            if (withdrawalRequest != null) {
+
+                //var payHelper = payBLL.GetPayHelper(withdrawalRequest.PayName);
+                //payHelper.
+                //lib.ToMD5(transId,)
+                //withdrawalRequest.ISetting["key"];
+
+                return Content(true.ToString());
+            }
+            else
+            {
+                return Content(false.ToString());
+            }
         }
     }
 }

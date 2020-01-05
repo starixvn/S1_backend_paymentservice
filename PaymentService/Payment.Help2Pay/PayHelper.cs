@@ -9,9 +9,66 @@ namespace Payment.Help2Pay
 {
     public class PayHelper : PayHelperBase
     {
+        public class CallBackCreditReq
+        {
+            public string MerchantCode { get; set; }
+            public string TransactionID { get; set; }
+            public string CurrencyCode { get; set; }
+            public string Amount { get; set; }
+            public string TransactionDatetime { get; set; }
+            public string Key { get; set; }
+            public string Status { get; set; }
+            public string MemberCode { get; set; }
+            public string ID { get; set; }
+            public string PayoutFee { get; set; }
+            public string Message { get; set; }
+        }
+
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            var data = FromJson<CallBackCreditReq>(ToJson(formData));
+            string merchant_no = payResource["merchant_no"];
+            string key = payResource["key"];
+            decimal amount = 0m;
+            decimal.TryParse(data.Amount, out amount);
+            string p = $"{merchant_no}{data.TransactionID}{data.MemberCode}{amount.ToString("#.00")}{data.CurrencyCode}{data.Status}{key}";
+            string sign = ToMD5(p).ToUpper();
+
+            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            oNotify.WithdrawId = data.TransactionID;
+            if (sign == data.Key)
+            {
+                if (data.Status == "000")
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = decimal.Parse(data.Amount);
+                    oNotify.ThirdId = data.ID;
+                    oNotify.Message = data.Message;
+                    oNotify.Response = "OK";
+                }
+                else if (data.Status == "001")
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.ThirdId = data.ID;
+                    oNotify.Message = data.Message;
+                    oNotify.Response = "Fail";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Pending;
+                    oNotify.ThirdId = data.ID;
+                    oNotify.Message = data.Status;
+                    oNotify.Response = "Pending";
+                }
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Message = "Signature error";
+                oNotify.Response = "Signature error";
+            }
+
+            return oNotify;
         }
 
         public class CallBackDebitReq

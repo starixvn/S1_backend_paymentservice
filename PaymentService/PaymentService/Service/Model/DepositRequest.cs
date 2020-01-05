@@ -38,12 +38,6 @@ namespace PaymentService.Service.Model
     {
         int Ver { get; set; }
     }
-    public interface IPay
-    {
-        int PayId { get; set; }
-        int ChannelId { get; set; }
-        int CurrencyId { get; set; }
-    }
     public class DepositInfo1_1 : IDepositInfo, IPay
     {
         public int Ver { get; set; }

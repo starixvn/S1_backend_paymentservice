@@ -38,7 +38,7 @@ namespace PaymentService
             services.AddSingleton<CustInfoService>();
             services.AddSingleton<DepoistService>();
             services.AddSingleton<WalletService>();
-
+            services.AddSingleton<WithdrawalService>();
 
             /*BLL*/
             services.AddSingleton<PayBLL>();
