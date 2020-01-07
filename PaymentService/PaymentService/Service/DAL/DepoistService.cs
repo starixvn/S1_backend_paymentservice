@@ -25,10 +25,10 @@ namespace PaymentService.Service.DAL
         }
         public DepositRequest GetDepositRequest(int depositId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<DepositRequest>("DepositCallBack_Get", new { DepositId = depositId }, commandType: CommandType.StoredProcedure);
         }
-        public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string thirdId, string Operator, DepositStatus forStatus, DepositStatus status)
+        public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status)
         {
             int depositId = 0;
             int type = payTypePosition + pay.PayId;
@@ -38,12 +38,13 @@ namespace PaymentService.Service.DAL
             int result = 0;
             try
             {
-                using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+                using (var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
                 {
                     conn.Open();
                     using (var trans = conn.BeginTransaction())
                     {
-                        var p = new DynamicParameters(new { DepositId = depositId, SiteId = siteId, ActualDeposit = actualDeposit, Comment = comment, ForStatus = (int)forStatus, Status = (int)status, ThirdId = thirdId });
+                        string sForStatus = Newtonsoft.Json.JsonConvert.SerializeObject(forStatus);
+                        var p = new DynamicParameters(new { DepositId = depositId, SiteId = siteId, ActualDeposit = actualDeposit, Comment = comment, ForStatus = sForStatus, Status = (int)status, ThirdId = thirdId });
                         p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                         p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
                         result = conn.Execute("DepositInfo_Set", p, trans, commandType: CommandType.StoredProcedure);

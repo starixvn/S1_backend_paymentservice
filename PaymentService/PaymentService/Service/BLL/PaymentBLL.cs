@@ -32,12 +32,16 @@ namespace PaymentService.Service.BLL
 
         public void DepositSuccess(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
-            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, depositRequest.PayName, DepositStatus.Pending, DepositStatus.Approved);
+            List<int> forStatus = new List<int>();
+            forStatus.Add((int)DepositStatus.Pending);
+            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
         }
 
         public void DepositFail(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
-            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, depositRequest.PayName, DepositStatus.Pending, DepositStatus.Rejected);
+            List<int> forStatus = new List<int>();
+            forStatus.Add((int)DepositStatus.Pending);
+            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Rejected);
         }
 
         public WithdrawalRequest GetWithdrawalRequest(string transId)
