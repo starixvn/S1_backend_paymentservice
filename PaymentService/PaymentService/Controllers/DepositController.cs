@@ -189,7 +189,6 @@ namespace PaymentService.Controllers
                 var paySetting = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == pay.PayId).FirstOrDefault();
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
                 DepReq.Add("TransID", depositRequest.TransId);
-
                 //檢查namespace是否存在 
                 if (!DepReq.ContainsKey("PayName"))
                 {
@@ -199,6 +198,7 @@ namespace PaymentService.Controllers
                 }
 
                 var payHelper = payBLL.GetPayHelper(paySetting.PayName);
+                depositRequest.PayName = paySetting.PayName;
                 //((PayHelperBase)payHelper).AddPaymentLog(InsertPaymentLog);
 
                 //取得每家金流的成果 

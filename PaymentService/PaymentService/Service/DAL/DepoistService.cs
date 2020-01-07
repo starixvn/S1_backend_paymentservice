@@ -28,7 +28,7 @@ namespace PaymentService.Service.DAL
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<DepositRequest>("DepositCallBack_Get", new { DepositId = depositId }, commandType: CommandType.StoredProcedure);
         }
-        public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string thirdId, DepositStatus forStatus, DepositStatus status)
+        public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string thirdId, string Operator, DepositStatus forStatus, DepositStatus status)
         {
             int depositId = 0;
             int type = payTypePosition + pay.PayId;
@@ -50,7 +50,7 @@ namespace PaymentService.Service.DAL
 
                         if (result > 0)
                         {
-                            SetDepositLog(depositId, siteId, comment, (int)status, actualDeposit);
+                            SetDepositLog(depositId, siteId, comment, (int)status, actualDeposit, Operator);
 
                             if (status == DepositStatus.Approved)
                             {
@@ -82,7 +82,7 @@ namespace PaymentService.Service.DAL
             }
             catch (Exception ex)
             {
-                SetDepositLog(depositId, siteId, ex.Message, (int)DepositStatus.Error, actualDeposit);
+                SetDepositLog(depositId, siteId, ex.Message, (int)DepositStatus.Error, actualDeposit, "Payment Service");
             }
 
             return result;
@@ -91,10 +91,10 @@ namespace PaymentService.Service.DAL
         {
             return conn.Execute("DepositInfoFirstDeposit_Set", new { DepositId = depositId, SiteId = siteId }, trans, commandType: CommandType.StoredProcedure);
         }
-        private int SetDepositLog(int depositId, int siteId, string comment, int status, decimal actualDeposit)
+        private int SetDepositLog(int depositId, int siteId, string comment, int status, decimal actualDeposit, string Operator)
         {
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("DepositLog_Ins", new { DepositId = depositId, SiteId = siteId, Comment = comment, Action = status, ActualDeposit = actualDeposit, Operator = "Payment Service" }, commandType: CommandType.StoredProcedure);
+            return conn.Execute("DepositLog_Ins", new { DepositId = depositId, SiteId = siteId, Comment = comment, Action = status, ActualDeposit = actualDeposit, Operator }, commandType: CommandType.StoredProcedure);
         }
     }
 }

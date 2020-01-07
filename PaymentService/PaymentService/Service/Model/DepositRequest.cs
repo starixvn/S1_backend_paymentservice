@@ -12,6 +12,7 @@ namespace PaymentService.Service.Model
         public int CustId { set; get; }
         public string UserName { set; get; }
         public int SiteId { set; get; }
+        public string PayName { set; get; }
         public string DepositInfo { set; get; }
         public decimal Amount { set; get; }
         public decimal ActualDeposit { set; get; }

@@ -32,12 +32,12 @@ namespace PaymentService.Service.BLL
 
         public void DepositSuccess(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
-            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, DepositStatus.Pending, DepositStatus.Approved);
+            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, depositRequest.PayName, DepositStatus.Pending, DepositStatus.Approved);
         }
 
         public void DepositFail(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
-            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, DepositStatus.Pending, DepositStatus.Rejected);
+            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, depositRequest.PayName, DepositStatus.Pending, DepositStatus.Rejected);
         }
 
         public WithdrawalRequest GetWithdrawalRequest(string transId)
@@ -54,15 +54,16 @@ namespace PaymentService.Service.BLL
             List<int> forStatus = new List<int>();
             forStatus.Add((int)WithdrawalStatus.Process);
 
-            withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, forStatus, WithdrawalStatus.Approved);
+            withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
         }
 
         public void WithdrawalFail(WithdrawalRequest withdrawalRequest, NotifyWithdrawResult notifyWithdrawResult)
         {
             List<int> forStatus = new List<int>();
             forStatus.Add((int)WithdrawalStatus.Process);
+            //withdrawalRequest.PayName
 
-            withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, forStatus, WithdrawalStatus.Verify);
+            withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Verify);
         }
     }
 }

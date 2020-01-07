@@ -16,7 +16,6 @@ namespace PaymentService.Service.DAL
     {
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
-        private const string Operator = "Payment Service";
 
         public WithdrawalService(IConfiguration configuration, WalletService walletService)
         {
@@ -29,7 +28,7 @@ namespace PaymentService.Service.DAL
             return conn.QueryFirstOrDefault<WithdrawalRequest>("WithdrawalRequesPay_Get", new { WithdrawalId = withdrawalId }, commandType: CommandType.StoredProcedure);
         }
 
-        public int SetWithdrawalInfo(string transId, int siteId, IPay pay, string comment, string refId, IEnumerable<int> forStatus, WithdrawalStatus status)
+        public int SetWithdrawalInfo(string transId, int siteId, IPay pay, string comment, string refId, string Operator, IEnumerable<int> forStatus, WithdrawalStatus status)
         {
             int withdrawalId = 0;
             Match m = Regex.Match(transId, @"\d+");
@@ -58,7 +57,7 @@ namespace PaymentService.Service.DAL
                         result = walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, -1 * amount, conn, trans);
                     }
 
-                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status);
+                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator);
                     if (result > 0)
                     {
                         trans.Commit();
@@ -67,14 +66,14 @@ namespace PaymentService.Service.DAL
             }
             catch (Exception ex)
             {
-                SetWithdrawalLog(withdrawalId, siteId, ex.Message, (int)WithdrawalStatus.Error);
+                SetWithdrawalLog(withdrawalId, siteId, ex.Message, (int)WithdrawalStatus.Error, "Payment Service");
             }
 
             return result;
         }
 
 
-        private int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status)
+        private int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status, string Operator)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Execute("WithdrawalLog_Ins", new { WithdrawalId = withdrawalId, SiteId = siteId, Comment = comment, Action = status, Operator }, commandType: CommandType.StoredProcedure);
