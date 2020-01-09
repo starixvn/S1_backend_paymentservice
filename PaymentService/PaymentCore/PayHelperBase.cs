@@ -37,7 +37,8 @@ namespace PaymentCore
         public string RawContent { get; set; }
     }
 
-    public delegate void InsertPaymentLogEventHandler(string url, string input, string output, string SerialID);
+    public delegate void InsertPaymentLogEventHandler(string url, string input, string output, string transID);
+    public delegate void ErrorLogEventHandler(string log);
     public interface IPayHelper
     {
         DepositResult Debit(Dictionary<string, string> inputs);
@@ -122,10 +123,24 @@ namespace PaymentCore
         /// 1. 會夾帶Content-Type
         /// 2. 簡體字會變成亂碼，且無法還原
         /// </summary>
+        /// 
+        private readonly string proxyHost;
+        private readonly int proxyPort;
+        public PayHelperBase(string proxyHost = null, int proxyPort = 0)
+        {
+            this.proxyHost = proxyHost;
+            this.proxyPort = proxyPort;
+        }
         protected string HttpPost(string url, string parameters, string contentType, string transID)
         {
             WebRequest request = WebRequest.Create(url);
+
             request.Method = "POST";
+            if (string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+
             string postData = parameters;
             byte[] byteArray = Encoding.UTF8.GetBytes(postData);
             request.ContentType = contentType;
@@ -141,20 +156,14 @@ namespace PaymentCore
             reader.Close();
             dataStream.Close();
             response.Close();
-            if (InsertPaymentLog != null)
-            {
-                InsertPaymentLog(url, parameters, responseFromServer, transID);
-            }
+            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
 
             return responseFromServer;
         }
 
         public void DoInsertPaymentLog(string url, string input, string output, string SerialID)
         {
-            if (InsertPaymentLog != null)
-            {
-                InsertPaymentLog(url, input, output, SerialID);
-            }
+            InsertPaymentLog?.Invoke(url, input, output, SerialID);
         }
 
         /// <summary>
@@ -172,10 +181,7 @@ namespace PaymentCore
                 var response = await client.PostAsync(url, content).ConfigureAwait(false);
                 responseBody = await response.Content.ReadAsStringAsync();
 
-                if (InsertPaymentLog != null)
-                {
-                    InsertPaymentLog(url, string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}").ToArray()), responseBody, SerialID);
-                }
+                InsertPaymentLog?.Invoke(url, string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}").ToArray()), responseBody, SerialID);
             }
 
             return responseBody;

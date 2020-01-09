@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using PaymentCore;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Model;
@@ -17,13 +19,17 @@ namespace PaymentService.Service.BLL
         private readonly PayService payService;
         private readonly IMemoryCache cache;
         private readonly IWebHostEnvironment environment;
+        private readonly IConfiguration configuration;
+        private readonly ILogger<PayBLL> logger;
         private static ConcurrentDictionary<string, IPayHelper> PayHelperContainer = new ConcurrentDictionary<string, IPayHelper>();
 
-        public PayBLL(IMemoryCache cache, IWebHostEnvironment environment, PayService payService)
+        public PayBLL(ILogger<PayBLL> logger, IMemoryCache cache, IWebHostEnvironment environment, IConfiguration configuration, PayService payService)
         {
             this.payService = payService;
             this.cache = cache;
             this.environment = environment;
+            this.configuration = configuration;
+            this.logger = logger;
         }
         public IEnumerable<BankInfoPay> GetOnlineBankList()
         {
@@ -108,13 +114,20 @@ namespace PaymentService.Service.BLL
             {
                 var assembly = Assembly.Load($"Payment.{PayName}");
                 var assemblyType = assembly.GetType($"Payment.{PayName}.PayHelper");
-                if (PayHelperContainer.TryAdd(PayName, (IPayHelper)Activator.CreateInstance(assemblyType)))
+                string proxyHost = configuration.GetValue<string>("ProxyHost");
+                int proxyPort = configuration.GetValue<int>("ProxyPort");
+                if (PayHelperContainer.TryAdd(PayName, (IPayHelper)Activator.CreateInstance(assemblyType, proxyHost, proxyPort)))
                 {
-                    //PayHelperContainer[PayName].InsertPaymentLog += dbLogger.InsertPaymentLog;
+                    PayHelperContainer[PayName].InsertPaymentLog += InsertPaymentLog;
                 }
             }
 
             return PayHelperContainer[PayName];
+        }
+
+        public void InsertPaymentLog(string url, string input, string output, string refId)
+        {
+            logger.LogInformation($"Url={url}, Input={input}, Output={output}, RefId={refId}");
         }
     }
 }
