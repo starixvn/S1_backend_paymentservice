@@ -136,7 +136,7 @@ namespace PaymentCore
             WebRequest request = WebRequest.Create(url);
 
             request.Method = "POST";
-            if (string.IsNullOrEmpty(proxyHost))
+            if (!string.IsNullOrEmpty(proxyHost))
             {
                 request.Proxy = new WebProxy(proxyHost, proxyPort);
             }
