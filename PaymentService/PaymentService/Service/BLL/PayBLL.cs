@@ -114,9 +114,8 @@ namespace PaymentService.Service.BLL
             {
                 var assembly = Assembly.Load($"Payment.{PayName}");
                 var assemblyType = assembly.GetType($"Payment.{PayName}.PayHelper");
-                string proxyHost = configuration.GetValue<string>("ProxyHost");
-                int proxyPort = configuration.GetValue<int>("ProxyPort");
-                if (PayHelperContainer.TryAdd(PayName, (IPayHelper)Activator.CreateInstance(assemblyType, proxyHost, proxyPort)))
+
+                if (PayHelperContainer.TryAdd(PayName, (IPayHelper)Activator.CreateInstance(assemblyType)))
                 {
                     PayHelperContainer[PayName].InsertPaymentLog += InsertPaymentLog;
                 }

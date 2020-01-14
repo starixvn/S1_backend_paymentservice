@@ -9,10 +9,6 @@ namespace Payment.Help2Pay
 {
     public class PayHelper : PayHelperBase
     {
-        public PayHelper(string proxyHost = null, int proxyPort = 0) : base(proxyHost, proxyPort)
-        {
-
-        }
         public class CallBackCreditReq
         {
             public string MerchantCode { get; set; }

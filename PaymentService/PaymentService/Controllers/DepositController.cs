@@ -112,6 +112,7 @@ namespace PaymentService.Controllers
             DepReq.Add("BankCode", onlineBank.BankCode);
             DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
             DepReq.Add("PayLangId", payLangId);
+            DepReq.Add("CustId", reqDeposit.CustId.ToString());
             var callBackUrl = configuration.GetValue<string>("CallBack");
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
             var result = payHelper.Debit(DepReq);

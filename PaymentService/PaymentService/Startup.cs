@@ -45,6 +45,9 @@ namespace PaymentService
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();
 
+            PaymentCore.PayHelperBase.proxyHost = Configuration.GetValue<string>("ProxyHost");
+            PaymentCore.PayHelperBase.proxyPort = Configuration.GetValue<int>("ProxyPort");
+
             services.AddControllers();
         }
 

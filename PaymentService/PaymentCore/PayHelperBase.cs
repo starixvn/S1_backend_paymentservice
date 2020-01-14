@@ -124,13 +124,8 @@ namespace PaymentCore
         /// 2. 簡體字會變成亂碼，且無法還原
         /// </summary>
         /// 
-        private readonly string proxyHost;
-        private readonly int proxyPort;
-        public PayHelperBase(string proxyHost = null, int proxyPort = 0)
-        {
-            this.proxyHost = proxyHost;
-            this.proxyPort = proxyPort;
-        }
+        public static string proxyHost;
+        public static int proxyPort;
         protected string HttpPost(string url, string parameters, string contentType, string transID)
         {
             WebRequest request = WebRequest.Create(url);
