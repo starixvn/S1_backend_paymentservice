@@ -35,11 +35,14 @@ namespace PaymentService
             //services.AddSingleton<IBCDBLibrary>();
 
             /*DAL*/
+
             services.AddSingleton<PayService>();
             services.AddSingleton<CustInfoService>();
+            services.AddSingleton<WithdrawalLimitService>();
             services.AddSingleton<DepoistService>();
             services.AddSingleton<WalletService>();
             services.AddSingleton<WithdrawalService>();
+
 
             /*BLL*/
             services.AddSingleton<PayBLL>();

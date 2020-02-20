@@ -16,12 +16,14 @@ namespace PaymentService.Service.DAL
     {
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
+        private readonly WithdrawalLimitService withdrawalLimitService;
         private int payTypePosition = 100;
 
-        public DepoistService(IConfiguration configuration, WalletService walletService)
+        public DepoistService(IConfiguration configuration, WalletService walletService, WithdrawalLimitService withdrawalLimitService)
         {
             this.configuration = configuration;
             this.walletService = walletService;
+            this.withdrawalLimitService = withdrawalLimitService;
         }
         public DepositRequest GetDepositRequest(int depositId)
         {
@@ -61,6 +63,12 @@ namespace PaymentService.Service.DAL
                                 int custId = p.Get<int?>("CustId") ?? 0;
                                 string UserName = p.Get<string>("UserName");
                                 result = walletService.SetBalance(custId, siteId, UserName, actualDeposit, type, $"Deposit Approved: {actualDeposit}", transId, out afterAmount, out is1stDepoist, conn, trans);
+
+                                if (result > 0)
+                                {
+                                    decimal withdrawalLimit = 0;
+                                    result = withdrawalLimitService.SetWithdrawalLimit(custId, UserName, siteId, actualDeposit, $"WithdrawalLimit: {actualDeposit}", transId, out withdrawalLimit, conn, trans);
+                                }
 
                                 if (is1stDepoist == 1 && result > 0)
                                 {
