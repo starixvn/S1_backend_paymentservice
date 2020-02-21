@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -184,7 +185,7 @@ namespace PaymentCore
 
         protected string ToMD5(string encodeStr)
         {
-            using (var cryptoMD5 = System.Security.Cryptography.MD5.Create())
+            using (var cryptoMD5 = MD5.Create())
             {
                 var bytes = Encoding.UTF8.GetBytes(encodeStr);
                 var hash = cryptoMD5.ComputeHash(bytes);
@@ -194,6 +195,20 @@ namespace PaymentCore
                 return md5;
             }
         }
+
+        protected string ToSHA1(string encodeStr)
+        {
+            using (var cryptosha1 = new SHA1CryptoServiceProvider())
+            {
+                var bytes = Encoding.UTF8.GetBytes(encodeStr);
+                var hash = cryptosha1.ComputeHash(bytes);
+                var sha1 = BitConverter.ToString(hash)
+                  .Replace("-", String.Empty);
+
+                return sha1;
+            }
+        }
+
         protected string GetRandomString4(int length)
         {
             var str = "0123456789abcdefghijklmnopqrstuvwxyz";//ABCDEFGHIJKLMNOPQRSTUVWXYZ

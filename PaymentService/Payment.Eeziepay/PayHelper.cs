@@ -44,10 +44,11 @@ namespace Payment.Eeziepay
             formData.Add("bank_code", inputs["BankCode"]);
             formData.Add("member_ip", "");
             formData.Add("member_id", inputs["CustId"]);
-            //formData.Add("key", inputs["key"]);
-            //var dicP = FromJson<Dictionary<string, string>>(ToJson(oDebitReq)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = $"{formData["service_version"]}{formData["partner_code"]}{formData["partner_orderid"]}{formData["member_id"]}{formData["member_ip"]}{formData["currency"]}{formData["amount"]}{formData["backend_url"]}{formData["redirect_url"]}{formData["bank_code"]}{formData["trans_time"]}";
-            formData.Add("sign", ToMD5(p).ToUpper());
+
+            string p = $"service_version={formData["service_version"]}&partner_code={formData["partner_code"]}&partner_orderid={formData["partner_orderid"]}&" +
+                $"member_id={formData["member_id"]}&member_ip={formData["member_ip"]}&currency={formData["currency"]}&amount={formData["amount"]}&" +
+                $"backend_url={formData["backend_url"]}&redirect_url={formData["redirect_url"]}&bank_code={formData["bank_code"]}&trans_time={formData["trans_time"]}&key={inputs["key"]}";
+            formData.Add("sign", ToSHA1(p).ToUpper());
            
             DepositResult oDepositResult = new DepositResult();
             oDepositResult.Url = sUrl;
