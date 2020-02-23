@@ -97,6 +97,9 @@ namespace PaymentCore
         public decimal Fee { get { return RequestAmount - ActualAmount; } }
         public string Comment { get; set; }
         public string Response { get; set; }
+
+        public string billno { get; set; }
+        public string status { get; set; }
     }
     public class NotifyWithdrawResult
     {

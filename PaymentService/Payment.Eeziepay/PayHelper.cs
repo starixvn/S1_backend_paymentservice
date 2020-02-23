@@ -7,14 +7,58 @@ namespace Payment.Eeziepay
 {
     public class PayHelper : PayHelperBase
     {
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public class CallBackCreditReq
+        {
+            public string service_version { get; set; }
+            public string sign { get; set; }
+            public string billno { get; set; }
+            public string partner_orderid { get; set; }
+            public string currency { get; set; }
+            public string amount { get; set; }
+            public string status { get; set; }
+        }
+
+            public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();
         }
 
+
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            var data = FromJson<CallBackCreditReq>(ToJson(formData));
+            string merchant_no = payResource["merchant_no"];
+            string key = payResource["key"];
+            decimal amount = 0m;
+            decimal.TryParse(data.amount, out amount);
+            string p = $"service_version={data.service_version}&billno={data.billno}&partner_orderid={data.partner_orderid}&currency={data.currency}&amount={data.amount}&status={data.status}&key={key}";
+
+            string sign = ToSHA1(p).ToUpper();
+
+            NotifyDepositResult oNotify = new NotifyDepositResult();
+            oNotify.billno = data.billno;
+            if (sign == data.sign)
+            {
+                if (data.status == "000" || data.status == "002")
+                {
+                    oNotify.status = "OK";
+                }
+                else if (data.status == "001" || data.status == "007" || data.status == "008")
+                {
+                    oNotify.status = "Fail";
+                }
+                else
+                {
+                    oNotify.status = "Pending";
+                }
+            }
+            else
+            {
+                oNotify.billno = data.billno;
+                oNotify.status = "Signature error";
+            }
+
+            return oNotify;
         }
 
         public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
