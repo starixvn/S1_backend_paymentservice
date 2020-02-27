@@ -181,14 +181,10 @@ namespace Payment.Eeziepay
             creditReq.amount = amount.ToString("#");
             creditReq.account_name = inputs["AccountName"];
             creditReq.account_number = inputs["AccountNo"];
-            string bankdic = "na";
-            if (bankDic.ContainsKey(creditReq.currency))
-            {
-                bankdic = bankDic[creditReq.currency];
-            }
-            creditReq.bank_province = bankdic;
-            creditReq.bank_city = bankdic;
-            creditReq.bank_branch = bankdic;
+            
+            creditReq.bank_province = bankDic[creditReq.currency];
+            creditReq.bank_city = bankDic[creditReq.currency];
+            creditReq.bank_branch = bankDic[creditReq.currency];
             creditReq.bank_code = inputs["BankCode"];
             creditReq.notify_url = inputs["CallBackUrl"];
 
