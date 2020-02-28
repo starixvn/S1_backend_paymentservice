@@ -67,6 +67,7 @@ namespace PaymentService.Controllers
                 return apiResult;
             }
 
+      
             var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqWithdrawal.PayId).FirstOrDefault();
             var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
 
@@ -85,7 +86,7 @@ namespace PaymentService.Controllers
             }
 
             var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-
+            
             WithReq.Add("PayCurrencyId", payCurrency.PayCurrencyId);
             //WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
             WithReq.Add("OutgoingIp", outgoingIp);
@@ -93,7 +94,7 @@ namespace PaymentService.Controllers
             WithReq.Add("TransID", reqWithdrawal.TransId);
             WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
             WithReq.Add("PayCode", onlineBank.PayCode);
-            WithReq.Add("BankCode", onlineBank.BankCode);
+            WithReq.Add("BankCode", onlineBank.BankPayoutCode);
             WithReq.Add("AccountName", reqWithdrawal.AccountName);
             WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
             var callBackUrl = configuration.GetValue<string>("CallBack");
