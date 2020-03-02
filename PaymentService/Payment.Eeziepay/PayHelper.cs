@@ -53,7 +53,7 @@ namespace Payment.Eeziepay
                 oNotify.Message = data.status;
                 oNotify.Response = $"<xml><billno>{data.billno}</billno><status>OK</status></xml>";
             }
-            else if (data.status == "001")
+            else if (data.status == "001" || data.status == "112")
             {
                 oNotify.TransStatus = TransStatus.Fail;
                 oNotify.ThirdId = data.billno;
@@ -103,21 +103,21 @@ namespace Payment.Eeziepay
                     oNotify.Message = data.status;
                     oNotify.Response = $"<xml><billno>{data.billno}</billno><status>OK</status></xml>";
                 }
-                else if (data.status == "001" || data.status == "007" || data.status == "008")
-                {
-                    oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.ThirdId = data.billno;
-                    oNotify.Comment = data.status;
-                    oNotify.Message = data.status;
-                    oNotify.Response = $"<xml><billno>{data.billno}</billno><status>Fail</status></xml>";
-                }
-                else
+                else if (data.status == "001")
                 {
                     oNotify.TransStatus = TransStatus.Pending;
                     oNotify.ThirdId = data.billno;
                     oNotify.Comment = data.status;
                     oNotify.Message = data.status;
-                    oNotify.Response = $"<xml><billno>{data.billno}</billno><status>Pending</status></xml>";
+                    oNotify.Response = $"<xml><billno>{data.billno}</billno><status>OK</status></xml>";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.ThirdId = data.billno;
+                    oNotify.Comment = data.status;
+                    oNotify.Message = data.status;
+                    oNotify.Response = $"<xml><billno>{data.billno}</billno><status>OK</status></xml>";
                 }
             }
             else
@@ -125,7 +125,7 @@ namespace Payment.Eeziepay
                 oNotify.TransStatus = TransStatus.Pending;
                 oNotify.Comment = "Signature error";
                 oNotify.Message = "Signature error";
-                oNotify.Response = $"<xml><billno>{data.billno}</billno><status>Signature Error</status></xml>";
+                oNotify.Response = $"<xml><billno>{data.billno}</billno><status>OK</status></xml>";
             }
 
             return oNotify;
