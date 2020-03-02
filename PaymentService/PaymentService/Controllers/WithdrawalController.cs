@@ -59,7 +59,7 @@ namespace PaymentService.Controllers
             ApiResult apiResult = new ApiResult();
             var custId = reqWithdrawal.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var onlineBank = payBLL.GetOnlineBankList().Where(x => x.PayId == reqWithdrawal.PayId && reqWithdrawal.SysId == x.SysId).FirstOrDefault();
+            var onlineBank = payBLL.GetOnlineBankListForPayout().Where(x => x.PayId == reqWithdrawal.PayId && reqWithdrawal.SysId == x.SysId).FirstOrDefault();
 
             if (custInfo.CurrencyId != onlineBank.CurrencyId)
             {
@@ -94,7 +94,7 @@ namespace PaymentService.Controllers
             WithReq.Add("TransID", reqWithdrawal.TransId);
             WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
             WithReq.Add("PayCode", onlineBank.PayCode);
-            WithReq.Add("BankCode", onlineBank.BankPayoutCode);
+            WithReq.Add("BankCode", onlineBank.BankCode);
             WithReq.Add("AccountName", reqWithdrawal.AccountName);
             WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
             var callBackUrl = configuration.GetValue<string>("CallBack");
