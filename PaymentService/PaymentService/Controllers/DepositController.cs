@@ -115,6 +115,9 @@ namespace PaymentService.Controllers
             DepReq.Add("CustId", reqDeposit.CustId.ToString());
             var callBackUrl = configuration.GetValue<string>("CallBack");
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+
+            logger.LogInformation($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}");
+
             var result = payHelper.Debit(DepReq);
 
             if (result.Success)

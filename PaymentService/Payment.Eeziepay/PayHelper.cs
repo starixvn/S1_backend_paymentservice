@@ -53,19 +53,19 @@ namespace Payment.Eeziepay
                 oNotify.Message = data.status;
                 oNotify.Response = $"<xml><billno>{data.billno}</billno><status>OK</status></xml>";
             }
-            else if (data.status == "001" || data.status == "112")
-            {
-                oNotify.TransStatus = TransStatus.Fail;
-                oNotify.ThirdId = data.billno;
-                oNotify.Message = data.status;
-                oNotify.Response = $"<xml><billno>{data.billno}</billno><status>Fail</status></xml>";
-            }
-            else
+            else if (data.status == "001")
             {
                 oNotify.TransStatus = TransStatus.Pending;
                 oNotify.ThirdId = data.billno;
                 oNotify.Message = data.status;
-                oNotify.Response = $"<xml><billno>{data.billno}</billno><status>Pending</status></xml>";
+                oNotify.Response = $"<xml><billno>{data.billno}</billno><status>OK</status></xml>";
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Fail;
+                oNotify.ThirdId = data.billno;
+                oNotify.Message = data.status;
+                oNotify.Response = $"<xml><billno>{data.billno}</billno><status>OK</status></xml>";
             }
 
             return oNotify;

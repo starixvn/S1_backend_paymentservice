@@ -99,6 +99,9 @@ namespace PaymentService.Controllers
             WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
             var callBackUrl = configuration.GetValue<string>("CallBack");
             WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
+
+            logger.LogInformation($"{pay.PayName}\r{JsonConvert.SerializeObject(WithReq)}");
+
             var result = payHelper.Credit(WithReq);
 
             if (result.Success)
