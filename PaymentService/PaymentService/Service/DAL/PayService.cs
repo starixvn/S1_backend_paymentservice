@@ -44,5 +44,10 @@ namespace PaymentService.Service.DAL
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<Pay>("PaySetting_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
         }
+        public IEnumerable<MobilePayInfo> GetMobilePayInfo()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<MobilePayInfo>("Service_MobilePay_Get", commandType: CommandType.StoredProcedure);
+        }
     }
 }

@@ -32,6 +32,7 @@ namespace PaymentService.Service.Model.enums
         #region Payment Error  (3xxxx)
         BankNotFound = 3001,
         PayOutFail = 3002,
+        ChannelNotFound = 3003,
         #endregion
         Not_allowed_country = 5001,
         Not_allowed_currency = 5002,

@@ -130,6 +130,98 @@ namespace PaymentService.Controllers
                 payResult.Mode = onlineBank.Mode;
                 apiResult.Data = payResult;
             }
+            else if (!result.Success)
+            {
+                DepositRequest depositRequest = new DepositRequest();
+                depositRequest.TransId = reqDeposit.TransId;
+                depositRequest.ActualDeposit = reqDeposit.Amount;
+                depositRequest.Amount = reqDeposit.Amount;
+                depositRequest.PayName = pay.PayName;
+                depositRequest.SiteId = custInfo.SiteId;
+                depositRequest.DepositInfo = JsonConvert.SerializeObject(onlineBank);
+                var rNotifyDepositResult = new NotifyDepositResult();
+                rNotifyDepositResult.Comment = result.Message;
+                rNotifyDepositResult.ThirdId = result.ThirdId;
+                paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
+            }
+
+            return apiResult;
+        }
+
+        [HttpPost]
+        [Route("Payment/ReqDepositMobile")]
+        public ApiResult<PayResult> DepositMobile(ReqDepositMobile reqDeposit)
+        {
+            ApiResult<PayResult> apiResult = new ApiResult<PayResult>();
+            var custId = reqDeposit.CustId;
+            var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
+            var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
+            var mobilePayInfo = payBLL.GetMobilePayInfoList().Where(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel).FirstOrDefault();
+            //var PayCurrency = payBLL.GetPayCurrency().;
+            if (mobilePayInfo == null)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.ChannelNotFound;
+                return apiResult;
+            }
+
+            if (custInfo.CurrencyId != mobilePayInfo.CurrencyId)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                return apiResult;
+            }
+
+            var payLangId = payBLL.GetPayLanguage().Where(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase)).FirstOrDefault()?.PayLangId;
+            var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == mobilePayInfo.PayId).FirstOrDefault();
+            //DateTimeOffset
+            var payHelper = payBLL.GetPayHelper(pay.PayName);
+
+            if (payHelper == null)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                return apiResult;
+            }
+
+            var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+            DepReq.Add("PayCurrencyId", mobilePayInfo.PayCurrencyId);
+            DepReq.Add("ClientIP", reqDeposit.ClientIP);
+            DepReq.Add("TransID", reqDeposit.TransId);
+            DepReq.Add("Amount", reqDeposit.Amount.ToString());
+            DepReq.Add("PayCode", mobilePayInfo.PayCode);
+            DepReq.Add("BankCode", null);
+            DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
+            DepReq.Add("PayLangId", payLangId);
+            DepReq.Add("CustId", reqDeposit.CustId.ToString());
+            var callBackUrl = configuration.GetValue<string>("CallBack");
+            DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+
+            logger.LogInformation($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}");
+
+            var result = payHelper.Debit(DepReq);
+
+            if (result.Success)
+            {
+                apiResult.ErrorCode = 0;
+                PayResult payResult = new PayResult();
+                payResult.Url = result.Url;
+                payResult.FormData = result.FormData;
+                payResult.ThirdId = result.ThirdId;
+                payResult.Mode = mobilePayInfo.Mode;
+                apiResult.Data = payResult;
+            }
+            else if (!result.Success)
+            {
+                DepositRequest depositRequest = new DepositRequest();
+                depositRequest.TransId = reqDeposit.TransId;
+                depositRequest.ActualDeposit = reqDeposit.Amount;
+                depositRequest.Amount = reqDeposit.Amount;
+                depositRequest.PayName = pay.PayName;
+                depositRequest.SiteId = custInfo.SiteId;
+                depositRequest.DepositInfo = JsonConvert.SerializeObject(mobilePayInfo);
+                var rNotifyDepositResult = new NotifyDepositResult();
+                rNotifyDepositResult.Comment = result.Message;
+                rNotifyDepositResult.ThirdId = result.ThirdId;
+                paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
+            }
 
             return apiResult;
         }

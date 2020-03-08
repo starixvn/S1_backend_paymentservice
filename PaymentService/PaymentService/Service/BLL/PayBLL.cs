@@ -55,6 +55,28 @@ namespace PaymentService.Service.BLL
             return bankInfoPayList;
         }
 
+        public IEnumerable<MobilePayInfo> GetMobilePayInfoList()
+        {
+            string key = "MobilePayInfoList";
+            var mobilePayInfoList = cache.Get<IEnumerable<MobilePayInfo>>(key);
+            if (mobilePayInfoList == null)
+            {
+                mobilePayInfoList = payService.GetMobilePayInfo();
+
+                if (mobilePayInfoList != null)
+                {
+                    var expireTime = TimeSpan.FromHours(1);
+                    if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
+                    {
+                        expireTime = TimeSpan.FromMinutes(5);
+                    }
+
+                    cache.Set(key, mobilePayInfoList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
+                }
+            }
+            return mobilePayInfoList;
+        }
+
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
         {
             string key = "OnlineBankListForPayout";
