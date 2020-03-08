@@ -196,6 +196,7 @@ namespace PaymentCore
             }
         }
 
+
         protected string ToSHA1(string encodeStr)
         {
             using (var cryptosha1 = new SHA1CryptoServiceProvider())
