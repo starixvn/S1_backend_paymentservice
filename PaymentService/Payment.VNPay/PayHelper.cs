@@ -46,14 +46,14 @@ namespace Payment.VNPay
                 oNotify.RequestAmount = decimal.Parse(data.amount);
                 oNotify.ActualAmount = decimal.Parse(data.amount);
                 oNotify.ThirdId = data.ylt_order_no;
-                oNotify.Comment = data.extra_param;
+                oNotify.Comment = data.result_code;
                 oNotify.Message = data.extra_param;
                 oNotify.Response = "success”";
             }
             else
             {
                 oNotify.TransStatus = TransStatus.Fail;
-                oNotify.Comment = data.extra_param;
+                oNotify.Comment = data.result_code;
                 oNotify.Message = data.extra_param;
                 oNotify.Response = "failed";
             }
