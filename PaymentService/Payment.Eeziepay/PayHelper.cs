@@ -71,7 +71,7 @@ namespace Payment.Eeziepay
             return oNotify;
         }
 
-        public class CallBackDebitReq: result
+        public class CallBackDebitReq : result
         {
             public string billno { set; get; }
             public string partner_orderid { set; get; }
@@ -181,7 +181,7 @@ namespace Payment.Eeziepay
             creditReq.amount = amount.ToString("#");
             creditReq.account_name = inputs["AccountName"];
             creditReq.account_number = inputs["AccountNo"];
-            
+
             creditReq.bank_province = bankDic[creditReq.currency];
             creditReq.bank_city = bankDic[creditReq.currency];
             creditReq.bank_branch = bankDic[creditReq.currency];
@@ -230,7 +230,10 @@ namespace Payment.Eeziepay
             formData.Add("trans_time", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
             formData.Add("redirect_url", inputs["ReturnUrl"]);
             formData.Add("backend_url", inputs["CallBackUrl"]);
-            formData.Add("bank_code", inputs["BankCode"]);
+            if (inputs["PayCode"] != null)
+                formData.Add("bank_code", inputs["PayCode"]);
+            else
+                formData.Add("bank_code", inputs["BankCode"]);
             formData.Add("member_ip", "");
             formData.Add("member_id", inputs["CustId"]);
 
