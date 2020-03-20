@@ -53,7 +53,10 @@ namespace PaymentCore
         NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
 
     }
-
+    public interface IPayHelperNoCallBackUrl
+    {
+        string FetchTransId(Dictionary<string, string> formData, string bodyContent);
+    }
     public interface IDepositResult
     {
         TransStatus TransStatus { get; set; }

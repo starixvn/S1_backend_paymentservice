@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Payment.CirclePay
 {
-    class PayHelper : PayHelperBase
+    class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
@@ -175,6 +175,10 @@ namespace Payment.CirclePay
         }
 
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
         {
             throw new NotImplementedException();
         }

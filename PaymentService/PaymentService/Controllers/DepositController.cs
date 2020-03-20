@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -265,8 +266,19 @@ namespace PaymentService.Controllers
                 isFormData = true;
             }
 
+            int depositId = 0;
+
+            Match m = Regex.Match(transId, @"\d+");
+            int.TryParse(m.Value, out depositId);
+            string cTransId = $"D{common.GetEnv()}{depositId}";
+            if (cTransId != transId)
+            {
+                var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)payBLL.GetPayHelper(transId);
+                transId = payHelperNoCallBackUrl.FetchTransId(dicParam, bodyText);
+            }
+
             logger.LogInformation($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
-            var responseToPay = await CallBackHandlerAsync(transId, dicParam, "", isFormData);
+            var responseToPay = await CallBackHandlerAsync(transId, dicParam, bodyText, isFormData);
             return Content(responseToPay);
         }
         private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
