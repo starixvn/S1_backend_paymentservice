@@ -15,6 +15,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.VNPay", "Payment.VN
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.OneClickPay", "Payment.OneClickPay\Payment.OneClickPay.csproj", "{1A02C416-6991-4E92-BDA8-66CC5E0AE608}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.FXBit", "Payment.FXBit\Payment.FXBit.csproj", "{041113AD-4D27-41B1-BF18-3BACB94B42FE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8BB8C09F-1FA7-4BB8-AAE3-F83BEA0B71E6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.YRPay", "Payment.YRPay\Payment.YRPay.csproj", "{97608B76-1EAB-4FC9-8BFD-26F928CEC5EF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.CirclePay", "Payment.CirclePay\Payment.CirclePay.csproj", "{3D8784DB-692D-4A9E-BF3A-F4B5DEA5617F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +53,18 @@ Global
 		{1A02C416-6991-4E92-BDA8-66CC5E0AE608}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A02C416-6991-4E92-BDA8-66CC5E0AE608}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A02C416-6991-4E92-BDA8-66CC5E0AE608}.Release|Any CPU.Build.0 = Release|Any CPU
+		{041113AD-4D27-41B1-BF18-3BACB94B42FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{041113AD-4D27-41B1-BF18-3BACB94B42FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{041113AD-4D27-41B1-BF18-3BACB94B42FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{041113AD-4D27-41B1-BF18-3BACB94B42FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97608B76-1EAB-4FC9-8BFD-26F928CEC5EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97608B76-1EAB-4FC9-8BFD-26F928CEC5EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97608B76-1EAB-4FC9-8BFD-26F928CEC5EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97608B76-1EAB-4FC9-8BFD-26F928CEC5EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D8784DB-692D-4A9E-BF3A-F4B5DEA5617F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D8784DB-692D-4A9E-BF3A-F4B5DEA5617F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D8784DB-692D-4A9E-BF3A-F4B5DEA5617F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D8784DB-692D-4A9E-BF3A-F4B5DEA5617F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

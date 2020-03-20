@@ -210,6 +210,18 @@ namespace PaymentCore
             }
         }
 
+        protected string ToHMACSHA256(string encodeStr, string key)
+        {
+            var encoding = new System.Text.UTF8Encoding();
+            byte[] keyByte = encoding.GetBytes(key);
+            byte[] messageBytes = encoding.GetBytes(encodeStr);
+            using (var hmacSHA256 = new HMACSHA256(keyByte))
+            {
+                byte[] hashMessage = hmacSHA256.ComputeHash(messageBytes);
+                return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
+            }
+        }
+
         protected string GetRandomString4(int length)
         {
             var str = "0123456789abcdefghijklmnopqrstuvwxyz";//ABCDEFGHIJKLMNOPQRSTUVWXYZ
