@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace Payment.OneClickPay
 {
-    public class PayHelper : PayHelperBase
+    public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
@@ -24,13 +24,14 @@ namespace Payment.OneClickPay
             public string tnx { get; set; }
             public string description { get; set; }
             public string sign { get; set; }
+            public string bank_code { get; set; }
         }
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
-            string merchant_no = payResource["merchant_no"];
             string secret_key = payResource["secret_key"];
-            string p = $"{data.merchant_txn}{data.merchant_customer}{data.amount}{data.net_amount}{data.tnx}{data}{secret_key}";
+
+            string p = $"{data.merchant_txn}{data.merchant_customer}{data.amount}{data.net_amount}{data.tnx}{secret_key}";
             string sign = ToMD5(p).ToLower();
 
             NotifyDepositResult oNotify = new NotifyDepositResult();
@@ -96,7 +97,7 @@ namespace Payment.OneClickPay
             creditReq.merchant_customer = inputs["CustId"];
             creditReq.bank_account_no = inputs["AccountNo"];
             creditReq.bank_account_name = inputs["AccountName"];
-            creditReq.bank_code = inputs["bank_code"];
+            creditReq.bank_code = inputs["BankCode"];
             decimal amount = decimal.Parse(inputs["Amount"]);
             creditReq.amount = amount.ToString("#");
 
@@ -166,10 +167,6 @@ namespace Payment.OneClickPay
             depositReq.description = "";
             depositReq.url_success = inputs["ReturnUrl"];
             depositReq.url_error = inputs["ReturnUrl"];
-
-            // Bank list
-            //string p = $"{depositReq.merchant_id}{depositReq.mer_txn}{inputs["secret_key"]}";
-            //depositReq.sign = ToMD5(p).ToLower();
 
             string p = $"{depositReq.merchant_id}{depositReq.merchant_txn}{depositReq.merchant_customer}{depositReq.amount}{depositReq.bank_code}{inputs["secret_key"]}";
             depositReq.sign = ToMD5(p).ToLower();
@@ -262,11 +259,32 @@ namespace Payment.OneClickPay
                 enquiryWithdrawResult.Message = payoutQueryRes.msg;
                 enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
             }
-            else
+            else if (payoutQueryRes.code == 18)
+            {
+                enquiryWithdrawResult.TransStatus = TransStatus.Pending;
+                enquiryWithdrawResult.Message = payoutQueryRes.msg;
+                enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
+            }
+            else if (payoutQueryRes.code == 99)
+            {
+                if (payoutQueryRes.data.stat == "Processing" || payoutQueryRes.data.stat == "Transfering")
+                {
+                    enquiryWithdrawResult.TransStatus = TransStatus.Pending;
+                    enquiryWithdrawResult.Amount = decimal.Parse(payoutQueryRes.data.amount);
+                    enquiryWithdrawResult.WithdrawId = payoutQueryRes.data.merchant_txn;
+                    enquiryWithdrawResult.Message = payoutQueryRes.msg;
+                    enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
+                }
+                else if (payoutQueryRes.data.stat == "Refund")
+                {
+                    enquiryWithdrawResult.TransStatus = TransStatus.Fail;
+                    enquiryWithdrawResult.Message = payoutQueryRes.msg;
+                    enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
+                }
+            }
+            else if (payoutQueryRes.code == 17)
             {
                 enquiryWithdrawResult.TransStatus = TransStatus.Fail;
-                enquiryWithdrawResult.Amount = decimal.Parse(payoutQueryRes.data.amount);
-                enquiryWithdrawResult.WithdrawId = payoutQueryRes.data.merchant_txn;
                 enquiryWithdrawResult.Message = payoutQueryRes.msg;
                 enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
             }
@@ -324,7 +342,7 @@ namespace Payment.OneClickPay
             if (depositQueryRes.code == 0)
             {
                 enquiryDepositResult.TransStatus = TransStatus.Success;
-                enquiryDepositResult.ActualAmount = decimal.Parse(depositQueryRes.data.amount.ToString()) - decimal.Parse(depositQueryRes.data.fee);
+                enquiryDepositResult.ActualAmount = decimal.Parse(depositQueryRes.data.amount.ToString());
                 enquiryDepositResult.RequestAmount = decimal.Parse(depositQueryRes.data.amount.ToString());
                 enquiryDepositResult.DepositId = depositQueryRes.data.mer_txn;
                 enquiryDepositResult.ThirdId = depositQueryRes.data.transaction_id;
@@ -334,15 +352,16 @@ namespace Payment.OneClickPay
             else
             {
                 enquiryDepositResult.TransStatus = TransStatus.Fail;
-                enquiryDepositResult.ActualAmount = decimal.Parse(depositQueryRes.data.amount.ToString()) - decimal.Parse(depositQueryRes.data.fee);
-                enquiryDepositResult.RequestAmount = decimal.Parse(depositQueryRes.data.amount.ToString());
-                enquiryDepositResult.DepositId = depositQueryRes.data.mer_txn;
-                enquiryDepositResult.ThirdId = depositQueryRes.data.transaction_id;
                 enquiryDepositResult.Message = depositQueryRes.msg;
                 enquiryDepositResult.RawContent = depositQueryRes.msg;
             }
 
             return enquiryDepositResult;
+        }
+
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        {
+            return formData["merchant_txn"];
         }
     }
 }

@@ -86,7 +86,6 @@ namespace Payment.Eeziepay
             string key = payResource["key"];
             decimal amount = decimal.Parse(data.amount) / 100;
             string p = $"service_version={data.service_version}&billno={data.billno}&partner_orderid={data.partner_orderid}&currency={data.currency}&amount={data.amount}&status={data.status}&key={key}";
-
             string sign = ToSHA1(p).ToUpper();
 
             NotifyDepositResult oNotify = new NotifyDepositResult();

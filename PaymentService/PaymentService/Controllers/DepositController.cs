@@ -266,18 +266,20 @@ namespace PaymentService.Controllers
                 isFormData = true;
             }
 
+            logger.LogInformation($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
+
             int depositId = 0;
 
             Match m = Regex.Match(transId, @"\d+");
             int.TryParse(m.Value, out depositId);
             string cTransId = $"D{common.GetEnv()}{depositId}";
+
             if (cTransId != transId)
             {
                 var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)payBLL.GetPayHelper(transId);
                 transId = payHelperNoCallBackUrl.FetchTransId(dicParam, bodyText);
             }
 
-            logger.LogInformation($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
             var responseToPay = await CallBackHandlerAsync(transId, dicParam, bodyText, isFormData);
             return Content(responseToPay);
         }

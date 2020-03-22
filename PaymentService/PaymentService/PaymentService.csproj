@@ -13,9 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Payment.CirclePay\Payment.CirclePay.csproj" />
-    <ProjectReference Include="..\Payment.FXBit\Payment.FXBit.csproj" />
     <ProjectReference Include="..\Payment.Eeziepay\Payment.Eeziepay.csproj" />
-    <ProjectReference Include="..\Payment.FXBit\Payment.FXBit.csproj" />
     <ProjectReference Include="..\Payment.Help2Pay\Payment.Help2Pay.csproj" />
     <ProjectReference Include="..\Payment.OneClickPay\Payment.OneClickPay.csproj" />
     <ProjectReference Include="..\Payment.VNPay\Payment.VNPay.csproj" />
