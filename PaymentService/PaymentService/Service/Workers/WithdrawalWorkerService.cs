@@ -91,7 +91,7 @@ namespace PaymentService.Service.Workers
                     }
                     catch(Exception ex1)
                     {
-                        logger.LogError($"PayName: {withdrawalRequest.PayName}\r\n{ex1.ToString()}");
+                        //logger.LogError($"PayName: {withdrawalRequest.PayName}\r\n{ex1.ToString()}");
                         continue;
                     }
                 }
