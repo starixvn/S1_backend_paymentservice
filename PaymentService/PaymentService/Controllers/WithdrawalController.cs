@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -158,6 +159,19 @@ namespace PaymentService.Controllers
             }
 
             logger.LogInformation($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
+
+            int withdrawalId = 0;
+
+            Match m = Regex.Match(transId, @"\w+");
+            int.TryParse(m.Value, out withdrawalId);
+            string cTransId = $"W{common.GetEnv()}{withdrawalId}";
+
+            if (cTransId != transId)
+            {
+                var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)payBLL.GetPayHelper(transId);
+                transId = payHelperNoCallBackUrl.FetchTransId(dicParam, bodyText);
+            }
+
             var responseToPay = CallBackHandler(transId, dicParam, "", isFormData);
             return Content(responseToPay);
         }

@@ -168,6 +168,39 @@ namespace PaymentCore
             return responseFromServer;
         }
 
+        protected string HttpPost(string url, string parameters, string contentType, string username, string password, string transID)
+        {
+            WebRequest request = WebRequest.Create(url);
+
+            request.Method = "POST";
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+
+            string postData = parameters;
+            byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+            request.ContentType = contentType;
+            request.ContentLength = byteArray.Length;
+
+            string svcCredentials = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(username + ":" + password));
+            request.Headers.Add("Authorization", "Basic " + svcCredentials);
+            Stream dataStream = request.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            using WebResponse response = request.GetResponse();
+
+            dataStream = response.GetResponseStream();
+            using StreamReader reader = new StreamReader(dataStream);
+            string responseFromServer = reader.ReadToEnd();
+            reader.Close();
+            dataStream.Close();
+            response.Close();
+            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
+
+            return responseFromServer;
+        }
+
         public void DoInsertPaymentLog(string url, string input, string output, string SerialID)
         {
             InsertPaymentLog?.Invoke(url, input, output, SerialID);

@@ -83,7 +83,7 @@ namespace Payment.OneClickPay
         private class Payout
         {
             public int code { get; set; }
-            public string msg { get; set; }
+            public string message { get; set; }
             public int count { get; set; }
             public Data data { get; set; }
         }
@@ -115,14 +115,14 @@ namespace Payment.OneClickPay
             if (payout.code == 0)
             {
                 withdrawResult.Success = true;
-                withdrawResult.Message = payout.msg;
-                withdrawResult.RawContent = payout.msg;
+                withdrawResult.Message = payout.message;
+                withdrawResult.RawContent = payout.message;
             }
             else
             {
                 withdrawResult.Success = false;
-                withdrawResult.Message = payout.msg;
-                withdrawResult.RawContent = payout.msg;
+                withdrawResult.Message = payout.message;
+                withdrawResult.RawContent = payout.message;
             }
 
             return withdrawResult;
@@ -229,7 +229,7 @@ namespace Payment.OneClickPay
         private class PayoutQueryRes
         {
             public int code { get; set; }
-            public string msg { get; set; }
+            public string message { get; set; }
             public int count { get; set; }
             public PayourQueryResData data { get; set; }
         }
@@ -256,12 +256,12 @@ namespace Payment.OneClickPay
                 enquiryWithdrawResult.TransStatus = TransStatus.Success;
                 enquiryWithdrawResult.RequestAmount = decimal.Parse(payoutQueryRes.data.amount);
                 enquiryWithdrawResult.WithdrawId = payoutQueryRes.data.merchant_txn;
-                enquiryWithdrawResult.Message = payoutQueryRes.msg;
+                enquiryWithdrawResult.Message = payoutQueryRes.message;
             }
             else if (payoutQueryRes.code == 18)
             {
                 enquiryWithdrawResult.TransStatus = TransStatus.Pending;
-                enquiryWithdrawResult.Message = payoutQueryRes.msg;
+                enquiryWithdrawResult.Message = payoutQueryRes.message;
             }
             else if (payoutQueryRes.code == 99)
             {
@@ -270,18 +270,23 @@ namespace Payment.OneClickPay
                     enquiryWithdrawResult.TransStatus = TransStatus.Pending;
                     enquiryWithdrawResult.RequestAmount = decimal.Parse(payoutQueryRes.data.amount);
                     enquiryWithdrawResult.WithdrawId = payoutQueryRes.data.merchant_txn;
-                    enquiryWithdrawResult.Message = payoutQueryRes.msg;
+                    enquiryWithdrawResult.Message = payoutQueryRes.message;
                 }
                 else if (payoutQueryRes.data.stat == "Refund")
                 {
                     enquiryWithdrawResult.TransStatus = TransStatus.Fail;
-                    enquiryWithdrawResult.Message = payoutQueryRes.msg;
+                    enquiryWithdrawResult.Message = payoutQueryRes.message;
                 }
             }
             else if (payoutQueryRes.code == 17)
             {
                 enquiryWithdrawResult.TransStatus = TransStatus.Fail;
-                enquiryWithdrawResult.Message = payoutQueryRes.msg;
+                enquiryWithdrawResult.Message = payoutQueryRes.message;
+            }
+            else
+            {
+                enquiryWithdrawResult.TransStatus = TransStatus.Pending;
+                enquiryWithdrawResult.Message = payoutQueryRes.message;
             }
 
             return enquiryWithdrawResult;

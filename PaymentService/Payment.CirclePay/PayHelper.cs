@@ -3,6 +3,7 @@ using PaymentCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Payment.CirclePay
 {
@@ -141,7 +142,7 @@ namespace Payment.CirclePay
             public string bank_code { get; set; }
             public string card_fullname { get; set; }
             public string card_number { get; set; }
-            public string reson { get; set; }
+            public string reason { get; set; }
             public string partner_tran_id { get; set; }
             public string token { get; set; }
         }
@@ -166,13 +167,17 @@ namespace Payment.CirclePay
             creditReq.card_fullname = inputs["AccountName"];
             creditReq.card_number = inputs["AccountNo"];
             creditReq.bank_code = inputs["BankCode"];
+            creditReq.reason = "payout";
 
             string p = $"{creditReq.total_amount}{creditReq.bank_code}{creditReq.card_fullname}{creditReq.card_number}{creditReq.partner_tran_id}";
             creditReq.token = ToHMACSHA256(p, inputs["key"]);
 
+            var username = inputs["email"];
+            var password = ToHMACSHA256(username, inputs["key"]);
+
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
             string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.partner_tran_id);
+            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", username, password, creditReq.partner_tran_id);
 
             Payout payout = new Payout();
             payout = JsonConvert.DeserializeObject<Payout>(sResponse);
