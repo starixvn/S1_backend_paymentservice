@@ -138,6 +138,24 @@ namespace PaymentCore
         /// 
         public static string proxyHost;
         public static int proxyPort;
+        protected string HttpGet(string url, string parameters, string transID)
+        {
+            WebRequest request = WebRequest.Create($"{url}?{parameters}");
+            request.Method = "GET";
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+
+            using WebResponse response = request.GetResponse();
+            using Stream dataStream = response.GetResponseStream();
+            using StreamReader reader = new StreamReader(dataStream);
+            string responseFromServer = reader.ReadToEnd();
+
+            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
+
+            return responseFromServer;
+        }
         protected string HttpPost(string url, string parameters, string contentType, string transID)
         {
             WebRequest request = WebRequest.Create(url);

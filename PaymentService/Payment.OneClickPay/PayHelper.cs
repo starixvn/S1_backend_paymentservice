@@ -106,7 +106,7 @@ namespace Payment.OneClickPay
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
             string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.merchant_txn);
+            string sResponse = HttpGet(sUrl, sParam, creditReq.merchant_txn);
 
             Payout payout = new Payout();
             payout = JsonConvert.DeserializeObject<Payout>(sResponse);
