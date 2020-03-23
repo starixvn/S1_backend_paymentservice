@@ -53,7 +53,7 @@ namespace PaymentService.Service.BLL
             return withdrawalService.GetWithdrawalRequest(withdrawalId);
         }
 
-        public void WithdrawalSuccess(WithdrawalRequest withdrawalRequest, NotifyWithdrawResult notifyWithdrawResult)
+        public void WithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
             List<int> forStatus = new List<int>();
             forStatus.Add((int)WithdrawalStatus.Process);
@@ -61,13 +61,18 @@ namespace PaymentService.Service.BLL
             withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
         }
 
-        public void WithdrawalFail(WithdrawalRequest withdrawalRequest, NotifyWithdrawResult notifyWithdrawResult)
+        public void WithdrawalFail(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
             List<int> forStatus = new List<int>();
             forStatus.Add((int)WithdrawalStatus.Process);
             //withdrawalRequest.PayName
 
             withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Verify);
+        }
+
+        public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry()
+        {
+            return withdrawalService.GetWithdrawalRequesPayEnquiry();
         }
     }
 }

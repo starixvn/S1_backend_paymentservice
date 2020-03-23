@@ -235,6 +235,7 @@ namespace Payment.OneClickPay
         }
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
+            EnquiryWithdrawResult enquiryWithdrawResult = new EnquiryWithdrawResult();
             string sUrl = inputs["PayOutQuery"];
             CreditReq creditReq = new CreditReq();
             creditReq.merchant_id = inputs["merchant_no"];
@@ -246,47 +247,41 @@ namespace Payment.OneClickPay
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
             string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.merchant_txn);
-
+            enquiryWithdrawResult.RawContent = sResponse;
             PayoutQueryRes payoutQueryRes = new PayoutQueryRes();
             payoutQueryRes = JsonConvert.DeserializeObject<PayoutQueryRes>(sResponse);
 
-            EnquiryWithdrawResult enquiryWithdrawResult = new EnquiryWithdrawResult();
             if (payoutQueryRes.code == 0)
             {
                 enquiryWithdrawResult.TransStatus = TransStatus.Success;
-                enquiryWithdrawResult.Amount = decimal.Parse(payoutQueryRes.data.amount);
+                enquiryWithdrawResult.RequestAmount = decimal.Parse(payoutQueryRes.data.amount);
                 enquiryWithdrawResult.WithdrawId = payoutQueryRes.data.merchant_txn;
                 enquiryWithdrawResult.Message = payoutQueryRes.msg;
-                enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
             }
             else if (payoutQueryRes.code == 18)
             {
                 enquiryWithdrawResult.TransStatus = TransStatus.Pending;
                 enquiryWithdrawResult.Message = payoutQueryRes.msg;
-                enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
             }
             else if (payoutQueryRes.code == 99)
             {
                 if (payoutQueryRes.data.stat == "Processing" || payoutQueryRes.data.stat == "Transfering")
                 {
                     enquiryWithdrawResult.TransStatus = TransStatus.Pending;
-                    enquiryWithdrawResult.Amount = decimal.Parse(payoutQueryRes.data.amount);
+                    enquiryWithdrawResult.RequestAmount = decimal.Parse(payoutQueryRes.data.amount);
                     enquiryWithdrawResult.WithdrawId = payoutQueryRes.data.merchant_txn;
                     enquiryWithdrawResult.Message = payoutQueryRes.msg;
-                    enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
                 }
                 else if (payoutQueryRes.data.stat == "Refund")
                 {
                     enquiryWithdrawResult.TransStatus = TransStatus.Fail;
                     enquiryWithdrawResult.Message = payoutQueryRes.msg;
-                    enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
                 }
             }
             else if (payoutQueryRes.code == 17)
             {
                 enquiryWithdrawResult.TransStatus = TransStatus.Fail;
                 enquiryWithdrawResult.Message = payoutQueryRes.msg;
-                enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
             }
 
             return enquiryWithdrawResult;

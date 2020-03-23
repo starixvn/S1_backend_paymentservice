@@ -27,6 +27,11 @@ namespace PaymentService.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<WithdrawalRequest>("WithdrawalRequesPay_Get", new { WithdrawalId = withdrawalId }, commandType: CommandType.StoredProcedure);
         }
+        public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<WithdrawalRequest>("Service_WithdrawalRequesPayEnquiry_Get", commandType: CommandType.StoredProcedure);
+        }
 
         public int SetWithdrawalInfo(string transId, int siteId, IPay pay, string comment, string refId, string Operator, IEnumerable<int> forStatus, WithdrawalStatus status)
         {

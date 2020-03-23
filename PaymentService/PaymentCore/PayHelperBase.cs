@@ -80,13 +80,21 @@ namespace PaymentCore
         public string Comment { get; set; }
         public string RawContent { get; set; }
     }
-    public class EnquiryWithdrawResult
+    public interface IWithdrawResult
     {
         public TransStatus TransStatus { get; set; }
         public string Message { get; set; }
         public string WithdrawId { get; set; }
-        public decimal Amount { get; set; }
-        //public decimal Fee { get { return OrderAmount - FactAmount; } }
+        public decimal RequestAmount { get; set; }
+        public string ThirdId { get; set; }
+    }
+    public class EnquiryWithdrawResult : IWithdrawResult
+    {
+        public TransStatus TransStatus { get; set; }
+        public string Message { get; set; }
+        public string WithdrawId { get; set; }
+        public decimal RequestAmount { get; set; }
+        public string ThirdId { get; set; }
         public string RawContent { get; set; }
     }
     public class NotifyDepositResult : IDepositResult
@@ -101,7 +109,7 @@ namespace PaymentCore
         public string Comment { get; set; }
         public string Response { get; set; }
     }
-    public class NotifyWithdrawResult
+    public class NotifyWithdrawResult : IWithdrawResult
     {
         public TransStatus TransStatus { get; set; }
         public string Message { get; set; }
