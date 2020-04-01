@@ -162,7 +162,7 @@ namespace PaymentService.Controllers
 
             int withdrawalId = 0;
 
-            Match m = Regex.Match(transId, @"\w+");
+            Match m = Regex.Match(transId, @"\d+");
             int.TryParse(m.Value, out withdrawalId);
             string cTransId = $"W{common.GetEnv()}{withdrawalId}";
 
