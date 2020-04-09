@@ -83,7 +83,7 @@ namespace Payment.OneClickPay
         private class Payout
         {
             public int code { get; set; }
-            public string message { get; set; }
+            public string msg { get; set; }
             public int count { get; set; }
             public Data data { get; set; }
         }
@@ -106,7 +106,7 @@ namespace Payment.OneClickPay
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
             string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpGet(sUrl, sParam, creditReq.merchant_txn);
+            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.merchant_txn);
 
             Payout payout = new Payout();
             payout = JsonConvert.DeserializeObject<Payout>(sResponse);
@@ -115,14 +115,14 @@ namespace Payment.OneClickPay
             if (payout.code == 0)
             {
                 withdrawResult.Success = true;
-                withdrawResult.Message = payout.message;
-                withdrawResult.RawContent = payout.message;
+                withdrawResult.Message = payout.msg;
+                withdrawResult.RawContent = payout.msg;
             }
             else
             {
                 withdrawResult.Success = false;
-                withdrawResult.Message = payout.message;
-                withdrawResult.RawContent = payout.message;
+                withdrawResult.Message = payout.msg;
+                withdrawResult.RawContent = payout.msg;
             }
 
             return withdrawResult;
@@ -203,16 +203,7 @@ namespace Payment.OneClickPay
             string sign { get; set; }
         }
 
-        private class PayourQueryResPayout
-        {
-            public string bank_account { get; set; }
-            public string bank_name { get; set; }
-            public int bank_id { get; set; }
-            public string bank_account_name { get; set; }
-            public string bank_code { get; set; }
-        }
-
-        private class PayourQueryResData
+        public class PayoutQueryResData
         {
             public int id { get; set; }
             public string amount { get; set; }
@@ -222,16 +213,17 @@ namespace Payment.OneClickPay
             public string merchant_txn { get; set; }
             public string merchant_user { get; set; }
             public string stat { get; set; }
-            public PayourQueryResPayout data_payout { get; set; }
+            public string data_payout { get; set; }
+            public object refund_reason { get; set; }
             public string created_at { get; set; }
         }
 
-        private class PayoutQueryRes
+        public class PayoutQueryRes
         {
             public int code { get; set; }
-            public string message { get; set; }
+            public string msg { get; set; }
             public int count { get; set; }
-            public PayourQueryResData data { get; set; }
+            public PayoutQueryResData data { get; set; }
         }
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
@@ -246,7 +238,7 @@ namespace Payment.OneClickPay
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
             string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.merchant_txn);
+            string sResponse = HttpGet(sUrl, sParam, creditReq.merchant_txn);
             enquiryWithdrawResult.RawContent = sResponse;
             PayoutQueryRes payoutQueryRes = new PayoutQueryRes();
             payoutQueryRes = JsonConvert.DeserializeObject<PayoutQueryRes>(sResponse);
@@ -256,12 +248,14 @@ namespace Payment.OneClickPay
                 enquiryWithdrawResult.TransStatus = TransStatus.Success;
                 enquiryWithdrawResult.RequestAmount = decimal.Parse(payoutQueryRes.data.amount);
                 enquiryWithdrawResult.WithdrawId = payoutQueryRes.data.merchant_txn;
-                enquiryWithdrawResult.Message = payoutQueryRes.message;
+                enquiryWithdrawResult.Message = payoutQueryRes.data.stat;
+                enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
             }
             else if (payoutQueryRes.code == 18)
             {
                 enquiryWithdrawResult.TransStatus = TransStatus.Pending;
-                enquiryWithdrawResult.Message = payoutQueryRes.message;
+                enquiryWithdrawResult.Message = payoutQueryRes.data.stat;
+                enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
             }
             else if (payoutQueryRes.code == 99)
             {
@@ -270,23 +264,27 @@ namespace Payment.OneClickPay
                     enquiryWithdrawResult.TransStatus = TransStatus.Pending;
                     enquiryWithdrawResult.RequestAmount = decimal.Parse(payoutQueryRes.data.amount);
                     enquiryWithdrawResult.WithdrawId = payoutQueryRes.data.merchant_txn;
-                    enquiryWithdrawResult.Message = payoutQueryRes.message;
+                    enquiryWithdrawResult.Message = payoutQueryRes.data.stat;
+                    enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
                 }
                 else if (payoutQueryRes.data.stat == "Refund")
                 {
                     enquiryWithdrawResult.TransStatus = TransStatus.Fail;
-                    enquiryWithdrawResult.Message = payoutQueryRes.message;
+                    enquiryWithdrawResult.Message = payoutQueryRes.data.stat;
+                    enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
                 }
             }
             else if (payoutQueryRes.code == 17)
             {
                 enquiryWithdrawResult.TransStatus = TransStatus.Fail;
-                enquiryWithdrawResult.Message = payoutQueryRes.message;
+                enquiryWithdrawResult.Message = payoutQueryRes.data.stat;
+                enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
             }
             else
             {
                 enquiryWithdrawResult.TransStatus = TransStatus.Pending;
-                enquiryWithdrawResult.Message = payoutQueryRes.message;
+                enquiryWithdrawResult.Message = payoutQueryRes.data.stat;
+                enquiryWithdrawResult.RawContent = payoutQueryRes.msg;
             }
 
             return enquiryWithdrawResult;
