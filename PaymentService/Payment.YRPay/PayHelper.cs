@@ -20,37 +20,49 @@ namespace Payment.YRPay
             public string created { set; get; }
             public string paid { set; get; }
             public string paytype { set; get; }
-            public string extend { set; get; }
-            public string orig_amount { set; get; }
             public string is_mobile { set; get; }
             public string is_wap { set; get; }
+            public string extend { set; get; }
+            public string orig_amount { set; get; }
             public string sign { set; get; }
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            var data = FromJson<CallBackDebitReq>(ToJson(bodyContent));
+            var data = FromJson<CallBackDebitReq>(ToJson(formData));
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
+            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
+            string sign = ToMD5(p);
 
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.orderid;
             oNotify.ThirdId = data.orderid;
             oNotify.Message = data.status;
-
-            if (data.status == "verified")
+            if (sign == data.sign)
             {
-                oNotify.TransStatus = TransStatus.Success;
-                oNotify.RequestAmount = decimal.Parse(data.amount);
-                oNotify.Response = "success";
-            }
-            else if (data.status == "revoked")
-            {
-                oNotify.TransStatus = TransStatus.Fail;
-                oNotify.Response = "success";
+                if (data.status == "verified")
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = decimal.Parse(data.amount);
+                    oNotify.Response = "success";
+                }
+                else if (data.status == "revoked")
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Response = "success";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Pending;
+                    oNotify.Response = "success";
+                }
             }
             else
             {
                 oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Response = "success";
+                oNotify.Message = "Signature error";
+                oNotify.Response = "Signature error";
+                oNotify.Response = "failed";
             }
 
             return oNotify;
@@ -58,7 +70,11 @@ namespace Payment.YRPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            var data = FromJson<CallBackDebitReq>(bodyContent);
+            var data = FromJson<CallBackDebitReq>(ToJson(formData));
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
+            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
+            string sign = ToMD5(p);
 
             NotifyDepositResult oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.orderid;
@@ -66,23 +82,33 @@ namespace Payment.YRPay
             oNotify.Comment = data.status;
             oNotify.Message = data.status;
 
-            if (data.status == "verified")
+            if (sign == data.sign)
             {
-                oNotify.TransStatus = TransStatus.Success;
-                oNotify.RequestAmount = decimal.Parse(data.amount);
-                oNotify.ActualAmount = decimal.Parse(data.amount);
+                if (data.status == "verified")
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = decimal.Parse(data.amount);
+                    oNotify.ActualAmount = decimal.Parse(data.amount);
 
-                oNotify.Response = "success";
-            }
-            else if (data.status == "revoked")
-            {
-                oNotify.TransStatus = TransStatus.Fail;
-                oNotify.Response = "success";
+                    oNotify.Response = "success";
+                }
+                else if (data.status == "revoked")
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Response = "success";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Pending;
+                    oNotify.Response = "success";
+                }
             }
             else
             {
                 oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Response = "success";
+                oNotify.Comment = "Signature error";
+                oNotify.Message = "Signature error";
+                oNotify.Response = "failed";
             }
 
             return oNotify;
@@ -168,7 +194,7 @@ namespace Payment.YRPay
             formData.Add("notifyurl", inputs["CallBackUrl"]);
             if (inputs["PayCode"] != null)
             {
-                if (inputs["PayCode"] == "ALIPAY" || inputs["PayCode"] == "WXPAY" || inputs["PayCode"] == "UNIPAY")
+                if (inputs["PayCode"] =="ALIPAY" || inputs["PayCode"] == "WXPAY" || inputs["PayCode"] == "UNIPAY")
                     formData.Add("paytype", "qrcode");
                 else
                     formData.Add("paytype", "quick");
@@ -179,13 +205,13 @@ namespace Payment.YRPay
                 formData.Add("paytype", "online");
                 formData.Add("bankflag", inputs["BankCode"]);
             }
-
+            
             formData.Add("syncurl", "");
             formData.Add("cardname", "");
             formData.Add("extend", "");
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
+            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}"; 
             formData.Add("sign", ToMD5(p));
 
             DepositResult oDepositResult = new DepositResult();
