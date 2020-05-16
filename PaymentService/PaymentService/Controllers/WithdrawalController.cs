@@ -88,7 +88,7 @@ namespace PaymentService.Controllers
 
             var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
             
-            WithReq.Add("PayCurrencyId", payCurrency.PayCurrencyId);
+            WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
             //WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
             WithReq.Add("OutgoingIp", outgoingIp);
             WithReq.Add("CustId", custInfo.CustId.ToString());
