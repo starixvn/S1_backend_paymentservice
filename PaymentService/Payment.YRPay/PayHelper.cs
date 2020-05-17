@@ -29,7 +29,7 @@ namespace Payment.YRPay
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            var data = FromJson<CallBackDebitReq>(ToJson(formData));
+            var data = FromJson<CallBackDebitReq>(bodyContent);
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
             string sign = ToMD5(p);
@@ -70,7 +70,7 @@ namespace Payment.YRPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            var data = FromJson<CallBackDebitReq>(ToJson(formData));
+            var data = FromJson<CallBackDebitReq>(bodyContent);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
@@ -87,7 +87,7 @@ namespace Payment.YRPay
                 if (data.status == "verified")
                 {
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.amount);
+                    oNotify.RequestAmount = decimal.Parse(data.orig_amount);
                     oNotify.ActualAmount = decimal.Parse(data.amount);
 
                     oNotify.Response = "success";
