@@ -1,0 +1,260 @@
+﻿using Newtonsoft.Json;
+using PaymentCore;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+
+namespace Payment.Fuli
+{
+    class PayHelper : PayHelperBase
+    {
+        private class CallBackWithdrawalReq
+        {
+            public string requestId { get; set; }
+            public string result { get; set; }
+            public string sum { get; set; }
+            public string totalSum { get; set; }
+            public string balance { get; set; }
+            public string canUsedBalance { get; set; }
+            public string frozenBalance { get; set; }
+            public string unsettledBalance { get; set; }
+            public string payType { get; set; }
+            public string bankAccount { get; set; }
+            public string bankName { get; set; }
+            public string name { get; set; }
+            public string requestTime { get; set; }
+            public string dealTime { get; set; }
+            public string noticeType { get; set; }
+            public string failReason { get; set; }
+            public string signature { get; set; }
+        }
+
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        {
+            var data = FromJson<CallBackWithdrawalReq>(ToJson(formData));
+            var p = $"{data.requestId}{data.result}{data.sum}{data.balance}";
+            string sign = ToHMACSMD5(p, payResource["key"]);
+
+            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            oNotify.WithdrawId = data.requestId;
+            oNotify.ThirdId = data.requestId;
+            oNotify.Message = data.result;
+            if (sign == data.signature)
+            {
+                if (data.result == "00000")
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = decimal.Parse(data.sum);
+                    oNotify.Response = "success";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Response = "success";
+                    oNotify.Message = data.failReason;
+                }
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Message = "Signature error";
+                oNotify.Response = "Signature error";
+            }
+
+            return oNotify;
+        }
+
+        private class CallBackDebitReq
+        {
+            public string requestId { get; set; }
+            public string description { get; set; }
+            public string tradeId { get; set; }
+            public string fiscalDate { get; set; }
+            public string payType { get; set; }
+            public string bankCode { get; set; }
+            public string totalPrice { get; set; }
+            public string tradeAmount { get; set; }
+            public string tradeFee { get; set; }
+            public string status { get; set; }
+            public string endTime { get; set; }
+            public string userIdIdentity { get; set; }
+            public string couponFe { get; set; }
+            public string feeType { get; set; }
+            public string bankType { get; set; }
+            public string resultSignature { get; set; }
+        }
+
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        {
+            var data = FromJson<CallBackDebitReq>(ToJson(formData));
+            var p = $"{data.requestId}{data.tradeId}{data.fiscalDate}{data.description}{data.totalPrice}{data.tradeAmount}{data.tradeFee}";
+            string sign = ToHMACSMD5(p, payResource["key"]);
+
+            NotifyDepositResult oNotify = new NotifyDepositResult();
+            oNotify.DepositId = data.requestId;
+            oNotify.ThirdId = data.tradeId;
+            oNotify.Comment = data.description;
+            oNotify.Message = data.status;
+
+            if (sign == data.resultSignature)
+            {
+                if (data.status == "2")
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = decimal.Parse(data.totalPrice);
+                    oNotify.ActualAmount = decimal.Parse(data.tradeAmount);
+                    oNotify.Response = "success";
+                }
+                else 
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Response = "success";
+                }
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Comment = "Signature error";
+                oNotify.Message = "Signature error";
+                oNotify.Response = "failed";
+            }
+
+            return oNotify;
+        }
+
+        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        private class WithdrawalRes
+        {
+            public string requestId { get; set; }
+            public string result { get; set; }
+            public string sum { get; set; }
+            public string signature { get; set; }
+        }
+
+        public override WithdrawResult Credit(Dictionary<string, string> inputs)
+        {
+            string sUrl = inputs["PayOut"];
+            Dictionary<string, string> formData = new Dictionary<string, string>();
+            formData.Add("requestId", inputs["TransID"]);
+            formData.Add("merchantCode", inputs["merchant_no"]);
+            formData.Add("transferType", "1");
+            decimal amount = decimal.Parse(inputs["Amount"]);
+            formData.Add("sum", amount.ToString("#"));
+            formData.Add("accountType", "1");
+            formData.Add("unionBankNum", "000000");
+            formData.Add("branchBankName", toGBK("无"));
+            formData.Add("openBankName", toGBK("无"));
+            formData.Add("openBankProvince", toGBK("无"));
+            formData.Add("openBankCity", toGBK("无"));
+            formData.Add("accountName", toGBK(inputs["AccountName"]));
+            formData.Add("bankCode", inputs["BankCode"]);
+            formData.Add("bankAccount", inputs["AccountNo"]);
+            formData.Add("reason", toGBK("无"));
+            formData.Add("noticeUrl", inputs["CallBackUrl"]);
+
+            string p = $"{formData["requestId"]}{formData["merchantCode"]}{formData["transferType"]}{formData["sum"]}{formData["accountType"]}{formData["unionBankNum"]}" +
+                        $"{formData["branchBankName"]}{formData["openBankName"]}{formData["openBankProvince"]}{formData["openBankCity"]}{formData["accountName"]}{formData["bankCode"]}" +
+                        $"{formData["bankAccount"]}{formData["reason"]}{formData["noticeUrl"]}";
+            formData.Add("signature", ToHMACSMD5(p, inputs["key"]));
+
+            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["requestId"]);
+
+            WithdrawResult withdrawResult = new WithdrawResult();
+            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
+
+            if (withdrawalRes.result == "00000" || withdrawalRes.result == "00001")
+            {
+                withdrawResult.Success = true;
+                withdrawResult.Message = withdrawalRes.result;
+            }
+            else
+            {
+                withdrawResult.Success = false;
+                //withdrawResult.Message = withdrawalRes.result;
+                var big5 = System.Text.Encoding.GetEncoding(936);
+                withdrawResult.Message = $"Name : {big5.EncodingName} , CodePage :{big5.CodePage}";
+            }
+
+            return withdrawResult;
+        }
+
+        private class DepositRes
+        {
+            public string requestId { get; set; }
+            public string result { get; set; }
+            public string codeUrl { get; set; }
+            public string codeImgString { get; set; }
+            public string codeImgUrl { get; set; }
+            public string payId { get; set; }
+            public string passThrough { get; set; }
+            public string resultSignature { get; set; }
+        }
+
+        public override DepositResult Debit(Dictionary<string, string> inputs)
+        {
+            string sUrl = inputs["host"];
+            Dictionary<string, string> formData = new Dictionary<string, string>();
+            formData.Add("tradeCode", "IAZ1002");
+            formData.Add("requestId", inputs["TransID"]);
+            formData.Add("merchantCode", inputs["merchant_no"]);
+            formData.Add("totalBizType", "BIZ01100");
+            decimal amount = decimal.Parse(inputs["Amount"]);
+            formData.Add("totalPrice", amount.ToString("#"));
+            formData.Add("goodsDesc", toGBK("无"));
+            //formData.Add("goodsDesc", "no");
+            formData.Add("rePayTimeOut", "0");
+            formData.Add("noticeurl", inputs["CallBackUrl"]);
+            formData.Add("encode", "GBK");
+            formData.Add("remoteIp", inputs["ClientIP"]);
+            formData.Add("payType", inputs["PayCode"]);
+            formData.Add("productId", toGBK("无"));
+            formData.Add("productName", toGBK("无"));
+            //formData.Add("productId", "no");
+            //formData.Add("productName", "no");
+            formData.Add("fund", formData["totalPrice"]);
+            formData.Add("merAcct", inputs["TransID"]);
+            formData.Add("bizType", "BIZ01100");
+            formData.Add("productNumber", "1");
+            string p = $"{formData["requestId"]}{formData["merchantCode"]}{formData["totalBizType"]}{formData["totalPrice"]}{formData["noticeurl"]}{formData["remoteIp"]}{formData["payType"]}";
+            formData.Add("mersignature", ToHMACSMD5(p, inputs["key"]));
+
+            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["requestId"]);
+
+            DepositRes depositRes = new DepositRes();
+            depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
+            DepositResult oDepositResult = new DepositResult();
+            if (depositRes.result == "00000")
+            {
+                oDepositResult.Url = depositRes.codeUrl;
+                oDepositResult.Success = true;
+                oDepositResult.FormData = null;
+                oDepositResult.Message = "";
+            }
+            else
+            {
+                oDepositResult.Success = false;
+            }
+
+            return oDepositResult;
+        }
+
+        public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

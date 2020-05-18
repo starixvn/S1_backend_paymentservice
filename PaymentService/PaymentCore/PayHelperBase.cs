@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
 
 namespace PaymentCore
 {
@@ -284,6 +285,18 @@ namespace PaymentCore
             }
         }
 
+        protected string ToHMACSMD5(string encodeStr, string key)
+        {
+            var encoding = new System.Text.UTF8Encoding();
+            byte[] keyByte = encoding.GetBytes(key);
+            byte[] messageBytes = encoding.GetBytes(encodeStr);
+            using (var hmacMD5 = new HMACMD5(keyByte))
+            {
+                byte[] hashMessage = hmacMD5.ComputeHash(messageBytes);
+                return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
+            }
+        }
+
         protected string GetRandomString4(int length)
         {
             var str = "0123456789abcdefghijklmnopqrstuvwxyz";//ABCDEFGHIJKLMNOPQRSTUVWXYZ
@@ -370,6 +383,36 @@ namespace PaymentCore
                 return 0;
             }
         }
-    }
 
+        protected string toGBK(string str)
+        {
+            //Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            //var encodings = Encoding.GetEncodings();
+
+
+            //byte[] bs = Encoding.GetEncoding("UTF-8").GetBytes(str);
+            //bs = Encoding.Convert(Encoding.GetEncoding("UTF-8"), Encoding.GetEncoding("GBK"), bs);
+            //return Encoding.GetEncoding("GBK").GetString(bs);
+            return str;
+
+            byte[] buffer = Encoding.UTF8.GetBytes(str);
+
+            string result = Encoding.GetEncoding(936).GetString(buffer);
+
+            string result2 = Encoding.GetEncoding(950).GetString(buffer);
+            
+            string result3 = Encoding.GetEncoding(1200).GetString(buffer);
+
+            string result4 = Encoding.GetEncoding(65001).GetString(buffer);
+
+            var big5 = Encoding.GetEncoding(936);
+            // withdrawResult.Message = $"Name : {big5.EncodingName} , CodePage :{big5.CodePage}";
+
+
+   
+
+            return result;
+
+        }
+    }
 }
