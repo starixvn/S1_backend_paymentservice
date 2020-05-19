@@ -46,7 +46,7 @@ namespace Payment.YRPay
                     oNotify.RequestAmount = decimal.Parse(data.amount);
                     oNotify.Response = "success";
                 }
-                else if (data.status.Equals("revoked", StringComparison.OrdinalIgnoreCase))
+                else if (data.status.Equals("revoked", StringComparison.OrdinalIgnoreCase) || data.status.Equals("timeout", StringComparison.OrdinalIgnoreCase))
                 {
                     oNotify.TransStatus = TransStatus.Fail;
                     oNotify.Response = "success";
@@ -92,7 +92,7 @@ namespace Payment.YRPay
 
                     oNotify.Response = "success";
                 }
-                else if (data.status.Equals("revoked", StringComparison.OrdinalIgnoreCase))
+                else if (data.status.Equals("revoked", StringComparison.OrdinalIgnoreCase) || data.status.Equals("timeout", StringComparison.OrdinalIgnoreCase))
                 {
                     oNotify.TransStatus = TransStatus.Fail;
                     oNotify.Response = "success";
