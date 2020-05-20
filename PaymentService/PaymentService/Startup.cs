@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -52,7 +52,7 @@ namespace PaymentService
 
             PaymentCore.PayHelperBase.proxyHost = Configuration.GetValue<string>("ProxyHost");
             PaymentCore.PayHelperBase.proxyPort = Configuration.GetValue<int>("ProxyPort");
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             services.AddControllers();
         }
 
@@ -65,6 +65,7 @@ namespace PaymentService
             }
 
             app.UseRouting();
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             //app.UseAuthorization();
 

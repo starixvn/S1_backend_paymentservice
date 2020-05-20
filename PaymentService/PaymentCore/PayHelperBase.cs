@@ -220,6 +220,36 @@ namespace PaymentCore
             return responseFromServer;
         }
 
+        protected string HttpPostGBK(string url, string parameters, string contentType, string transID)
+        {
+            WebRequest request = WebRequest.Create(url);
+            request.Method = "POST";
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+
+            string postData = parameters;
+            byte[] byteArray = UTF8ToGBK(parameters);
+            request.ContentType = contentType;
+            request.ContentLength = byteArray.Length;
+
+            Stream dataStream = request.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            using WebResponse response = request.GetResponse();
+
+            dataStream = response.GetResponseStream();
+            using StreamReader reader = new StreamReader(dataStream);
+            string responseFromServer = reader.ReadToEnd();
+            reader.Close();
+            dataStream.Close();
+            response.Close();
+            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
+
+            return responseFromServer;
+        }
+
         public void DoInsertPaymentLog(string url, string input, string output, string SerialID)
         {
             InsertPaymentLog?.Invoke(url, input, output, SerialID);
@@ -258,7 +288,6 @@ namespace PaymentCore
                 return md5;
             }
         }
-
 
         protected string ToSHA1(string encodeStr)
         {
@@ -384,34 +413,16 @@ namespace PaymentCore
             }
         }
 
-        protected string toGBK(string str)
+        protected byte[] UTF8ToGBK(string str)
         {
-            //Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            //var encodings = Encoding.GetEncodings();
+            Encoding GBK = Encoding.GetEncoding("GB2312"); // GBK 编码
+            Encoding UTF8 = new UTF8Encoding(true); // UTF-8 编码
 
+            byte[] utf8bytes = Encoding.UTF8.GetBytes(str);
+            byte[] gbkbytes = Encoding.Convert(UTF8, GBK, utf8bytes);
+            //string gbktext = GBK.GetString(gbkbytes);
 
-            //byte[] bs = Encoding.GetEncoding("UTF-8").GetBytes(str);
-            //bs = Encoding.Convert(Encoding.GetEncoding("UTF-8"), Encoding.GetEncoding("GBK"), bs);
-            //return Encoding.GetEncoding("GBK").GetString(bs);
-            return str;
-
-            byte[] buffer = Encoding.UTF8.GetBytes(str);
-
-            string result = Encoding.GetEncoding(936).GetString(buffer);
-
-            string result2 = Encoding.GetEncoding(950).GetString(buffer);
-            
-            string result3 = Encoding.GetEncoding(1200).GetString(buffer);
-
-            string result4 = Encoding.GetEncoding(65001).GetString(buffer);
-
-            var big5 = Encoding.GetEncoding(936);
-            // withdrawResult.Message = $"Name : {big5.EncodingName} , CodePage :{big5.CodePage}";
-
-
-   
-
-            return result;
+            return gbkbytes;
 
         }
     }

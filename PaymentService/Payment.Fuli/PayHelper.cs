@@ -148,14 +148,14 @@ namespace Payment.Fuli
             formData.Add("sum", amount.ToString("#"));
             formData.Add("accountType", "1");
             formData.Add("unionBankNum", "000000");
-            formData.Add("branchBankName", toGBK("无"));
-            formData.Add("openBankName", toGBK("无"));
-            formData.Add("openBankProvince", toGBK("无"));
-            formData.Add("openBankCity", toGBK("无"));
-            formData.Add("accountName", toGBK(inputs["AccountName"]));
+            formData.Add("branchBankName", "无");
+            formData.Add("openBankName", "无");
+            formData.Add("openBankProvince", "无");
+            formData.Add("openBankCity", "无");
+            formData.Add("accountName", inputs["AccountName"]);
             formData.Add("bankCode", inputs["BankCode"]);
             formData.Add("bankAccount", inputs["AccountNo"]);
-            formData.Add("reason", toGBK("无"));
+            formData.Add("reason", "无");
             formData.Add("noticeUrl", inputs["CallBackUrl"]);
 
             string p = $"{formData["requestId"]}{formData["merchantCode"]}{formData["transferType"]}{formData["sum"]}{formData["accountType"]}{formData["unionBankNum"]}" +
@@ -164,7 +164,7 @@ namespace Payment.Fuli
             formData.Add("signature", ToHMACSMD5(p, inputs["key"]));
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["requestId"]);
+            string sResponse = HttpPostGBK(sUrl, sParam, "application/x-www-form-urlencoded", formData["requestId"]);
 
             WithdrawResult withdrawResult = new WithdrawResult();
             WithdrawalRes withdrawalRes = new WithdrawalRes();
@@ -178,9 +178,7 @@ namespace Payment.Fuli
             else
             {
                 withdrawResult.Success = false;
-                //withdrawResult.Message = withdrawalRes.result;
-                var big5 = System.Text.Encoding.GetEncoding(936);
-                withdrawResult.Message = $"Name : {big5.EncodingName} , CodePage :{big5.CodePage}";
+                withdrawResult.Message = withdrawalRes.result;
             }
 
             return withdrawResult;
@@ -208,17 +206,14 @@ namespace Payment.Fuli
             formData.Add("totalBizType", "BIZ01100");
             decimal amount = decimal.Parse(inputs["Amount"]);
             formData.Add("totalPrice", amount.ToString("#"));
-            formData.Add("goodsDesc", toGBK("无"));
-            //formData.Add("goodsDesc", "no");
+            formData.Add("goodsDesc", "无");
             formData.Add("rePayTimeOut", "0");
             formData.Add("noticeurl", inputs["CallBackUrl"]);
             formData.Add("encode", "GBK");
             formData.Add("remoteIp", inputs["ClientIP"]);
             formData.Add("payType", inputs["PayCode"]);
-            formData.Add("productId", toGBK("无"));
-            formData.Add("productName", toGBK("无"));
-            //formData.Add("productId", "no");
-            //formData.Add("productName", "no");
+            formData.Add("productId", "无");
+            formData.Add("productName", "无");;
             formData.Add("fund", formData["totalPrice"]);
             formData.Add("merAcct", inputs["TransID"]);
             formData.Add("bizType", "BIZ01100");
@@ -227,7 +222,7 @@ namespace Payment.Fuli
             formData.Add("mersignature", ToHMACSMD5(p, inputs["key"]));
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["requestId"]);
+            string sResponse = HttpPostGBK(sUrl, sParam, "application/x-www-form-urlencoded", formData["requestId"]);
 
             DepositRes depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
