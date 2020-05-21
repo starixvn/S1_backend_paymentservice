@@ -52,7 +52,17 @@ namespace Payment.Fuli
                 {
                     oNotify.TransStatus = TransStatus.Fail;
                     oNotify.Response = "success";
-                    oNotify.Message = data.failReason;
+                    string failReason = "";
+                    try
+                    {
+                        failReason = System.Web.HttpUtility.UrlDecode(data.failReason, System.Text.Encoding.GetEncoding("GB2312"));
+                    }
+                    catch(Exception ex)
+                    {
+                        failReason = data.failReason;
+                    }
+
+                    oNotify.Message = failReason;
                 }
             }
             else
