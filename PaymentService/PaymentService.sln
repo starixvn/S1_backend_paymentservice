@@ -27,6 +27,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.Xingji", "Payment.X
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.Fuli", "Payment.Fuli\Payment.Fuli.csproj", "{9CB132E6-5382-4B06-A064-16EBE55212C4}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.FuliH5", "Payment.FuliH5\Payment.FuliH5.csproj", "{0E523089-3558-41F0-8A9B-5787161521EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,10 @@ Global
 		{9CB132E6-5382-4B06-A064-16EBE55212C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9CB132E6-5382-4B06-A064-16EBE55212C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9CB132E6-5382-4B06-A064-16EBE55212C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E523089-3558-41F0-8A9B-5787161521EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E523089-3558-41F0-8A9B-5787161521EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E523089-3558-41F0-8A9B-5787161521EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E523089-3558-41F0-8A9B-5787161521EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

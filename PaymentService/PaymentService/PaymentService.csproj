@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Payment.CirclePay\Payment.CirclePay.csproj" />
     <ProjectReference Include="..\Payment.Eeziepay\Payment.Eeziepay.csproj" />
+    <ProjectReference Include="..\Payment.FuliH5\Payment.FuliH5.csproj" />
     <ProjectReference Include="..\Payment.Fuli\Payment.Fuli.csproj" />
     <ProjectReference Include="..\Payment.Help2Pay\Payment.Help2Pay.csproj" />
     <ProjectReference Include="..\Payment.OneClickPay\Payment.OneClickPay.csproj" />
