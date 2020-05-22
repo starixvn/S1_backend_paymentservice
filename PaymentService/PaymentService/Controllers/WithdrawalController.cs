@@ -96,6 +96,7 @@ namespace PaymentService.Controllers
             WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
             WithReq.Add("PayCode", onlineBank.PayCode);
             WithReq.Add("BankCode", onlineBank.BankCode);
+            WithReq.Add("BankName", onlineBank.BankName);
             WithReq.Add("AccountName", reqWithdrawal.AccountName);
             WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
             var callBackUrl = configuration.GetValue<string>("CallBack");

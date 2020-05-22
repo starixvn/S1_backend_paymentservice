@@ -29,6 +29,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.Fuli", "Payment.Ful
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.FuliH5", "Payment.FuliH5\Payment.FuliH5.csproj", "{0E523089-3558-41F0-8A9B-5787161521EE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.WonderfulSky", "Payment.WonderfulSky\Payment.WonderfulSky.csproj", "{EFB2B3AD-1163-4BB8-B52D-8819EEDB8354}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,10 @@ Global
 		{0E523089-3558-41F0-8A9B-5787161521EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E523089-3558-41F0-8A9B-5787161521EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E523089-3558-41F0-8A9B-5787161521EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFB2B3AD-1163-4BB8-B52D-8819EEDB8354}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFB2B3AD-1163-4BB8-B52D-8819EEDB8354}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFB2B3AD-1163-4BB8-B52D-8819EEDB8354}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFB2B3AD-1163-4BB8-B52D-8819EEDB8354}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
