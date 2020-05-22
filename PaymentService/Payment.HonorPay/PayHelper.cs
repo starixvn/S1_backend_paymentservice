@@ -25,7 +25,7 @@ namespace Payment.HonorPay
         {
             var data = FromJson<CallBackWithdrawalReq>(ToJson(formData));
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&{payResource["key"]}";
+            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
 
             string sign = ToHMACSHA256(p, payResource["key"]).ToUpper();
 
@@ -123,6 +123,7 @@ namespace Payment.HonorPay
             public string orderNo { get; set; }
             public string amount { get; set; }
             public string fee { get; set; }
+            public string retMsg { get; set; }
         }
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
@@ -134,20 +135,22 @@ namespace Payment.HonorPay
             formData.Add("orderNo", inputs["TransID"]);
             decimal amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
-            formData.Add("bankName", inputs["BankName"]);
-            formData.Add("bankHolder", inputs["AccountName"]);
-            formData.Add("bankCode", inputs["BankCode"]);
+            formData.Add("bankName", UrlEncode(inputs["BankName"]));
+            formData.Add("bankHolder", UrlEncode(inputs["AccountName"]));
             formData.Add("bankNumber", inputs["AccountNo"]);
             formData.Add("bankBranch", "");
             formData.Add("bankProvince", "");
             formData.Add("bankCity", "");
-            formData.Add("nonceStr", inputs["CallBackUrl"]);
-            formData.Add("notifyURL", inputs["CallBackUrl"]);
+            formData.Add("nonceStr", GetRandomString4(20));
+            formData.Add("notifyURL", UrlEncode(inputs["CallBackUrl"]));
+
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&{inputs["key"]}";
-
-            formData.Add("sign", ToHMACSHA256(p, inputs["key"]));
+            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
+            formData.Add("sign", ToHMACSHA256(p, inputs["key"]).ToUpper());
+            formData["bankName"] = inputs["BankName"];
+            formData["bankHolder"] = inputs["AccountName"];
+            formData["notifyURL"] = inputs["CallBackUrl"];
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"]);
@@ -164,7 +167,7 @@ namespace Payment.HonorPay
             else
             {
                 withdrawResult.Success = false;
-                withdrawResult.Message = withdrawalRes.retCode;
+                withdrawResult.Message = withdrawalRes.retMsg;
             }
 
             return withdrawResult;

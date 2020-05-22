@@ -110,7 +110,7 @@ namespace PaymentService.Controllers
             DepReq.Add("TransID", reqDeposit.TransId);
             DepReq.Add("Amount", reqDeposit.Amount.ToString());
             DepReq.Add("PayCode", onlineBank.PayCode);
-            DepReq.Add("BankCode", onlineBank.BankName);
+            DepReq.Add("BankName", onlineBank.BankName);
             DepReq.Add("BankCode", onlineBank.BankCode);
             DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
             DepReq.Add("PayLangId", payLangId);

@@ -187,6 +187,38 @@ namespace PaymentCore
             return responseFromServer;
         }
 
+        protected string HttpPost(string url, string parameters, string contentType, string accesstoken, string transID)
+        {
+            WebRequest request = WebRequest.Create(url);
+
+            request.Method = "POST";
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+
+            string postData = parameters;
+            byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+            request.ContentType = contentType;
+            request.ContentLength = byteArray.Length;
+            request.Headers.Add("Authorization", "Bearer " + accesstoken);
+
+            Stream dataStream = request.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            using WebResponse response = request.GetResponse();
+
+            dataStream = response.GetResponseStream();
+            using StreamReader reader = new StreamReader(dataStream);
+            string responseFromServer = reader.ReadToEnd();
+            reader.Close();
+            dataStream.Close();
+            response.Close();
+            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
+
+            return responseFromServer;
+        }
+
         protected string HttpPost(string url, string parameters, string contentType, string username, string password, string transID)
         {
             WebRequest request = WebRequest.Create(url);
@@ -412,7 +444,6 @@ namespace PaymentCore
                 return 0;
             }
         }
-
         protected byte[] UTF8ToGBK(string str)
         {
             Encoding GBK = Encoding.GetEncoding("GB2312"); // GBK 编码
@@ -423,7 +454,23 @@ namespace PaymentCore
             //string gbktext = GBK.GetString(gbkbytes);
 
             return gbkbytes;
+        }
 
+        protected string UrlEncode(string str)
+        {
+            StringBuilder builder = new StringBuilder();
+            foreach (char c in str)
+            {
+                if (HttpUtility.UrlEncode(c.ToString()).Length > 1)
+                {
+                    builder.Append(HttpUtility.UrlEncode(c.ToString()).ToUpper());
+                }
+                else
+                {
+                    builder.Append(c);
+                }
+            }
+            return builder.ToString();
         }
     }
 }
