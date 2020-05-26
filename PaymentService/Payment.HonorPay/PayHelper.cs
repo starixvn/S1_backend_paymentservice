@@ -198,7 +198,6 @@ namespace Payment.HonorPay
             formData.Add("ip", inputs["ClientIP"]);
             formData.Add("notifyURL", inputs["CallBackUrl"]);
             formData.Add("orderNo", inputs["TransID"]);
-            formData.Add("bankName", inputs["BankName"]);
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"]);
