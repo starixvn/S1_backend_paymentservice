@@ -76,16 +76,19 @@ namespace Payment.PatekPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
+            NotifyDepositResult oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
+            oNotify.Comment = $"{data.status}-{data.remark}";
             data.endtime = System.Web.HttpUtility.UrlEncode(data.endtime).ToLower();
+            data.remark = System.Web.HttpUtility.UrlEncode(data.remark).ToLower();
+
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             string p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&secret={payResource["key"]}";
             string sign = ToMD5(p).ToLower();
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.outtradeno;
             oNotify.ThirdId = data.tradeno;
-            oNotify.Comment = data.status;
+            //oNotify.Comment = data.status;
             oNotify.Message = data.status;
 
             if (sign == data.sign)
@@ -102,7 +105,7 @@ namespace Payment.PatekPay
                     oNotify.TransStatus = TransStatus.Pending;
                     oNotify.Response = "success";
                 }
-                else 
+                else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
                     oNotify.Response = "success";
@@ -139,7 +142,7 @@ namespace Payment.PatekPay
         {
             string sUrl = inputs["PayOut"];
             Dictionary<string, string> formData = new Dictionary<string, string>();
-   
+
             formData.Add("merchant", inputs["merchant_no"]);
             formData.Add("outtransferno", inputs["TransID"].ToLower());
             decimal amount = decimal.Parse(inputs["Amount"]);
