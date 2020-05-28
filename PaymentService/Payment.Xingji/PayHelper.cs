@@ -202,7 +202,7 @@ namespace Payment.Xingji
         private class DepositRes
         {
             public string status { get; set; }
-
+            public string msg { get; set; }
             public DepositResData Data { get; set; }
         }
 
@@ -217,6 +217,7 @@ namespace Payment.Xingji
             public string pay_url { get; set; }
 
             public string h5_url { get; set; }
+            public string code { get; set; }
         }
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
