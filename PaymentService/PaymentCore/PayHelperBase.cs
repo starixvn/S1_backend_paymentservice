@@ -451,9 +451,20 @@ namespace PaymentCore
 
             byte[] utf8bytes = Encoding.UTF8.GetBytes(str);
             byte[] gbkbytes = Encoding.Convert(UTF8, GBK, utf8bytes);
-            //string gbktext = GBK.GetString(gbkbytes);
 
             return gbkbytes;
+        }
+
+        protected string GBKToUTF8(string str)
+        {
+            Encoding GBK = Encoding.GetEncoding("GB2312"); // GBK 编码
+            Encoding UTF8 = new UTF8Encoding(true); // UTF-8 编码
+
+            byte[] gbkbytes = GBK.GetBytes(str);
+            byte[] utf8bytes = Encoding.Convert(GBK, UTF8, gbkbytes);
+            string toString = UTF8.GetString(utf8bytes);
+
+            return toString;
         }
 
         protected string UrlEncode(string str)
@@ -471,6 +482,16 @@ namespace PaymentCore
                 }
             }
             return builder.ToString();
+        }
+
+        protected string RSASign(string privateKey, string data)
+        {
+            var rsa = RSA.Create();
+            rsa.ImportRSAPrivateKey(Convert.FromBase64String(privateKey), out _);
+            byte[] bytes = rsa.SignData(Encoding.UTF8.GetBytes(data), HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
+            rsa.VerifyData(Encoding.UTF8.GetBytes(data), bytes, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
+            string signature = Convert.ToBase64String(bytes);
+            return signature;
         }
     }
 }

@@ -11,10 +11,6 @@ namespace Payment.WonderfulSky
 {
     class PayHelper : PayHelperBase
     {
-        private readonly string publicKey = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAlPl9FrmjiXGJUkgYMtnfaMm08BdmUHqxy0IIfk1oXTvT40F9hl41D4xvxmnYImHk2B0BOLTQJCkDOacBUJMTjzhCD7ptpQEjS2fBw+OKp81J6n2XlD6yy9XmYweojc3dCvLhveDVYBsE6xZVor4LqL9klTDsZ5WKtRbe2lpUBA5rWVuDl9OThOCTHYqc+79qMnSNBTA1Cn0r9JXFt4bTggqzVoqGAVI63DDmJXGcTx8//Dpc/eyflzk8wx4uLdOgDHBLMzIJnLSiZwDA3tcIK/1dWE2WyHSnwgPfTXBGW02ztC39zD0nlC3vK09GBxFGhDIQhLBlvS6EN+hSrHzW9WiysoKO+W3WT/SrAA9RZ/RtSb/uRhJ6bUle/WtIXQOjE/JAUCPE3Z7kAQtKF2sPWu85WW3K6y0Bgx+1TCNrxMnENeyb0FyKnmUWOCz/1A7E5dT5X3gTnVofKOgi14YI6QQ4OXRZSI76sOPrL4s+twauhF5QwbbbLhRO2H3kbdSOh5RjHZ/35ZMILk6Q61XzZLK/YSxbV9S/ZyJhk+ft0LlP84gTBKPKCnq3wfAp8hZ5ohuIxlsfKBohqu/HNqKYN8c6m1Ww5fUL2ZSXLPPhcluvDGpDeEju1EJGlUJdZMR9rdfxOFLMY2ZnuKGPPsLXj+2HG3zBgBOwDp8DkmtrcIECAwEAAQ==";
-        private readonly string privateKey = "MIIJJwIBAAKCAgEAlPl9FrmjiXGJUkgYMtnfaMm08BdmUHqxy0IIfk1oXTvT40F9hl41D4xvxmnYImHk2B0BOLTQJCkDOacBUJMTjzhCD7ptpQEjS2fBw+OKp81J6n2XlD6yy9XmYweojc3dCvLhveDVYBsE6xZVor4LqL9klTDsZ5WKtRbe2lpUBA5rWVuDl9OThOCTHYqc+79qMnSNBTA1Cn0r9JXFt4bTggqzVoqGAVI63DDmJXGcTx8//Dpc/eyflzk8wx4uLdOgDHBLMzIJnLSiZwDA3tcIK/1dWE2WyHSnwgPfTXBGW02ztC39zD0nlC3vK09GBxFGhDIQhLBlvS6EN+hSrHzW9WiysoKO+W3WT/SrAA9RZ/RtSb/uRhJ6bUle/WtIXQOjE/JAUCPE3Z7kAQtKF2sPWu85WW3K6y0Bgx+1TCNrxMnENeyb0FyKnmUWOCz/1A7E5dT5X3gTnVofKOgi14YI6QQ4OXRZSI76sOPrL4s+twauhF5QwbbbLhRO2H3kbdSOh5RjHZ/35ZMILk6Q61XzZLK/YSxbV9S/ZyJhk+ft0LlP84gTBKPKCnq3wfAp8hZ5ohuIxlsfKBohqu/HNqKYN8c6m1Ww5fUL2ZSXLPPhcluvDGpDeEju1EJGlUJdZMR9rdfxOFLMY2ZnuKGPPsLXj+2HG3zBgBOwDp8DkmtrcIECAwEAAQKCAgBjgkML6vRR2oTfcUi4rs+MLy+tL/Qnzcz0+Ca0NwB/RndCVXyDRGos+KGw5wJ39Ovnb3hhaGWfwcVlvSgjqhpmkC2QU/bpQNlShPvo3RTBAV9eQoX9f+PuQ/KgM31jOx9rMNGZA5WDnIisfz60dj1TeoS1IvjGOB1u2NgDAlMcYoVSKs67m5fuKhQap3w0rKdDDJcl4A2N9A5oUaK/9E9TjdI8/EqGl2a5rfANEtZWA4m58UIsWuI/IPx1WLN/6Nv/cwLIL6Q8CGxyYQ5zyy6qM5MmaK1POJzV+8As+dIFKuHeeNoOksrdL9GSHGGqVt/Dba2a9DkBJREsRwLyNHFgdqoWuUSVFGQVvUpT1ne0nbl7ZqIcgXuBmiGyu3m2VWR1+W5PRYt1K/uhbx/WjZSs7W/Ge8pHwAzi+N9IVwJpZUGwjM2VtEwBbl07GAZnuJrQH2o5CV6EL8335PB7jFE0FomSBqUhPygG6Pcx1xLPDllr5TgU4nww+A+/qPsvvYh0l30d3ejoFnD/7/e1muAvIxhsuDMLlfAUXDi4izU4Ca3FpsMcYqOcb5H71S5uBZvvx7OMLKyWzBC/gtDYD5dWovWBChY1YFETEU8/l/vM+mvOBPwLuGeTWnM0K0QQS5GV4qiO/ffpmhYLdM9x79RZVBGbvMt9BZSzXK8kBftsAQKCAQEAw9A86KsVjtcfZhEd641zmXLSTjJTXfqZadq2gFHIrUDe19hXQLAmp12r9/ZZMot9yyPFfgYVAEC5XDKdj3RG5YzEGxuB5nl1IGyYZ+HDIfHBiHY5yx+6wUdETg0QPYqccEvEg88DE4BlKfi4x29HbpQJ9RDNhVyNt6gRd/ZoDrs/SY+O+iBHkaaWpX8tAP85+yKSZwvGICNMhEYEYKisSMMBS4ZUCWW1E9s/cz+VWG9FFxUS33pDriknNBrIONYHNovofc3igAP1Si+AR7nDjr2xE0Qb7XLY11CBbC/ayqft8eYaOaIvJ2qSn+lez+h/kwygfHxkCdZD5wEnnO3kpwKCAQEAwsOw5zRGKGS+lYZSOodCE/jSk/6Msh0AqKrAYngo1Xp37CirfAApK0NCfH1A8wXEbUXt4XLZ22qAX5FFdxXOIJighGmmB3XmTparD5aVDD+g9tZ3VruqX3lYU9xTR0vFO/vwWoKNgQma+NXc21yvxkas8gWaNqJxRdEeRTYcpU8/H36pEBhUpwkiUkmqAzxXnD8l4NIqup+ZbEDdukb+pRn0vH+ScNkcZpcEIVjAvft0Y09H4R0DJ59e8LlfoH+4dUovGl7mUc/TP1m6Sn9rfUQFWM9bTVYct0YV53CPH8/wn1DQxglpSXhwDFgsrahGAwXNoVm7AMPAUyEaZwIelwKCAQAVgN+/eVJDvnIPRl/vxzfjqQ1ZUwN+tY91ZXRXQSP1isMuFu72BqIoDQxejaob99+XmFUO0uIphfIVIuXUpCNJAB1lEK9CPSJUrjhKaCuCpcboEnukR9a9dPMWUy7uYzNszZVGGEyxLo9tfYflNt40UYOKaw72z0Qs4AMTFnc07vEzRdWguDzDzPSMNhweGOkoIBLNyCg4zUeQ2xON/df1oZyZy6Wc5pNtG82q/VeMP6PptgG9kvKtxI0ulqZYP4DJR7H/ZsWx4z1jqTXAKrFEEqbIg9lBSTRw6MFdvR+c07Y4s1k77QianoR9lSY5VMH1xxQ0t4BQ6DvKuYC9Jg7PAoIBAGV2yUxJwVr90QPYrDHtkRESibGr5ORNk7BK9FrYOn2shZk0PtIky03MhnCQWCvDD2fWDG1tBe3299XRupylcXMt0EHrQCGW3FqIx6khS5jL9TFi3V0D+2gtsURO/dugr6nmQHsGlG1q8Z882wg0qyXiX+rd3E8mJVi37ssju5yrQjlIJQ9LfZ5fdc/krHtvDj1J8JPFKZl719O7n0eSAMtGUGd7FnFPyinv9qjgsdjHjQTHoqy2DpSvxCgoipb0ssX31b4pPlfUqzrPpet1oivqKdbwf6I0gFVCX9romsd57uMwmPLyqDUsV0M3FF+L0J12gn/SXUeysxkbn8OWKRUCggEAAVc7RLZ5+QtbApI5V5OlddbHgqWVIgMDUh6TnZLqaq0MchOphX+74pDmDMa2hKWQe4B4j+0Atk14YOUscry1vNdw8tM3yI5RZrL+o/+cnACWZYrYjxESZWGJykQ/l8Ji/I4bCKHJQgqY67paFLzEEr89/3D97vI42/5qaJgVUy6UD9ei/uJ6IfK/vKrghnSrzK5uYPCiuqhWnmdw0YmsQ6pRDbQRUuLJYIpBDMgybU6CbKFeQuyYQ394il3+z0HL6F5n0NkZrS5JiX24i4+6o70pMqYxPTblynWnNxgX4e28Aqro77fx+UZG6AwRH7S9hdfxUO1JWGifKbL9D7EWog==";
-
-        //private class CallBackWithdrawalReq
         //{
         //    public string requestId { get; set; }
         //    public string result { get; set; }
@@ -41,7 +37,7 @@ namespace Payment.WonderfulSky
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             string p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
 
-            var rsa = new RSAHelper(RSAType.RSA, Encoding.Unicode, privateKey, publicKey);
+            var rsa = new RSAHelper(RSAType.RSA, Encoding.Unicode, payResource["private_key"], payResource["public_key"]);
             string sign = rsa.Encrypt(p);
 
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
@@ -96,7 +92,7 @@ namespace Payment.WonderfulSky
             string p = $"amount={data.amount}&merchantid={data.merchantid}&mid={data.mid}&status={data.status}&" +
                          $"systemid={data.systemid}&time={data.time}&{payResource["key"]}";
 
-            var rsa = new RSAHelper(RSAType.RSA, Encoding.Unicode, privateKey, publicKey);
+            var rsa = new RSAHelper(RSAType.RSA, Encoding.Unicode, payResource["private_key"], payResource["public_key"]);
             var sign= rsa.Encrypt(p);
 
             NotifyDepositResult oNotify = new NotifyDepositResult();
@@ -176,7 +172,7 @@ namespace Payment.WonderfulSky
             //string p = string.Join("&", dicP.Where(x => !x.Key.Equals("remark", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&{inputs["key"]}";
 
 
-            var rsa = new RSAHelper(RSAType.RSA, Encoding.Unicode, privateKey, publicKey);
+            var rsa = new RSAHelper(RSAType.RSA, Encoding.Unicode, inputs["private_key"], inputs["public_key"]);
             formData.Add("sign", rsa.Encrypt(p));
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
@@ -211,6 +207,8 @@ namespace Payment.WonderfulSky
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
+            var rsa = new RSAHelper(RSAType.RSA, Encoding.UTF8, inputs["private_key"], inputs["public_key"]);
+
             string sUrl = inputs["host"];
             Dictionary<string, string> formData = new Dictionary<string, string>();
             formData.Add("service", "Payment");
@@ -226,9 +224,20 @@ namespace Payment.WonderfulSky
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             string p = string.Join("&", dicP.Where(x => !x.Key.Equals("remark", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&{inputs["key"]}";
+            // formData.Add("sign", rsa.Sign(p));
 
-            var rsa = new RSAHelper(RSAType.RSA, Encoding.UTF8, privateKey, publicKey);
-            formData.Add("sign", rsa.Sign(p));
+            formData.Add("sign", RSASign(inputs["private_key"], p));
+
+            //string final = "AHlUlHfYlYmR+41/xKwavGJmajutHEKSFrH6K2GtyPTDxENdcuK3AGNLHde9Ijqc6/cQvszlFHDHgQNfGIu1LM7xVVew5JzdWLpfnWPuY+YZhSfAHH3+ZoqLhe2kn7bVj4GO5qQ679U6n/C1Cs7PySeBUViM206zIrYabvzBw4rN4S+3FKcCUGQ4F23KGASS0mvxKp4SHZZfUQ/UD+nTX04rvcO31ekGbzI1jAEtz+f3AFQcZ8QsNBy7lahbtimJ1MpIPcwFptRcwq8tt4QRX9D4ihCEIRWXgBOowYDa0tmrUCda6V2T3o15TXSMoJMj0G//L7qRYdUk5ZelKf/LZtd3oXn3piRtdZGsJ50sVIU03ZysOQUVd/M7wSL6nzihYvSdwJh94xiirfvIjJ4CCrgd0a+WPfwX718WWwloTT8eYTvE1kbNXCHRxvVnJIF02ATA5kWClJUNDWPSX0HCmSbB5x8NaCqG2MpFpQvtMTaJyCz1RAPznVbvcAjhz4GM6lpXYFLuRtrkS4K7+iRpNLtfjkLC25Pd23XPFFDWByrASXkHz03xGCqs+4HF6p01ZD4VSeAwPxXhfs3mHgWNKB9cblJ1yc4nQvdxiC7wOULy0I6V8f2DFnpW8CZxqz4iB/blYLfXeC00aBzG4PCElcLb6VxkmdmqLI92KbPHN04=";
+            //string text = "amount=300&channel=qqpay&currency=CNY&merchantid=DD1590&mid=6550&notifyurl=http://payment.n88dev.com:59159/Payment/DepositCallBack/DD1590&" +
+            //    "returnurl=http://localhost:60930/cs/Cashier/Deposit&" +
+            //    "service=Payment&5BEA2FEC1937F527BE82795999A96D10";
+            //string b = rsa.Sign(text);
+            //string aa = rsa.Sign(p);
+            //int c = string.Compare(final, b);
+            //int d = string.Compare(final, aa);
+
+
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["merchantid"]);
