@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Payment.Fuli\Payment.Fuli.csproj" />
     <ProjectReference Include="..\Payment.Help2Pay\Payment.Help2Pay.csproj" />
     <ProjectReference Include="..\Payment.HonorPay\Payment.HonorPay.csproj" />
+    <ProjectReference Include="..\Payment.MangoPay\Payment.MangoPay.csproj" />
     <ProjectReference Include="..\Payment.MongoPay\Payment.MongoPay.csproj" />
     <ProjectReference Include="..\Payment.OneClickPay\Payment.OneClickPay.csproj" />
     <ProjectReference Include="..\Payment.PatekPay\Payment.PatekPay.csproj" />

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace Payment.MongoPay
+namespace Payment.MangoPay
 {
     class PayHelper : PayHelperBase
     {
@@ -30,9 +30,9 @@ namespace Payment.MongoPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             NotifyDepositResult oNotify = new NotifyDepositResult();
-            var data = FromJson<CallBackDebitReq>(ToJson(formData));
+            var data = FromJson<CallBackDebitReq>(bodyContent);
 
-            string p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["amount"]}{payResource["key"]}";
+            string p = $"{data.merchantId}{data.orderSn}{data.amount}{payResource["key"]}";
             string sign = ToMD5(p).ToLower();
 
             oNotify.DepositId = data.orderSn;
@@ -44,18 +44,21 @@ namespace Payment.MongoPay
                 if (data.status == "2" || data.status == "3")
                 {
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.amount)/100;
-                    oNotify.ActualAmount = decimal.Parse(data.amount)/100;
+                    oNotify.RequestAmount = decimal.Parse(data.amount) / 100;
+                    oNotify.ActualAmount = decimal.Parse(data.amount) / 100;
+                    oNotify.Message = data.status;
                     oNotify.Response = "success";
                 }
                 else if (data.status == "1")
                 {
                     oNotify.TransStatus = TransStatus.Pending;
+                    oNotify.Message = data.status;
                     oNotify.Response = "success";
                 }
                 else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Message = data.status;
                     oNotify.Response = "success";
                 }
             }
@@ -75,6 +78,15 @@ namespace Payment.MongoPay
             throw new NotImplementedException();
         }
 
+        private class WithdrawalRes
+        {
+            public long code { get; set; }
+
+            public string message { get; set; }
+
+            public object[] data { get; set; }
+        }
+
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             string sUrl = inputs["PayOut"];
@@ -83,19 +95,19 @@ namespace Payment.MongoPay
             formData.Add("merchantId", inputs["merchant_no"]);
             formData.Add("orderSn", inputs["TransID"]);
             formData.Add("currency", inputs["PayCurrencyId"]);
-            decimal amount = decimal.Parse(inputs["Amount"])*100;
+            decimal amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             formData.Add("type", "bank");
             formData.Add("userName", inputs["AccountName"]);
             formData.Add("cardNo", inputs["AccountNo"]);
             formData.Add("bankCode", inputs["BankCode"]);
-            formData.Add("bankName", inputs["BankName"]);
-            formData.Add("bankBranch", "");
-            formData.Add("branchAddress", "");
-            formData.Add("province", "");
-            formData.Add("city", "");
-            formData.Add("unionCode	", "");
-            formData.Add("bankMobile", "");
+            formData.Add("bankName", inputs["BankCode"]);
+            formData.Add("bankBranch", inputs["BankCode"]);
+            formData.Add("branchAddress", inputs["BankCode"]);
+            formData.Add("province", inputs["BankCode"]);
+            formData.Add("city", inputs["BankCode"]);
+            formData.Add("unionCode", inputs["BankCode"]);
+            formData.Add("bankMobile", inputs["BankCode"]);
 
             string p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["type"]}{formData["userName"]}{formData["cardNo"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
@@ -104,18 +116,20 @@ namespace Payment.MongoPay
             string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
 
             WithdrawResult withdrawResult = new WithdrawResult();
-            DepositRes withdrawalRes = new DepositRes();
-            withdrawalRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
+            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
-            if (withdrawalRes.code == "200")
+            if (withdrawalRes.code == 200)
             {
                 withdrawResult.Success = true;
                 withdrawResult.Message = withdrawalRes.message;
+                withdrawResult.RawContent = withdrawalRes.message;
             }
             else
             {
                 withdrawResult.Success = false;
                 withdrawResult.Message = withdrawalRes.message;
+                withdrawResult.RawContent = withdrawalRes.message;
             }
 
             return withdrawResult;
@@ -197,7 +211,7 @@ namespace Payment.MongoPay
         }
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
+            string sUrl = inputs["PayOutQuery"];
             Dictionary<string, string> formData = new Dictionary<string, string>();
             formData.Add("merchantId", inputs["merchant_no"]);
             formData.Add("orderSn", inputs["TransID"]);
@@ -220,7 +234,7 @@ namespace Payment.MongoPay
                 if (enquiryWithdrawRes.data.status == "2" || enquiryWithdrawRes.data.status == "3")
                 {
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(enquiryWithdrawRes.data.amount)/100;
+                    oNotify.RequestAmount = decimal.Parse(enquiryWithdrawRes.data.amount) / 100;
                 }
                 else if (enquiryWithdrawRes.data.status == "1")
                 {
@@ -229,7 +243,7 @@ namespace Payment.MongoPay
                 else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
-                   
+
                 }
                 oNotify.Message = enquiryWithdrawRes.data.status;
             }
@@ -238,7 +252,7 @@ namespace Payment.MongoPay
                 oNotify.TransStatus = TransStatus.Pending;
 
             }
-            oNotify.Message = enquiryWithdrawRes.message +" - "+enquiryWithdrawRes.data.status;
+            oNotify.Message = enquiryWithdrawRes.message + " - " + enquiryWithdrawRes.data.status;
             return oNotify;
         }
 
