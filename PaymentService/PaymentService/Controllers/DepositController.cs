@@ -172,8 +172,9 @@ namespace PaymentService.Controllers
                 return apiResult;
             }
 
-            var payLangId = payBLL.GetPayLanguage().Where(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase)).FirstOrDefault()?.PayLangId;
             var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == mobilePayInfo.PayId).FirstOrDefault();
+            var payLangId = payBLL.GetPayLanguage().Where(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && (x.PayId == pay.PayId)).FirstOrDefault()?.PayLangId;
+            
             //DateTimeOffset
             var payHelper = payBLL.GetPayHelper(pay.PayName);
 
