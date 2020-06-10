@@ -47,6 +47,17 @@ namespace PaymentService.Service.Workers
                         {
                             WithReq.Add("TransID", withdrawalRequest.TransId);
                         }
+
+                        if (!WithReq.ContainsKey("Amount"))
+                        {
+                            WithReq.Add("Amount", withdrawalRequest.Amount.ToString());
+                        }
+
+                        if (!WithReq.ContainsKey("CurrencyId"))
+                        {
+                            WithReq.Add("CurrencyId", withdrawalRequest.CurrencyId.ToString());
+                        }
+
                         var enquiryWithdrawResult = payHelper.EnquiryForCredit(WithReq);
 
                         if (enquiryWithdrawResult.TransStatus == TransStatus.Success)

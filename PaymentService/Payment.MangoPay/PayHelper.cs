@@ -209,13 +209,19 @@ namespace Payment.MangoPay
             public string status { get; set; }
 
         }
+
+        Dictionary<string, string> payCurrencyIdMapping = new Dictionary<string, string>()
+        {
+            { "4","5"}
+        };
+
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
             string sUrl = inputs["PayOutQuery"];
             Dictionary<string, string> formData = new Dictionary<string, string>();
             formData.Add("merchantId", inputs["merchant_no"]);
             formData.Add("orderSn", inputs["TransID"]);
-            formData.Add("currency", inputs["PayCurrencyId"]);
+            formData.Add("currency", payCurrencyIdMapping[inputs["CurrencyId"]]);
             decimal amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             formData.Add("type", "bank");
@@ -243,16 +249,18 @@ namespace Payment.MangoPay
                 else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
-
                 }
-                oNotify.Message = enquiryWithdrawRes.data.status;
+            }
+            else if(enquiryWithdrawRes.code == "201")
+            {
+                oNotify.TransStatus = TransStatus.Fail;
             }
             else
             {
                 oNotify.TransStatus = TransStatus.Pending;
 
             }
-            oNotify.Message = enquiryWithdrawRes.message + " - " + enquiryWithdrawRes.data.status;
+            oNotify.Message = $"{enquiryWithdrawRes.data.status} - {enquiryWithdrawRes.message}";
             return oNotify;
         }
 
