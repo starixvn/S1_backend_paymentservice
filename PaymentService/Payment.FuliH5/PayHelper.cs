@@ -55,7 +55,8 @@ namespace Payment.FuliH5
                     string failReason = "";
                     try
                     {
-                        failReason = System.Web.HttpUtility.UrlDecode(data.failReason, System.Text.Encoding.GetEncoding("GB2312"));
+                        //failReason = System.Web.HttpUtility.UrlDecode(data.failReason, System.Text.Encoding.GetEncoding("GB2312"));
+                        failReason = GBKToUTF8(data.failReason);
                     }
                     catch(Exception ex)
                     {

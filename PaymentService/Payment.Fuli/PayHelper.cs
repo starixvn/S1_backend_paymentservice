@@ -9,6 +9,23 @@ namespace Payment.Fuli
 {
     class PayHelper : PayHelperBase
     {
+        Dictionary<string, string> failReasonTypeDic = new Dictionary<string, string>() {
+            {"200200000","网络异常，请致电客服" },
+            {"200300000","网络异常，请致电客服" },
+            {"200300162","账户余额不足，请及时充值" },
+            {"200300288","银行处理失败" },
+            {"209900000","网络异常，请致电客服" },
+            {"209999999","IP地址沒有加入白名单，请致电客服" } ,
+            {"310060309","单笔金额超限" } ,
+            {"310060310","单日金额超限" },
+            {"310060312","金额有误" },
+            {"310060313","无效业务" },
+            {"310060314","通讯失败" },
+            {"310060315","外部系统错误" },
+            {"310060316","其他错误" },
+            {"310060317","账号有误" }
+        };
+
         private class CallBackWithdrawalReq
         {
             public string requestId { get; set; }
@@ -55,7 +72,8 @@ namespace Payment.Fuli
                     string failReason = "";
                     try
                     {
-                        failReason = System.Web.HttpUtility.UrlDecode(data.failReason, System.Text.Encoding.GetEncoding("GB2312"));
+                        //failReason = System.Web.HttpUtility.UrlDecode(data.failReason, System.Text.Encoding.GetEncoding("GB2312"));
+                        failReason = GBKToUTF8(data.failReason);
                     }
                     catch(Exception ex)
                     {

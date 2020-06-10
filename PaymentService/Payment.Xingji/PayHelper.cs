@@ -204,6 +204,7 @@ namespace Payment.Xingji
             public string status { get; set; }
             public string msg { get; set; }
             public DepositResData Data { get; set; }
+            public string code { get; set; }
         }
 
         private class DepositResData
