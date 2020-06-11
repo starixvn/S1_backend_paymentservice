@@ -16,13 +16,13 @@ namespace Payment.MangoPay
 
         private class CallBackDebitReq
         {
-            public string merchantId { get; set; }
+            public int merchantId { get; set; }
             public string orderSn { get; set; }
             public string queryId { get; set; }
             public string goodsName { get; set; }
-            public string amount { get; set; }
-            public string status { get; set; }
-            public string realMoney { get; set; }
+            public decimal amount { get; set; }
+            public int status { get; set; }
+            public decimal realMoney { get; set; }
             public string message { get; set; }
             public string sign { get; set; }
         }
@@ -41,26 +41,26 @@ namespace Payment.MangoPay
 
             if (sign == data.sign)
             {
-                if (data.status == "2" || data.status == "3")
+                if (data.status == 2 || data.status == 3)
                 {
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.amount) / 100;
-                    oNotify.ActualAmount = decimal.Parse(data.amount) / 100;
-                    oNotify.Message = data.status;
+                    oNotify.RequestAmount = data.amount / 100;
+                    oNotify.ActualAmount = data.amount / 100;
+                    oNotify.Message = data.message;
                     oNotify.Comment = $"{data.status}-{data.message}";
                     oNotify.Response = "success";
                 }
-                else if (data.status == "1")
+                else if (data.status == 1)
                 {
                     oNotify.TransStatus = TransStatus.Pending;
-                    oNotify.Message = data.status;
+                    oNotify.Message = data.message;
                     oNotify.Comment = $"{data.status}-{data.message}";
                     oNotify.Response = "success";
                 }
                 else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.Message = data.status;
+                    oNotify.Message = data.message;
                     oNotify.Comment = $"{data.status}-{data.message}";
                     oNotify.Response = "success";
                 }
