@@ -241,6 +241,7 @@ namespace Payment.MangoPay
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = decimal.Parse(enquiryWithdrawRes.data.amount) / 100;
+                    oNotify.ThirdId = enquiryWithdrawRes.data.upOrderSn;
                 }
                 else if (enquiryWithdrawRes.data.status == "1")
                 {
@@ -249,6 +250,7 @@ namespace Payment.MangoPay
                 else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.ThirdId = enquiryWithdrawRes.data.upOrderSn;
                 }
             }
             else if(enquiryWithdrawRes.code == "201")
@@ -258,9 +260,9 @@ namespace Payment.MangoPay
             else
             {
                 oNotify.TransStatus = TransStatus.Pending;
-
             }
-            oNotify.Message = $"{enquiryWithdrawRes.data.status} - {enquiryWithdrawRes.message}";
+            
+            oNotify.Message = enquiryWithdrawRes.message;
             return oNotify;
         }
 
