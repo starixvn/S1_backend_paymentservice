@@ -47,18 +47,21 @@ namespace Payment.MangoPay
                     oNotify.RequestAmount = decimal.Parse(data.amount) / 100;
                     oNotify.ActualAmount = decimal.Parse(data.amount) / 100;
                     oNotify.Message = data.status;
+                    oNotify.Comment = $"{data.status}-{data.message}";
                     oNotify.Response = "success";
                 }
                 else if (data.status == "1")
                 {
                     oNotify.TransStatus = TransStatus.Pending;
                     oNotify.Message = data.status;
+                    oNotify.Comment = $"{data.status}-{data.message}";
                     oNotify.Response = "success";
                 }
                 else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
                     oNotify.Message = data.status;
+                    oNotify.Comment = $"{data.status}-{data.message}";
                     oNotify.Response = "success";
                 }
             }
