@@ -246,14 +246,14 @@ namespace Payment.MangoPay
                     oNotify.RequestAmount = decimal.Parse(enquiryWithdrawRes.data.amount) / 100;
                     oNotify.ThirdId = enquiryWithdrawRes.data.upOrderSn;
                 }
-                else if (enquiryWithdrawRes.data.status == "1")
-                {
-                    oNotify.TransStatus = TransStatus.Pending;
-                }
-                else
+                else if (enquiryWithdrawRes.data.status == "4")
                 {
                     oNotify.TransStatus = TransStatus.Fail;
                     oNotify.ThirdId = enquiryWithdrawRes.data.upOrderSn;
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Pending;
                 }
             }
             else if(enquiryWithdrawRes.code == "201")
