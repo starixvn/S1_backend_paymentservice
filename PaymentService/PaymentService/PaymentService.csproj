@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.30" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.0" />
@@ -11,7 +10,6 @@
     <PackageReference Include="MySql.Data" Version="8.0.18" />
     <PackageReference Include="system.text.encoding.codepages" Version="4.7.1" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Payment.CirclePay\Payment.CirclePay.csproj" />
     <ProjectReference Include="..\Payment.Eeziepay\Payment.Eeziepay.csproj" />
@@ -23,11 +21,8 @@
     <ProjectReference Include="..\Payment.OneClickPay\Payment.OneClickPay.csproj" />
     <ProjectReference Include="..\Payment.PatekPay\Payment.PatekPay.csproj" />
     <ProjectReference Include="..\Payment.VNPay\Payment.VNPay.csproj" />
-    <ProjectReference Include="..\Payment.WonderfulSky\Payment.WonderfulSky.csproj" />
     <ProjectReference Include="..\Payment.Xingji\Payment.Xingji.csproj" />
     <ProjectReference Include="..\Payment.YRPay\Payment.YRPay.csproj" />
     <ProjectReference Include="..\PaymentCore\PaymentCore.csproj" />
   </ItemGroup>
-
-
 </Project>
