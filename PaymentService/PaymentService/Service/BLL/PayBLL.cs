@@ -43,7 +43,7 @@ namespace PaymentService.Service.BLL
 
             if (bankInfoPayList != null)
             {
-                var expireTime = TimeSpan.FromMinutes(5);
+                var expireTime = TimeSpan.FromMinutes(1);
                 if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
                 {
                     expireTime = TimeSpan.FromMinutes(5);
@@ -65,7 +65,7 @@ namespace PaymentService.Service.BLL
 
                 if (mobilePayInfoList != null)
                 {
-                    var expireTime = TimeSpan.FromMinutes(5);
+                    var expireTime = TimeSpan.FromMinutes(1);
                     if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
                     {
                         expireTime = TimeSpan.FromMinutes(5);
@@ -89,7 +89,7 @@ namespace PaymentService.Service.BLL
 
             if (bankInfoPayList != null)
             {
-                var expireTime = TimeSpan.FromMinutes(5);
+                var expireTime = TimeSpan.FromMinutes(1);
                 if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
                 {
                     expireTime = TimeSpan.FromMinutes(5);
