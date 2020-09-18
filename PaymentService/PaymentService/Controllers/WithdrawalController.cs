@@ -173,7 +173,7 @@ namespace PaymentService.Controllers
                 transId = payHelperNoCallBackUrl.FetchTransId(dicParam, bodyText);
             }
 
-            var responseToPay = CallBackHandler(transId, dicParam, "", isFormData);
+            var responseToPay = CallBackHandler(transId, dicParam, bodyText, isFormData);
             return Content(responseToPay);
         }
 

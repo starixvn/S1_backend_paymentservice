@@ -24,12 +24,12 @@ namespace Payment.CirclePay
             var data = FromJson<CallBackWithdrawReq>(bodyContent);
 
             string p = $"{payResource["email"]}{data.partner_tran_id}{data.total_amount}";
-            var token = ToHMACSHA256(p, payResource["key"]);
+            string sign = ToHMACSHA256(p, payResource["key"]);
 
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.partner_tran_id;
 
-            if (token == data.token)
+            if (sign == data.token)
             {
                 if (data.status == "00")
                 {
@@ -78,11 +78,6 @@ namespace Payment.CirclePay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            //URL: http://payment.n88dev.com:59159/Payment/DepositCallBack/CirclePay 
-            // Data: {"partner_tran_id":"dd1276","tran_id":"27041859","amount":"5000000"
-            //,"method":"IB_ONLINE","status":"00","time":"2020-03-20 22:29:38",
-            //"token":"815c1817d1f1be60e7e6d181739bcb787f11a3e1b7b4c9fd45e52c3a9162905a"} 
-
             var data = FromJson<CallBackDebitReq>(bodyContent);
 
             string p = $"{payResource["email"]}{data.partner_tran_id}{data.amount}";
