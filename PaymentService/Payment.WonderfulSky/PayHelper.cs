@@ -11,6 +11,11 @@ namespace Payment.WonderfulSky
 {
     class PayHelper : PayHelperBase
     {
+        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
+        {
+            throw new NotImplementedException();
+        }
+
         //{
         //    public string requestId { get; set; }
         //    public string result { get; set; }

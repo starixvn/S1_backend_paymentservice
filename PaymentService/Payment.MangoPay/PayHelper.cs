@@ -9,6 +9,11 @@ namespace Payment.MangoPay
 {
     class PayHelper : PayHelperBase
     {
+        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
+        {
+            throw new NotImplementedException();
+        }
+
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();
@@ -155,20 +160,30 @@ namespace Payment.MangoPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
+            string sUrl = "";
             Dictionary<string, string> formData = new Dictionary<string, string>();
+            if (inputs["PayCode"] != null)
+            {
+                sUrl = inputs["host"];
+                formData.Add("type", "2");
+                formData.Add("scanType", inputs["PayCode"]);
+            }
+            else
+            {
+                sUrl = inputs["hostgateway"];
+                formData.Add("type", "1");
+            }
+
             formData.Add("merchantId", inputs["merchant_no"]);
             formData.Add("orderSn", inputs["TransID"]);
-            formData.Add("type", "2");
-            formData.Add("scanType", inputs["PayCode"]);
             formData.Add("currency", inputs["PayCurrencyId"]);
             decimal amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             formData.Add("returnUrl", inputs["ReturnUrl"]);
             formData.Add("notifyUrl", inputs["CallBackUrl"]);
-            formData.Add("goodsName", "N/A");
             formData.Add("language", inputs["PayLangId"]);
-
+            formData.Add("goodsName", "N/A");
+            
             string p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["notifyUrl"]}{formData["type"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 

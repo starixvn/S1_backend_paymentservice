@@ -9,6 +9,10 @@ namespace Payment.Help2Pay
 {
     public class PayHelper : PayHelperBase
     {
+        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
+        {
+            throw new NotImplementedException();
+        }
         public class CallBackCreditReq
         {
             public string MerchantCode { get; set; }

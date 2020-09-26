@@ -10,6 +10,11 @@ namespace Payment.VNPay
 {
     public class PayHelper : PayHelperBase
     {
+        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
+        {
+            throw new NotImplementedException();
+        }
+
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();

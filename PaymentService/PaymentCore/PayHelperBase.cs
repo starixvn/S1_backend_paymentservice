@@ -18,6 +18,12 @@ namespace PaymentCore
         Success,
         Fail
     }
+
+    public class ExchangeResult
+    {
+        public string Message { get; set; }
+    }
+
     public class DepositResult
     {
         public bool Success { get; set; }
@@ -52,6 +58,7 @@ namespace PaymentCore
         EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs);
         NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
         NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
+        ExchangeResult GetExchange(Dictionary<string, string> payResource);
 
     }
     public interface IPayHelperNoCallBackUrl
@@ -131,6 +138,7 @@ namespace PaymentCore
         public abstract EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs);
         public abstract NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
         public abstract NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
+        public abstract ExchangeResult GetExchange(Dictionary<string, string> payResource);
 
         /// <summary>
         /// 1. 會夾帶Content-Type
@@ -147,6 +155,26 @@ namespace PaymentCore
             {
                 request.Proxy = new WebProxy(proxyHost, proxyPort);
             }
+            
+            using WebResponse response = request.GetResponse();
+            using Stream dataStream = response.GetResponseStream();
+            using StreamReader reader = new StreamReader(dataStream);
+            string responseFromServer = reader.ReadToEnd();
+
+            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
+
+            return responseFromServer;
+        }
+        protected string HttpGet(string url, string parameters, string contentType, string accesstoken, string transID)
+        {
+            WebRequest request = WebRequest.Create($"{url}?{parameters}");
+            request.Method = "GET";
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+            request.Headers.Add("accept", contentType);
+            request.Headers.Add("x-api-key", accesstoken);
 
             using WebResponse response = request.GetResponse();
             using Stream dataStream = response.GetResponseStream();
@@ -187,6 +215,7 @@ namespace PaymentCore
             return responseFromServer;
         }
 
+        
         protected string HttpPost(string url, string parameters, string contentType, string accesstoken, string transID)
         {
             WebRequest request = WebRequest.Create(url);
@@ -202,6 +231,8 @@ namespace PaymentCore
             request.ContentType = contentType;
             request.ContentLength = byteArray.Length;
             request.Headers.Add("Authorization", "Bearer " + accesstoken);
+            request.Headers.Add("accept", contentType);
+            request.Headers.Add("x-api-key", accesstoken);
 
             Stream dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);
@@ -218,6 +249,39 @@ namespace PaymentCore
 
             return responseFromServer;
         }
+
+        //protected string HttpPost1(string url, string parameters, string contentType, string accesstoken, string transID)
+        //{
+        //    WebRequest request = WebRequest.Create(url);
+
+        //    request.Method = "POST";
+        //    if (!string.IsNullOrEmpty(proxyHost))
+        //    {
+        //        request.Proxy = new WebProxy(proxyHost, proxyPort);
+        //    }
+
+        //    string postData = parameters;
+        //    byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+        //    request.ContentType = contentType;
+        //    request.ContentLength = byteArray.Length;
+        //    request.Headers.Add("accept", contentType);
+        //    request.Headers.Add("x-api-key", accesstoken);
+
+        //    Stream dataStream = request.GetRequestStream();
+        //    dataStream.Write(byteArray, 0, byteArray.Length);
+        //    dataStream.Close();
+        //    using WebResponse response = request.GetResponse();
+
+        //    dataStream = response.GetResponseStream();
+        //    using StreamReader reader = new StreamReader(dataStream);
+        //    string responseFromServer = reader.ReadToEnd();
+        //    reader.Close();
+        //    dataStream.Close();
+        //    response.Close();
+        //    InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
+
+        //    return responseFromServer;
+        //}
 
         protected string HttpPost(string url, string parameters, string contentType, string username, string password, string transID)
         {
@@ -344,6 +408,20 @@ namespace PaymentCore
                 byte[] hashMessage = hmacSHA256.ComputeHash(messageBytes);
                 return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
             }
+        }
+
+        protected string ToSHA256(string encodeStr)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(encodeStr);
+            byte[] hash = SHA256Managed.Create().ComputeHash(bytes);
+
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < hash.Length; i++)
+            {
+                builder.Append(hash[i].ToString("X2"));
+            }
+
+            return builder.ToString();
         }
 
         protected string ToHMACSMD5(string encodeStr, string key)

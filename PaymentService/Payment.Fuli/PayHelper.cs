@@ -26,6 +26,11 @@ namespace Payment.Fuli
             {"310060317","账号有误" }
         };
 
+        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
+        {
+            throw new NotImplementedException();
+        }
+
         private class CallBackWithdrawalReq
         {
             public string requestId { get; set; }

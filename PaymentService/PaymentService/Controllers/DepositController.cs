@@ -46,6 +46,20 @@ namespace PaymentService.Controllers
             this.common = common;
         }
 
+        [HttpPost]
+        [Route("Payment/ReqExchangeRate")]
+        public string ReqExchangeRate(int PayId, int CustId)
+        {
+            ApiResult<PayResult> apiResult = new ApiResult<PayResult>();
+            var custInfo = custInfoBLL.GetCustInfoWithCache(CustId);
+            var paySetting = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == PayId).FirstOrDefault();
+            var exchangerateReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
+            var payHelper = payBLL.GetPayHelper(paySetting.PayName);
+            var rExchangeRate = payHelper.GetExchange(exchangerateReq);
+
+            return rExchangeRate.Message;
+        }
+
         public class ReqDeposit
         {
             public string TransId { get; set; }
@@ -248,7 +262,6 @@ namespace PaymentService.Controllers
                         Request.QueryString.ToUriComponent());
 
             logger.LogInformation(bodyText);
-
 
             Dictionary<string, string> dicParam = new Dictionary<string, string>();
             bool isFormData = false;

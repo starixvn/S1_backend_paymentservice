@@ -10,6 +10,11 @@ namespace Payment.OneClickPay
 {
     public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
+        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
+        {
+            throw new NotImplementedException();
+        }
+
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();
