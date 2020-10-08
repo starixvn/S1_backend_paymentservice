@@ -28,7 +28,7 @@ namespace Payment.CirclePay
         {
             var data = FromJson<CallBackWithdrawReq>(bodyContent);
 
-            string p = $"{payResource["email"]}{data.partner_tran_id}{data.total_amount}";
+            string p = $"{payResource["email"]}";
             string sign = ToHMACSHA256(p, payResource["key"]);
 
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
