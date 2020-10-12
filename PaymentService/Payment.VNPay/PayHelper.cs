@@ -53,7 +53,7 @@ namespace Payment.VNPay
                 oNotify.ThirdId = data.ylt_order_no;
                 oNotify.Comment = data.result_code;
                 oNotify.Message = data.extra_param;
-                oNotify.Response = "success”";
+                oNotify.Response = "success";
             }
             else
             {

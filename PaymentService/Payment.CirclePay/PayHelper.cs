@@ -22,50 +22,51 @@ namespace Payment.CirclePay
             public string token { set; get; }
             public string time { set; get; }
             public string status { set; get; }
+            public string note { set; get; }
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackWithdrawReq>(bodyContent);
 
-            string p = $"{payResource["email"]}";
-            string sign = ToHMACSHA256(p, payResource["key"]);
+            //string p = $"{data.total_amount}{data.bank_code}{data.card_fullname}{data.card_number}{data.partner_tran_id}";
+            //string sign = ToHMACSHA256(p, payResource["key"]);
 
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.partner_tran_id;
 
-            if (sign == data.token)
-            {
+            //if (sign == data.token)
+            //{
                 if (data.status == "00")
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = decimal.Parse(data.total_amount);
                     oNotify.ThirdId = data.tran_id;
-                    oNotify.Message = data.status;
+                    oNotify.Message = data.status + "-" + data.note;
                     oNotify.Response = "200";
                 }
                 else if (data.status == "01" || data.status == "04")
                 {
                     oNotify.TransStatus = TransStatus.Pending;
                     oNotify.ThirdId = data.tran_id;
-                    oNotify.Message = data.status;
+                    oNotify.Message = data.status + "-" + data.note;
                     oNotify.Response = "200";
                 }
                 else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
                     oNotify.ThirdId = data.tran_id;
-                    oNotify.Message = data.status;
+                    oNotify.Message = data.status + "-" + data.note;
                     oNotify.Response = "200";
                 }
-            }
-            else
-            {
-                oNotify.TransStatus = TransStatus.Pending;
-                oNotify.ThirdId = data.tran_id;
-                oNotify.Message = data.status;
-                oNotify.Response = "Token error";
-            }
+            //}
+            //else
+            //{
+            //    oNotify.TransStatus = TransStatus.Pending;
+            //    oNotify.ThirdId = data.tran_id;
+            //    oNotify.Message = data.status;
+            //    oNotify.Response = "Token error";
+            //}
 
             return oNotify;
         }

@@ -40,8 +40,7 @@ namespace Payment.NganLuong
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            var data = FromJson<CallBackDebitReq>(bodyContent);
-
+            var data = FromJson<CallBackDebitReq>(ToJson(formData));
             string p = $"{data.token_code}|{data.version}|{data.order_code}|{data.order_description}|{data.amount}|{data.sender_fee}|{data.receiver_fee}|{data.currency}|" +
                         $"{data.return_url}|{data.cancel_url}|{data.notify_url}|{data.status}|{data.payment_method_code}|{data.payment_method_name}|{payResource["merchant_passcode"]}";
             string sign = ToMD5(p).ToLower();
