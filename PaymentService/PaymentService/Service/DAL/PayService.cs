@@ -18,10 +18,10 @@ namespace PaymentService.Service.DAL
         {
             this.configuration = configuration;
         }
-        public IEnumerable<BankInfoPay> GetOnlineBankList()
+        public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
         {
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BankInfoPay>("BankInfoPay_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<BankInfoPay>("Common_BankInfoPay_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
         }
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
         {
@@ -44,10 +44,10 @@ namespace PaymentService.Service.DAL
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<Pay>("PaySetting_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
         }
-        public IEnumerable<MobilePayInfo> GetMobilePayInfo()
+        public IEnumerable<MobilePayInfo> GetMobilePayInfo(int siteId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<MobilePayInfo>("Service_MobilePay_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<MobilePayInfo>("Member_MobilePayV2_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
         }
     }
 }

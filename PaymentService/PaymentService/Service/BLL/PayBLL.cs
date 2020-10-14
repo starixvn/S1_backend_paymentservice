@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PaymentCore;
 using PaymentService.Service.DAL;
@@ -18,12 +19,12 @@ namespace PaymentService.Service.BLL
     {
         private readonly PayService payService;
         private readonly IMemoryCache cache;
-        private readonly IWebHostEnvironment environment;
+        private readonly IHostEnvironment environment;
         private readonly IConfiguration configuration;
         private readonly ILogger<PayBLL> logger;
         private static ConcurrentDictionary<string, IPayHelper> PayHelperContainer = new ConcurrentDictionary<string, IPayHelper>();
 
-        public PayBLL(ILogger<PayBLL> logger, IMemoryCache cache, IWebHostEnvironment environment, IConfiguration configuration, PayService payService)
+        public PayBLL(ILogger<PayBLL> logger, IMemoryCache cache, IHostEnvironment environment, IConfiguration configuration, PayService payService)
         {
             this.payService = payService;
             this.cache = cache;
@@ -31,7 +32,7 @@ namespace PaymentService.Service.BLL
             this.configuration = configuration;
             this.logger = logger;
         }
-        public IEnumerable<BankInfoPay> GetOnlineBankList()
+        public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
         {
             string key = "OnlineBankList";
             var bankInfoPayListCache = cache.Get<IEnumerable<BankInfoPay>>(key);
@@ -39,12 +40,12 @@ namespace PaymentService.Service.BLL
             {
                 return bankInfoPayListCache;
             }
-            var bankInfoPayList = payService.GetOnlineBankList();
+            var bankInfoPayList = payService.GetOnlineBankList(siteId);
 
             if (bankInfoPayList != null)
             {
                 var expireTime = TimeSpan.FromMinutes(1);
-                if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
+                if (environment.IsDevelopment() || environment.EnvironmentName == "QA")
                 {
                     expireTime = TimeSpan.FromMinutes(5);
                 }
@@ -54,14 +55,13 @@ namespace PaymentService.Service.BLL
 
             return bankInfoPayList;
         }
-
-        public IEnumerable<MobilePayInfo> GetMobilePayInfoList()
+        public IEnumerable<MobilePayInfo> GetMobilePayInfoList(int siteId)
         {
             string key = "MobilePayInfoList";
             var mobilePayInfoList = cache.Get<IEnumerable<MobilePayInfo>>(key);
             if (mobilePayInfoList == null)
             {
-                mobilePayInfoList = payService.GetMobilePayInfo();
+                mobilePayInfoList = payService.GetMobilePayInfo(siteId);
 
                 if (mobilePayInfoList != null)
                 {

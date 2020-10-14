@@ -119,9 +119,9 @@ namespace Payment.NganLuong
             formData.Add("function", "CreateOrder");
             formData.Add("merchant_site_code", inputs["merchant_site_code"]);
             formData.Add("order_code", inputs["TransID"].ToLower());
-            
+
             decimal amount = decimal.Parse(inputs["Amount"]);
-            formData.Add("amount", amount.ToString("#"));
+            formData.Add("amount", amount.ToString("#.00"));
 
             formData.Add("currency", inputs["PayCurrencyId"]);
             formData.Add("buyer_fullname", "N/A");
@@ -130,7 +130,7 @@ namespace Payment.NganLuong
             formData.Add("buyer_mobile", "0948888123");
             formData.Add("return_url", inputs["ReturnUrl"]);
             formData.Add("cancel_url", inputs["ReturnUrl"]);
-            formData.Add("notify_url", inputs["CallBackUrl"]); 
+            formData.Add("notify_url", inputs["CallBackUrl"]);
             formData.Add("language", inputs["PayLangId"]);
             formData.Add("order_description", "");
 
@@ -146,14 +146,15 @@ namespace Payment.NganLuong
             DepositResult oDepositResult = new DepositResult();
             if (depositRes.result_code == "0000")
             {
-                    oDepositResult.Url = depositRes.result_data.checkout_url;
-                    oDepositResult.Success = true;
-                    oDepositResult.FormData = null;
-                    oDepositResult.Message = "";
+                oDepositResult.Url = depositRes.result_data.checkout_url;
+                oDepositResult.Success = true;
+                oDepositResult.FormData = null;
+                oDepositResult.Message = "";
             }
             else
             {
                 oDepositResult.Success = false;
+                oDepositResult.ErrorCode = depositRes.result_code;
                 oDepositResult.Message = depositRes.result_message;
             }
 

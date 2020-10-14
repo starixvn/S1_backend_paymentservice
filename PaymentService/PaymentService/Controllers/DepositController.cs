@@ -87,7 +87,7 @@ namespace PaymentService.Controllers
             var custId = reqDeposit.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
             var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-            var onlineBank = payBLL.GetOnlineBankList().Where(x => x.PayId == reqDeposit.PayId && reqDeposit.SysId == x.SysId && x.PointLevel <= vipLevel).FirstOrDefault();
+            var onlineBank = payBLL.GetOnlineBankList(custInfo.SiteId).Where(x => x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) && x.PointLevel <= vipLevel).FirstOrDefault();
             //var PayCurrency = payBLL.GetPayCurrency().;
             if (onlineBank == null)
             {
@@ -95,7 +95,7 @@ namespace PaymentService.Controllers
                 return apiResult;
             }
 
-            if (custInfo.CurrencyId != onlineBank.CurrencyId)
+            if (custInfo.CurrencyId != onlineBank.CurrencyId && onlineBank.CurrencyId != 0)
             {
                 apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
                 return apiResult;
@@ -149,6 +149,7 @@ namespace PaymentService.Controllers
             else if (!result.Success)
             {
                 DepositRequest depositRequest = new DepositRequest();
+                depositRequest.DepositType = (int)DepositType.OnlineBanking;
                 depositRequest.TransId = reqDeposit.TransId;
                 depositRequest.ActualDeposit = reqDeposit.Amount;
                 depositRequest.Amount = reqDeposit.Amount;
@@ -159,6 +160,9 @@ namespace PaymentService.Controllers
                 rNotifyDepositResult.Comment = result.Message;
                 rNotifyDepositResult.ThirdId = result.ThirdId;
                 paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
+                apiResult.ErrorCode = (int)ErrorCode.Fail;
+                apiResult.RawErrorCode = result.ErrorCode;
+                apiResult.RawMessage = result.Message;
             }
 
             return apiResult;
@@ -172,7 +176,7 @@ namespace PaymentService.Controllers
             var custId = reqDeposit.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
             var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-            var mobilePayInfo = payBLL.GetMobilePayInfoList().Where(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel).FirstOrDefault();
+            var mobilePayInfo = payBLL.GetMobilePayInfoList(custInfo.SiteId).Where(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel).FirstOrDefault();
             //var PayCurrency = payBLL.GetPayCurrency().;
             if (mobilePayInfo == null)
             {
@@ -228,6 +232,7 @@ namespace PaymentService.Controllers
             else if (!result.Success)
             {
                 DepositRequest depositRequest = new DepositRequest();
+                depositRequest.DepositType = (int)DepositType.MobilePayment;
                 depositRequest.TransId = reqDeposit.TransId;
                 depositRequest.ActualDeposit = reqDeposit.Amount;
                 depositRequest.Amount = reqDeposit.Amount;
@@ -238,6 +243,9 @@ namespace PaymentService.Controllers
                 rNotifyDepositResult.Comment = result.Message;
                 rNotifyDepositResult.ThirdId = result.ThirdId;
                 paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
+                apiResult.ErrorCode = (int)ErrorCode.Fail;
+                apiResult.RawErrorCode = result.ErrorCode;
+                apiResult.RawMessage = result.Message;
             }
 
             return apiResult;

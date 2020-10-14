@@ -28,6 +28,7 @@ namespace PaymentCore
     {
         public bool Success { get; set; }
         public string Message { get; set; }
+        public string ErrorCode { get; set; }
         public decimal DepositAmount { get; set; }
         public decimal SuggestAmount { get; set; }
         public string Url { get; set; }

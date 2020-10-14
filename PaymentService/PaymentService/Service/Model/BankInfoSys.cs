@@ -28,6 +28,7 @@ namespace PaymentService.Service.Model
         public int Mode { get; set; }
         public int PointLevel { get; set; }
         public string PayCode { get; set; }
+        public bool SelBank { get; set; }
     }
     public class MobilePayInfo
     {
