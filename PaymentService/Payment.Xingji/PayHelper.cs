@@ -9,11 +9,6 @@ namespace Payment.Xingji
 {
     class PayHelper : PayHelperBase
     {
-        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
-        {
-            throw new NotImplementedException();
-        }
-
         private class CallBackWithdrawalReq
         {
             public string memberid { get; set; }

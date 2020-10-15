@@ -9,11 +9,6 @@ namespace Payment.CirclePay
 {
     class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
-        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
-        {
-            throw new NotImplementedException();
-        }
-
         private class CallBackWithdrawReq
         {
             public string tran_id { set; get; }

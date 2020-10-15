@@ -54,7 +54,7 @@ namespace PaymentService.Controllers
             var custInfo = custInfoBLL.GetCustInfoWithCache(CustId);
             var paySetting = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == PayId).FirstOrDefault();
             var exchangerateReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
-            var payHelper = payBLL.GetPayHelper(paySetting.PayName);
+            var payHelper = (IExchangeHelper)payBLL.GetPayHelper(paySetting.PayName);
             var rExchangeRate = payHelper.GetExchange(exchangerateReq);
 
             return rExchangeRate.Message;

@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Payment.FXBit
 {
-    class PayHelper : PayHelperBase
+    class PayHelper : PayHelperBase, IExchangeHelper
     {
         private class CNY
         {
@@ -42,7 +42,7 @@ namespace Payment.FXBit
             public USDC USDC { get; set; }
         }
 
-        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
+        public ExchangeResult GetExchange(Dictionary<string, string> payResource)
         {
             string sUrl = payResource["host"];
             string getExchangeRate = sUrl + "getExchangeRate";

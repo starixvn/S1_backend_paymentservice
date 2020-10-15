@@ -9,11 +9,6 @@ namespace Payment.HonorPay
 {
     class PayHelper : PayHelperBase
     {
-        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
-        {
-            throw new NotImplementedException();
-        }
-
         private class CallBackWithdrawalReq
         {
             public string account { get; set; }

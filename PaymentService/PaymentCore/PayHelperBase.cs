@@ -59,8 +59,10 @@ namespace PaymentCore
         EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs);
         NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
         NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
+    }
+    public interface IExchangeHelper
+    {
         ExchangeResult GetExchange(Dictionary<string, string> payResource);
-
     }
     public interface IPayHelperNoCallBackUrl
     {
@@ -139,8 +141,6 @@ namespace PaymentCore
         public abstract EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs);
         public abstract NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
         public abstract NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
-        public abstract ExchangeResult GetExchange(Dictionary<string, string> payResource);
-
         /// <summary>
         /// 1. 會夾帶Content-Type
         /// 2. 簡體字會變成亂碼，且無法還原

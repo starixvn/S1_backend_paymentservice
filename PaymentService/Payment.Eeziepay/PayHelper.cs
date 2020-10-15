@@ -15,12 +15,6 @@ namespace Payment.Eeziepay
             {"MYR","Kuala Lumpur" },
             {"IDR","Jakarta" }
         };
-
-        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
-        {
-            throw new NotImplementedException();
-        }
-
         public class result
         {
             public string service_version { get; set; }
