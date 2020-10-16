@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PaymentCore;
 using PaymentService.Service.DAL;
+using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 using System;
 using System.Collections.Concurrent;
@@ -24,13 +25,14 @@ namespace PaymentService.Service.BLL
         private readonly ILogger<PayBLL> logger;
         private static ConcurrentDictionary<string, IPayHelper> PayHelperContainer = new ConcurrentDictionary<string, IPayHelper>();
 
-        public PayBLL(ILogger<PayBLL> logger, IMemoryCache cache, IHostEnvironment environment, IConfiguration configuration, PayService payService)
+        public PayBLL(ILogger<PayBLL> logger, HttpHelper httpHelper, IMemoryCache cache, IHostEnvironment environment, IConfiguration configuration, PayService payService)
         {
             this.payService = payService;
             this.cache = cache;
             this.environment = environment;
             this.configuration = configuration;
             this.logger = logger;
+            PayHelperBase.HttpHelper = httpHelper;
         }
         public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
         {

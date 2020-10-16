@@ -19,9 +19,18 @@ namespace PaymentCore
         Fail
     }
 
+    public class ExchangeRate
+    {
+        public long Updated_timestamp { get; set; }
+        public decimal BuyRate { get; set; }
+        public decimal SellRate { get; set; }
+    }
+
     public class ExchangeResult
     {
+        public Dictionary<string, Dictionary<int, ExchangeRate>> ExchangeRateList { get; set; }
         public string Message { get; set; }
+        public string ErrorCode { get; set; }
     }
 
     public class DepositResult
@@ -62,7 +71,8 @@ namespace PaymentCore
     }
     public interface IExchangeHelper
     {
-        ExchangeResult GetExchange(Dictionary<string, string> payResource);
+        //ExchangeResult GetExchangeAsync(Dictionary<string, string> payResource);
+        public System.Threading.Tasks.Task<ExchangeResult> GetExchangeAsync(Dictionary<string, string> payResource);
     }
     public interface IPayHelperNoCallBackUrl
     {
@@ -132,8 +142,8 @@ namespace PaymentCore
     }
     public abstract class PayHelperBase : IPayHelper
     {
+        public static IPayHttpHelper HttpHelper { get; set; }
         public event InsertPaymentLogEventHandler InsertPaymentLog;
-
         public abstract DepositResult Debit(Dictionary<string, string> inputs);
         public abstract WithdrawResult Credit(Dictionary<string, string> inputs);
         public abstract Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs);
@@ -156,7 +166,7 @@ namespace PaymentCore
             {
                 request.Proxy = new WebProxy(proxyHost, proxyPort);
             }
-            
+
             using WebResponse response = request.GetResponse();
             using Stream dataStream = response.GetResponseStream();
             using StreamReader reader = new StreamReader(dataStream);
@@ -216,7 +226,7 @@ namespace PaymentCore
             return responseFromServer;
         }
 
-        
+
         protected string HttpPost(string url, string parameters, string contentType, string accesstoken, string transID)
         {
             WebRequest request = WebRequest.Create(url);

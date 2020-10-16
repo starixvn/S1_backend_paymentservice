@@ -3,57 +3,81 @@ using PaymentCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Payment.FXBit
 {
     class PayHelper : PayHelperBase, IExchangeHelper
     {
-        private class CNY
+        private class FxBitExchanegRete
         {
             public DateTime updated_timestamp { get; set; }
+            public string buyRate { get; set; }
             public string sellRate { get; set; }
         }
 
-        private class BTC
+        Dictionary<string, int> currMapping = new Dictionary<string, int>
         {
-            public CNY CNY { get; set; }
-        }
+            {"CNY",13 }
+        };
+        public async Task<ExchangeResult> GetExchangeAsync(Dictionary<string, string> payResource)
+        {
+            ExchangeResult oExchangeResult = new ExchangeResult
+            {
+                ErrorCode = "9000"
+            };
 
-        private class ETH
-        {
-            public CNY CNY { get; set; }
-        }
-
-        private class USDT
-        {
-            public CNY CNY { get; set; }
-        }
-
-        private class USDC
-        {
-            public CNY CNY { get; set; }
-        }
-
-        private class GetExchangeResp
-        {
-            public BTC BTC { get; set; }
-            public ETH ETH { get; set; }
-            public USDT USDT { get; set; }
-            public USDC USDC { get; set; }
-        }
-
-        public ExchangeResult GetExchange(Dictionary<string, string> payResource)
-        {
             string sUrl = payResource["host"];
             string getExchangeRate = sUrl + "getExchangeRate";
             string apiKey = payResource["key"];
 
-            string sResponse = HttpGet(getExchangeRate, null, "application/json", apiKey, null);
-            var data = FromJson<GetExchangeResp>(sResponse);
-            var result = ToJson(data);
-            
-            ExchangeResult oExchangeResult = new ExchangeResult();
-            oExchangeResult.Message = result;
+            var httpClient = HttpHelper.GetClient();
+            //httpClient.DefaultRequestHeaders.Add("accept", "application/json");
+            httpClient.DefaultRequestHeaders
+      .Accept
+      .Add(new MediaTypeWithQualityHeaderValue("application/json"));//ACCEPT header
+            httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+
+            var response = await httpClient.GetAsync(getExchangeRate);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = response.Content.ReadAsStringAsync().Result;
+                var data = FromJson<Dictionary<string, Dictionary<string, FxBitExchanegRete>>>(result);
+                oExchangeResult.ExchangeRateList = new Dictionary<string, Dictionary<int, ExchangeRate>>();
+                //ExchangeRate
+                foreach (var a1 in data)
+                {
+                    foreach (var a2 in a1.Value)
+                    {
+                        if (currMapping.ContainsKey(a2.Key))
+                        {
+                            Dictionary<int, ExchangeRate> refa1 = null;
+
+                            if (!oExchangeResult.ExchangeRateList.ContainsKey(a1.Key))
+                            {
+                                oExchangeResult.ExchangeRateList.Add(a1.Key, new Dictionary<int, ExchangeRate>());
+                            }
+
+                            refa1 = oExchangeResult.ExchangeRateList[a1.Key];
+                            ExchangeRate exchangeRate = new ExchangeRate();
+                            exchangeRate.Updated_timestamp = new DateTimeOffset(a2.Value.updated_timestamp).ToUnixTimeSeconds();
+                            exchangeRate.SellRate = decimal.Parse(a2.Value.sellRate);
+                            exchangeRate.BuyRate = decimal.Parse(a2.Value.buyRate);
+                            refa1.Add(currMapping[a2.Key], exchangeRate);
+                        }
+                    }
+                }
+
+                oExchangeResult.Message = "";
+                oExchangeResult.ErrorCode = "0";
+            }
+            else
+            {
+                oExchangeResult.Message = response.Content.ReadAsStringAsync().Result;
+            }
 
             return oExchangeResult;
         }
@@ -97,7 +121,7 @@ namespace Payment.FXBit
                     oNotify.Comment = data.status;
                     oNotify.Response = "success";
                 }
-                else if(data.status == "3")
+                else if (data.status == "3")
                 {
                     oNotify.TransStatus = TransStatus.Fail;
                     oNotify.Response = "success";
@@ -194,7 +218,7 @@ namespace Payment.FXBit
                     depositGetH5Req.Add("receipt_token", depositGetWalletReq.receipt_token);
                     depositGetH5Req.Add("wallet_addr", depositGetWalletResp.public_address);
                     string sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-                    
+
                     oDepositResult.Success = true;
                     oDepositResult.Url = H5Url + "?" + sParam;
                 }

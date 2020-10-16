@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +33,8 @@ namespace PaymentService.Controllers
         private readonly string apiUrl;
         private readonly CourierAdapter courierAdapter;
         private readonly Common common;
+        private static Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>> ExchangeRateList = new Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>>();
+        private Timer timer;
 
         public DepositController(IConfiguration configuration, ILogger<DepositController> logger, CourierAdapter courierAdapter, PayBLL payBLL, CustInfoBLL custInfoBLL, PaymentBLL paymentBLL, Common common)
         {
@@ -46,18 +49,104 @@ namespace PaymentService.Controllers
             this.common = common;
         }
 
+        public class ReqExchangeRate
+        {
+            public int PayId { get; set; }
+            public int CustId { get; set; }
+        }
+
         [HttpPost]
         [Route("Payment/ReqExchangeRate")]
-        public string ReqExchangeRate(int PayId, int CustId)
+        public async Task<ApiResult<Dictionary<string, ExchangeRate>>> ReqExchangeRateAsync(ReqExchangeRate reqExchangeRate)
         {
-            ApiResult<PayResult> apiResult = new ApiResult<PayResult>();
-            var custInfo = custInfoBLL.GetCustInfoWithCache(CustId);
-            var paySetting = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == PayId).FirstOrDefault();
-            var exchangerateReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
-            var payHelper = (IExchangeHelper)payBLL.GetPayHelper(paySetting.PayName);
-            var rExchangeRate = payHelper.GetExchange(exchangerateReq);
+            ApiResult<Dictionary<string, ExchangeRate>> apiResult = new ApiResult<Dictionary<string, ExchangeRate>>();
+            var custInfo = custInfoBLL.GetCustInfoWithCache(reqExchangeRate.CustId);
 
-            return rExchangeRate.Message;
+            if (!ExchangeRateList.ContainsKey(custInfo.SiteId))
+            {
+                ExchangeRateList.TryAdd(custInfo.SiteId, null);
+            }
+
+            if (ExchangeRateList[custInfo.SiteId] == null)
+            {
+                var paySetting = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqExchangeRate.PayId).FirstOrDefault();
+                var exchangerateReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
+                var payHelper = (IExchangeHelper)payBLL.GetPayHelper(paySetting.PayName);
+                var rExchangeRate = await payHelper.GetExchangeAsync(exchangerateReq);
+
+                timer = new Lazy<Timer>(() => new Timer(DoTaskAsync, reqExchangeRate, TimeSpan.Zero, TimeSpan.Zero)).Value;
+                
+                if (rExchangeRate.ErrorCode == "0")
+                {
+                    apiResult.Data = new Dictionary<string, ExchangeRate>();
+                    ExchangeRateList[custInfo.SiteId] = rExchangeRate?.ExchangeRateList;
+                    foreach (var a1 in rExchangeRate?.ExchangeRateList)
+                    {
+                        foreach (var a2 in a1.Value)
+                        {
+                            if (a2.Key == custInfo.CurrencyId)
+                            {
+                                apiResult.Data.Add(a1.Key, a2.Value);
+                            }
+                        }
+                    }
+
+                    apiResult.ErrorCode = 0;
+                }
+                else
+                {
+                    apiResult.Message = rExchangeRate.Message;
+                }
+            }
+            else
+            {
+                apiResult.Data = new Dictionary<string, ExchangeRate>();
+
+                foreach (var a1 in ExchangeRateList[custInfo.SiteId])
+                {
+                    foreach (var a2 in a1.Value)
+                    {
+                        if (a2.Key == custInfo.CurrencyId)
+                        {
+                            apiResult.Data.Add(a1.Key, a2.Value);
+                        }
+                    }
+                }
+
+                apiResult.ErrorCode = 0;
+            }
+
+            return apiResult;
+        }
+
+        private async void DoTaskAsync(object state)
+        {
+            try
+            {
+                ReqExchangeRate reqExchangeRate = (ReqExchangeRate)state;
+
+                foreach (var c1 in ExchangeRateList)
+                {
+                    var paySetting = payBLL.GetPaymentList(c1.Key).Where(x => x.PayId == reqExchangeRate.PayId).FirstOrDefault();
+                    var exchangerateReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
+                    var payHelper = (IExchangeHelper)payBLL.GetPayHelper(paySetting.PayName);
+                    var rExchangeRate = await payHelper.GetExchangeAsync(exchangerateReq);
+
+                    if (rExchangeRate.ErrorCode == "0")
+                    {
+                        ExchangeRateList[c1.Key] = rExchangeRate.ExchangeRateList;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(5);
+                timer.Change(dueTimeSpan, TimeSpan.Zero);
+            }
         }
 
         public class ReqDeposit
@@ -192,7 +281,7 @@ namespace PaymentService.Controllers
 
             var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == mobilePayInfo.PayId).FirstOrDefault();
             var payLangId = payBLL.GetPayLanguage().Where(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && (x.PayId == pay.PayId)).FirstOrDefault()?.PayLangId;
-            
+
             //DateTimeOffset
             var payHelper = payBLL.GetPayHelper(pay.PayName);
 

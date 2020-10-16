@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -30,9 +32,27 @@ namespace PaymentService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMemoryCache();
+
+            if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))
+            {
+                var proxy = new HttpClientHandler
+                {
+                    Proxy = new WebProxy(Configuration.GetValue<string>("ProxyHost"), Configuration.GetValue<int>("ProxyPort")),
+                    UseProxy = true
+                };
+
+                services.AddHttpClient("with_proxy")
+                .ConfigurePrimaryHttpMessageHandler(() => proxy);
+            }
+            else
+            {
+                services.AddHttpClient();
+            }
+
             /*Library*/
             services.AddSingleton<Common>();
             services.AddSingleton<CourierAdapter>();
+            services.AddSingleton<HttpHelper>();
             //services.AddSingleton<IBCDBLibrary>();
 
             /*DAL*/
