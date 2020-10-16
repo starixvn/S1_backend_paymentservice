@@ -36,7 +36,7 @@ namespace PaymentService.Service.BLL
         }
         public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
         {
-            string key = "OnlineBankList";
+            string key = $"OnlineBankList_{siteId}";
             var bankInfoPayListCache = cache.Get<IEnumerable<BankInfoPay>>(key);
             if (bankInfoPayListCache != null)
             {
@@ -59,7 +59,7 @@ namespace PaymentService.Service.BLL
         }
         public IEnumerable<MobilePayInfo> GetMobilePayInfoList(int siteId)
         {
-            string key = "MobilePayInfoList";
+            string key = $"MobilePayInfoList_{siteId}";
             var mobilePayInfoList = cache.Get<IEnumerable<MobilePayInfo>>(key);
             if (mobilePayInfoList == null)
             {
