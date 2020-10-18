@@ -188,7 +188,7 @@ namespace Payment.FXBit
             string H5Url = inputs["H5host"];
 
             DepositReq depositReq = new DepositReq();
-            depositReq.marked_currency = "USDT";
+            depositReq.marked_currency = inputs["PayCurrencyId"];
             decimal amount = decimal.Parse(inputs["Amount"]);
             depositReq.marked_price = amount.ToString("#");
             depositReq.remark = inputs["TransID"];

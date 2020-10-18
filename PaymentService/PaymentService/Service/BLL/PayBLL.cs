@@ -78,6 +78,27 @@ namespace PaymentService.Service.BLL
             }
             return mobilePayInfoList;
         }
+        public IEnumerable<CryptoPayInfo> GetCryptoPayInfoList(int siteId)
+        {
+            string key = $"CryptoPayInfoList_{siteId}";
+            var cryptoPayInfoList = cache.Get<IEnumerable<CryptoPayInfo>>(key);
+            if (cryptoPayInfoList == null)
+            {
+                cryptoPayInfoList = payService.GetCryptoPayInfo(siteId);
+
+                if (cryptoPayInfoList != null)
+                {
+                    var expireTime = TimeSpan.FromMinutes(1);
+                    if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
+                    {
+                        expireTime = TimeSpan.FromMinutes(5);
+                    }
+
+                    cache.Set(key, cryptoPayInfoList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
+                }
+            }
+            return cryptoPayInfoList;
+        }
 
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
         {
