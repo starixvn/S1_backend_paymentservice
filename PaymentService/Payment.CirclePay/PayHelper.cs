@@ -49,7 +49,9 @@ namespace Payment.CirclePay
                 }
                 else
                 {
-                    oNotify.TransStatus = TransStatus.Fail;
+                    // Circlepay remove fail status due to they will update to accpet if fail
+                    // oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.TransStatus = TransStatus.Pending;
                     oNotify.ThirdId = data.tran_id;
                     oNotify.Message = data.status + "-" + data.note;
                     oNotify.Response = "200";
@@ -100,7 +102,9 @@ namespace Payment.CirclePay
                 }
                 else if (data.status == "02" || data.status == "03")
                 {
-                    oNotify.TransStatus = TransStatus.Fail;
+                    // Circlepay remove fail status due to they will update to accpet if fail
+                    //oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.TransStatus = TransStatus.Pending;
                     oNotify.ThirdId = data.tran_id;
                     oNotify.Comment = data.status;
                     oNotify.Message = data.status;
