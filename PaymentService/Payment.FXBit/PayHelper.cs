@@ -220,8 +220,18 @@ namespace Payment.FXBit
                     string sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
                     oDepositResult.Success = true;
-                    oDepositResult.Url = H5Url + "?" + sParam;
+                    oDepositResult.Url = $"{H5Url}?{sParam}";
                 }
+                else
+                {
+                    oDepositResult.Message = $"{depositGetWalletResp.error}-{depositGetWalletResp.error_message}";
+                    oDepositResult.RawContent = sResponse1;
+                }
+            }
+            else
+            {
+                oDepositResult.Message = $"{depositResp.error}";
+                oDepositResult.RawContent = sResponse;
             }
 
             return oDepositResult;

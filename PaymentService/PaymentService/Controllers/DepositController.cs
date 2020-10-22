@@ -124,17 +124,17 @@ namespace PaymentService.Controllers
             try
             {
                 ReqExchangeRate reqExchangeRate = (ReqExchangeRate)state;
-
-                foreach (var c1 in ExchangeRateList)
+                
+                foreach (var c1 in ExchangeRateList.Keys.ToArray())
                 {
-                    var paySetting = payBLL.GetPaymentList(c1.Key).Where(x => x.PayId == reqExchangeRate.PayId).FirstOrDefault();
+                    var paySetting = payBLL.GetPaymentList(c1).Where(x => x.PayId == reqExchangeRate.PayId).FirstOrDefault();
                     var exchangerateReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
                     var payHelper = (IExchangeHelper)payBLL.GetPayHelper(paySetting.PayName);
                     var rExchangeRate = await payHelper.GetExchangeAsync(exchangerateReq);
 
                     if (rExchangeRate.ErrorCode == "0")
                     {
-                        ExchangeRateList[c1.Key] = rExchangeRate.ExchangeRateList;
+                        ExchangeRateList[c1] = rExchangeRate.ExchangeRateList;
                     }
                 }
             }
