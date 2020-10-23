@@ -2,7 +2,9 @@
 using PaymentCore;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -188,50 +190,60 @@ namespace Payment.FXBit
             string H5Url = inputs["H5host"];
 
             DepositReq depositReq = new DepositReq();
-            depositReq.marked_currency = inputs["PayCurrencyId"];
+            depositReq.marked_currency = inputs["PayCode"];
             decimal amount = decimal.Parse(inputs["Amount"]);
             depositReq.marked_price = amount.ToString("#");
             depositReq.remark = inputs["TransID"];
             depositReq.callback_url = inputs["CallBackUrl"];
+            string sResponse = null;
 
-            string sResponse = HttpPost(getReceptionToken, ToJson(depositReq), "application/json", apiKey, depositReq.remark);
-
-            DepositResp depositResp = new DepositResp();
-            depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
             DepositResult oDepositResult = new DepositResult();
             oDepositResult.Success = false;
 
-            if (depositResp.error == 0)
+            try
             {
-                DepositGetWalletReq depositGetWalletReq = new DepositGetWalletReq();
-                depositGetWalletReq.receipt_token = depositResp.receipt_token;
-                depositGetWalletReq.billed_currency = inputs["PayCode"];
+                sResponse = HttpPost(getReceptionToken, ToJson(depositReq), "application/json", apiKey, depositReq.remark);
 
-                string sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json", apiKey, depositReq.remark);
+                DepositResp depositResp = new DepositResp();
+                depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
 
-                DepositGetWalletResp depositGetWalletResp = new DepositGetWalletResp();
-                depositGetWalletResp = JsonConvert.DeserializeObject<DepositGetWalletResp>(sResponse1);
-
-                if (depositGetWalletResp.error == 0)
+                if (depositResp.error == 0)
                 {
-                    Dictionary<string, string> depositGetH5Req = new Dictionary<string, string>();
-                    depositGetH5Req.Add("receipt_token", depositGetWalletReq.receipt_token);
-                    depositGetH5Req.Add("wallet_addr", depositGetWalletResp.public_address);
-                    string sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                    DepositGetWalletReq depositGetWalletReq = new DepositGetWalletReq();
+                    depositGetWalletReq.receipt_token = depositResp.receipt_token;
+                    depositGetWalletReq.billed_currency = inputs["PayCurrencyId"];
 
-                    oDepositResult.Success = true;
-                    oDepositResult.Url = $"{H5Url}?{sParam}";
+                    string sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json", apiKey, depositReq.remark);
+
+                    DepositGetWalletResp depositGetWalletResp = new DepositGetWalletResp();
+                    depositGetWalletResp = JsonConvert.DeserializeObject<DepositGetWalletResp>(sResponse1);
+
+                    if (depositGetWalletResp.error == 0)
+                    {
+                        Dictionary<string, string> depositGetH5Req = new Dictionary<string, string>();
+                        depositGetH5Req.Add("receipt_token", depositGetWalletReq.receipt_token);
+                        depositGetH5Req.Add("wallet_addr", depositGetWalletResp.public_address);
+                        string sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+                        oDepositResult.Success = true;
+                        oDepositResult.Url = $"{H5Url}?{sParam}";
+                    }
+                    else
+                    {
+                        oDepositResult.Message = $"{depositGetWalletResp.error}-{depositGetWalletResp.error_message}";
+                        oDepositResult.RawContent = sResponse1;
+                    }
                 }
                 else
                 {
-                    oDepositResult.Message = $"{depositGetWalletResp.error}-{depositGetWalletResp.error_message}";
-                    oDepositResult.RawContent = sResponse1;
+                    oDepositResult.Message = $"{depositResp.error}";
+                    oDepositResult.RawContent = sResponse;
                 }
             }
-            else
+            catch(WebException wEx)
             {
-                oDepositResult.Message = $"{depositResp.error}";
-                oDepositResult.RawContent = sResponse;
+                var err = FromJson<Dictionary<string, string>>(new StreamReader(wEx.Response?.GetResponseStream()).ReadToEnd());
+                oDepositResult.Message = $"{err["error"]}-{err["error_message"]}";
             }
 
             return oDepositResult;

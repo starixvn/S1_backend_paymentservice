@@ -29,8 +29,10 @@ namespace PaymentService.Service.Model
                 {
                     return Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo2_1>(DepositInfo);
                 }
-
-                return null;
+                else
+                {
+                    return Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfoGeneral_1>(DepositInfo);
+                }
             }
         }
         public int Status { set; get; }
@@ -56,6 +58,13 @@ namespace PaymentService.Service.Model
         public string PayCode { get; set; }
     }
     public class DepositInfo2_1 : IDepositInfo, IPay
+    {
+        public int Ver { get; set; }
+        public int PayId { get; set; }
+        public int ChannelId { get; set; }
+        public int CurrencyId { get; set; }
+    }
+    public class DepositInfoGeneral_1 : IDepositInfo, IPay
     {
         public int Ver { get; set; }
         public int PayId { get; set; }
