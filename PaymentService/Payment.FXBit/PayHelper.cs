@@ -190,7 +190,7 @@ namespace Payment.FXBit
             string H5Url = inputs["H5host"];
 
             DepositReq depositReq = new DepositReq();
-            depositReq.marked_currency = inputs["PayCode"];
+            depositReq.marked_currency = inputs["PayCurrencyId"];
             decimal amount = decimal.Parse(inputs["Amount"]);
             depositReq.marked_price = amount.ToString("#");
             depositReq.remark = inputs["TransID"];
@@ -211,7 +211,7 @@ namespace Payment.FXBit
                 {
                     DepositGetWalletReq depositGetWalletReq = new DepositGetWalletReq();
                     depositGetWalletReq.receipt_token = depositResp.receipt_token;
-                    depositGetWalletReq.billed_currency = inputs["PayCurrencyId"];
+                    depositGetWalletReq.billed_currency = inputs["PayCode"];
 
                     string sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json", apiKey, depositReq.remark);
 
@@ -243,7 +243,10 @@ namespace Payment.FXBit
             catch(WebException wEx)
             {
                 var err = FromJson<Dictionary<string, string>>(new StreamReader(wEx.Response?.GetResponseStream()).ReadToEnd());
-                oDepositResult.Message = $"{err["error"]}-{err["error_message"]}";
+                if (err.ContainsKey("error"))
+                    oDepositResult.Message = $"{err["error"]}-{err["error_message"]}";
+                if (err.ContainsKey("err"))
+                    oDepositResult.Message = $"{err["err"]}";
             }
 
             return oDepositResult;
