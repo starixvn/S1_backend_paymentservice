@@ -423,6 +423,7 @@ namespace PaymentService.Controllers
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
                 apiResult.RawErrorCode = result.ErrorCode;
                 apiResult.RawMessage = result.Message;
+                apiResult.Message = result.Message;
             }
 
             return apiResult;
