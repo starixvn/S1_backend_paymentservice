@@ -213,7 +213,12 @@ namespace PaymentService.Controllers
 
                 //oDBLog.InsertPaymentLog("", sInput, JsonConvert.SerializeObject(rNotifyDepositResult));
 
-                if (!string.Equals(transId, rNotifyWithdrawalResult.WithdrawId, StringComparison.OrdinalIgnoreCase))
+                string temp = rNotifyWithdrawalResult.WithdrawId;
+                while(temp.Substring(0,1) == "0")
+                {
+                    temp = temp.Remove(0, 1);
+                }
+                if (!string.Equals(transId, temp, StringComparison.OrdinalIgnoreCase))
                 {
                     logger.LogError($"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
                     //dblogger.Write(SerialId, $"{SerialId} is not equal {rNotifyDepositResult.DepositID} with PayName={DepReq["PayName"]}");
