@@ -430,9 +430,9 @@ namespace PaymentService.Controllers
 
             return apiResult;
         }
-        bool IsWhiteList(string clientIP, string PaymentName)
+        bool IsWhiteList(string clientIP, string PaymentName, string transId)
         {
-            log2File.Info(clientIP, $"{PaymentName}_PaymentIPLog");
+            log2File.Info($"{clientIP},{transId}", $"{PaymentName}_PaymentIPLog");
             var WhiteList = configuration.GetSection("WhiteList")?.Get<Dictionary<string, string[]>>();
             if (WhiteList != null)
             {
@@ -443,7 +443,7 @@ namespace PaymentService.Controllers
                     WhiteListIgnoreCase.TryGetValue(PaymentName, out iplist);
                     if (!iplist.Any(x => x == clientIP))
                     {
-                        log2File.Info(clientIP, $"{PaymentName}_PaymentRejectIPLog");
+                        log2File.Info($"{clientIP},{transId}", $"{PaymentName}_PaymentRejectIPLog");
                         return false;
                     }
                 }
@@ -532,7 +532,7 @@ namespace PaymentService.Controllers
                     return $"PayName of TransId={transId} is not exist";
                 }
 
-                if (!IsWhiteList(common.GetClientIP(HttpContext), paySetting.PayName))
+                if (!IsWhiteList(common.GetClientIP(HttpContext), paySetting.PayName, transId))
                 {
                     return "Invalid IP!";
                 }
