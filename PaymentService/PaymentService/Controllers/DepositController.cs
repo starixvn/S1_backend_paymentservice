@@ -33,10 +33,11 @@ namespace PaymentService.Controllers
         private readonly string apiUrl;
         private readonly CourierAdapter courierAdapter;
         private readonly Common common;
+        private readonly Log2File log2File;
         private static Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>> ExchangeRateList = new Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>>();
         private Timer timer;
 
-        public DepositController(IConfiguration configuration, ILogger<DepositController> logger, CourierAdapter courierAdapter, PayBLL payBLL, CustInfoBLL custInfoBLL, PaymentBLL paymentBLL, Common common)
+        public DepositController(IConfiguration configuration, ILogger<DepositController> logger, CourierAdapter courierAdapter, PayBLL payBLL, CustInfoBLL custInfoBLL, PaymentBLL paymentBLL, Common common, Log2File log2File)
         {
             this.payBLL = payBLL;
             this.custInfoBLL = custInfoBLL;
@@ -47,6 +48,7 @@ namespace PaymentService.Controllers
             apiUrl = configuration.GetValue<string>("TpService");
             this.courierAdapter = courierAdapter;
             this.common = common;
+            this.log2File = log2File;
         }
 
         public class ReqExchangeRate
@@ -428,6 +430,29 @@ namespace PaymentService.Controllers
 
             return apiResult;
         }
+        bool IsWhiteList(string clientIP, string PaymentName)
+        {
+            log2File.Info(clientIP, $"{PaymentName}_PaymentIPLog");
+            var WhiteList = configuration.GetSection("WhiteList")?.Get<Dictionary<string, string[]>>();
+            if (WhiteList != null)
+            {
+                var WhiteListIgnoreCase = new Dictionary<string, string[]>(WhiteList, StringComparer.OrdinalIgnoreCase);
+                string[] iplist;
+                if (WhiteListIgnoreCase.ContainsKey(PaymentName))
+                {
+                    WhiteListIgnoreCase.TryGetValue(PaymentName, out iplist);
+                    if (!iplist.Any(x => x == clientIP))
+                    {
+                        log2File.Info(clientIP, $"{PaymentName}_PaymentRejectIPLog");
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return true;
+        }
 
         [Route("Payment/DepositCallBack/{TransId}")]
         [HttpPost]
@@ -487,7 +512,6 @@ namespace PaymentService.Controllers
         private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
         {
             var sbody = string.Join("&", dicParam.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
             DepositRequest depositRequest = null;
             //查詢訂單在不在db
             depositRequest = paymentBLL.GetDepositRequest(transId);
@@ -506,6 +530,11 @@ namespace PaymentService.Controllers
                     logger.LogError($"PayName of TransId={transId} is not exist");
                     //dblogger.Write(SerialId, $"PayName of SerialId={depositRequest.SerialId} is not exist");
                     return $"PayName of TransId={transId} is not exist";
+                }
+
+                if (!IsWhiteList(common.GetClientIP(HttpContext), paySetting.PayName))
+                {
+                    return "Invalid IP!";
                 }
 
                 var payHelper = payBLL.GetPayHelper(paySetting.PayName);
