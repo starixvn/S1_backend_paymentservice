@@ -54,5 +54,10 @@ namespace PaymentService.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<CryptoPayInfo>("Common_CryptoPay_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
         }
+        public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfo(int siteId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<LoadCardPayInfo>("Common_LoadCardPay_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
+        }
     }
 }

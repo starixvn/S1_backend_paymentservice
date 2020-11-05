@@ -99,6 +99,27 @@ namespace PaymentService.Service.BLL
             }
             return cryptoPayInfoList;
         }
+        public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfoList(int siteId)
+        {
+            string key = $"LoadCardPayInfoList_{siteId}";
+            var loadCardPayInfoList = cache.Get<IEnumerable<LoadCardPayInfo>>(key);
+            if (loadCardPayInfoList == null)
+            {
+                loadCardPayInfoList = payService.GetLoadCardPayInfo(siteId);
+
+                if (loadCardPayInfoList != null)
+                {
+                    var expireTime = TimeSpan.FromMinutes(1);
+                    if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
+                    {
+                        expireTime = TimeSpan.FromMinutes(5);
+                    }
+
+                    cache.Set(key, loadCardPayInfoList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
+                }
+            }
+            return loadCardPayInfoList;
+        }
 
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
         {
