@@ -71,7 +71,8 @@ namespace PaymentService.Service.Model.enums
         OnlineBanking = 1,
         MobilePayment = 2,
         LocalBank = 3,
-        CryptoPayPayment = 4
+        CryptoPayPayment = 4,
+        LoadCardPayment = 5
     }
 
     /// <summary>
