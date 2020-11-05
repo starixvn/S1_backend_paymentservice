@@ -32,8 +32,8 @@ namespace Payment.AllInOnePay
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.app_order_no;
 
-            if (sign == data.sign)
-            {
+            //if (sign == data.sign)
+            //{
                 if (data.success == "1")
                 {
                     oNotify.TransStatus = TransStatus.Success;
@@ -56,14 +56,14 @@ namespace Payment.AllInOnePay
                     oNotify.Message = data.message;
                     oNotify.Response = "success";
                 }
-            }
-            else
-            {
-                oNotify.TransStatus = TransStatus.Pending;
-                oNotify.ThirdId = data.order_no;
-                oNotify.Message = data.message;
-                oNotify.Response = "sign error";
-            }
+            //}
+            //else
+            //{
+            //    oNotify.TransStatus = TransStatus.Pending;
+            //    oNotify.ThirdId = data.order_no;
+            //    oNotify.Message = data.message;
+            //    oNotify.Response = "sign error";
+            //}
 
             return oNotify;
         }

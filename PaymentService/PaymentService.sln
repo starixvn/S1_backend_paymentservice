@@ -39,6 +39,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.MangoPay", "Payment
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.VOBPay", "Payment.Vobpay\Payment.VOBPay.csproj", "{0143DDA0-D9E6-46BE-83AD-7C3F5CAD20E7}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.AllInOnePay", "Payment.AllInOnePay\Payment.AllInOnePay.csproj", "{A1889C9E-DCA8-4213-98DC-EE02E8A7B58C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.AllInOnePayLocal", "Payment.AllInOnePayLocal\Payment.AllInOnePayLocal.csproj", "{67D03A9B-4512-46D7-8F89-39828E598046}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -113,6 +117,14 @@ Global
 		{0143DDA0-D9E6-46BE-83AD-7C3F5CAD20E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0143DDA0-D9E6-46BE-83AD-7C3F5CAD20E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0143DDA0-D9E6-46BE-83AD-7C3F5CAD20E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1889C9E-DCA8-4213-98DC-EE02E8A7B58C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1889C9E-DCA8-4213-98DC-EE02E8A7B58C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1889C9E-DCA8-4213-98DC-EE02E8A7B58C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1889C9E-DCA8-4213-98DC-EE02E8A7B58C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67D03A9B-4512-46D7-8F89-39828E598046}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67D03A9B-4512-46D7-8F89-39828E598046}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67D03A9B-4512-46D7-8F89-39828E598046}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67D03A9B-4512-46D7-8F89-39828E598046}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
