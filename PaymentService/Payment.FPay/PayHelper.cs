@@ -49,9 +49,17 @@ namespace Payment.FPay
                     oNotify.Message = data.order_status;
                     oNotify.Response = "200";
                 }
-                else
+                else if (data.order_status == "fail")
                 {
                     oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.ThirdId = data.order_id;
+                    oNotify.Comment = data.order_status;
+                    oNotify.Message = data.order_status;
+                    oNotify.Response = "200";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Pending;
                     oNotify.ThirdId = data.order_id;
                     oNotify.Comment = data.order_status;
                     oNotify.Message = data.order_status;
