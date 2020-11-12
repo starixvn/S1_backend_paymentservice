@@ -43,6 +43,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.AllInOnePay", "Paym
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.AllInOnePayLocal", "Payment.AllInOnePayLocal\Payment.AllInOnePayLocal.csproj", "{67D03A9B-4512-46D7-8F89-39828E598046}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.FPay", "Payment.FPay\Payment.FPay.csproj", "{58052478-61A0-4558-A800-26CCD52BE572}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,10 @@ Global
 		{67D03A9B-4512-46D7-8F89-39828E598046}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{67D03A9B-4512-46D7-8F89-39828E598046}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{67D03A9B-4512-46D7-8F89-39828E598046}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58052478-61A0-4558-A800-26CCD52BE572}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58052478-61A0-4558-A800-26CCD52BE572}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58052478-61A0-4558-A800-26CCD52BE572}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58052478-61A0-4558-A800-26CCD52BE572}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
