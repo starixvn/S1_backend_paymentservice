@@ -23,7 +23,7 @@ namespace Payment.FXBit
 
         Dictionary<string, int> currMapping = new Dictionary<string, int>
         {
-            {"CNY",13 }
+            {"CNY",13}, {"USDT",96}
         };
         public async Task<ExchangeResult> GetExchangeAsync(Dictionary<string, string> payResource)
         {
