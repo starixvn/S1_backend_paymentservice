@@ -224,6 +224,7 @@ namespace PaymentService.Controllers
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
 
             logger.LogInformation($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}");
+            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositBank");
 
             var result = payHelper.Debit(DepReq);
 
@@ -307,6 +308,7 @@ namespace PaymentService.Controllers
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
 
             logger.LogInformation($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}");
+            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositMobile");
 
             var result = payHelper.Debit(DepReq);
 
@@ -395,6 +397,7 @@ namespace PaymentService.Controllers
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
 
             logger.LogInformation($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}");
+            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositCrpyto");
 
             var result = payHelper.Debit(DepReq);
 
@@ -484,7 +487,7 @@ namespace PaymentService.Controllers
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
 
             logger.LogInformation($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}");
-
+            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositLoadCard");
             var result = payHelper.Debit(DepReq);
 
             if (result.Success)
@@ -562,12 +565,14 @@ namespace PaymentService.Controllers
                         Request.QueryString.ToUriComponent());
 
             logger.LogInformation(bodyText);
+            log2File.Info(bodyText, "DepositCallBack");
 
             Dictionary<string, string> dicParam = new Dictionary<string, string>();
             bool isFormData = false;
             if (Request.ContentType == null)
             {
                 logger.LogError($"IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
+                log2File.Error($"IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null", "DepositCallBack");
                 return Content("Request data is null");
             }
 
@@ -582,6 +587,7 @@ namespace PaymentService.Controllers
             }
 
             logger.LogInformation($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
+            log2File.Info($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}", "DepositCallBack");
 
             int depositId = 0;
 
@@ -617,6 +623,7 @@ namespace PaymentService.Controllers
                 if (!DepReq.ContainsKey("PayName"))
                 {
                     logger.LogError($"PayName of TransId={transId} is not exist");
+                    log2File.Error($"PayName of TransId={transId} is not exist", "CallBackHandlerAsync");
                     //dblogger.Write(SerialId, $"PayName of SerialId={depositRequest.SerialId} is not exist");
                     return $"PayName of TransId={transId} is not exist";
                 }
@@ -647,6 +654,7 @@ namespace PaymentService.Controllers
                 if (!string.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
                 {
                     logger.LogError($"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
+                    log2File.Error($"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}", "CallBackHandlerAsync");
                     //dblogger.Write(SerialId, $"{SerialId} is not equal {rNotifyDepositResult.DepositID} with PayName={DepReq["PayName"]}");
                     return $"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}";
                 }
@@ -657,6 +665,7 @@ namespace PaymentService.Controllers
                 if (rNotifyDepositResult.RequestAmount != depositRequest.Amount)
                 {
                     logger.LogError($"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}");
+                    log2File.Error($"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}", "CallBackHandlerAsync");
                     //dblogger.Write(transId, $"OrderAmount{rNotifyDepositResult.OrderAmount} is not equal {depositRequest.UserMoney}");
                     return $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
                 }
@@ -681,12 +690,14 @@ namespace PaymentService.Controllers
                         errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
                         errorMessages.AppendLine($"Source: {SqlEx.Source}");
                         logger.LogError(errorMessages.ToString());
+                        log2File.Error(errorMessages.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, errorMessages.ToString());
                         return "Update UserMoney error(SQL)";
                     }
                     catch (Exception exForEachTransaction)
                     {
                         logger.LogError(exForEachTransaction.Message);
+                        log2File.Error(exForEachTransaction.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, exForEachTransaction.Message);
                         return "Update UserMoney error(Other)";
                     }
@@ -712,6 +723,7 @@ namespace PaymentService.Controllers
                     catch (Exception ex)
                     {
                         logger.LogError(ex.Message);
+                        log2File.Error(ex.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, ex.Message);
                         return "Update DepositFail error";
                     }
@@ -722,6 +734,7 @@ namespace PaymentService.Controllers
             else
             {
                 logger.LogError($"SerialId={transId} is not exist");
+                log2File.Error($"SerialId={transId} is not exist", "CallBackHandlerAsync");
                 //dblogger.Write(SerialId, $"SerialId={SerialId} is not exist");
                 return $"SerialId={transId} is not exist";
             }
