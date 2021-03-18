@@ -24,8 +24,9 @@
     <ProjectReference Include="..\Payment.MangoPay\Payment.MangoPay.csproj" />
     <ProjectReference Include="..\Payment.OneClickPay\Payment.OneClickPay.csproj" />
     <ProjectReference Include="..\Payment.PatekPay\Payment.PatekPay.csproj" />
+    <ProjectReference Include="..\Payment.TruePay\Payment.TruePay.csproj" />
     <ProjectReference Include="..\Payment.VNPay\Payment.VNPay.csproj" />
-    <ProjectReference Include="..\Payment.Vobpay\Payment.VOBPay.csproj" />
+    <ProjectReference Include="..\Payment.NganLuong\Payment.NganLuong.csproj" />
     <ProjectReference Include="..\Payment.Xingji\Payment.Xingji.csproj" />
     <ProjectReference Include="..\Payment.YRPay\Payment.YRPay.csproj" />
     <ProjectReference Include="..\PaymentCore\PaymentCore.csproj" />
