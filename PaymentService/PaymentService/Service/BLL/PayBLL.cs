@@ -182,7 +182,7 @@ namespace PaymentService.Service.BLL
 
         public IEnumerable<Pay> GetPaymentList(int siteId)
         {
-            string key = "Pay";
+            string key = $"OnlineBankList_{siteId}";
             var payCache = cache.Get<IEnumerable<Pay>>(key);
             if (payCache != null)
             {
