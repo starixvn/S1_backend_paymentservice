@@ -77,7 +77,7 @@ namespace PaymentService.Controllers
                 var rExchangeRate = await payHelper.GetExchangeAsync(exchangerateReq);
 
                 timer = new Lazy<Timer>(() => new Timer(DoTaskAsync, reqExchangeRate, TimeSpan.Zero, TimeSpan.Zero)).Value;
-                
+
                 if (rExchangeRate.ErrorCode == "0")
                 {
                     apiResult.Data = new Dictionary<string, ExchangeRate>();
@@ -126,7 +126,7 @@ namespace PaymentService.Controllers
             try
             {
                 ReqExchangeRate reqExchangeRate = (ReqExchangeRate)state;
-                
+
                 foreach (var c1 in ExchangeRateList.Keys.ToArray())
                 {
                     var paySetting = payBLL.GetPaymentList(c1).Where(x => x.PayId == reqExchangeRate.PayId).FirstOrDefault();
@@ -143,6 +143,7 @@ namespace PaymentService.Controllers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error($"Exception={ex.Message}, DoTaskAsync Exception", "DoTaskAsync");
             }
             finally
             {
@@ -238,7 +239,7 @@ namespace PaymentService.Controllers
                 payResult.Mode = onlineBank.Mode;
                 apiResult.Data = payResult;
             }
-            else if (!result.Success)
+            else
             {
                 DepositRequest depositRequest = new DepositRequest();
                 depositRequest.DepositType = (int)DepositType.OnlineBanking;
@@ -322,7 +323,7 @@ namespace PaymentService.Controllers
                 payResult.Mode = mobilePayInfo.Mode;
                 apiResult.Data = payResult;
             }
-            else if (!result.Success)
+            else
             {
                 DepositRequest depositRequest = new DepositRequest();
                 depositRequest.DepositType = (int)DepositType.MobilePayment;
@@ -411,7 +412,7 @@ namespace PaymentService.Controllers
                 payResult.Mode = cryptoPayInfo.Mode;
                 apiResult.Data = payResult;
             }
-            else if (!result.Success)
+            else
             {
                 DepositRequest depositRequest = new DepositRequest();
                 depositRequest.DepositType = (int)DepositType.CryptoPayPayment;
@@ -500,7 +501,7 @@ namespace PaymentService.Controllers
                 payResult.Mode = loadCardPay.Mode;
                 apiResult.Data = payResult;
             }
-            else if (!result.Success)
+            else
             {
                 DepositRequest depositRequest = new DepositRequest();
                 depositRequest.DepositType = (int)DepositType.LoadCardPayment;

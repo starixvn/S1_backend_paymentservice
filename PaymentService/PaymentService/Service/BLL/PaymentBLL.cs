@@ -34,7 +34,14 @@ namespace PaymentService.Service.BLL
         {
             List<int> forStatus = new List<int>();
             forStatus.Add((int)DepositStatus.Pending);
-            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
+            try
+            {
+                depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         public void DepositFail(DepositRequest depositRequest, IDepositResult iDepositResult)

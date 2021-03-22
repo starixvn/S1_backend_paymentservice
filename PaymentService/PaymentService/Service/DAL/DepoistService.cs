@@ -88,6 +88,7 @@ namespace PaymentService.Service.DAL
             catch (Exception ex)
             {
                 SetDepositLog(depositId, siteId, ex.Message, (int)DepositStatus.Error, actualDeposit, "Payment Service");
+                throw ex;
             }
 
             return result;
