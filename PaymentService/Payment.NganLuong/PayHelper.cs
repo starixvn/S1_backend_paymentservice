@@ -29,7 +29,7 @@ namespace Payment.NganLuong
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(bodyContent);
-             
+
             NotifyDepositResult oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.content;
             oNotify.TransStatus = TransStatus.Success;
@@ -55,7 +55,7 @@ namespace Payment.NganLuong
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"] + $"?email={inputs["email"]}&amount={Convert.ToInt32(decimal.Parse(inputs["Amount"])).ToString()}&content={inputs["TransID"].ToLower()}";
+            string sUrl = inputs["host"] + $"?email={inputs["email"]}&amount={decimal.Parse(inputs["Amount"]).ToString("#")}&content={inputs["TransID"].ToLower()}";
 
             DepositResult oDepositResult = new DepositResult();
             oDepositResult.Url = sUrl;
