@@ -34,6 +34,7 @@ namespace PaymentService.Service.BLL
         {
             List<int> forStatus = new List<int>();
             forStatus.Add((int)DepositStatus.Pending);
+            forStatus.Add((int)DepositStatus.Rejected);
             try
             {
                 depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
