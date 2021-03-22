@@ -30,31 +30,38 @@ namespace Payment.TruePay
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.id;
 
-            if (sign == data.token)
+            //if (sign == data.token)
+            //{
+            if (data.status == 1)
             {
-                if (data.status == 1)
-                {
-                    oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.amount);
-                    oNotify.ThirdId = data.id;
-                    oNotify.Message = data.status + "-" + data.message;
-                    oNotify.Response = "OK";
-                }
-                else
-                {
-                    oNotify.TransStatus = TransStatus.Pending;
-                    oNotify.ThirdId = data.id;
-                    oNotify.Message = data.status + "-" + data.message;
-                    oNotify.Response = "fail";
-                }
+                oNotify.TransStatus = TransStatus.Success;
+                oNotify.RequestAmount = decimal.Parse(data.amount);
+                oNotify.ThirdId = data.id;
+                oNotify.Message = data.status + "-" + data.message;
+                oNotify.Response = "OK";
+            }
+            else if (data.status == -1)
+            {
+                oNotify.TransStatus = TransStatus.Fail;
+                oNotify.ThirdId = data.id;
+                oNotify.Message = data.status + "-" + data.message;
+                oNotify.Response = "OK";
             }
             else
             {
                 oNotify.TransStatus = TransStatus.Pending;
                 oNotify.ThirdId = data.id;
-                oNotify.Message = "Signature error";
-                oNotify.Response = "fail";
+                oNotify.Message = data.status + "-" + data.message;
+                oNotify.Response = "OK";
             }
+            //}
+            //else
+            //{
+            //    oNotify.TransStatus = TransStatus.Pending;
+            //    oNotify.ThirdId = data.id;
+            //    oNotify.Message = "Signature error";
+            //    oNotify.Response = "Signature error";
+            //}
 
             return oNotify;
         }
@@ -82,32 +89,39 @@ namespace Payment.TruePay
             oNotify.ThirdId = data.id;
             oNotify.Message = data.message;
 
-            if (sign == data.token)
+            //if (sign == data.token)
+            //{
+            if (data.status == 1)
             {
-                if (data.status == 1)
-                {
-                    oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.amount);
-                    oNotify.ActualAmount = decimal.Parse(data.amount);
-                    oNotify.Message = data.message;
-                    oNotify.Comment = $"{data.status}-{data.message}";
-                    oNotify.Response = "OK";
-                }
-                else
-                {
-                    oNotify.TransStatus = TransStatus.Pending;
-                    oNotify.Message = data.message;
-                    oNotify.Comment = $"{data.status}-{data.message}";
-                    oNotify.Response = "fail";
-                }
+                oNotify.TransStatus = TransStatus.Success;
+                oNotify.RequestAmount = decimal.Parse(data.amount);
+                oNotify.ActualAmount = decimal.Parse(data.amount);
+                oNotify.Message = data.message;
+                oNotify.Comment = $"{data.status}-{data.message}";
+                oNotify.Response = "OK";
+            }
+            else if (data.status == -1)
+            {
+                oNotify.TransStatus = TransStatus.Fail;
+                oNotify.Message = data.message;
+                oNotify.Comment = $"{data.status}-{data.message}";
+                oNotify.Response = "OK";
             }
             else
             {
                 oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Comment = "Signature error";
-                oNotify.Message = "Signature error";
-                oNotify.Response = "fail";
+                oNotify.Message = data.message;
+                oNotify.Comment = $"{data.status}-{data.message}";
+                oNotify.Response = "OK";
             }
+            //}
+            //else
+            //{
+            //    oNotify.TransStatus = TransStatus.Pending;
+            //    oNotify.Comment = "Signature error";
+            //    oNotify.Message = "Signature error";
+            //    oNotify.Response = "Signature error";
+            //}
 
             return oNotify;
         }
@@ -142,7 +156,7 @@ namespace Payment.TruePay
             formData.Add("user", inputs["CustId"]);
             decimal amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amt", amount.ToString("#"));
-            formData.Add("bAccName", inputs["AccountName"]); 
+            formData.Add("bAccName", inputs["AccountName"]);
             formData.Add("bAccNo", inputs["AccountNo"]);
             formData.Add("notifyUrl", inputs["CallBackUrl"]);
 
@@ -192,7 +206,7 @@ namespace Payment.TruePay
         {
             string sUrl = inputs["host"] + "/a/getDPLink";
             Dictionary<string, string> formData = new Dictionary<string, string>();
-        
+
             formData.Add("mCode", inputs["Merchant"]);
             formData.Add("ts", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
             if (inputs["PayCode"] != null)
