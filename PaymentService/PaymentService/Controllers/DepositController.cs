@@ -526,6 +526,14 @@ namespace PaymentService.Controllers
         bool IsWhiteList(string clientIP, string PaymentName, string transId)
         {
             log2File.Info($"{clientIP},{transId}", $"{PaymentName}_PaymentIPLog");
+
+            string[] officeList = configuration.GetSection("OfficeIP")?.Get<string[]>();
+
+            if (officeList.Any(x => x == clientIP))
+            {
+                return true;
+            }
+
             var WhiteList = configuration.GetSection("WhiteList")?.Get<Dictionary<string, string[]>>();
             if (WhiteList != null)
             {
