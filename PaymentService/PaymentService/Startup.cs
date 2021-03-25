@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
@@ -88,6 +84,8 @@ namespace PaymentService
             app.UseRouting();
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
+            app.UseRequestLogMiddleware();
+            app.UseResponseLogMiddleware();
             //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
