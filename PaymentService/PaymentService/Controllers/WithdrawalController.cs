@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -309,14 +309,6 @@ namespace PaymentService.Controllers
             else
             {
                 return Content(false.ToString());
-            }
-        }
-
-        public static class MethodExtension
-        {
-            public static string GetCurrentMethod()
-            {
-                return new StackTrace().GetFrame(1)?.GetMethod()?.Name;
             }
         }
     }

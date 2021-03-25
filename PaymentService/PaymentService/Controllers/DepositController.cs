@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
@@ -799,14 +799,6 @@ namespace PaymentService.Controllers
         public enum TransferStatus
         {
             Success = 0, Fail = 1, Pending = 2, PendingD = 3
-        }
-
-        public static class MethodExtension
-        {
-            public static string GetCurrentMethod()
-            {
-                return new StackTrace().GetFrame(1)?.GetMethod()?.Name;
-            }
         }
     }
 }
