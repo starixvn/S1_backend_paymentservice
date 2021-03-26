@@ -55,7 +55,7 @@ namespace Payment.NganLuong
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"] + $"?email={inputs["email"]}&amount={decimal.Parse(inputs["Amount"]).ToString("#")}&content={inputs["TransID"].ToLower()}";
+            string sUrl = inputs["host"] + $"?language={inputs["PayLangId"]}&email={inputs["email"]}&amount={decimal.Parse(inputs["Amount"]).ToString("#")}&content={inputs["TransID"].ToLower()}";
 
             DepositResult oDepositResult = new DepositResult();
             oDepositResult.Url = sUrl;
