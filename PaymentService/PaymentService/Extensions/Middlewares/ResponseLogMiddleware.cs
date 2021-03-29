@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -19,6 +20,7 @@ namespace PaymentService.Extensions.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
+            var sw = Stopwatch.StartNew();
             var path = context.Request.Path.Value;
             if (path.EndsWith("home.html"))
             {
@@ -34,8 +36,12 @@ namespace PaymentService.Extensions.Middlewares
                 await _next(context);
 
                 responseBodyStream.Seek(0, SeekOrigin.Begin);
-                var recordContent = new StreamReader(responseBodyStream, Encoding.UTF8, true, 1024, true).ReadToEnd();
-                _logger.LogInformation($"RESPONSE: {recordContent}");
+                var recordContent = await new StreamReader(responseBodyStream, Encoding.UTF8, true, 1024, true).ReadToEndAsync();
+                using (_logger.BeginScope("ElapsedMilliseconds: {ElapsedMilliseconds}", sw.Elapsed.TotalMilliseconds))
+                {
+                    _logger.LogInformation($"RESPONSE: {recordContent}");
+                }
+
                 responseBodyStream.Seek(0, SeekOrigin.Begin);
                 await responseBodyStream.CopyToAsync(bodyStream);
             }
