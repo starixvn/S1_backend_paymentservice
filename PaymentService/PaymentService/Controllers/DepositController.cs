@@ -6,19 +6,17 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
-using PaymentService.Extensions;
 using PaymentService.Service.BLL;
-using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
+using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers
 {
@@ -143,7 +141,7 @@ namespace PaymentService.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError($"Method={GetCurrentMethod()}, {ex.Message}");
                 log2File.Error($"Exception={ex.Message}, DoTaskAsync Exception", "DoTaskAsync");
             }
             finally
@@ -225,7 +223,7 @@ namespace PaymentService.Controllers
             var callBackUrl = configuration.GetValue<string>("CallBack");
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
 
-            logger.LogInformation($"{MethodExtension.GetCurrentMethod()} {pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}");
+            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositBank");
 
             var result = payHelper.Debit(DepReq);
@@ -309,7 +307,7 @@ namespace PaymentService.Controllers
             var callBackUrl = configuration.GetValue<string>("CallBack");
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
 
-            logger.LogInformation($"{MethodExtension.GetCurrentMethod()} {pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}");
+            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositMobile");
 
             var result = payHelper.Debit(DepReq);
@@ -398,7 +396,7 @@ namespace PaymentService.Controllers
             var callBackUrl = configuration.GetValue<string>("CallBack");
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
 
-            logger.LogInformation($"{MethodExtension.GetCurrentMethod()} {pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}");
+            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositCrpyto");
 
             var result = payHelper.Debit(DepReq);
@@ -488,7 +486,7 @@ namespace PaymentService.Controllers
             var callBackUrl = configuration.GetValue<string>("CallBack");
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
 
-            logger.LogInformation($"{MethodExtension.GetCurrentMethod()} {pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}");
+            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositLoadCard");
             var result = payHelper.Debit(DepReq);
 
@@ -526,7 +524,7 @@ namespace PaymentService.Controllers
         }
         bool IsWhiteList(string clientIP, string PaymentName, string transId)
         {
-            logger.LogInformation($"{MethodExtension.GetCurrentMethod()} Request: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
+            logger.LogInformation($"Method={GetCurrentMethod()}, Request: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
             log2File.Info($"{clientIP},{transId}", $"{PaymentName}_PaymentIPLog");
 
             string[] officeList = configuration.GetSection("OfficeIP")?.Get<string[]>();
@@ -546,7 +544,7 @@ namespace PaymentService.Controllers
                     WhiteListIgnoreCase.TryGetValue(PaymentName, out iplist);
                     if (!iplist.Any(x => x == clientIP))
                     {
-                        logger.LogInformation($"{MethodExtension.GetCurrentMethod()} Reject: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
+                        logger.LogInformation($"Method={GetCurrentMethod()}, Reject: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
                         log2File.Info($"{clientIP},{transId}", $"{PaymentName}_PaymentRejectIPLog");
                         return false;
                     }
@@ -557,6 +555,7 @@ namespace PaymentService.Controllers
 
             return true;
         }
+        
 
         [Route("Payment/DepositCallBack/{TransId}")]
         [HttpPost]
@@ -576,14 +575,11 @@ namespace PaymentService.Controllers
                         Request.Path.ToUriComponent(),
                         Request.QueryString.ToUriComponent());
 
-            logger.LogInformation($"{MethodExtension.GetCurrentMethod()} {bodyText}");
-            log2File.Info(bodyText, "DepositCallBack");
-
             Dictionary<string, string> dicParam = new Dictionary<string, string>();
             bool isFormData = false;
             if (Request.ContentType == null)
             {
-                logger.LogError($"{MethodExtension.GetCurrentMethod()} IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
+                logger.LogError($"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
                 log2File.Error($"IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null", "DepositCallBack");
                 return Content("Request data is null");
             }
@@ -598,7 +594,7 @@ namespace PaymentService.Controllers
                 isFormData = true;
             }
 
-            logger.LogInformation($"{MethodExtension.GetCurrentMethod()} IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
+            logger.LogInformation($"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
             log2File.Info($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}", "DepositCallBack");
 
             int depositId = 0;
@@ -634,7 +630,7 @@ namespace PaymentService.Controllers
                 //檢查namespace是否存在 
                 if (!DepReq.ContainsKey("PayName"))
                 {
-                    logger.LogError($"{MethodExtension.GetCurrentMethod()} PayName of TransId={transId} is not exist");
+                    logger.LogError($"Method={GetCurrentAsyncMethod()}, PayName of TransId={transId} is not exist");
                     log2File.Error($"PayName of TransId={transId} is not exist", "CallBackHandlerAsync");
                     //dblogger.Write(SerialId, $"PayName of SerialId={depositRequest.SerialId} is not exist");
                     return $"PayName of TransId={transId} is not exist";
@@ -665,7 +661,7 @@ namespace PaymentService.Controllers
 
                 if (!string.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.LogError($"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}");
+                    logger.LogError($"Method={GetCurrentAsyncMethod()}, {transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
                     log2File.Error($"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}", "CallBackHandlerAsync");
                     //dblogger.Write(SerialId, $"{SerialId} is not equal {rNotifyDepositResult.DepositID} with PayName={DepReq["PayName"]}");
                     return $"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}";
@@ -676,7 +672,7 @@ namespace PaymentService.Controllers
 
                 if (rNotifyDepositResult.RequestAmount != depositRequest.Amount)
                 {
-                    logger.LogError($"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}");
+                    logger.LogError($"Method={GetCurrentAsyncMethod()}, Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}");
                     log2File.Error($"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}", "CallBackHandlerAsync");
                     //dblogger.Write(transId, $"OrderAmount{rNotifyDepositResult.OrderAmount} is not equal {depositRequest.UserMoney}");
                     return $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
@@ -701,14 +697,14 @@ namespace PaymentService.Controllers
                         errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
                         errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
                         errorMessages.AppendLine($"Source: {SqlEx.Source}");
-                        logger.LogError($"{MethodExtension.GetCurrentMethod()} {errorMessages.ToString()}");
+                        logger.LogError($"Method={GetCurrentAsyncMethod()}, {errorMessages}");
                         log2File.Error(errorMessages.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, errorMessages.ToString());
                         return "Update UserMoney error(SQL)";
                     }
                     catch (Exception exForEachTransaction)
                     {
-                        logger.LogError($"{MethodExtension.GetCurrentMethod()} {exForEachTransaction.Message}");
+                        logger.LogError($"Method={GetCurrentAsyncMethod()}, {exForEachTransaction.Message}");
                         log2File.Error(exForEachTransaction.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, exForEachTransaction.Message);
                         return "Update UserMoney error(Other)";
@@ -734,7 +730,7 @@ namespace PaymentService.Controllers
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError($"{MethodExtension.GetCurrentMethod()} {ex.Message}");
+                        logger.LogError($"Method={GetCurrentAsyncMethod()}, {ex.Message}");
                         log2File.Error(ex.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, ex.Message);
                         return "Update DepositFail error";
@@ -745,7 +741,7 @@ namespace PaymentService.Controllers
             }
             else
             {
-                logger.LogError($"{MethodExtension.GetCurrentMethod()} SerialId={transId} is not exist");
+                logger.LogError($"Method={GetCurrentAsyncMethod()}, SerialId={transId} is not exist");
                 log2File.Error($"SerialId={transId} is not exist", "CallBackHandlerAsync");
                 //dblogger.Write(SerialId, $"SerialId={SerialId} is not exist");
                 return $"SerialId={transId} is not exist";
