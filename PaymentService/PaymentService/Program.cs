@@ -28,7 +28,8 @@ namespace PaymentService
             "Executing ObjectResult, writing value of type '{Type}'",
             "Executed action {ActionName}",
             "Executed endpoint '{EndpointName}'",
-            "{HostingRequestFinishedLog:l}"
+            "{HostingRequestFinishedLog:l}",
+            "Executing ContentResult with HTTP Response ContentType of {ContentType}"
         };
         public static void Main(string[] args)
         {
