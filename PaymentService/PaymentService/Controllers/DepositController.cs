@@ -192,6 +192,12 @@ namespace PaymentService.Controllers
                 return apiResult;
             }
 
+            if (reqDeposit.Amount % 1 != 0)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
+                return apiResult;
+            }
+
             var payLangId = payBLL.GetPayLanguage().Where(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase)).FirstOrDefault()?.PayLangId;
             var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqDeposit.PayId).FirstOrDefault();
             var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
@@ -279,6 +285,12 @@ namespace PaymentService.Controllers
             if (custInfo.CurrencyId != mobilePayInfo.CurrencyId)
             {
                 apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                return apiResult;
+            }
+
+            if (reqDeposit.Amount % 1 != 0)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
                 return apiResult;
             }
 
@@ -371,6 +383,12 @@ namespace PaymentService.Controllers
                 return apiResult;
             }
 
+            if (reqDeposit.Amount % 1 != 0)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
+                return apiResult;
+            }
+
             var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == cryptoPayInfo.PayId).FirstOrDefault();
             var payLangId = payBLL.GetPayLanguage().Where(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && (x.PayId == pay.PayId)).FirstOrDefault()?.PayLangId;
 
@@ -458,6 +476,12 @@ namespace PaymentService.Controllers
             if (custInfo.CurrencyId != loadCardPay.CurrencyId)
             {
                 apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                return apiResult;
+            }
+
+            if (reqDeposit.Amount % 1 != 0)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
                 return apiResult;
             }
 
