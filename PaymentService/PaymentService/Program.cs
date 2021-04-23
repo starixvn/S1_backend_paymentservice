@@ -54,6 +54,7 @@ namespace PaymentService
                         .UseStartup<Startup>();
                 }).ConfigureServices((hostContext, services) =>
                 {
+                    services.AddHostedService<DepositWorkerService>();
                     services.AddHostedService<WithdrawalWorkerService>();
                 });
     }
