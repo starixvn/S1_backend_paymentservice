@@ -145,6 +145,30 @@ namespace PaymentService.Service.BLL
             return bankInfoPayList;
         }
 
+        public IEnumerable<BankInfoPay> GetCryptoListForPayout()
+        {
+            string key = "CryptoListForPayout";
+            var cryptoPayListCache = cache.Get<IEnumerable<BankInfoPay>>(key);
+            if (cryptoPayListCache != null)
+            {
+                return cryptoPayListCache;
+            }
+            var cryptoPayList = payService.GetCryptoListForPayout();
+
+            if (cryptoPayList != null)
+            {
+                var expireTime = TimeSpan.FromMinutes(1);
+                if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
+                {
+                    expireTime = TimeSpan.FromMinutes(5);
+                }
+
+                cache.Set(key, cryptoPayList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
+            }
+
+            return cryptoPayList;
+        }
+
         public IEnumerable<PayCurrency> GetPayCurrency()
         {
             string key = "PayCurrency";

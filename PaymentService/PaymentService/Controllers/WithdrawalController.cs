@@ -123,6 +123,73 @@ namespace PaymentService.Controllers
             return apiResult;
         }
 
+        [HttpPost]
+        [Route("Payment/CryptoWithdrawal")]
+        public ApiResult CryptoWithdrawal(ReqWithdrawal reqWithdrawal)
+        {
+            ApiResult apiResult = new ApiResult();
+            var custId = reqWithdrawal.CustId;
+            var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
+            var crypto = payBLL.GetCryptoListForPayout().Where(x => x.PayId == reqWithdrawal.PayId && custInfo.CurrencyId == x.CurrencyId).FirstOrDefault();
+
+            if (crypto == null)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                return apiResult;
+            }
+
+
+            var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqWithdrawal.PayId).FirstOrDefault();
+            var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
+
+            if (pay == null)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                return apiResult;
+            }
+
+            var payHelper = payBLL.GetPayHelper(pay.PayName);
+
+            if (payHelper == null)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                return apiResult;
+            }
+
+            var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+
+            WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
+            //WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
+            WithReq.Add("OutgoingIp", outgoingIp);
+            WithReq.Add("CustId", custInfo.CustId.ToString());
+            WithReq.Add("TransID", reqWithdrawal.TransId);
+            WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
+            WithReq.Add("PayCode", crypto.PayCode);
+            WithReq.Add("BankCode", crypto.BankCode);
+            WithReq.Add("BankName", crypto.BankName);
+            WithReq.Add("AccountName", reqWithdrawal.AccountName);
+            WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
+            var callBackUrl = configuration.GetValue<string>("CallBack");
+            WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
+
+            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
+            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(WithReq)}", "Withdrawal");
+            var result = payHelper.Credit(WithReq);
+
+            if (result.Success)
+            {
+                apiResult.ErrorCode = 0;
+                apiResult.Message = result.Message;
+            }
+            else
+            {
+                apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
+                apiResult.Message = result.Message;
+            }
+
+            return apiResult;
+        }
+
         [Route("Payment/WithdrawalCallBack/{TransId}")]
         [HttpPost]
         public async Task<IActionResult> WithdrawalCallBackAsync(string transId)
