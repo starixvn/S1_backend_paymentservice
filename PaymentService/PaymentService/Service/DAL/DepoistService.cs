@@ -27,10 +27,17 @@ namespace PaymentService.Service.DAL
         }
         public DepositRequest GetDepositRequest(int depositId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
             return conn.QueryFirstOrDefault<DepositRequest>("DepositCallBack_Get", new { DepositId = depositId }, commandType: CommandType.StoredProcedure);
         }
-        public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status)
+
+        public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
+            return conn.Query<DepositRequest>("Service_DepositRequesPayEnquiry_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string refThirdId, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status)
         {
             int depositId = 0;
             int type = payTypePosition + pay.PayId;
@@ -44,10 +51,10 @@ namespace PaymentService.Service.DAL
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 string sForStatus = Newtonsoft.Json.JsonConvert.SerializeObject(forStatus);
-                var p = new DynamicParameters(new { DepositId = depositId, SiteId = siteId, ActualDeposit = actualDeposit, Comment = comment, ForStatus = sForStatus, Status = (int)status, ThirdId = thirdId, Operator = Operator });
+                var p = new DynamicParameters(new { DepositId = depositId, SiteId = siteId, ActualDeposit = actualDeposit, Comment = comment, ForStatus = sForStatus, Status = (int)status, RefThirdId = refThirdId, ThirdId = thirdId, Operator = Operator });
                 p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
-                result = conn.Execute("Admin_DepositInfo_Set", p, trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_DepositInfo_Set", p, trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -101,6 +108,12 @@ namespace PaymentService.Service.DAL
         {
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Execute("DepositLog_Ins", new { DepositId = depositId, SiteId = siteId, Comment = comment, Action = status, ActualDeposit = actualDeposit, Operator }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetThirdId(string transId, string thirdId)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_DepositInfoThirdID_Set", new { TransId = transId, ThirdId = thirdId }, commandType: CommandType.StoredProcedure);
         }
     }
 }

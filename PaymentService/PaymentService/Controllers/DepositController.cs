@@ -243,6 +243,9 @@ namespace PaymentService.Controllers
                 payResult.ThirdId = result.ThirdId;
                 payResult.Mode = onlineBank.Mode;
                 apiResult.Data = payResult;
+
+                if (result.ThirdId != null)
+                    paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
             }
             else
             {
@@ -333,6 +336,9 @@ namespace PaymentService.Controllers
                 payResult.ThirdId = result.ThirdId;
                 payResult.Mode = mobilePayInfo.Mode;
                 apiResult.Data = payResult;
+
+                if (result.ThirdId != null)
+                    paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
             }
             else
             {
@@ -428,6 +434,13 @@ namespace PaymentService.Controllers
                 payResult.ThirdId = result.ThirdId;
                 payResult.Mode = cryptoPayInfo.Mode;
                 apiResult.Data = payResult;
+
+                log2File.Info($"result.TransId={reqDeposit.TransId}, result.ThirdId={result.ThirdId}", "ReqDepositCrpyto");
+                if (result.ThirdId != null)
+                {
+                    paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                }
+
             }
             else
             {
@@ -523,6 +536,9 @@ namespace PaymentService.Controllers
                 payResult.ThirdId = result.ThirdId;
                 payResult.Mode = loadCardPay.Mode;
                 apiResult.Data = payResult;
+
+                if (result.ThirdId != null)
+                    paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
             }
             else
             {

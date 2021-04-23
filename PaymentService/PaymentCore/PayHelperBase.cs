@@ -88,6 +88,7 @@ namespace PaymentCore
         decimal ActualAmount { get; set; }
         decimal Fee { get; }
         string Comment { get; set; }
+        string RefThirdId { get; set; }
     }
     public class EnquiryDepositResult : IDepositResult
     {
@@ -100,6 +101,7 @@ namespace PaymentCore
         public decimal Fee { get { return RequestAmount - ActualAmount; } }
         public string Comment { get; set; }
         public string RawContent { get; set; }
+        public string RefThirdId { get; set; }
     }
     public interface IWithdrawResult
     {
@@ -123,6 +125,7 @@ namespace PaymentCore
         public TransStatus TransStatus { get; set; }
         public string Message { get; set; }
         public string DepositId { get; set; }
+        public string RefThirdId { get; set; }
         public string ThirdId { get; set; }
         public decimal RequestAmount { get; set; }
         public decimal ActualAmount { get; set; }

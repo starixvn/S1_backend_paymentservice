@@ -37,7 +37,7 @@ namespace PaymentService.Service.BLL
             forStatus.Add((int)DepositStatus.Rejected);
             try
             {
-                depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
+                depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
             }
             catch (Exception ex)
             {
@@ -49,7 +49,12 @@ namespace PaymentService.Service.BLL
         {
             List<int> forStatus = new List<int>();
             forStatus.Add((int)DepositStatus.Pending);
-            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Rejected);
+            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Rejected);
+        }
+
+        public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
+        {
+            return depoistService.GetDepositRequesPayEnquiry();
         }
 
         public WithdrawalRequest GetWithdrawalRequest(string transId)
@@ -81,6 +86,11 @@ namespace PaymentService.Service.BLL
         public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry()
         {
             return withdrawalService.GetWithdrawalRequesPayEnquiry();
+        }
+
+        public void SetThirdId(string transId, string thirdID)
+        {
+            depoistService.SetThirdId(transId, thirdID);
         }
     }
 }
