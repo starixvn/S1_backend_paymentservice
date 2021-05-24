@@ -47,8 +47,7 @@ namespace PaymentService
                                 .Enrich.FromLogContext()
                                 .Filter.ByExcluding(c => c.Properties.Any(p => p.Value.ToString().Contains("/health")
                                     || Excludes.Any(item =>  c.MessageTemplate.ToString().Contains(item))))
-                                .Enrich.WithExceptionDetails()
-                                .MinimumLevel.Information().WriteTo.Console(new JsonFormatter());
+                                .Enrich.WithExceptionDetails();
 
                         })
                         .UseStartup<Startup>();
