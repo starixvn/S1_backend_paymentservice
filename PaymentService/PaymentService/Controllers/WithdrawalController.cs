@@ -102,6 +102,7 @@ namespace PaymentService.Controllers
             WithReq.Add("BankName", onlineBank.BankName); 
             WithReq.Add("AccountName", reqWithdrawal.AccountName);
             WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
+            WithReq.Add("IsTest", common.IsTest());
             var callBackUrl = configuration.GetValue<string>("CallBack");
             WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
 
@@ -169,6 +170,7 @@ namespace PaymentService.Controllers
             WithReq.Add("BankName", crypto.BankName);
             WithReq.Add("AccountName", reqWithdrawal.AccountName);
             WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
+            WithReq.Add("IsTest", common.IsTest());
             var callBackUrl = configuration.GetValue<string>("CallBack");
             WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
 

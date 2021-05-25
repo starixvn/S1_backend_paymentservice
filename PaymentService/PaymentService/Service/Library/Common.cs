@@ -35,6 +35,19 @@ namespace PaymentService.Service.Library
             }
             return "X";
         }
+
+        public string IsTest()
+        {
+           if (environment.EnvironmentName == "Production")
+            {
+                return "false";
+            }
+            else 
+            {
+                return "true";
+            }
+        }
+
         public decimal Floor(decimal d, int decimals)
         {
             long value = (long)Math.Pow(10.0, decimals);

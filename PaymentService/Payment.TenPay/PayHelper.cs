@@ -150,7 +150,7 @@ namespace Payment.TenPay
             decimal amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("CurrencyId", inputs["PayCurrencyId"]);
-            formData.Add("IsTest", "false");
+            formData.Add("IsTest", inputs["IsTest"]);
             formData.Add("PayeeAccountName", inputs["AccountName"]);
             formData.Add("PayeeAccountNumber", inputs["AccountNo"]);
             formData.Add("PayeeIFSCCode", inputs["BankCode"]);
@@ -212,7 +212,7 @@ namespace Payment.TenPay
             decimal amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("CurrencyId", inputs["PayCurrencyId"]);
-            formData.Add("IsTest", "false");
+            formData.Add("IsTest", inputs["IsTest"]);
             formData.Add("PayerKey", inputs["CustId"]);
             formData.Add("PayerName", inputs["CustId"]);
             formData.Add("PaymentChannelId", inputs["PayCode"]);

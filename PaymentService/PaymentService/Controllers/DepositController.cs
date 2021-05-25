@@ -229,6 +229,7 @@ namespace PaymentService.Controllers
             DepReq.Add("CustId", reqDeposit.CustId.ToString());
             var callBackUrl = configuration.GetValue<string>("CallBack");
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+            DepReq.Add("IsTest", common.IsTest());
 
             logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositBank");
@@ -322,6 +323,7 @@ namespace PaymentService.Controllers
             DepReq.Add("CustId", reqDeposit.CustId.ToString());
             var callBackUrl = configuration.GetValue<string>("CallBack");
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+            DepReq.Add("IsTest", common.IsTest());
 
             logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositMobile");
@@ -423,6 +425,7 @@ namespace PaymentService.Controllers
             DepReq.Add("CustId", reqDeposit.CustId.ToString());
             var callBackUrl = configuration.GetValue<string>("CallBack");
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+            DepReq.Add("IsTest", common.IsTest());
 
             logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositCrpyto");
@@ -526,6 +529,7 @@ namespace PaymentService.Controllers
             DepReq.Add("CustId", reqDeposit.CustId.ToString());
             var callBackUrl = configuration.GetValue<string>("CallBack");
             DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+            DepReq.Add("IsTest", common.IsTest());
 
             logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositLoadCard");
