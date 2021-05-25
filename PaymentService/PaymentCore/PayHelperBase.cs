@@ -5,10 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Security;
+using System.Security.Cryptography;
+using Org.BouncyCastle.Crypto.Parameters;
 
 namespace PaymentCore
 {
@@ -228,8 +231,6 @@ namespace PaymentCore
 
             return responseFromServer;
         }
-
-
         protected string HttpPost(string url, string parameters, string contentType, string accesstoken, string transID)
         {
             WebRequest request = WebRequest.Create(url);
@@ -263,40 +264,6 @@ namespace PaymentCore
 
             return responseFromServer;
         }
-
-        //protected string HttpPost1(string url, string parameters, string contentType, string accesstoken, string transID)
-        //{
-        //    WebRequest request = WebRequest.Create(url);
-
-        //    request.Method = "POST";
-        //    if (!string.IsNullOrEmpty(proxyHost))
-        //    {
-        //        request.Proxy = new WebProxy(proxyHost, proxyPort);
-        //    }
-
-        //    string postData = parameters;
-        //    byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-        //    request.ContentType = contentType;
-        //    request.ContentLength = byteArray.Length;
-        //    request.Headers.Add("accept", contentType);
-        //    request.Headers.Add("x-api-key", accesstoken);
-
-        //    Stream dataStream = request.GetRequestStream();
-        //    dataStream.Write(byteArray, 0, byteArray.Length);
-        //    dataStream.Close();
-        //    using WebResponse response = request.GetResponse();
-
-        //    dataStream = response.GetResponseStream();
-        //    using StreamReader reader = new StreamReader(dataStream);
-        //    string responseFromServer = reader.ReadToEnd();
-        //    reader.Close();
-        //    dataStream.Close();
-        //    response.Close();
-        //    InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
-
-        //    return responseFromServer;
-        //}
-
         protected string HttpPost(string url, string parameters, string contentType, string username, string password, string transID)
         {
             WebRequest request = WebRequest.Create(url);
@@ -329,7 +296,6 @@ namespace PaymentCore
 
             return responseFromServer;
         }
-
         protected string HttpPostGBK(string url, string parameters, string contentType, string transID)
         {
             WebRequest request = WebRequest.Create(url);
@@ -576,14 +542,98 @@ namespace PaymentCore
             return builder.ToString();
         }
 
-        protected string RSASign(string privateKey, string data)
+        protected string AddPrivateHeader(string text)
         {
-            var rsa = RSA.Create();
-            rsa.ImportRSAPrivateKey(Convert.FromBase64String(privateKey), out _);
-            byte[] bytes = rsa.SignData(Encoding.UTF8.GetBytes(data), HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
-            rsa.VerifyData(Encoding.UTF8.GetBytes(data), bytes, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
-            string signature = Convert.ToBase64String(bytes);
-            return signature;
+            return $"-----BEGIN RSA PRIVATE KEY-----\n{text}\n-----END RSA PRIVATE KEY-----";
+        }
+
+        protected string AddPublicHeader(string text)
+        {
+            return $"-----BEGIN PUBLIC KEY-----\n{text}\n-----END PUBLIC KEY-----";
+        }
+
+        protected static string RSAPublicKeyJava2DotNet(string publicKey)
+        {
+            RsaKeyParameters publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
+            return DotNetUtilities.ToRSA(publicKeyParam).ToXmlString(false);
+        }
+
+        protected static string RSAPrivateKeyJava2DotNet(string privateKey)
+        {
+            RsaPrivateCrtKeyParameters privateKeyParam = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
+            return DotNetUtilities.ToRSA(privateKeyParam).ToXmlString(true);
+        }
+        
+        protected string RSAEncryptWithPublicKey(string publickey, string content)
+        {
+            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+            //byte[] cipherbytes;
+            rsa.FromXmlString(publickey);
+            RSAParameters rp = rsa.ExportParameters(false);
+
+            //转换密钥
+            AsymmetricKeyParameter pbk = DotNetUtilities.GetRsaPublicKey(rp);
+
+            IBufferedCipher c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
+            //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
+            c.Init(true, pbk);
+
+            byte[] DataToEncrypt = Encoding.UTF8.GetBytes(content);
+            byte[] outBytes = c.DoFinal(DataToEncrypt);
+            return Convert.ToBase64String(outBytes);
+        }
+
+        protected string RSAEncryptWithPrivateKey(string privateKey, string content)
+        {
+            //加载私钥
+            RSACryptoServiceProvider privateRsa = new RSACryptoServiceProvider();
+            privateRsa.FromXmlString(privateKey);
+
+            //转换密钥
+            AsymmetricCipherKeyPair keyPair = DotNetUtilities.GetKeyPair(privateRsa);
+            IBufferedCipher c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding"); //使用RSA/ECB/PKCS1Padding格式
+
+            //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
+            c.Init(true, keyPair.Private);
+            byte[] DataToEncrypt = Encoding.UTF8.GetBytes(content);
+            byte[] outBytes = c.DoFinal(DataToEncrypt);//加密
+            return Convert.ToBase64String(outBytes);
+        }
+
+        protected string RSADecryptWithPublicKey(string publicKey, string content)
+        {
+            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+            rsa.FromXmlString(publicKey);
+            RSAParameters rp = rsa.ExportParameters(false);
+
+            //转换密钥
+            AsymmetricKeyParameter pbk = DotNetUtilities.GetRsaPublicKey(rp);
+
+            IBufferedCipher c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
+
+            //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
+            c.Init(false, pbk);
+
+            byte[] DataToDecrypt = Convert.FromBase64String(content);
+            byte[] outBytes = c.DoFinal(DataToDecrypt);//解密
+            return Encoding.UTF8.GetString(outBytes);
+        }
+
+        protected string RSADecryptWithPrivateKey(string privatekey, string content)
+        {
+            //加载私钥
+            RSACryptoServiceProvider privateRsa = new RSACryptoServiceProvider();
+            privateRsa.FromXmlString(privatekey);
+
+            //转换密钥
+            AsymmetricCipherKeyPair keyPair = DotNetUtilities.GetKeyPair(privateRsa);
+            IBufferedCipher c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding"); //使用RSA/ECB/PKCS1Padding格式
+
+            //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
+            c.Init(false, keyPair.Private);
+            byte[] DataToEncrypt = Convert.FromBase64String(content);
+            byte[] outBytes = c.DoFinal(DataToEncrypt);//加密
+            return Encoding.UTF8.GetString(outBytes);
         }
     }
 }

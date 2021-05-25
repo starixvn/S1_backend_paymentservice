@@ -108,4 +108,9 @@ namespace PaymentService.Service.Model.enums
         Rejected = 7,
         Error = 99
     }
+
+    public enum CurrencyMap
+    {
+        USDT = 96
+    }
 }

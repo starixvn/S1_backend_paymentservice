@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
@@ -408,6 +409,9 @@ namespace PaymentService.Controllers
             }
 
             var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+
+            var currency = (CurrencyMap)custInfo.CurrencyId;
+            DepReq.Add("CurrencyId", currency.ToString());
             DepReq.Add("PayCurrencyId", cryptoPayInfo.PayCurrencyId);
             DepReq.Add("ClientIP", reqDeposit.ClientIP);
             DepReq.Add("TransID", reqDeposit.TransId);
@@ -599,6 +603,7 @@ namespace PaymentService.Controllers
 
         [Route("Payment/DepositCallBack/{TransId}")]
         [HttpPost]
+        [HttpGet]
         public async Task<IActionResult> DepositCallBackAsync(string transId)
         {
             string bodyText = "";
@@ -617,16 +622,31 @@ namespace PaymentService.Controllers
 
             Dictionary<string, string> dicParam = new Dictionary<string, string>();
             bool isFormData = false;
-            if (Request.ContentType == null)
+
+            if (Request.ContentType == null && Request.QueryString == null)
             {
                 logger.LogError($"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
                 log2File.Error($"IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null", "DepositCallBack");
                 return Content("Request data is null");
             }
 
-            if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) || Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+            if (Request.ContentType != null)
             {
-                foreach (var vFormData in Request.Form)
+                if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) || Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (var vFormData in Request.Form)
+                    {
+                        dicParam.Add(vFormData.Key, vFormData.Value);
+                    }
+
+                    isFormData = true;
+                }
+            }
+            else
+            {
+                var query = QueryHelpers.ParseQuery(Request.QueryString.Value);
+
+                foreach (var vFormData in query)
                 {
                     dicParam.Add(vFormData.Key, vFormData.Value);
                 }
@@ -652,6 +672,7 @@ namespace PaymentService.Controllers
             var responseToPay = await CallBackHandlerAsync(transId, dicParam, bodyText, isFormData);
             return Content(responseToPay);
         }
+
         private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
         {
             var sbody = string.Join("&", dicParam.Select(kp => $"{kp.Key}={kp.Value}").ToArray());

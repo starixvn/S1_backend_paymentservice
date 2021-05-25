@@ -15,7 +15,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Payment.AllInOnePayLocal\Payment.AllInOnePayLocal.csproj" />
     <ProjectReference Include="..\Payment.AllInOnePay\Payment.AllInOnePay.csproj" />
+    <ProjectReference Include="..\Payment.AllpassPay\Payment.AllpassPay.csproj" />
     <ProjectReference Include="..\Payment.CirclePay\Payment.CirclePay.csproj" />
+    <ProjectReference Include="..\Payment.DirePay\Payment.DirePay.csproj" />
+    <ProjectReference Include="..\Payment.DragonPay\Payment.DragonPay.csproj" />
     <ProjectReference Include="..\Payment.Eeziepay\Payment.Eeziepay.csproj" />
     <ProjectReference Include="..\Payment.FPay\Payment.FPay.csproj" />
     <ProjectReference Include="..\Payment.FuliH5\Payment.FuliH5.csproj" />
@@ -26,6 +29,7 @@
     <ProjectReference Include="..\Payment.MangoPay\Payment.MangoPay.csproj" />
     <ProjectReference Include="..\Payment.OneClickPay\Payment.OneClickPay.csproj" />
     <ProjectReference Include="..\Payment.PatekPay\Payment.PatekPay.csproj" />
+    <ProjectReference Include="..\Payment.TenPay\Payment.TenPay.csproj" />
     <ProjectReference Include="..\Payment.TruePay\Payment.TruePay.csproj" />
     <ProjectReference Include="..\Payment.VNPay\Payment.VNPay.csproj" />
     <ProjectReference Include="..\Payment.NganLuong\Payment.NganLuong.csproj" />
