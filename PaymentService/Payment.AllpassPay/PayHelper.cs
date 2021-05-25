@@ -104,7 +104,7 @@ namespace Payment.AllpassPay
             WithdrawalRes withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
             withdrawResult.Message = withdrawalRes.msg;
-            withdrawResult.RawContent = withdrawalRes.data;
+            withdrawResult.RawContent = withdrawalRes.msg;
 
             if (withdrawalRes.code == "200")
             {
