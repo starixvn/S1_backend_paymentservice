@@ -5,10 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Payment.DirePay
 {
@@ -86,9 +82,10 @@ namespace Payment.DirePay
                 oNotify.TransStatus = TransStatus.Success;
                 oNotify.RequestAmount = decimal.Parse(data.paid_amount);
                 oNotify.ActualAmount = decimal.Parse(data.paid_amount);
+                oNotify.RefThirdId = data.txid;
                 oNotify.Response = "true";
             }
-            else if (data.status == "3")
+            else if (data.status == "expired")
             {
                 oNotify.TransStatus = TransStatus.Fail;
                 oNotify.Response = "true";

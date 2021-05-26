@@ -1,8 +1,6 @@
 ﻿using PaymentCore;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Xml.Serialization;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -10,7 +8,6 @@ namespace Payment.TenPay
 {
     public class PayHelper : PayHelperBase
     {
-
         private class CallBackCreditReq
         {
             public string Amount { get; set; }
@@ -30,7 +27,7 @@ namespace Payment.TenPay
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            var data = FromJson<CallBackCreditReq>(ToJson(formData));
+            var data = FromJson<CallBackCreditReq>(bodyContent);
 
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.ShopOrderId;
@@ -41,21 +38,21 @@ namespace Payment.TenPay
                 oNotify.RequestAmount = decimal.Parse(data.Amount);
                 oNotify.ThirdId = data.TrackingNumber;
                 oNotify.Message = data.DepositOrderStatusId;
-                oNotify.Response ="OK";
+                oNotify.Response ="ok";
             }
             else if (data.DepositOrderStatusId == "3")
             {
                 oNotify.TransStatus = TransStatus.Fail;
                 oNotify.ThirdId = data.TrackingNumber;
                 oNotify.Message = data.DepositOrderStatusId;
-                oNotify.Response = "OK";
+                oNotify.Response = "ok";
             }
             else
             {
                 oNotify.TransStatus = TransStatus.Pending;
                 oNotify.ThirdId = data.TrackingNumber;
                 oNotify.Message = data.DepositOrderStatusId;
-                oNotify.Response = "OK";
+                oNotify.Response = "ok";
             }
 
             return oNotify;
@@ -69,7 +66,7 @@ namespace Payment.TenPay
             public string CurrencyId { get; set; }
             public string EncryptValue { get; set; }
             public string FailedMessage { get; set; }
-             public string IsTest { get; set; }
+            public string IsTest { get; set; }
             public string OrderStatusId { get; set; }
             public string OriginalOrderTrackingNumber { get; set; }
             public string PaymentChannelId { get; set; }
@@ -84,8 +81,9 @@ namespace Payment.TenPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            var data = FromJson<CallBackDebitReq>(ToJson(formData));
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
+            var data = FromJson<CallBackDebitReq>(bodyContent);
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).Where(f => f.Value.Length > 0).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
+            dicP.Remove("EncryptValue");
             string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={payResource["key"]}";
             string sign = ToSHA256(p.ToLower()).ToUpper();
 
@@ -101,7 +99,7 @@ namespace Payment.TenPay
                     oNotify.ThirdId = data.TrackingNumber;
                     oNotify.Comment = data.TrackingNumber;
                     oNotify.Message = data.TrackingNumber;
-                    oNotify.Response = "OK";
+                    oNotify.Response = "ok";
                 }
                 else if (data.OrderStatusId == "3")
                 {
@@ -109,7 +107,7 @@ namespace Payment.TenPay
                     oNotify.ThirdId = data.TrackingNumber;
                     oNotify.Comment = data.FailedMessage;
                     oNotify.Message = data.FailedMessage;
-                    oNotify.Response = "OK";
+                    oNotify.Response = "ok";
                 }
                 else
                 {
@@ -117,7 +115,7 @@ namespace Payment.TenPay
                     oNotify.ThirdId = data.TrackingNumber;
                     oNotify.Comment = data.FailedMessage;
                     oNotify.Message = data.FailedMessage;
-                    oNotify.Response = "OK";
+                    oNotify.Response = "ok";
                 }
             }
             else
@@ -157,9 +155,9 @@ namespace Payment.TenPay
             formData.Add("PayeeAccountNumber", inputs["AccountNo"]);
             formData.Add("PayeeBankName", inputs["BankName"]);
             formData.Add("PaymentChannelId", inputs["PayCode"]);
-            formData.Add("ShopInformUrl", inputs["ReturnUrl"]);
+            formData.Add("ShopInformUrl", inputs["CallBackUrl"]);
             formData.Add("ShopOrderId", inputs["TransID"]);
-            formData.Add("ShopReturnUrl", inputs["CallBackUrl"]);
+            formData.Add("ShopReturnUrl", inputs["ReturnUrl"]);
             formData.Add("ShopUserLongId", inputs["merchant_no"]);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
@@ -216,9 +214,9 @@ namespace Payment.TenPay
             formData.Add("PayerKey", inputs["CustId"]);
             formData.Add("PayerName", inputs["CustId"]);
             formData.Add("PaymentChannelId", inputs["PayCode"]);
-            formData.Add("ShopInformUrl", inputs["ReturnUrl"]);
+            formData.Add("ShopReturnUrl", inputs["ReturnUrl"]);
             formData.Add("ShopOrderId", inputs["TransID"]);
-            formData.Add("ShopReturnUrl", inputs["CallBackUrl"]);
+            formData.Add("ShopInformUrl", inputs["CallBackUrl"]);
             formData.Add("ShopUserLongId", inputs["merchant_no"]);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
