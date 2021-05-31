@@ -607,7 +607,6 @@ namespace PaymentService.Controllers
 
         [Route("Payment/DepositCallBack/{TransId}")]
         [HttpPost]
-        [HttpGet]
         public async Task<IActionResult> DepositCallBackAsync(string transId)
         {
             string bodyText = "";
