@@ -316,14 +316,14 @@ namespace PaymentService.Controllers
                         errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
                         errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
                         errorMessages.AppendLine($"Source: {SqlEx.Source}");
-                        logger.LogError($"Method={GetCurrentMethod()}, {errorMessages.ToString()}");
+                        logger.LogError(SqlEx, $"Method={GetCurrentMethod()}");
                         //dblogger.Write(SerialId, errorMessages.ToString());
                         log2File.Error(errorMessages.ToString(), "CallBackHandler");
                         return "Update UserMoney error(SQL)";
                     }
                     catch (Exception exForEachTransaction)
                     {
-                        logger.LogError($"Method={GetCurrentMethod()}, {exForEachTransaction.Message}");
+                        logger.LogError(exForEachTransaction, $"Method={GetCurrentMethod()}");
                         log2File.Error(exForEachTransaction.ToString(), "CallBackHandler");
                         //dblogger.Write(SerialId, exForEachTransaction.Message);
                         return "Update UserMoney error(Other)";
@@ -338,7 +338,7 @@ namespace PaymentService.Controllers
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError($"Method={GetCurrentMethod()}, {ex.Message}");
+                        logger.LogError(ex, $"Method={GetCurrentMethod()}");
                         log2File.Error(ex.ToString(), "CallBackHandler");
                         //dblogger.Write(SerialId, ex.Message);
                         return "Update DepositFail error";

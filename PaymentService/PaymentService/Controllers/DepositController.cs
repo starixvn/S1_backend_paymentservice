@@ -142,7 +142,7 @@ namespace PaymentService.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError($"Method={GetCurrentMethod()}, {ex.Message}");
+                logger.LogError(ex, $"Method={GetCurrentMethod()}");
                 log2File.Error($"Exception={ex.Message}, DoTaskAsync Exception", "DoTaskAsync");
             }
             finally
@@ -761,14 +761,14 @@ namespace PaymentService.Controllers
                         errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
                         errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
                         errorMessages.AppendLine($"Source: {SqlEx.Source}");
-                        logger.LogError($"Method={GetCurrentAsyncMethod()}, {errorMessages}");
+                        logger.LogError(SqlEx, $"Method={GetCurrentAsyncMethod()}");
                         log2File.Error(errorMessages.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, errorMessages.ToString());
                         return "Update UserMoney error(SQL)";
                     }
                     catch (Exception exForEachTransaction)
                     {
-                        logger.LogError($"Method={GetCurrentAsyncMethod()}, {exForEachTransaction.Message}");
+                        logger.LogError(exForEachTransaction, $"Method={GetCurrentAsyncMethod()}");
                         log2File.Error(exForEachTransaction.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, exForEachTransaction.Message);
                         return "Update UserMoney error(Other)";
@@ -794,7 +794,7 @@ namespace PaymentService.Controllers
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError($"Method={GetCurrentAsyncMethod()}, {ex.Message}");
+                        logger.LogError(ex, $"Method={GetCurrentAsyncMethod()}");
                         log2File.Error(ex.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, ex.Message);
                         return "Update DepositFail error";
