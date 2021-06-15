@@ -34,103 +34,119 @@ namespace PaymentService.Service.BLL
             this.logger = logger;
             PayHelperBase.HttpHelper = httpHelper;
         }
+
         public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
         {
             string key = $"OnlineBankList_{siteId}";
-            var bankInfoPayListCache = cache.Get<IEnumerable<BankInfoPay>>(key);
-            if (bankInfoPayListCache != null)
+            var bankInfoPayList = cache.Get<IEnumerable<BankInfoPay>>(key);
+            if (bankInfoPayList != null && bankInfoPayList.Any())
             {
-                return bankInfoPayListCache;
+                return bankInfoPayList;
             }
-            var bankInfoPayList = payService.GetOnlineBankList(siteId);
 
-            if (bankInfoPayList != null)
+            bankInfoPayList = payService.GetOnlineBankList(siteId);
+            if (bankInfoPayList != null && bankInfoPayList.Any())
             {
                 var expireTime = TimeSpan.FromMinutes(1);
-                if (environment.IsDevelopment() || environment.EnvironmentName == "QA")
+                if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
                 {
                     expireTime = TimeSpan.FromMinutes(5);
                 }
 
-                cache.Set(key, bankInfoPayList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
+                var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(expireTime);
+                cache.Set(key, bankInfoPayList, cacheEntryOptions);
             }
 
             return bankInfoPayList;
         }
+
         public IEnumerable<MobilePayInfo> GetMobilePayInfoList(int siteId)
         {
             string key = $"MobilePayInfoList_{siteId}";
             var mobilePayInfoList = cache.Get<IEnumerable<MobilePayInfo>>(key);
-            if (mobilePayInfoList == null)
+            if (mobilePayInfoList != null && mobilePayInfoList.Any())
             {
-                mobilePayInfoList = payService.GetMobilePayInfo(siteId);
-
-                if (mobilePayInfoList != null)
-                {
-                    var expireTime = TimeSpan.FromMinutes(1);
-                    if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
-                    {
-                        expireTime = TimeSpan.FromMinutes(5);
-                    }
-
-                    cache.Set(key, mobilePayInfoList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
-                }
+                return mobilePayInfoList;
             }
+
+            mobilePayInfoList = payService.GetMobilePayInfo(siteId);
+            if (mobilePayInfoList != null && mobilePayInfoList.Any())
+            {
+                var expireTime = TimeSpan.FromMinutes(1);
+                if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
+                {
+                    expireTime = TimeSpan.FromMinutes(5);
+                }
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(expireTime);
+                cache.Set(key, mobilePayInfoList, cacheEntryOptions);
+            }
+
             return mobilePayInfoList;
         }
+
         public IEnumerable<CryptoPayInfo> GetCryptoPayInfoList(int siteId)
         {
             string key = $"CryptoPayInfoList_{siteId}";
             var cryptoPayInfoList = cache.Get<IEnumerable<CryptoPayInfo>>(key);
-            if (cryptoPayInfoList == null)
+            if (cryptoPayInfoList != null && cryptoPayInfoList.Any())
             {
-                cryptoPayInfoList = payService.GetCryptoPayInfo(siteId);
+                return cryptoPayInfoList;
 
-                if (cryptoPayInfoList != null)
-                {
-                    var expireTime = TimeSpan.FromMinutes(1);
-                    if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
-                    {
-                        expireTime = TimeSpan.FromMinutes(5);
-                    }
-
-                    cache.Set(key, cryptoPayInfoList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
-                }
             }
+
+            cryptoPayInfoList = payService.GetCryptoPayInfo(siteId);
+
+            if (cryptoPayInfoList != null && cryptoPayInfoList.Any())
+            {
+                var expireTime = TimeSpan.FromMinutes(1);
+                if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
+                {
+                    expireTime = TimeSpan.FromMinutes(5);
+                }
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(expireTime);
+                cache.Set(key, cryptoPayInfoList, cacheEntryOptions);
+            }
+
             return cryptoPayInfoList;
         }
+
         public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfoList(int siteId)
         {
             string key = $"LoadCardPayInfoList_{siteId}";
             var loadCardPayInfoList = cache.Get<IEnumerable<LoadCardPayInfo>>(key);
-            if (loadCardPayInfoList == null)
+            if (loadCardPayInfoList != null && loadCardPayInfoList.Any())
             {
-                loadCardPayInfoList = payService.GetLoadCardPayInfo(siteId);
-
-                if (loadCardPayInfoList != null)
-                {
-                    var expireTime = TimeSpan.FromMinutes(1);
-                    if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
-                    {
-                        expireTime = TimeSpan.FromMinutes(5);
-                    }
-
-                    cache.Set(key, loadCardPayInfoList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
-                }
+                return loadCardPayInfoList;
             }
+
+            loadCardPayInfoList = payService.GetLoadCardPayInfo(siteId);
+            if (loadCardPayInfoList != null && loadCardPayInfoList.Any())
+            {
+                var expireTime = TimeSpan.FromMinutes(1);
+                if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
+                {
+                    expireTime = TimeSpan.FromMinutes(5);
+                }
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(expireTime);
+                cache.Set(key, loadCardPayInfoList, cacheEntryOptions);
+            }
+
             return loadCardPayInfoList;
         }
 
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
         {
             string key = "OnlineBankListForPayout";
-            var bankInfoPayListCache = cache.Get<IEnumerable<BankInfoPay>>(key);
-            if (bankInfoPayListCache != null)
+            var bankInfoPayList = cache.Get<IEnumerable<BankInfoPay>>(key);
+            if (bankInfoPayList != null && bankInfoPayList.Any())
             {
-                return bankInfoPayListCache;
+                return bankInfoPayList;
             }
-            var bankInfoPayList = payService.GetOnlineBankListForPayout();
-
+            
+            bankInfoPayList = payService.GetOnlineBankListForPayout();
             if (bankInfoPayList != null)
             {
                 var expireTime = TimeSpan.FromMinutes(1);
@@ -139,7 +155,7 @@ namespace PaymentService.Service.BLL
                     expireTime = TimeSpan.FromMinutes(5);
                 }
 
-                cache.Set(key, bankInfoPayList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
+                cache.Set(key, bankInfoPayList, new MemoryCacheEntryOptions().SetSlidingExpiration(expireTime));
             }
 
             return bankInfoPayList;
@@ -148,14 +164,14 @@ namespace PaymentService.Service.BLL
         public IEnumerable<BankInfoPay> GetCryptoListForPayout()
         {
             string key = "CryptoListForPayout";
-            var cryptoPayListCache = cache.Get<IEnumerable<BankInfoPay>>(key);
-            if (cryptoPayListCache != null)
+            var cryptoPayList = cache.Get<IEnumerable<BankInfoPay>>(key);
+            if (cryptoPayList != null && cryptoPayList.Any())
             {
-                return cryptoPayListCache;
+                return cryptoPayList;
             }
-            var cryptoPayList = payService.GetCryptoListForPayout();
-
-            if (cryptoPayList != null)
+            
+            cryptoPayList = payService.GetCryptoListForPayout();
+            if (cryptoPayList != null && cryptoPayList.Any())
             {
                 var expireTime = TimeSpan.FromMinutes(1);
                 if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
@@ -163,7 +179,7 @@ namespace PaymentService.Service.BLL
                     expireTime = TimeSpan.FromMinutes(5);
                 }
 
-                cache.Set(key, cryptoPayList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
+                cache.Set(key, cryptoPayList, new MemoryCacheEntryOptions().SetSlidingExpiration(expireTime));
             }
 
             return cryptoPayList;
@@ -172,33 +188,36 @@ namespace PaymentService.Service.BLL
         public IEnumerable<PayCurrency> GetPayCurrency()
         {
             string key = "PayCurrency";
-            var payCurrencyCache = cache.Get<IEnumerable<PayCurrency>>(key);
-            if (payCurrencyCache != null)
+            var payCurrency = cache.Get<IEnumerable<PayCurrency>>(key);
+            if (payCurrency != null && payCurrency.Any())
             {
-                return payCurrencyCache;
+                return payCurrency;
             }
-            var payCurrency = payService.GetPayCurrency();
-            if (payCurrency != null)
+            
+            payCurrency = payService.GetPayCurrency();
+            if (payCurrency != null && payCurrency.Any())
             {
                 var expireTime = TimeSpan.FromMinutes(5);
-                cache.Set(key, payCurrency, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
+                cache.Set(key, payCurrency, new MemoryCacheEntryOptions().SetSlidingExpiration(expireTime));
             }
 
             return payCurrency;
         }
+
         public IEnumerable<PayLanguage> GetPayLanguage()
         {
             string key = "PayLanguage";
-            var payLanguageCache = cache.Get<IEnumerable<PayLanguage>>(key);
-            if (payLanguageCache != null)
+            var payLanguage = cache.Get<IEnumerable<PayLanguage>>(key);
+            if (payLanguage != null && payLanguage.Any())
             {
-                return payLanguageCache;
+                return payLanguage;
             }
-            var payLanguage = payService.GetPayLanguage();
-            if (payLanguage != null)
+            
+            payLanguage = payService.GetPayLanguage();
+            if (payLanguage != null && payLanguage.Any())
             {
                 var expireTime = TimeSpan.FromDays(1);
-                cache.Set(key, payLanguage, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
+                cache.Set(key, payLanguage, new MemoryCacheEntryOptions().SetSlidingExpiration(expireTime));
             }
 
             return payLanguage;
@@ -207,16 +226,17 @@ namespace PaymentService.Service.BLL
         public IEnumerable<Pay> GetPaymentList(int siteId)
         {
             string key = $"Pay_{siteId}";
-            var payCache = cache.Get<IEnumerable<Pay>>(key);
-            if (payCache != null)
+            var pay = cache.Get<IEnumerable<Pay>>(key);
+            if (pay != null && pay.Any())
             {
-                return payCache;
+                return pay;
             }
-            var pay = payService.GetPaymentList(siteId);
-            if (pay != null)
+            
+            pay = payService.GetPaymentList(siteId);
+            if (pay != null && pay.Any())
             {
                 var expireTime = TimeSpan.FromDays(1);
-                cache.Set(key, pay, new MemoryCacheEntryOptions().SetAbsoluteExpiration(expireTime));
+                cache.Set(key, pay, new MemoryCacheEntryOptions().SetSlidingExpiration(expireTime));
             }
 
             return pay;
