@@ -96,7 +96,6 @@ namespace PaymentService.Service.BLL
             }
 
             cryptoPayInfoList = payService.GetCryptoPayInfo(siteId);
-
             if (cryptoPayInfoList != null && cryptoPayInfoList.Any())
             {
                 var expireTime = TimeSpan.FromMinutes(1);
@@ -216,7 +215,7 @@ namespace PaymentService.Service.BLL
             payLanguage = payService.GetPayLanguage();
             if (payLanguage != null && payLanguage.Any())
             {
-                var expireTime = TimeSpan.FromDays(1);
+                var expireTime = TimeSpan.FromMinutes(5);
                 cache.Set(key, payLanguage, new MemoryCacheEntryOptions().SetSlidingExpiration(expireTime));
             }
 
@@ -235,7 +234,7 @@ namespace PaymentService.Service.BLL
             pay = payService.GetPaymentList(siteId);
             if (pay != null && pay.Any())
             {
-                var expireTime = TimeSpan.FromDays(1);
+                var expireTime = TimeSpan.FromMinutes(5);
                 cache.Set(key, pay, new MemoryCacheEntryOptions().SetSlidingExpiration(expireTime));
             }
 
