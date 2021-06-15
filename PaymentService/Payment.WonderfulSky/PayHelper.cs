@@ -11,10 +11,10 @@ namespace Payment.WonderfulSky
 {
     class PayHelper : PayHelperBase
     {
-        public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
-        {
-            throw new NotImplementedException();
-        }
+        // public override ExchangeResult GetExchange(Dictionary<string, string> payResource)
+        // {
+        //     throw new NotImplementedException();
+        // }
 
         //{
         //    public string requestId { get; set; }
@@ -231,7 +231,7 @@ namespace Payment.WonderfulSky
             string p = string.Join("&", dicP.Where(x => !x.Key.Equals("remark", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&{inputs["key"]}";
             // formData.Add("sign", rsa.Sign(p));
 
-            formData.Add("sign", RSASign(inputs["private_key"], p));
+            // formData.Add("sign", RSASign(inputs["private_key"], p));
 
             //string final = "AHlUlHfYlYmR+41/xKwavGJmajutHEKSFrH6K2GtyPTDxENdcuK3AGNLHde9Ijqc6/cQvszlFHDHgQNfGIu1LM7xVVew5JzdWLpfnWPuY+YZhSfAHH3+ZoqLhe2kn7bVj4GO5qQ679U6n/C1Cs7PySeBUViM206zIrYabvzBw4rN4S+3FKcCUGQ4F23KGASS0mvxKp4SHZZfUQ/UD+nTX04rvcO31ekGbzI1jAEtz+f3AFQcZ8QsNBy7lahbtimJ1MpIPcwFptRcwq8tt4QRX9D4ihCEIRWXgBOowYDa0tmrUCda6V2T3o15TXSMoJMj0G//L7qRYdUk5ZelKf/LZtd3oXn3piRtdZGsJ50sVIU03ZysOQUVd/M7wSL6nzihYvSdwJh94xiirfvIjJ4CCrgd0a+WPfwX718WWwloTT8eYTvE1kbNXCHRxvVnJIF02ATA5kWClJUNDWPSX0HCmSbB5x8NaCqG2MpFpQvtMTaJyCz1RAPznVbvcAjhz4GM6lpXYFLuRtrkS4K7+iRpNLtfjkLC25Pd23XPFFDWByrASXkHz03xGCqs+4HF6p01ZD4VSeAwPxXhfs3mHgWNKB9cblJ1yc4nQvdxiC7wOULy0I6V8f2DFnpW8CZxqz4iB/blYLfXeC00aBzG4PCElcLb6VxkmdmqLI92KbPHN04=";
             //string text = "amount=300&channel=qqpay&currency=CNY&merchantid=DD1590&mid=6550&notifyurl=http://payment.n88dev.com:59159/Payment/DepositCallBack/DD1590&" +

@@ -228,9 +228,16 @@ namespace Payment.DragonPay
             DepositResult oDepositResult = new DepositResult();
             if (depositRes.statusCode == "200")
             {
+                oDepositResult.ThirdId = depositRes.data.orderNo;
                 oDepositResult.Url = depositRes.data.qrCodeImagePath;
+                Dictionary<string, string> ResData = new Dictionary<string, string>();
+                decimal reqamount = decimal.Parse(depositRes.data.requestAmount) / 100;
+                ResData.Add("DepositAmount", reqamount.ToString("#"));
+                ResData.Add("BankName", depositRes.data.bankName);
+                ResData.Add("AccountName", depositRes.data.accountName);
+                ResData.Add("AccountNumber", depositRes.data.accountNumber);
+                oDepositResult.FormData = ResData;
                 oDepositResult.Success = true;
-                oDepositResult.FormData = null;
                 oDepositResult.Message = "";
             }
             else
