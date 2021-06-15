@@ -231,7 +231,7 @@ namespace Payment.DragonPay
                 oDepositResult.ThirdId = depositRes.data.orderNo;
                 oDepositResult.Url = depositRes.data.qrCodeImagePath;
                 Dictionary<string, string> ResData = new Dictionary<string, string>();
-                decimal reqamount = decimal.Parse(depositRes.data.requestAmount) / 100;
+                decimal reqamount = decimal.Parse(depositRes.data.systemAmount) / 100;
                 ResData.Add("DepositAmount", reqamount.ToString("#"));
                 ResData.Add("BankName", depositRes.data.bankName);
                 ResData.Add("AccountName", depositRes.data.accountName);
