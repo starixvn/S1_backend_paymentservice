@@ -24,7 +24,8 @@ namespace Payment.DragonPay
             string sign = UrlEncode(RSADecryptWithPrivateKey(RSAPrivateKeyJava2DotNet(payResource["PrivateKey"]), data.sign));
 
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
-            oNotify.WithdrawId = data.transactionId.Remove(0, data.transactionId.IndexOf("-") + 1);
+            //oNotify.WithdrawId = data.transactionId.Remove(0, data.transactionId.IndexOf("-") + 1);
+            oNotify.WithdrawId = data.transactionId.Substring(data.transactionId.IndexOf("-") + 1);
             oNotify.ThirdId = data.transactionStatus.ToString();
             oNotify.Message = data.transactionStatus.ToString();
 
@@ -79,7 +80,8 @@ namespace Payment.DragonPay
             string p = $"{payResource["merchant_no"]}{data.transactionId}{data.amount}{data.timestamp}";
             string sign = UrlEncode(RSADecryptWithPrivateKey(RSAPrivateKeyJava2DotNet(payResource["PrivateKey"]), data.sign));
 
-            oNotify.DepositId = data.transactionId.Remove(0, data.transactionId.IndexOf("-") + 1);
+            //oNotify.DepositId = data.transactionId.Remove(0, data.transactionId.IndexOf("-") + 1);
+            oNotify.DepositId = data.transactionId.Substring(data.transactionId.IndexOf("-") + 1);
             oNotify.ThirdId = data.platformTransactionId;
             oNotify.Message = data.transactionStatus.ToString();
             oNotify.Comment = data.transactionStatus.ToString();
@@ -263,7 +265,8 @@ namespace Payment.DragonPay
         public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
-            return data.transactionId.Remove(0, data.transactionId.IndexOf("-") + 1);
+            //return data.transactionId.Remove(0, data.transactionId.IndexOf("-") + 1);
+            return data.transactionId.Substring(data.transactionId.IndexOf("-") + 1);
         }
     }
 }
