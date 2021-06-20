@@ -736,8 +736,8 @@ namespace PaymentService.Controllers
 
                 if (rNotifyDepositResult.RequestAmount != depositRequest.Amount)
                 {
-                    logger.LogError($"Method={GetCurrentAsyncMethod()}, Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}");
-                    log2File.Error($"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}", "CallBackHandlerAsync");
+                    logger.LogError($"Method={GetCurrentAsyncMethod()},Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}");
+                    log2File.Error($"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}", "CallBackHandlerAsync");
                     //dblogger.Write(transId, $"OrderAmount{rNotifyDepositResult.OrderAmount} is not equal {depositRequest.UserMoney}");
                     return $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
                 }
