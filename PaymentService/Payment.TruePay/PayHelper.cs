@@ -140,7 +140,7 @@ namespace Payment.TruePay
 
         public class WithdrawalResData
         {
-            public int id { get; set; }
+            public string id { get; set; }
         }
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
