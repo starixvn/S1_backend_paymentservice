@@ -694,7 +694,7 @@ namespace PaymentService.Controllers
                 //檢查namespace是否存在 
                 if (!DepReq.ContainsKey("PayName"))
                 {
-                    logger.LogError($"Method={GetCurrentAsyncMethod()}, PayName of TransId={transId} is not exist");
+                    logger.LogError($"Method={GetCurrentAsyncMethod()}, {paySetting.PayName} of TransId={transId} is not exist");
                     log2File.Error($"PayName of TransId={transId} is not exist", "CallBackHandlerAsync");
                     //dblogger.Write(SerialId, $"PayName of SerialId={depositRequest.SerialId} is not exist");
                     return $"PayName of TransId={transId} is not exist";
@@ -702,6 +702,7 @@ namespace PaymentService.Controllers
 
                 if (!IsWhiteList(common.GetClientIP(HttpContext), paySetting.PayName, transId))
                 {
+                    logger.LogError($"Method={GetCurrentAsyncMethod()}, {paySetting.PayName} requested of {transId} from {common.GetClientIP(HttpContext)} is Invalid IP!");
                     return "Invalid IP!";
                 }
 
