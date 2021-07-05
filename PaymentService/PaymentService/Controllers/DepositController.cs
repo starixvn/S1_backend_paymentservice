@@ -181,20 +181,24 @@ namespace PaymentService.Controllers
             var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
             var onlineBank = payBLL.GetOnlineBankList(custInfo.SiteId).Where(x => x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) && x.PointLevel <= vipLevel).FirstOrDefault();
             //var PayCurrency = payBLL.GetPayCurrency().;
+            
             if (onlineBank == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Bank Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.BankNotFound;
                 return apiResult;
             }
 
             if (custInfo.CurrencyId != onlineBank.CurrencyId && onlineBank.CurrencyId != 0)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
                 apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
                 return apiResult;
             }
 
             if (reqDeposit.Amount % 1 != 0)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
                 apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
                 return apiResult;
             }
@@ -204,14 +208,16 @@ namespace PaymentService.Controllers
             var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
             if (pay == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} pay Setting Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
                 return apiResult;
             }
+
             //DateTimeOffset
             var payHelper = payBLL.GetPayHelper(pay.PayName);
-
             if (payHelper == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
                 return apiResult;
             }
@@ -235,7 +241,6 @@ namespace PaymentService.Controllers
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositBank");
 
             var result = payHelper.Debit(DepReq);
-
             if (result.Success)
             {
                 apiResult.ErrorCode = 0;
@@ -247,7 +252,9 @@ namespace PaymentService.Controllers
                 apiResult.Data = payResult;
 
                 if (result.ThirdId != null)
+                {
                     paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                }
             }
             else
             {
@@ -281,20 +288,24 @@ namespace PaymentService.Controllers
             var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
             var mobilePayInfo = payBLL.GetMobilePayInfoList(custInfo.SiteId).Where(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel).FirstOrDefault();
             //var PayCurrency = payBLL.GetPayCurrency().;
+           
             if (mobilePayInfo == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Channel Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.ChannelNotFound;
                 return apiResult;
             }
 
             if (custInfo.CurrencyId != mobilePayInfo.CurrencyId)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
                 apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
                 return apiResult;
             }
 
             if (reqDeposit.Amount % 1 != 0)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
                 apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
                 return apiResult;
             }
@@ -304,9 +315,9 @@ namespace PaymentService.Controllers
 
             //DateTimeOffset
             var payHelper = payBLL.GetPayHelper(pay.PayName);
-
             if (payHelper == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
                 return apiResult;
             }
@@ -329,7 +340,6 @@ namespace PaymentService.Controllers
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositMobile");
 
             var result = payHelper.Debit(DepReq);
-
             if (result.Success)
             {
                 apiResult.ErrorCode = 0;
@@ -341,7 +351,9 @@ namespace PaymentService.Controllers
                 apiResult.Data = payResult;
 
                 if (result.ThirdId != null)
+                {
                     paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                }
             }
             else
             {
@@ -380,20 +392,24 @@ namespace PaymentService.Controllers
             var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
             var cryptoPayInfo = payBLL.GetCryptoPayInfoList(custInfo.SiteId).Where(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel).FirstOrDefault();
             //var PayCurrency = payBLL.GetPayCurrency().;
+            
             if (cryptoPayInfo == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Channel Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.ChannelNotFound;
                 return apiResult;
             }
 
             if (custInfo.CurrencyId != cryptoPayInfo.CurrencyId)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
                 apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
                 return apiResult;
             }
 
             if (reqDeposit.Amount % 1 != 0)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
                 apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
                 return apiResult;
             }
@@ -403,15 +419,14 @@ namespace PaymentService.Controllers
 
             //DateTimeOffset
             var payHelper = payBLL.GetPayHelper(pay.PayName);
-
             if (payHelper == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
                 return apiResult;
             }
 
             var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-
             var currency = (CurrencyMap)custInfo.CurrencyId;
             DepReq.Add("CurrencyId", currency.ToString());
             DepReq.Add("PayCurrencyId", cryptoPayInfo.PayCurrencyId);
@@ -431,7 +446,6 @@ namespace PaymentService.Controllers
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositCrpyto");
 
             var result = payHelper.Debit(DepReq);
-
             if (result.Success)
             {
                 apiResult.ErrorCode = 0;
@@ -442,12 +456,10 @@ namespace PaymentService.Controllers
                 payResult.Mode = cryptoPayInfo.Mode;
                 apiResult.Data = payResult;
 
-                log2File.Info($"result.TransId={reqDeposit.TransId}, result.ThirdId={result.ThirdId}", "ReqDepositCrpyto");
                 if (result.ThirdId != null)
                 {
                     paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
                 }
-
             }
             else
             {
@@ -487,20 +499,24 @@ namespace PaymentService.Controllers
             var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
             var loadCardPay = payBLL.GetLoadCardPayInfoList(custInfo.SiteId).Where(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel).FirstOrDefault();
             //var PayCurrency = payBLL.GetPayCurrency().;
+            
             if (loadCardPay == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Channel Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.ChannelNotFound;
                 return apiResult;
             }
 
             if (custInfo.CurrencyId != loadCardPay.CurrencyId)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
                 apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
                 return apiResult;
             }
 
             if (reqDeposit.Amount % 1 != 0)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
                 apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
                 return apiResult;
             }
@@ -510,9 +526,9 @@ namespace PaymentService.Controllers
 
             //DateTimeOffset
             var payHelper = payBLL.GetPayHelper(pay.PayName);
-
             if (payHelper == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
                 return apiResult;
             }
@@ -533,8 +549,8 @@ namespace PaymentService.Controllers
 
             logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositLoadCard");
+            
             var result = payHelper.Debit(DepReq);
-
             if (result.Success)
             {
                 apiResult.ErrorCode = 0;
@@ -546,7 +562,9 @@ namespace PaymentService.Controllers
                 apiResult.Data = payResult;
 
                 if (result.ThirdId != null)
+                {
                     paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                }
             }
             else
             {
@@ -665,7 +683,6 @@ namespace PaymentService.Controllers
             Match m = Regex.Match(transId, @"\d+");
             int.TryParse(m.Value, out depositId);
             string cTransId = $"D{common.GetEnv()}{depositId}";
-
             if (cTransId != transId)
             {
                 var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)payBLL.GetPayHelper(transId);
@@ -696,7 +713,6 @@ namespace PaymentService.Controllers
                 {
                     logger.LogError($"Method={GetCurrentAsyncMethod()}, {paySetting.PayName} of TransId={transId} is not exist");
                     log2File.Error($"PayName of TransId={transId} is not exist", "CallBackHandlerAsync");
-                    //dblogger.Write(SerialId, $"PayName of SerialId={depositRequest.SerialId} is not exist");
                     return $"PayName of TransId={transId} is not exist";
                 }
 
@@ -728,7 +744,6 @@ namespace PaymentService.Controllers
                 {
                     logger.LogError($"Method={GetCurrentAsyncMethod()}, {transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
                     log2File.Error($"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}", "CallBackHandlerAsync");
-                    //dblogger.Write(SerialId, $"{SerialId} is not equal {rNotifyDepositResult.DepositID} with PayName={DepReq["PayName"]}");
                     return $"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}";
                 }
 
@@ -739,7 +754,8 @@ namespace PaymentService.Controllers
                 {
                     logger.LogError($"Method={GetCurrentAsyncMethod()},Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}");
                     log2File.Error($"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}", "CallBackHandlerAsync");
-                    //dblogger.Write(transId, $"OrderAmount{rNotifyDepositResult.OrderAmount} is not equal {depositRequest.UserMoney}");
+                    rNotifyDepositResult.Comment = $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
+                    paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
                     return $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
                 }
 
@@ -762,14 +778,14 @@ namespace PaymentService.Controllers
                         errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
                         errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
                         errorMessages.AppendLine($"Source: {SqlEx.Source}");
-                        logger.LogError(SqlEx, $"Method={GetCurrentAsyncMethod()}");
+                        logger.LogError(SqlEx, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
                         log2File.Error(errorMessages.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, errorMessages.ToString());
                         return "Update UserMoney error(SQL)";
                     }
                     catch (Exception exForEachTransaction)
                     {
-                        logger.LogError(exForEachTransaction, $"Method={GetCurrentAsyncMethod()}");
+                        logger.LogError(exForEachTransaction, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
                         log2File.Error(exForEachTransaction.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, exForEachTransaction.Message);
                         return "Update UserMoney error(Other)";
@@ -795,9 +811,8 @@ namespace PaymentService.Controllers
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError(ex, $"Method={GetCurrentAsyncMethod()}");
+                        logger.LogError(ex, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
                         log2File.Error(ex.ToString(), "CallBackHandlerAsync");
-                        //dblogger.Write(SerialId, ex.Message);
                         return "Update DepositFail error";
                     }
                 }
@@ -808,7 +823,6 @@ namespace PaymentService.Controllers
             {
                 logger.LogError($"Method={GetCurrentAsyncMethod()}, SerialId={transId} is not exist");
                 log2File.Error($"SerialId={transId} is not exist", "CallBackHandlerAsync");
-                //dblogger.Write(SerialId, $"SerialId={SerialId} is not exist");
                 return $"SerialId={transId} is not exist";
             }
         }

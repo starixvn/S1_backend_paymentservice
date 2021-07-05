@@ -67,6 +67,7 @@ namespace PaymentService.Controllers
 
             if (custInfo.CurrencyId != onlineBank.CurrencyId)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
                 apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
                 return apiResult;
             }
@@ -74,23 +75,22 @@ namespace PaymentService.Controllers
       
             var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqWithdrawal.PayId).FirstOrDefault();
             var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
-
             if (pay == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} pay Setting Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
                 return apiResult;
             }
 
             var payHelper = payBLL.GetPayHelper(pay.PayName);
-
             if (payHelper == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} payHelper Setting Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
                 return apiResult;
             }
 
             var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-            
             WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
             //WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
             WithReq.Add("OutgoingIp", outgoingIp);
@@ -108,8 +108,8 @@ namespace PaymentService.Controllers
 
             logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(WithReq)}", "Withdrawal");
+            
             var result = payHelper.Credit(WithReq);
-
             if (result.Success)
             {
                 apiResult.ErrorCode = 0;
@@ -132,33 +132,31 @@ namespace PaymentService.Controllers
             var custId = reqWithdrawal.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
             var crypto = payBLL.GetCryptoListForPayout().Where(x => x.PayId == reqWithdrawal.PayId && custInfo.CurrencyId == x.CurrencyId).FirstOrDefault();
-
             if (crypto == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
                 apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
                 return apiResult;
             }
 
-
             var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqWithdrawal.PayId).FirstOrDefault();
             var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
-
             if (pay == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} pay Setting Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
                 return apiResult;
             }
 
             var payHelper = payBLL.GetPayHelper(pay.PayName);
-
             if (payHelper == null)
             {
+                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} payHelper Setting Not Found");
                 apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
                 return apiResult;
             }
 
             var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-
             WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
             //WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
             WithReq.Add("OutgoingIp", outgoingIp);
@@ -176,8 +174,8 @@ namespace PaymentService.Controllers
 
             logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
             log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(WithReq)}", "Withdrawal");
-            var result = payHelper.Credit(WithReq);
 
+            var result = payHelper.Credit(WithReq);
             if (result.Success)
             {
                 apiResult.ErrorCode = 0;
@@ -231,12 +229,11 @@ namespace PaymentService.Controllers
 
             logger.LogInformation($"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
             log2File.Info($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}", "WithdrawalCallBack");
+            
             int withdrawalId = 0;
-
             Match m = Regex.Match(transId, @"\d+");
             int.TryParse(m.Value, out withdrawalId);
             string cTransId = $"W{common.GetEnv()}{withdrawalId}";
-
             if (cTransId != transId)
             {
                 var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)payBLL.GetPayHelper(transId);
@@ -263,7 +260,6 @@ namespace PaymentService.Controllers
                 {
                     logger.LogError($"Method={GetCurrentMethod()}, PayName of TransId={transId} is not exist");
                     log2File.Error($"PayName of TransId={transId} is not exist", "CallBackHandler");
-                    //dblogger.Write(SerialId, $"PayName of SerialId={depositRequest.SerialId} is not exist");
                     return $"PayName of TransId={transId} is not exist";
                 }
 
@@ -293,7 +289,6 @@ namespace PaymentService.Controllers
                 {
                     logger.LogError($"Method={GetCurrentMethod()}, {transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
                     log2File.Error($"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}", "CallBackHandler");
-                    //dblogger.Write(SerialId, $"{SerialId} is not equal {rNotifyDepositResult.DepositID} with PayName={DepReq["PayName"]}");
                     return $"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}";
                 }
 
@@ -309,23 +304,19 @@ namespace PaymentService.Controllers
                     {
                         /*Need Check Transaction Status*/
                         StringBuilder errorMessages = new StringBuilder();
-                        //errorMessages.AppendLine(Newtonsoft.Json.JsonConvert.SerializeObject(dataParam));
-
                         errorMessages.AppendLine($"Message: {SqlEx.Message}");
                         errorMessages.AppendLine($"Error Number: {SqlEx.Number}");
                         errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
                         errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
                         errorMessages.AppendLine($"Source: {SqlEx.Source}");
-                        logger.LogError(SqlEx, $"Method={GetCurrentMethod()}");
-                        //dblogger.Write(SerialId, errorMessages.ToString());
+                        logger.LogError(SqlEx, $"Method={GetCurrentMethod()}, transId={transId}");
                         log2File.Error(errorMessages.ToString(), "CallBackHandler");
                         return "Update UserMoney error(SQL)";
                     }
                     catch (Exception exForEachTransaction)
                     {
-                        logger.LogError(exForEachTransaction, $"Method={GetCurrentMethod()}");
+                        logger.LogError(exForEachTransaction, $"Method={GetCurrentMethod()}, transId={transId}");
                         log2File.Error(exForEachTransaction.ToString(), "CallBackHandler");
-                        //dblogger.Write(SerialId, exForEachTransaction.Message);
                         return "Update UserMoney error(Other)";
                     }
                     #endregion
@@ -338,9 +329,8 @@ namespace PaymentService.Controllers
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError(ex, $"Method={GetCurrentMethod()}");
+                        logger.LogError(ex, $"Method={GetCurrentMethod()}, transId={transId}");
                         log2File.Error(ex.ToString(), "CallBackHandler");
-                        //dblogger.Write(SerialId, ex.Message);
                         return "Update DepositFail error";
                     }
                 }
@@ -351,7 +341,6 @@ namespace PaymentService.Controllers
             {
                 logger.LogError($"Method={GetCurrentMethod()}, SerialId ={transId} is not exist");
                 log2File.Error($"SerialId={transId} is not exist", "CallBackHandler");
-                //dblogger.Write(SerialId, $"SerialId={SerialId} is not exist");
                 return $"SerialId={transId} is not exist";
             }
         }
