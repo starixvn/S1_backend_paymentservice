@@ -27,13 +27,13 @@ namespace PaymentService.Service.DAL
         }
         public DepositRequest GetDepositRequest(int depositId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<DepositRequest>("DepositCallBack_Get", new { DepositId = depositId }, commandType: CommandType.StoredProcedure);
         }
 
         public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<DepositRequest>("Service_DepositRequesPayEnquiry_Get", commandType: CommandType.StoredProcedure);
         }
 
