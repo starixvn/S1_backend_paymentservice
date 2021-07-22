@@ -11,19 +11,59 @@ namespace Payment.WealthPay
     {
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var data = FromJson<CallBackDebitReq>(bodyContent);
+
+            string p = $"{data.MerchantCode}{data.CurrencyCode}{data.BankCode}{data.TransactionID}{data.Amount}" +
+                        $"{data.TransactionTime}{data.ID}{data.Status}{data.Message}{payResource["key"]}";
+            string sign = ToSHA256(p).ToLower();
+
+            oNotify.WithdrawId = data.TransactionID;
+            oNotify.ThirdId = data.ID;
+            oNotify.Message = data.Message;
+
+            if (sign == data.Signature)
+            {
+                if (data.Status == "0001")
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = data.Amount;
+                    oNotify.Response = "200";
+                }
+                else if (data.Status == "0003")
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Response = "200";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Pending;
+                    oNotify.Response = "200";
+                }
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Message = "Signature error";
+                oNotify.Response = "fail";
+            }
+
+            return oNotify;
         }
+
         private class CallBackDebitReq
         {
-            public int merchantId { get; set; }
-            public string orderSn { get; set; }
-            public string queryId { get; set; }
-            public string goodsName { get; set; }
-            public decimal amount { get; set; }
-            public int status { get; set; }
-            public decimal realMoney { get; set; }
-            public string message { get; set; }
-            public string sign { get; set; }
+            public string MerchantCode { get; set; }
+            public string CurrencyCode { get; set; }
+            public string BankCode { get; set; }
+            public string TransactionID { get; set; }
+            public decimal Amount { get; set; }
+            public string SenderAccountNumber { get; set; }
+            public string TransactionTime { get; set; }
+            public string ID { get; set; }
+            public string Status { get; set; }
+            public string Message { get; set; }
+            public string Signature { get; set; }
         }
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
@@ -31,37 +71,38 @@ namespace Payment.WealthPay
             NotifyDepositResult oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(bodyContent);
 
-            string p = $"{data.merchantId}{data.orderSn}{data.amount}{payResource["key"]}";
-            string sign = ToMD5(p).ToLower();
+            string p = $"{data.MerchantCode}{data.CurrencyCode}{data.BankCode}{data.TransactionID}{data.Amount}" +
+                        $"{data.TransactionTime}{data.ID}{data.Status}{data.Message}{payResource["key"]}";
+            string sign = ToSHA256(p).ToLower();
 
-            oNotify.DepositId = data.orderSn;
-            oNotify.ThirdId = data.queryId;
-            oNotify.Message = data.message;
+            oNotify.DepositId = data.TransactionID;
+            oNotify.ThirdId = data.ID;
+            oNotify.Message = data.Message;
 
-            if (sign == data.sign)
+            if (sign == data.Signature)
             {
-                if (data.status == 2 || data.status == 3)
+                if (data.Status == "0001")
                 {
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = data.amount / 100;
-                    oNotify.ActualAmount = data.amount / 100;
-                    oNotify.Message = data.message;
-                    oNotify.Comment = $"{data.status}-{data.message}";
-                    oNotify.Response = "success";
+                    oNotify.RequestAmount = data.Amount;
+                    oNotify.ActualAmount = data.Amount;
+                    oNotify.Message = data.Message;
+                    oNotify.Comment = data.Message;
+                    oNotify.Response = "200";
                 }
-                else if (data.status == 1)
+                else if (data.Status == "0003" || data.Status == "0004")
                 {
-                    oNotify.TransStatus = TransStatus.Pending;
-                    oNotify.Message = data.message;
-                    oNotify.Comment = $"{data.status}-{data.message}";
-                    oNotify.Response = "success";
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Message = data.Message;
+                    oNotify.Comment = data.Message;
+                    oNotify.Response = "200";
                 }
                 else
                 {
-                    oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.Message = data.message;
-                    oNotify.Comment = $"{data.status}-{data.message}";
-                    oNotify.Response = "success";
+                    oNotify.TransStatus = TransStatus.Pending;
+                    oNotify.Message = data.Message;
+                    oNotify.Comment = data.Message;
+                    oNotify.Response = "200";
                 }
             }
             else
@@ -82,11 +123,9 @@ namespace Payment.WealthPay
 
         private class WithdrawalRes
         {
-            public long code { get; set; }
-
+            public string status { get; set; }
+            public string submissionID { get; set; }
             public string message { get; set; }
-
-            public object[] data { get; set; }
         }
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
@@ -94,34 +133,36 @@ namespace Payment.WealthPay
             string sUrl = inputs["PayOut"];
             Dictionary<string, string> formData = new Dictionary<string, string>();
 
-            formData.Add("merchantId", inputs["merchant_no"]);
-            formData.Add("orderSn", inputs["TransID"]);
-            formData.Add("currency", inputs["PayCurrencyId"]);
-            decimal amount = decimal.Parse(inputs["Amount"]) * 100;
-            formData.Add("amount", amount.ToString("#"));
-            formData.Add("type", "bank");
-            formData.Add("userName", inputs["AccountName"]);
-            formData.Add("cardNo", inputs["AccountNo"]);
-            formData.Add("bankCode", inputs["BankCode"]);
-            formData.Add("bankName", inputs["BankCode"]);
-            formData.Add("bankBranch", inputs["BankCode"]);
-            formData.Add("branchAddress", inputs["BankCode"]);
-            formData.Add("province", inputs["BankCode"]);
-            formData.Add("city", inputs["BankCode"]);
-            formData.Add("unionCode", inputs["BankCode"]);
-            formData.Add("bankMobile", inputs["BankCode"]);
+            formData.Add("MerchantCode", inputs["merchant_no"]);
+            formData.Add("TransactionID", inputs["TransID"]);
+            formData.Add("MemberID", inputs["MemberID"]);
+            formData.Add("CurrencyCode", inputs["PayCurrencyId"]);
+            formData.Add("BankCode", inputs["BankCode"]);
+            formData.Add("ToAccountNumber", inputs["AccountNo"]);
+            formData.Add("ToAccountName", inputs["AccountName"]);
+            formData.Add("ToProvince", "");
+            formData.Add("ToCity", "");
+            formData.Add("ToBranch", "");
+            decimal amount = decimal.Parse(inputs["Amount"]);
+            formData.Add("Amount", amount.ToString("#"));
+            formData.Add("Note", "");
+            formData.Add("CallbackURL", inputs["CallBackUrl"]);
+            var time = new DateTimeOffset(DateTime.Now);
+            formData.Add("TransactionTime", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
 
-            string p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["type"]}{formData["userName"]}{formData["cardNo"]}{inputs["key"]}";
-            formData.Add("sign", ToMD5(p).ToLower());
+            string p = $"{formData["MerchantCode"]}{formData["TransactionID"]}{formData["MemberID"]}{formData["CurrencyCode"]}{formData["BankCode"]}" +
+                                    $"{formData["ToAccountNumber"]}{formData["ToAccountName"]}{formData["ToProvince"]}{formData["ToCity"]}{formData["ToBranch"]}" +
+                                    $"{formData["Amount"]}{formData["Note"]}{formData["CallbackURL"]}{formData["ClientIP"]}{formData["TransactionTime"]}{inputs["key"]}"; 
+            formData.Add("Signature", ToSHA256(p).ToLower());
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
+            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["TransactionID"]);
 
             WithdrawResult withdrawResult = new WithdrawResult();
             WithdrawalRes withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
-            if (withdrawalRes.code == 200)
+            if (withdrawalRes.status == "0000")
             {
                 withdrawResult.Success = true;
                 withdrawResult.Message = withdrawalRes.message;
@@ -176,7 +217,9 @@ namespace Payment.WealthPay
             var time = new DateTimeOffset(DateTime.Now);
             formData.Add("TransactionTime", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
 
-            string p = $"{formData["MerchantCode"]}{formData["TransactionID"]}{formData["MemberID"]}{formData["CurrencyCode"]}{formData["BankCode"]}{formData["Amount"]}{formData["Note"]}{formData["RedirectURL"]}{formData["CallbackURL"]}{formData["ClientIP"]}{formData["TransactionTime"]}{inputs["key"]}";
+            string p = $"{formData["MerchantCode"]}{formData["TransactionID"]}{formData["MemberID"]}{formData["CurrencyCode"]}{formData["BankCode"]}" +
+                        $"{formData["Amount"]}{formData["Note"]}{formData["RedirectURL"]}{formData["CallbackURL"]}{formData["ClientIP"]}" +
+                        $"{formData["TransactionTime"]}{inputs["key"]}";
             formData.Add("Signature", ToSHA256(p).ToLower());
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
@@ -187,7 +230,7 @@ namespace Payment.WealthPay
             DepositResult oDepositResult = new DepositResult();
             if (depositRes.Status == "0000")
             {
-                oDepositResult.Url = depositRes.Status;
+                oDepositResult.Url = depositRes.RedirectURL;
                 oDepositResult.Success = true;
                 oDepositResult.FormData = null;
                 oDepositResult.Message = "";
