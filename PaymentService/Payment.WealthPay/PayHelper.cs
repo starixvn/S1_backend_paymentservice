@@ -164,13 +164,14 @@ namespace Payment.WealthPay
             formData.Add("SendeAccountNumber", "");
             formData.Add("SendeAccountName", "");
             formData.Add("TransactionID", inputs["TransID"]);
+            formData.Add("MemberID", inputs["CustId"]);
             formData.Add("CurrencyCode", inputs["PayCurrencyId"]);
+            formData.Add("BankCode", inputs["BankCode"]);
             decimal amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#"));
+            formData.Add("Note", "");
             formData.Add("RedirectURL", inputs["ReturnUrl"]);
             formData.Add("CallbackURL", inputs["CallBackUrl"]);
-            formData.Add("Note", "");
-            formData.Add("MemberID", inputs["CustId"]);
             formData.Add("ClientIP", inputs["ClientIP"]);
             var time = new DateTimeOffset(DateTime.Now);
             formData.Add("TransactionTime", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
