@@ -147,6 +147,7 @@ namespace Payment.WealthPay
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("Note", "");
             formData.Add("CallbackURL", inputs["CallBackUrl"]);
+            formData.Add("ClientIP", inputs["ClientIP"]);
             var time = new DateTimeOffset(DateTime.Now);
             formData.Add("TransactionTime", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
 
