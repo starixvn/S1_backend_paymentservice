@@ -17,8 +17,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.OneClickPay", "Paym
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.FXBit", "Payment.FXBit\Payment.FXBit.csproj", "{041113AD-4D27-41B1-BF18-3BACB94B42FE}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8BB8C09F-1FA7-4BB8-AAE3-F83BEA0B71E6}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.YRPay", "Payment.YRPay\Payment.YRPay.csproj", "{97608B76-1EAB-4FC9-8BFD-26F928CEC5EF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.CirclePay", "Payment.CirclePay\Payment.CirclePay.csproj", "{3D8784DB-692D-4A9E-BF3A-F4B5DEA5617F}"
@@ -54,6 +52,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.DragonPay", "Payment.DragonPay\Payment.DragonPay.csproj", "{9E53A71E-5277-439F-9FA6-3F29EBE3BF3C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.AllpassPay", "Payment.AllpassPay\Payment.AllpassPay.csproj", "{5B63F762-9CED-473E-ABA0-9E9EC0F5AA11}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.WealthPay", "Payment.WealthPay\Payment.WealthPay.csproj", "{37E5B454-ADB0-4D12-A619-42C10979D62E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -161,6 +161,10 @@ Global
 		{5B63F762-9CED-473E-ABA0-9E9EC0F5AA11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B63F762-9CED-473E-ABA0-9E9EC0F5AA11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B63F762-9CED-473E-ABA0-9E9EC0F5AA11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37E5B454-ADB0-4D12-A619-42C10979D62E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37E5B454-ADB0-4D12-A619-42C10979D62E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37E5B454-ADB0-4D12-A619-42C10979D62E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37E5B454-ADB0-4D12-A619-42C10979D62E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

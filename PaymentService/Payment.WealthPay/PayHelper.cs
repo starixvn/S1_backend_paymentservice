@@ -139,68 +139,62 @@ namespace Payment.WealthPay
 
         private class DepositRes
         {
-            public string code { get; set; }
-            public string message { get; set; }
-            public DepositResData data { get; set; }
-        }
-
-        public class DepositResData
-        {
-            public string gopayUrl { get; set; }
-            public int type { get; set; }
-            public string qrCode { get; set; }
-
+            public string Status { get; set; }
+            public string Message { get; set; }
+            public string RedirectURL { get; set; }
         }
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = "";
+            string sUrl = inputs["host"];
             Dictionary<string, string> formData = new Dictionary<string, string>();
-            if (inputs["PayCode"] != null)
-            {
-                sUrl = inputs["host"];
-                formData.Add("type", "2");
-                formData.Add("scanType", inputs["PayCode"]);
-            }
-            else
-            {
-                sUrl = inputs["hostgateway"];
-                formData.Add("type", "1");
-            }
+            //if (inputs["PayCode"] != null)
+            //{
+            //    formData.Add("DepositChannel", inputs["PayCode"]);
+            //}
+            //else
+            //{
+            //    formData.Add("DepositChannel", "1");
+            //}
 
-            formData.Add("merchantId", inputs["merchant_no"]);
-            formData.Add("orderSn", inputs["TransID"]);
-            formData.Add("currency", inputs["PayCurrencyId"]);
-            decimal amount = decimal.Parse(inputs["Amount"]) * 100;
-            formData.Add("amount", amount.ToString("#"));
-            formData.Add("returnUrl", inputs["ReturnUrl"]);
-            formData.Add("notifyUrl", inputs["CallBackUrl"]);
-            formData.Add("language", inputs["PayLangId"]);
-            formData.Add("goodsName", "N/A");
-            
-            string p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["notifyUrl"]}{formData["type"]}{inputs["key"]}";
-            formData.Add("sign", ToMD5(p).ToLower());
+            formData.Add("MerchantCode", inputs["merchant_no"]);
+            formData.Add("DepositType", "0");
+            formData.Add("DepositChannel", inputs["PayCode"]);
+            formData.Add("SenderBankCode", "");
+            formData.Add("SendeAccountNumber", "");
+            formData.Add("SendeAccountName", "");
+            formData.Add("TransactionID", inputs["TransID"]);
+            formData.Add("CurrencyCode", inputs["PayCurrencyId"]);
+            decimal amount = decimal.Parse(inputs["Amount"]);
+            formData.Add("Amount", amount.ToString("#"));
+            formData.Add("RedirectURL", inputs["ReturnUrl"]);
+            formData.Add("CallbackURL", inputs["CallBackUrl"]);
+            formData.Add("Note", "");
+            formData.Add("MemberID", inputs["CustId"]);
+            formData.Add("ClientIP", inputs["ClientIP"]);
+            var time = new DateTimeOffset(DateTime.Now);
+            formData.Add("TransactionTime", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
+
+            string p = $"{formData["MerchantCode"]}{formData["TransactionID"]}{formData["MemberID"]}{formData["CurrencyCode"]}{formData["BankCode"]}{formData["Amount"]}{formData["Note"]}{formData["RedirectURL"]}{formData["CallbackURL"]}{formData["ClientIP"]}{formData["TransactionTime"]}{inputs["key"]}";
+            formData.Add("Signature", ToSHA256(p).ToLower());
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
+            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["TransactionID"]);
 
             DepositRes depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
             DepositResult oDepositResult = new DepositResult();
-            if (depositRes.code == "200")
+            if (depositRes.Status == "0000")
             {
-                if (depositRes.data.type == 1)
-                {
-                    oDepositResult.Url = depositRes.data.gopayUrl;
-                    oDepositResult.Success = true;
-                    oDepositResult.FormData = null;
-                    oDepositResult.Message = "";
-                }
+                oDepositResult.Url = depositRes.Status;
+                oDepositResult.Success = true;
+                oDepositResult.FormData = null;
+                oDepositResult.Message = "";
             }
             else
             {
                 oDepositResult.Success = false;
-                oDepositResult.Message = depositRes.message;
+                oDepositResult.Message = depositRes.Message;
             }
 
             return oDepositResult;
@@ -265,7 +259,7 @@ namespace Payment.WealthPay
                     oNotify.TransStatus = TransStatus.Pending;
                 }
             }
-            else if(enquiryWithdrawRes.code == "201")
+            else if (enquiryWithdrawRes.code == "201")
             {
                 oNotify.TransStatus = TransStatus.Fail;
             }
@@ -273,7 +267,7 @@ namespace Payment.WealthPay
             {
                 oNotify.TransStatus = TransStatus.Pending;
             }
-            
+
             oNotify.Message = enquiryWithdrawRes.message;
             return oNotify;
         }
