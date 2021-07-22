@@ -135,7 +135,7 @@ namespace Payment.WealthPay
 
             formData.Add("MerchantCode", inputs["merchant_no"]);
             formData.Add("TransactionID", inputs["TransID"]);
-            formData.Add("MemberID", inputs["MemberID"]);
+            formData.Add("MemberID", inputs["CustId"]);
             formData.Add("CurrencyCode", inputs["PayCurrencyId"]);
             formData.Add("BankCode", inputs["BankCode"]);
             formData.Add("ToAccountNumber", inputs["AccountNo"]);
