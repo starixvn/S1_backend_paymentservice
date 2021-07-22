@@ -27,7 +27,7 @@ namespace Payment.WealthPay
                 if (data.Status == "0001")
                 {
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = data.Amount;
+                    oNotify.RequestAmount = decimal.Parse(data.Amount);
                     oNotify.Response = "200";
                 }
                 else if (data.Status == "0003")
@@ -57,7 +57,7 @@ namespace Payment.WealthPay
             public string CurrencyCode { get; set; }
             public string BankCode { get; set; }
             public string TransactionID { get; set; }
-            public decimal Amount { get; set; }
+            public string Amount { get; set; }
             public string SenderAccountNumber { get; set; }
             public string TransactionTime { get; set; }
             public string ID { get; set; }
@@ -84,8 +84,8 @@ namespace Payment.WealthPay
                 if (data.Status == "0001")
                 {
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = data.Amount;
-                    oNotify.ActualAmount = data.Amount;
+                    oNotify.RequestAmount = decimal.Parse(data.Amount);
+                    oNotify.ActualAmount = decimal.Parse(data.Amount);
                     oNotify.Message = data.Message;
                     oNotify.Comment = data.Message;
                     oNotify.Response = "200";
