@@ -16,7 +16,7 @@ namespace Payment.WealthPay
 
             string p = $"{data.MerchantCode}{data.CurrencyCode}{data.BankCode}{data.TransactionID}{data.Amount}" +
                         $"{data.TransactionTime}{data.ID}{data.Status}{data.Message}{payResource["key"]}";
-            string sign = ToSHA256(p).ToLower();
+            string sign = ToSHA256(p).ToUpper();
 
             oNotify.WithdrawId = data.TransactionID;
             oNotify.ThirdId = data.ID;
@@ -73,7 +73,7 @@ namespace Payment.WealthPay
 
             string p = $"{data.MerchantCode}{data.CurrencyCode}{data.BankCode}{data.TransactionID}{data.Amount}" +
                         $"{data.TransactionTime}{data.ID}{data.Status}{data.Message}{payResource["key"]}";
-            string sign = ToSHA256(p).ToLower();
+            string sign = ToSHA256(p).ToUpper();
 
             oNotify.DepositId = data.TransactionID;
             oNotify.ThirdId = data.ID;
@@ -153,7 +153,7 @@ namespace Payment.WealthPay
             string p = $"{formData["MerchantCode"]}{formData["TransactionID"]}{formData["MemberID"]}{formData["CurrencyCode"]}{formData["BankCode"]}" +
                                     $"{formData["ToAccountNumber"]}{formData["ToAccountName"]}{formData["ToProvince"]}{formData["ToCity"]}{formData["ToBranch"]}" +
                                     $"{formData["Amount"]}{formData["Note"]}{formData["CallbackURL"]}{formData["ClientIP"]}{formData["TransactionTime"]}{inputs["key"]}"; 
-            formData.Add("Signature", ToSHA256(p).ToLower());
+            formData.Add("Signature", ToSHA256(p).ToUpper());
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["TransactionID"]);
@@ -220,7 +220,7 @@ namespace Payment.WealthPay
             string p = $"{formData["MerchantCode"]}{formData["TransactionID"]}{formData["MemberID"]}{formData["CurrencyCode"]}{formData["BankCode"]}" +
                         $"{formData["Amount"]}{formData["Note"]}{formData["RedirectURL"]}{formData["CallbackURL"]}{formData["ClientIP"]}" +
                         $"{formData["TransactionTime"]}{inputs["key"]}";
-            formData.Add("Signature", ToSHA256(p).ToLower());
+            formData.Add("Signature", ToSHA256(p).ToUpper());
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["TransactionID"]);
