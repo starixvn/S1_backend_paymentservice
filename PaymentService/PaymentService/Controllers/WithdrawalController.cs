@@ -50,7 +50,7 @@ namespace PaymentService.Controllers
             public int PayId { get; set; }
             public int CustId { get; set; }
             public decimal Amount { get; set; }
-            public string ClientIP { set; get; }
+            //public string ClientIP { set; get; }
             public string AccountName { set; get; }
             public string AccountNo { set; get; }
             public string ReturnUrl { set; get; }
@@ -92,7 +92,7 @@ namespace PaymentService.Controllers
 
             var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
             WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
-            WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
+            WithReq.Add("ClientIP", common.GetClientIP(HttpContext));
             WithReq.Add("OutgoingIp", outgoingIp);
             WithReq.Add("CustId", custInfo.CustId.ToString());
             WithReq.Add("TransID", reqWithdrawal.TransId);
@@ -158,7 +158,7 @@ namespace PaymentService.Controllers
 
             var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
             WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
-            WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
+            //WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
             WithReq.Add("OutgoingIp", outgoingIp);
             WithReq.Add("CustId", custInfo.CustId.ToString());
             WithReq.Add("TransID", reqWithdrawal.TransId);
