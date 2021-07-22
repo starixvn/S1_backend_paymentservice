@@ -12,7 +12,7 @@ namespace Payment.WealthPay
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
-            var data = FromJson<CallBackDebitReq>(bodyContent);
+            var data = FromJson<CallBackDebitReq>(ToJson(formData));
 
             string p = $"{data.MerchantCode}{data.CurrencyCode}{data.BankCode}{data.TransactionID}{data.Amount}" +
                         $"{data.TransactionTime}{data.ID}{data.Status}{data.Message}{payResource["key"]}";
@@ -69,7 +69,7 @@ namespace Payment.WealthPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             NotifyDepositResult oNotify = new NotifyDepositResult();
-            var data = FromJson<CallBackDebitReq>(bodyContent);
+            var data = FromJson<CallBackDebitReq>(ToJson(formData));
 
             string p = $"{data.MerchantCode}{data.CurrencyCode}{data.BankCode}{data.TransactionID}{data.Amount}" +
                         $"{data.TransactionTime}{data.ID}{data.Status}{data.Message}{payResource["key"]}";
