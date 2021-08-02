@@ -542,6 +542,18 @@ namespace PaymentCore
             return builder.ToString();
         }
 
+        protected string ToBase64Encode(string str)
+        {
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(str);
+            return System.Convert.ToBase64String(plainTextBytes);
+        }
+
+        protected string ToBase64Decode(string str)
+        {
+            var base64EncodedBytes = System.Convert.FromBase64String(str);
+            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+        }
+
         protected string AddPrivateHeader(string text)
         {
             return $"-----BEGIN RSA PRIVATE KEY-----\n{text}\n-----END RSA PRIVATE KEY-----";
