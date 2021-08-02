@@ -151,8 +151,7 @@ namespace Payment.TenPay
             formData.Add("IsTest", inputs["IsTest"]);
             formData.Add("PayeeAccountName", inputs["AccountName"]);
             formData.Add("PayeeAccountNumber", inputs["AccountNo"]);
-            formData.Add("PayeeIFSCCode", inputs["BankCode"]);
-            formData.Add("PayeeAccountNumber", inputs["AccountNo"]);
+            formData.Add("PayeeIFSCCode", inputs["IFSCCode"]);
             formData.Add("PayeeBankName", inputs["BankName"]);
             formData.Add("PaymentChannelId", inputs["PayCode"]);
             formData.Add("ShopInformUrl", inputs["CallBackUrl"]);
