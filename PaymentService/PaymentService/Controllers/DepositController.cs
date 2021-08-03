@@ -487,6 +487,8 @@ namespace PaymentService.Controllers
         public class ReqDepositLoadCard : ReqDeposit
         {
             public int ChannelId { get; set; }
+            public string Code { get; set; }
+            public string Serial { get; set; }
         }
 
         [HttpPost]
@@ -539,7 +541,8 @@ namespace PaymentService.Controllers
             DepReq.Add("TransID", reqDeposit.TransId);
             DepReq.Add("Amount", reqDeposit.Amount.ToString());
             DepReq.Add("PayCode", loadCardPay.PayCode);
-            DepReq.Add("BankCode", null);
+            DepReq.Add("Code", reqDeposit.Code);
+            DepReq.Add("Serial", reqDeposit.Serial);
             DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
             DepReq.Add("PayLangId", payLangId);
             DepReq.Add("CustId", reqDeposit.CustId.ToString());

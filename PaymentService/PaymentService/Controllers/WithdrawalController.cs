@@ -53,7 +53,8 @@ namespace PaymentService.Controllers
             //public string ClientIP { set; get; }
             public string AccountName { set; get; }
             public string AccountNo { set; get; }
-            public string ReturnUrl { set; get; }
+            public string IFSCCode { set; get; }
+            //public string ReturnUrl { set; get; }
         }
 
         [HttpPost]
@@ -103,6 +104,8 @@ namespace PaymentService.Controllers
             WithReq.Add("AccountName", reqWithdrawal.AccountName);
             WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
             WithReq.Add("IsTest", common.IsTest());
+            WithReq.Add("IFSCCode", reqWithdrawal.IFSCCode);
+            
             var callBackUrl = configuration.GetValue<string>("CallBack");
             WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
 

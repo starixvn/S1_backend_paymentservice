@@ -219,7 +219,19 @@ namespace PaymentCore
             Stream dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);
             dataStream.Close();
-            using WebResponse response = request.GetResponse();
+            WebResponse response;
+
+            try
+            {
+                //執行Request
+                //若網站回應錯誤，就會在此引發WebException
+                response = request.GetResponse();
+            }
+            catch (WebException e)
+            {
+                //網站回應錯誤,
+                response = (HttpWebResponse)e.Response;
+            }
 
             dataStream = response.GetResponseStream();
             using StreamReader reader = new StreamReader(dataStream);
@@ -540,6 +552,18 @@ namespace PaymentCore
                 }
             }
             return builder.ToString();
+        }
+
+        protected string ToBase64Encode(string str)
+        {
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(str);
+            return System.Convert.ToBase64String(plainTextBytes);
+        }
+
+        protected string ToBase64Decode(string str)
+        {
+            var base64EncodedBytes = System.Convert.FromBase64String(str);
+            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
 
         protected string AddPrivateHeader(string text)

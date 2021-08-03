@@ -55,6 +55,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.AllpassPay", "Payme
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.WealthPay", "Payment.WealthPay\Payment.WealthPay.csproj", "{37E5B454-ADB0-4D12-A619-42C10979D62E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.Porttopup", "Payment.Porttopup\Payment.Porttopup.csproj", "{063170F0-7F81-4A80-8EFD-8184277C9C00}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -165,6 +167,10 @@ Global
 		{37E5B454-ADB0-4D12-A619-42C10979D62E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37E5B454-ADB0-4D12-A619-42C10979D62E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37E5B454-ADB0-4D12-A619-42C10979D62E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{063170F0-7F81-4A80-8EFD-8184277C9C00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{063170F0-7F81-4A80-8EFD-8184277C9C00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{063170F0-7F81-4A80-8EFD-8184277C9C00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{063170F0-7F81-4A80-8EFD-8184277C9C00}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
