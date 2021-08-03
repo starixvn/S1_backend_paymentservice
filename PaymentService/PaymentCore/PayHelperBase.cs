@@ -219,7 +219,19 @@ namespace PaymentCore
             Stream dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);
             dataStream.Close();
-            using WebResponse response = request.GetResponse();
+            WebResponse response;
+
+            try
+            {
+                //執行Request
+                //若網站回應錯誤，就會在此引發WebException
+                response = request.GetResponse();
+            }
+            catch (WebException e)
+            {
+                //網站回應錯誤,
+                response = (HttpWebResponse)e.Response;
+            }
 
             dataStream = response.GetResponseStream();
             using StreamReader reader = new StreamReader(dataStream);

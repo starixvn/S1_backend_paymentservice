@@ -136,7 +136,7 @@ namespace Payment.TenPay
 
         private class WithdrawRes
         {
-            public string Success { get; set; }
+            public bool Success { get; set; }
             public string TrackingNumber { get; set; }
             public string ErrorMessage { get; set; }
         }
@@ -156,13 +156,13 @@ namespace Payment.TenPay
             formData.Add("PaymentChannelId", inputs["PayCode"]);
             formData.Add("ShopInformUrl", inputs["CallBackUrl"]);
             formData.Add("ShopOrderId", inputs["TransID"]);
-            formData.Add("ShopReturnUrl", inputs["ReturnUrl"]);
             formData.Add("ShopUserLongId", inputs["merchant_no"]);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={inputs["key"]}";
             formData.Add("EncryptValue", ToSHA256(p.ToLower()).ToUpper());
 
+            formData["PayeeBankName"] = UrlEncode(inputs["BankName"]);
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["ShopOrderId"]);
 
@@ -170,7 +170,7 @@ namespace Payment.TenPay
             withdrawRes = JsonConvert.DeserializeObject<WithdrawRes>(sResponse);
             WithdrawResult oWithdrawResult = new WithdrawResult();
 
-            if (withdrawRes.Success == "true")
+            if (withdrawRes.Success)
             {
                 oWithdrawResult.Success = true;
                 oWithdrawResult.Message = withdrawRes.TrackingNumber;
