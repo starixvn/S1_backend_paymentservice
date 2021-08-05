@@ -250,13 +250,11 @@ namespace Payment.DirePay
             depositGetH5Req.Add("password", inputs["Password"]);
             string sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            string sResponse = null;
-
             DepositResult oDepositResult = new DepositResult();
             oDepositResult.Success = false;
             try
             {
-                sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower());
+                string sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower());
 
                 DepositResp depositResp = new DepositResp();
                 depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
@@ -268,12 +266,12 @@ namespace Payment.DirePay
                     depositGetWalletReq.line_items = new line_items[1];
                     depositGetWalletReq.line_items[0] = new line_items();
                     depositGetWalletReq.line_items[0].name = "deposit";
-                    depositGetWalletReq.line_items[0].item_id = inputs["PayCurrencyId"];
-                    depositGetWalletReq.line_items[0].description = $"Deposit {inputs["PayCurrencyId"]} via {inputs["PayCurrencyId"]}";
+                    depositGetWalletReq.line_items[0].item_id = "USDT";
+                    depositGetWalletReq.line_items[0].description = $"Deposit {inputs["CurrencyId"]} via USDT";
                     decimal amount = decimal.Parse(inputs["Amount"]);
                     depositGetWalletReq.line_items[0].amount = amount.ToString("#");
                     depositGetWalletReq.line_items[0].quantity = "1";
-                    depositGetWalletReq.currency = inputs["CurrencyId"];
+                    depositGetWalletReq.currency = currMapping(inputs["CurrencyId"]);
                     depositGetWalletReq.token = $"{inputs["PayCurrencyId"]}-USDT";
                     depositGetWalletReq.callback_url = inputs["CallBackUrl"];
                     depositGetWalletReq.customer_uid = inputs["CustId"];
@@ -285,9 +283,15 @@ namespace Payment.DirePay
 
                     if (depositGetWalletResp != null && depositGetWalletResp.txid != null)
                     {
+                        Dictionary<string, string> ResData = new Dictionary<string, string>();
+                        ResData.Add("DepositAmount", depositGetWalletResp.invoice_amount);
+                        ResData.Add("Rate", depositGetWalletResp.rates);
+                        ResData.Add("Token", depositGetWalletResp.payment_token);
+
                         oDepositResult.Success = true;
                         oDepositResult.Url = depositGetWalletResp.payment_address;
                         oDepositResult.ThirdId = depositGetWalletResp.txid;
+                        oDepositResult.FormData = ResData;
                     }
                     else
                     {
@@ -327,6 +331,13 @@ namespace Payment.DirePay
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+
+        private class GetExchangeResp
+        {
+            public string amount { get; set; }
+            public string currency { get; set; }
+            public string message { get; set; }
         }
     }
 }

@@ -659,5 +659,28 @@ namespace PaymentCore
             byte[] outBytes = c.DoFinal(DataToEncrypt);//加密
             return Encoding.UTF8.GetString(outBytes);
         }
+
+        protected string currMapping(string currencyId)
+        {
+            Dictionary<string, string> currMapping = new Dictionary<string, string>
+            {
+                {"2", "MYR"},
+                {"4", "THB"},
+                {"13", "CNY"},
+                {"15", "IDR"},
+                {"51", "VND"},
+                {"61", "INR"}
+            };
+
+            if (currMapping.ContainsKey(currencyId))
+            {
+
+                return currMapping[currencyId];
+             }
+            else
+            {
+                return ""; 
+            }
+        }
     }
 }

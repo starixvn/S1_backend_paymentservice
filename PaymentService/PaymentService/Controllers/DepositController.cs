@@ -390,7 +390,7 @@ namespace PaymentService.Controllers
             var custId = reqDeposit.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
             var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-            var cryptoPayInfo = payBLL.GetCryptoPayInfoList(custInfo.SiteId).Where(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel).FirstOrDefault();
+            var cryptoPayInfo = payBLL.GetCryptoPayInfoList(custInfo.SiteId).Where(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
             //var PayCurrency = payBLL.GetPayCurrency().;
             
             if (cryptoPayInfo == null)
@@ -434,7 +434,6 @@ namespace PaymentService.Controllers
             DepReq.Add("TransID", reqDeposit.TransId);
             DepReq.Add("Amount", reqDeposit.Amount.ToString());
             DepReq.Add("PayCode", cryptoPayInfo.PayCode);
-            DepReq.Add("BankCode", null);
             DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
             DepReq.Add("PayLangId", payLangId);
             DepReq.Add("CustId", reqDeposit.CustId.ToString());
