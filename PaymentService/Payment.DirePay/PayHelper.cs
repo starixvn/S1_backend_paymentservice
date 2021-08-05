@@ -266,8 +266,8 @@ namespace Payment.DirePay
                     depositGetWalletReq.line_items = new line_items[1];
                     depositGetWalletReq.line_items[0] = new line_items();
                     depositGetWalletReq.line_items[0].name = "deposit";
-                    depositGetWalletReq.line_items[0].item_id = "USDT";
-                    depositGetWalletReq.line_items[0].description = $"Deposit {inputs["CurrencyId"]} via USDT";
+                    depositGetWalletReq.line_items[0].item_id = $"{inputs["PayCurrencyId"]}";
+                    depositGetWalletReq.line_items[0].description = $"Deposit {currMapping(inputs["CurrencyId"])} via USDT";
                     decimal amount = decimal.Parse(inputs["Amount"]);
                     depositGetWalletReq.line_items[0].amount = amount.ToString("#");
                     depositGetWalletReq.line_items[0].quantity = "1";
@@ -286,6 +286,8 @@ namespace Payment.DirePay
                         Dictionary<string, string> ResData = new Dictionary<string, string>();
                         ResData.Add("DepositAmount", depositGetWalletResp.invoice_amount);
                         ResData.Add("Rate", depositGetWalletResp.rates);
+                        decimal requestAmount = decimal.Parse(depositGetWalletResp.invoice_amount) * decimal.Parse(depositGetWalletResp.rates);
+                        ResData.Add("RequestAmount", requestAmount.ToString());
                         ResData.Add("Token", depositGetWalletResp.payment_token);
 
                         oDepositResult.Success = true;
