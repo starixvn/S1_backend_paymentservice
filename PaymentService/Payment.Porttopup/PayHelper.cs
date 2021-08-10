@@ -103,12 +103,12 @@ namespace Payment.Porttopup
             formData.Add("card_value", amount.ToString("#"));
             formData.Add("telco", inputs["PayCode"]);
 
-            string p = $"{formData["request_id"]}|{formData["partner_code"]}|{formData["acc_game"]}|{formData["card_code"]}|{formData["card_serial"]}|" +
+            string p = $"{formData["request_id"]}|{formData["partner_code"]}|{formData["card_code"]}|{formData["card_serial"]}|" +
                         $"{formData["card_value"]}|{formData["telco"]}|{inputs["key"]}";
-            formData.Add("signature", ToSHA256(p).ToUpper());
 
+            formData.Add("signature", ToSHA256(p).ToUpper());
             string sParam = string.Join("|", formData.Select(kp => $"{kp.Value}").ToArray());
-            string sResponse = HttpGet(sUrl, ToBase64Encode(sParam), formData["TransactionID"]);
+            string sResponse = HttpGet(sUrl, $"data={ToBase64Encode(sParam)}", formData["request_id"]);
 
             DepositRes depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
