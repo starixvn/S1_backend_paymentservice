@@ -33,6 +33,10 @@ namespace PaymentService.Service.Model
                 {
                     return Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo2_1>(DepositInfo);
                 }
+                else if (DepositType == 3)
+                {
+                    return Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo3_1>(DepositInfo);
+                }
                 else
                 {
                     return Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfoGeneral_1>(DepositInfo);
@@ -81,6 +85,7 @@ namespace PaymentService.Service.Model
         public int SysId { get; set; }
         public string AccountName { get; set; }
         public string AccountNo { get; set; }
+        public int CurrencyId { get; set; }
     }
     public class Comments
     {

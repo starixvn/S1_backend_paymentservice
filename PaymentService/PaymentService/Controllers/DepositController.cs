@@ -273,6 +273,8 @@ namespace PaymentService.Controllers
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
                 apiResult.RawErrorCode = result.ErrorCode;
                 apiResult.RawMessage = result.Message;
+
+                paymentBLL.DepositRejectd(reqDeposit.TransId, 0, result.ErrorCode, User.Identity.Name);
             }
 
             return apiResult;
@@ -372,6 +374,8 @@ namespace PaymentService.Controllers
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
                 apiResult.RawErrorCode = result.ErrorCode;
                 apiResult.RawMessage = result.Message;
+
+                paymentBLL.DepositRejectd(reqDeposit.TransId, 0, result.ErrorCode, User.Identity.Name);
             }
 
             return apiResult;
@@ -478,6 +482,8 @@ namespace PaymentService.Controllers
                 apiResult.RawErrorCode = result.ErrorCode;
                 apiResult.RawMessage = result.Message;
                 apiResult.Message = result.Message;
+
+                paymentBLL.DepositRejectd(reqDeposit.TransId, 0, result.ErrorCode, User.Identity.Name);
             }
 
             return apiResult;
@@ -586,6 +592,8 @@ namespace PaymentService.Controllers
                 apiResult.RawErrorCode = result.ErrorCode;
                 apiResult.RawMessage = result.Message;
                 apiResult.Message = result.Message;
+
+                paymentBLL.DepositRejectd(reqDeposit.TransId, 0, result.ErrorCode, User.Identity.Name);
             }
 
             return apiResult;
