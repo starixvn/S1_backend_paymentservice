@@ -273,8 +273,6 @@ namespace PaymentService.Controllers
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
                 apiResult.RawErrorCode = result.ErrorCode;
                 apiResult.RawMessage = result.Message;
-
-                paymentBLL.DepositRejectd(reqDeposit.TransId, 0, result.ErrorCode, User.Identity.Name);
             }
 
             return apiResult;
@@ -374,8 +372,6 @@ namespace PaymentService.Controllers
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
                 apiResult.RawErrorCode = result.ErrorCode;
                 apiResult.RawMessage = result.Message;
-
-                paymentBLL.DepositRejectd(reqDeposit.TransId, 0, result.ErrorCode, User.Identity.Name);
             }
 
             return apiResult;
@@ -482,8 +478,6 @@ namespace PaymentService.Controllers
                 apiResult.RawErrorCode = result.ErrorCode;
                 apiResult.RawMessage = result.Message;
                 apiResult.Message = result.Message;
-
-                paymentBLL.DepositRejectd(reqDeposit.TransId, 0, result.ErrorCode, User.Identity.Name);
             }
 
             return apiResult;
@@ -563,11 +557,11 @@ namespace PaymentService.Controllers
             {
                 apiResult.ErrorCode = 0;
                 PayResult payResult = new PayResult();
-                payResult.Url = result.Url;
                 payResult.FormData = result.FormData;
                 payResult.ThirdId = result.ThirdId;
                 payResult.Mode = loadCardPay.Mode;
                 apiResult.Data = payResult;
+                apiResult.Message = result.Message;
 
                 if (result.ThirdId != null)
                 {
@@ -588,12 +582,16 @@ namespace PaymentService.Controllers
                 rNotifyDepositResult.Comment = result.Message;
                 rNotifyDepositResult.ThirdId = result.ThirdId;
                 paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
-                apiResult.ErrorCode = (int)ErrorCode.Fail;
-                apiResult.RawErrorCode = result.ErrorCode;
+                //apiResult.ErrorCode = (int)ErrorCode.Fail;
+                apiResult.ErrorCode = 0;
+                PayResult payResult = new PayResult();
+                payResult.FormData = result.FormData;
+                payResult.ThirdId = result.ThirdId;
+                payResult.Mode = loadCardPay.Mode;
+                apiResult.Data = payResult;
+                apiResult.RawErrorCode = ((int)ErrorCode.Fail).ToString();
                 apiResult.RawMessage = result.Message;
                 apiResult.Message = result.Message;
-
-                paymentBLL.DepositRejectd(reqDeposit.TransId, 0, result.ErrorCode, User.Identity.Name);
             }
 
             return apiResult;
@@ -635,6 +633,7 @@ namespace PaymentService.Controllers
 
         [Route("Payment/DepositCallBack/{TransId}")]
         [HttpPost]
+        [HttpGet]
         public async Task<IActionResult> DepositCallBackAsync(string transId)
         {
             string bodyText = "";

@@ -402,6 +402,18 @@ namespace PaymentCore
             }
         }
 
+        // To Base64
+        public static string ToHMACSHA256Base64(string message, string secretKey)
+        {
+            byte[] keyBytes = System.Text.Encoding.UTF8.GetBytes(secretKey);
+            byte[] messageBytes = System.Text.Encoding.UTF8.GetBytes(message);
+            System.Security.Cryptography.HMACSHA256 cryptographer = new System.Security.Cryptography.HMACSHA256(keyBytes);
+            byte[] bytes = cryptographer.ComputeHash(messageBytes);
+            string base64String = Convert.ToBase64String(bytes, 0, bytes.Length);
+            return base64String;
+        }
+
+
         protected string ToSHA256(string encodeStr)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(encodeStr);

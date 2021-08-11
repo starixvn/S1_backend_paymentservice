@@ -16,6 +16,7 @@ namespace Payment.Porttopup
 
         private class CallBackDebitReq
         {
+            public string data { get; set; }
             public string code { get; set; }
             public string message { get; set; }
             public string price { get; set; }
@@ -30,9 +31,19 @@ namespace Payment.Porttopup
         {
             NotifyDepositResult oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
+            var tmp = ToBase64Decode(data.data);
+            string[] sArray = tmp.Split('|');
+            data.code = sArray[0];
+            data.message = sArray[1];
+            data.price = sArray[2];
+            data.request_id = sArray[3];
+            data.tran_id = sArray[4];
+            data.acc_game = sArray[5];
+            data.partner_code = sArray[6];
+            data.signature = sArray[7];
 
-            string p = $"{data.code}|{data.message}|{data.price}|{data.request_id}|{data.tran_id}|{data.acc_game}|{payResource["key"]}";
-            string sign = ToSHA256(p).ToUpper();
+            string p = $"{data.code}|{data.message}|{data.price}|{data.request_id}|{data.tran_id}|{data.acc_game}|{data.partner_code}";
+            string sign = ToHMACSHA256Base64(p,payResource["secret"]);
 
             oNotify.DepositId = data.request_id;
             oNotify.ThirdId = data.tran_id;
@@ -46,17 +57,17 @@ namespace Payment.Porttopup
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = decimal.Parse(data.price);
                     oNotify.ActualAmount = decimal.Parse(data.price);
-                    oNotify.Response = "{\"rc\": 0, \"rd\": \"message\"}";
+                    oNotify.Response = "{\"rc\": 0, \"rd\": \"OK\"}";
                 }
                 else if (data.code == "44" || data.code == "46" || data.code == "56" || data.code == "58" || data.code == "62" || data.code == "64")
                 {
                     oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.Response = "{\"rc\": 0, \"rd\": \"message\"}";
+                    oNotify.Response = "{\"rc\": 0, \"rd\": \"OK\"}";
                 }
                 else
                 {
                     oNotify.TransStatus = TransStatus.Pending;
-                    oNotify.Response = "{\"rc\": 0, \"rd\": \"message\"}";
+                    oNotify.Response = "{\"rc\": 0, \"rd\": \"OK\"}";
                 }
             }
             else
@@ -100,30 +111,35 @@ namespace Payment.Porttopup
             formData.Add("card_code", inputs["Code"]);
             formData.Add("card_serial", inputs["Serial"]);
             decimal amount = decimal.Parse(inputs["Amount"]);
-            formData.Add("card_value", amount.ToString("#"));
+            formData.Add("card_value", amount.ToString("#")); 
+            formData.Add("acc_game", inputs["CustId"]);
             formData.Add("telco", inputs["PayCode"]);
+            formData.Add("access_key", inputs["key"]);
 
-            string p = $"{formData["request_id"]}|{formData["partner_code"]}|{formData["card_code"]}|{formData["card_serial"]}|" +
-                        $"{formData["card_value"]}|{formData["telco"]}|{inputs["key"]}";
+            string p = $"{formData["request_id"]}|{formData["partner_code"]}|{formData["acc_game"]}|{formData["card_code"]}|{formData["card_serial"]}|" +
+                        $"{formData["card_value"]}|{formData["telco"]}|{formData["access_key"]}";
 
-            formData.Add("signature", ToSHA256(p).ToUpper());
-            string sParam = string.Join("|", formData.Select(kp => $"{kp.Value}").ToArray());
+            formData.Add("signature", ToHMACSHA256Base64(p, inputs["secret"]));
+            string sParam = $"{formData["request_id"]}|{formData["partner_code"]}|{formData["acc_game"]}|{formData["card_code"]}|{formData["card_serial"]}|" +
+                            $"{formData["card_value"]}|{formData["telco"]}|{formData["access_key"]}|{formData["signature"]}";
             string sResponse = HttpGet(sUrl, $"data={ToBase64Encode(sParam)}", formData["request_id"]);
 
             DepositRes depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
             DepositResult oDepositResult = new DepositResult();
+
+            Dictionary<string, string> ResData = new Dictionary<string, string>();
+            ResData.Add("Message", depositRes.rd);
+            oDepositResult.FormData = ResData;
+            oDepositResult.Message = depositRes.rd;
+
             if (depositRes.rc == "0")
             {
-                oDepositResult.Url = depositRes.rd;
                 oDepositResult.Success = true;
-                oDepositResult.FormData = null;
-                oDepositResult.Message = "";
             }
             else
             {
                 oDepositResult.Success = false;
-                oDepositResult.Message = depositRes.rd;
             }
 
             return oDepositResult;
@@ -141,7 +157,19 @@ namespace Payment.Porttopup
 
         public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
         {
-            return formData["request_id"];
+            var data = FromJson<CallBackDebitReq>(ToJson(formData));
+            var tmp = ToBase64Decode(data.data);
+            string[] sArray = tmp.Split('|');
+            data.code = sArray[0];
+            data.message = sArray[1];
+            data.price = sArray[2];
+            data.request_id = sArray[3];
+            data.tran_id = sArray[4];
+            data.acc_game = sArray[5];
+            data.partner_code = sArray[6];
+            data.signature = sArray[7];
+
+            return data.request_id;
         }
     }
 }

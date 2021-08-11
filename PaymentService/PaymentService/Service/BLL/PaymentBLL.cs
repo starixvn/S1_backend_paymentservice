@@ -92,14 +92,5 @@ namespace PaymentService.Service.BLL
         {
             depoistService.SetThirdId(transId, thirdID);
         }
-
-        public int DepositRejectd(string transId, decimal actualDeposit, string comment, string Operator)
-        {
-            List<int> forStatus = new List<int>();
-            forStatus.Add((int)DepositStatus.Pending);
-
-            var depositRequest = GetDepositRequest(transId);
-            return depoistService.SetDepositInfo(transId, depositRequest.SiteId, actualDeposit, comment, Operator, forStatus, DepositStatus.Rejected, null);
-        }
     }
 }
