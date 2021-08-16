@@ -55,7 +55,7 @@ namespace Payment.Porttopup
                 if (data.code == "0")
                 {
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.price);
+                    oNotify.RequestAmount = decimal.Parse(payResource["Amount"]);
                     oNotify.ActualAmount = decimal.Parse(data.price);
                     oNotify.Response = "{\"rc\": 0, \"rd\": \"OK\"}";
                 }

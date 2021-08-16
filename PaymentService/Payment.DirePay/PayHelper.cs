@@ -5,10 +5,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Payment.DirePay
 {
-    class PayHelper : PayHelperBase
+    class PayHelper : PayHelperBase, IExchangeHelper
     {
         private class CallBackWithdrawReq
         {
@@ -335,11 +336,9 @@ namespace Payment.DirePay
             throw new NotImplementedException();
         }
 
-        private class GetExchangeResp
+        public Task<ExchangeResult> GetExchangeAsync(Dictionary<string, string> payResource)
         {
-            public string amount { get; set; }
-            public string currency { get; set; }
-            public string message { get; set; }
+            throw new NotImplementedException();
         }
     }
 }

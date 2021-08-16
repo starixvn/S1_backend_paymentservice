@@ -717,6 +717,7 @@ namespace PaymentService.Controllers
                 var paySetting = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == pay.PayId).FirstOrDefault();
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
                 DepReq.Add("TransID", depositRequest.TransId);
+                DepReq.Add("Amount", depositRequest.Amount.ToString());
                 //檢查namespace是否存在 
                 if (!DepReq.ContainsKey("PayName"))
                 {
