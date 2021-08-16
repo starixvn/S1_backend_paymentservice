@@ -55,8 +55,8 @@ namespace Payment.Porttopup
                 if (data.code == "0")
                 {
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(payResource["Amount"]);
-                    oNotify.ActualAmount = decimal.Parse(data.price);
+                    oNotify.RequestAmount = decimal.Parse(data.price);
+                    oNotify.ActualAmount = decimal.Parse(data.price) * decimal.Parse(payResource["Rate"]);
                     oNotify.Response = "{\"rc\": 0, \"rd\": \"OK\"}";
                 }
                 else if (data.code == "44" || data.code == "46" || data.code == "56" || data.code == "58" || data.code == "62" || data.code == "64")
