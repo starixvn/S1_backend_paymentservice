@@ -362,12 +362,11 @@ namespace Payment.DirePay
             if (toAmount > 0)
             {
                 ExchangeRate exchangeRate = new ExchangeRate();
-                exchangeRate.Updated_timestamp = new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds();
 
                 Dictionary<string, string> ResData = new Dictionary<string, string>();
                 ResData.Add("To_Amount", toAmount.ToString());
                 ResData.Add("Rate", (toAmount / decimal.Parse(amount)).ToString());
-                ResData.Add("Updated_timestamp", (toAmount / decimal.Parse(amount)).ToString());
+                ResData.Add("Updated_timestamp", new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString());
 
                 oExchangeResult.FormData = ResData;
                 oExchangeResult.ErrorCode = "0";
