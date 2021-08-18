@@ -151,30 +151,40 @@ namespace Payment.DirePay
                     withdrawGetWalletReq.command = "partner_withdraw";
                     decimal amount = decimal.Parse(inputs["Amount"]);
                     withdrawGetWalletReq.amount = amount.ToString("#");
-                    withdrawGetWalletReq.withdrawal_amount = amount.ToString("#");
-                    withdrawGetWalletReq.currency = inputs["CurrencyId"];
+                    withdrawGetWalletReq.currency = currMapping(inputs["CurrencyId"]);
                     withdrawGetWalletReq.withdrawal_token = $"{inputs["PayCurrencyId"]}-USDT";
                     withdrawGetWalletReq.callback_url = inputs["CallBackUrl"];
-                    withdrawGetWalletReq.address = inputs["address"];
+                    withdrawGetWalletReq.address = inputs["AccountNo"];
                     withdrawGetWalletReq.customer_uid = inputs["CustId"];
                     withdrawGetWalletReq.hashCode = ToMD5("partner_withdraw" + inputs["key"]).ToLower();
-                    string sResponse1 = HttpPost(getWalletAddress, ToJson(withdrawGetWalletReq), "application/json", depositResp.access_token, inputs["TransID"].ToLower());
+                    var message = "";
+                    decimal toAmount = getExchange(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency, withdrawGetWalletReq.withdrawal_token, inputs, out message);
 
-                    WithdrawGetWalletResp withdrawGetWalletResp = new WithdrawGetWalletResp();
-                    withdrawGetWalletResp = JsonConvert.DeserializeObject<WithdrawGetWalletResp>(sResponse1);
-
-                    withdrawResult.Message = withdrawGetWalletResp.message;
-                    withdrawResult.RawContent = withdrawGetWalletResp.message;
-                    if (withdrawGetWalletResp.status == "pending")
+                    if (toAmount > 0)
                     {
-                        withdrawResult.Success = true;
+                        withdrawGetWalletReq.withdrawal_amount = toAmount.ToString();
+                        string sResponse1 = HttpPost(getWalletAddress, ToJson(withdrawGetWalletReq), "application/json", depositResp.access_token, inputs["TransID"].ToLower());
+
+                        WithdrawGetWalletResp withdrawGetWalletResp = new WithdrawGetWalletResp();
+                        withdrawGetWalletResp = JsonConvert.DeserializeObject<WithdrawGetWalletResp>(sResponse1);
+
+                        withdrawResult.Message = withdrawGetWalletResp.message;
+                        withdrawResult.RawContent = withdrawGetWalletResp.message;
+                        if (withdrawGetWalletResp.status == "pending")
+                        {
+                            withdrawResult.Success = true;
+                        }
+                        else
+                        {
+                            withdrawResult.Success = false;
+                        }
                     }
                     else
                     {
                         withdrawResult.Success = false;
+                        oDepositResult.Message = message;
+                        oDepositResult.RawContent = message;
                     }
-
-                    return withdrawResult;
                 }
                 else
                 {
@@ -336,9 +346,103 @@ namespace Payment.DirePay
             throw new NotImplementedException();
         }
 
-        public Task<ExchangeResult> GetExchangeAsync(Dictionary<string, string> payResource)
+        ExchangeResult IExchangeHelper.GetExchange(Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            ExchangeResult oExchangeResult = new ExchangeResult
+            {
+                ErrorCode = "9000"
+            };
+
+            var from_currency = currMapping(payResource["CurrencyId"]);
+            var to_currency = $"{payResource["PayCurrencyId"]}-USDT";
+            var amount = payResource["Amount"];
+            string message;
+
+            decimal toAmount = getExchange(amount, from_currency, to_currency, payResource, out message);
+            if (toAmount > 0)
+            {
+                ExchangeRate exchangeRate = new ExchangeRate();
+                exchangeRate.Updated_timestamp = new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds();
+
+                Dictionary<string, string> ResData = new Dictionary<string, string>();
+                ResData.Add("To_Amount", toAmount.ToString());
+                ResData.Add("Rate", (toAmount / decimal.Parse(amount)).ToString());
+                ResData.Add("Updated_timestamp", (toAmount / decimal.Parse(amount)).ToString());
+
+                oExchangeResult.FormData = ResData;
+                oExchangeResult.ErrorCode = "0";
+            }
+            else
+            {
+                oExchangeResult.Message = message;
+            }
+
+            return oExchangeResult;
+        }
+
+        private class ExchangeReq
+        {
+            public string command { get; set; }
+            public string amount { get; set; }
+            public string from_currency { get; set; }
+            public string to_currency { get; set; }
+            public string type { get; set; }
+        }
+        private class ExchangeResp
+        {
+            public string amount { get; set; }
+            public string currency { get; set; }
+            public string message { get; set; }
+        }
+        private decimal getExchange(string amount, string from_currency, string to_currency, Dictionary<string, string> inputs, out string message)
+        {
+            message = "";
+            string sUrl = inputs["host"];
+            string getReceptionToken = sUrl + "/api/login";
+            string getWalletAddress = sUrl + "/api/callBack";
+
+            Dictionary<string, string> depositGetH5Req = new Dictionary<string, string>();
+            depositGetH5Req.Add("email", inputs["Email"]);
+            depositGetH5Req.Add("password", inputs["Password"]);
+            string sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            DepositResult oDepositResult = new DepositResult();
+            oDepositResult.Success = false;
+            try
+            {
+                string sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", "");
+
+                DepositResp depositResp = new DepositResp();
+                depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
+
+                if (depositResp != null && depositResp.access_token != null)
+                {
+                    ExchangeReq exchangeReq = new ExchangeReq();
+                    exchangeReq.command = "rates";
+                    exchangeReq.amount = amount.ToString();
+                    exchangeReq.from_currency = from_currency;
+                    exchangeReq.to_currency = to_currency;
+                    exchangeReq.type = "SELL";
+                    string sResponse1 = HttpPost(getWalletAddress, ToJson(exchangeReq), "application/json", depositResp.access_token, "");
+
+                    ExchangeResp exchangeResp = new ExchangeResp();
+                    exchangeResp = JsonConvert.DeserializeObject<ExchangeResp>(sResponse1);
+
+                    if (exchangeResp != null && exchangeResp.amount != null)
+                    {
+                        return decimal.Parse(exchangeResp.amount.ToString());
+                    }
+                    else
+                    {
+                        message = exchangeResp.message;
+                    }
+                }
+            }
+            catch (WebException wex)
+            {
+                message = wex.ToString();
+            }
+            return 0;
         }
     }
 }

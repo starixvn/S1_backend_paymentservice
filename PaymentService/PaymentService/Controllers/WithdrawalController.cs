@@ -56,6 +56,12 @@ namespace PaymentService.Controllers
             public string IFSCCode { set; get; }
             //public string ReturnUrl { set; get; }
         }
+        public class ReqExchange
+        {
+            public int PayId { get; set; }
+            public int CustId { get; set; }
+            public decimal Amount { get; set; }
+        }
 
         [HttpPost]
         [Route("Payment/Withdrawal")]
@@ -167,10 +173,9 @@ namespace PaymentService.Controllers
             WithReq.Add("TransID", reqWithdrawal.TransId);
             WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
             WithReq.Add("PayCode", crypto.PayCode);
-            WithReq.Add("BankCode", crypto.BankCode);
-            WithReq.Add("BankName", crypto.BankName);
             WithReq.Add("AccountName", reqWithdrawal.AccountName);
             WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
+            WithReq.Add("CurrencyId", custInfo.CurrencyId.ToString());
             WithReq.Add("IsTest", common.IsTest());
             var callBackUrl = configuration.GetValue<string>("CallBack");
             WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
@@ -368,6 +373,65 @@ namespace PaymentService.Controllers
             {
                 return Content(false.ToString());
             }
+        }
+
+        [HttpPost]
+        [Route("Payment/CryptoExchange")]
+        public ApiResult<Service.Model.ExchangeResult> CryptoExchange(ReqExchange reqExchange)
+        {
+            ApiResult<Service.Model.ExchangeResult> apiResult = new ApiResult<Service.Model.ExchangeResult>();
+            var custId = reqExchange.CustId;
+            var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
+            var crypto = payBLL.GetCryptoListForPayout().Where(x => x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId).FirstOrDefault();
+            if (crypto == null)
+            {
+                logger.LogError($"Method={GetCurrentMethod()}, Invalid Currency");
+                apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                return apiResult;
+            }
+
+            var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqExchange.PayId).FirstOrDefault();
+            var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
+            if (pay == null)
+            {
+                logger.LogError($"Method={GetCurrentMethod()}, pay Setting Not Found");
+                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                return apiResult;
+            }
+
+            var payHelper = (IExchangeHelper)payBLL.GetPayHelper(pay.PayName);
+            if (payHelper == null)
+            {
+                logger.LogError($"Method={GetCurrentMethod()}, payHelper Setting Not Found");
+                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                return apiResult;
+            }
+
+            var exchangeReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+            exchangeReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
+            exchangeReq.Add("Amount", reqExchange.Amount.ToString());
+            exchangeReq.Add("PayCode", crypto.PayCode);
+            exchangeReq.Add("CurrencyId", custInfo.CurrencyId.ToString());
+
+            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(exchangeReq)}");
+            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(exchangeReq)}", "ExchangeRate");
+
+            var result = payHelper.GetExchange(exchangeReq);
+            if (result.ErrorCode == "0")
+            {
+                apiResult.ErrorCode = (int)ErrorCode.Success;
+                Service.Model.ExchangeResult exchangeResult = new Service.Model.ExchangeResult();
+                exchangeResult.FormData = result.FormData;
+                apiResult.Data = exchangeResult;
+                apiResult.Message = result.Message;
+            }
+            else
+            {
+                apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
+                apiResult.Message = result.Message;
+            }
+
+            return apiResult;
         }
     }
 }

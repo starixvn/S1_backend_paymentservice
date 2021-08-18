@@ -33,6 +33,7 @@ namespace PaymentCore
     {
         public Dictionary<string, Dictionary<int, ExchangeRate>> ExchangeRateList { get; set; }
         public string Message { get; set; }
+        public Dictionary<string, string> FormData { get; set; }
         public string ErrorCode { get; set; }
     }
 
@@ -75,7 +76,8 @@ namespace PaymentCore
     public interface IExchangeHelper
     {
         //ExchangeResult GetExchangeAsync(Dictionary<string, string> payResource);
-        public System.Threading.Tasks.Task<ExchangeResult> GetExchangeAsync(Dictionary<string, string> payResource);
+        //public System.Threading.Tasks.Task<ExchangeResult> GetExchangeAsync(Dictionary<string, string> payResource);
+        public ExchangeResult GetExchange(Dictionary<string, string> payResource);
     }
     public interface IPayHelperNoCallBackUrl
     {

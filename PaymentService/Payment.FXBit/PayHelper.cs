@@ -12,76 +12,77 @@ using System.Threading.Tasks;
 
 namespace Payment.FXBit
 {
-    class PayHelper : PayHelperBase, IExchangeHelper
+    //class PayHelper : PayHelperBase, IExchangeHelper
+    class PayHelper : PayHelperBase
     {
-        private class FxBitExchanegRete
-        {
-            public DateTime updated_timestamp { get; set; }
-            public string buyRate { get; set; }
-            public string sellRate { get; set; }
-        }
+        //private class FxBitExchanegRete
+        //{
+        //    public DateTime updated_timestamp { get; set; }
+        //    public string buyRate { get; set; }
+        //    public string sellRate { get; set; }
+        //}
 
-        Dictionary<string, int> currMapping = new Dictionary<string, int>
-        {
-            {"CNY",13}, {"USDT",96}
-        };
+        //Dictionary<string, int> currMapping = new Dictionary<string, int>
+        //{
+        //    {"CNY",13}, {"USDT",96}
+        //};
 
-        public async Task<ExchangeResult> GetExchangeAsync(Dictionary<string, string> payResource)
-        {
-            ExchangeResult oExchangeResult = new ExchangeResult
-            {
-                ErrorCode = "9000"
-            };
+        //public async Task<ExchangeResult> GetExchangeAsync(Dictionary<string, string> payResource)
+        //{
+        //    ExchangeResult oExchangeResult = new ExchangeResult
+        //    {
+        //        ErrorCode = "9000"
+        //    };
 
-            string sUrl = payResource["host"];
-            string getExchangeRate = sUrl + "getExchangeRate";
-            string apiKey = payResource["key"];
+        //    string sUrl = payResource["host"];
+        //    string getExchangeRate = sUrl + "getExchangeRate";
+        //    string apiKey = payResource["key"];
 
-            var httpClient = HttpHelper.GetClient();
-            //httpClient.DefaultRequestHeaders.Add("accept", "application/json");
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));//ACCEPT header
-            httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+        //    var httpClient = HttpHelper.GetClient();
+        //    //httpClient.DefaultRequestHeaders.Add("accept", "application/json");
+        //    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));//ACCEPT header
+        //    httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
 
-            var response = await httpClient.GetAsync(getExchangeRate);
-            if (response.IsSuccessStatusCode)
-            {
-                var result = response.Content.ReadAsStringAsync().Result;
-                var data = FromJson<Dictionary<string, Dictionary<string, FxBitExchanegRete>>>(result);
-                oExchangeResult.ExchangeRateList = new Dictionary<string, Dictionary<int, ExchangeRate>>();
-                //ExchangeRate
-                foreach (var a1 in data)
-                {
-                    foreach (var a2 in a1.Value)
-                    {
-                        if (currMapping.ContainsKey(a2.Key))
-                        {
-                            Dictionary<int, ExchangeRate> refa1 = null;
+        //    var response = await httpClient.GetAsync(getExchangeRate);
+        //    if (response.IsSuccessStatusCode)
+        //    {
+        //        var result = response.Content.ReadAsStringAsync().Result;
+        //        var data = FromJson<Dictionary<string, Dictionary<string, FxBitExchanegRete>>>(result);
+        //        oExchangeResult.ExchangeRateList = new Dictionary<string, Dictionary<int, ExchangeRate>>();
+        //        //ExchangeRate
+        //        foreach (var a1 in data)
+        //        {
+        //            foreach (var a2 in a1.Value)
+        //            {
+        //                if (currMapping.ContainsKey(a2.Key))
+        //                {
+        //                    Dictionary<int, ExchangeRate> refa1 = null;
 
-                            if (!oExchangeResult.ExchangeRateList.ContainsKey(a1.Key))
-                            {
-                                oExchangeResult.ExchangeRateList.Add(a1.Key, new Dictionary<int, ExchangeRate>());
-                            }
+        //                    if (!oExchangeResult.ExchangeRateList.ContainsKey(a1.Key))
+        //                    {
+        //                        oExchangeResult.ExchangeRateList.Add(a1.Key, new Dictionary<int, ExchangeRate>());
+        //                    }
 
-                            refa1 = oExchangeResult.ExchangeRateList[a1.Key];
-                            ExchangeRate exchangeRate = new ExchangeRate();
-                            exchangeRate.Updated_timestamp = new DateTimeOffset(a2.Value.updated_timestamp).ToUnixTimeSeconds();
-                            exchangeRate.SellRate = decimal.Parse(a2.Value.sellRate);
-                            exchangeRate.BuyRate = decimal.Parse(a2.Value.buyRate);
-                            refa1.Add(currMapping[a2.Key], exchangeRate);
-                        }
-                    }
-                }
+        //                    refa1 = oExchangeResult.ExchangeRateList[a1.Key];
+        //                    ExchangeRate exchangeRate = new ExchangeRate();
+        //                    exchangeRate.Updated_timestamp = new DateTimeOffset(a2.Value.updated_timestamp).ToUnixTimeSeconds();
+        //                    exchangeRate.SellRate = decimal.Parse(a2.Value.sellRate);
+        //                    exchangeRate.BuyRate = decimal.Parse(a2.Value.buyRate);
+        //                    refa1.Add(currMapping[a2.Key], exchangeRate);
+        //                }
+        //            }
+        //        }
 
-                oExchangeResult.Message = "";
-                oExchangeResult.ErrorCode = "0";
-            }
-            else
-            {
-                oExchangeResult.Message = response.Content.ReadAsStringAsync().Result;
-            }
+        //        oExchangeResult.Message = "";
+        //        oExchangeResult.ErrorCode = "0";
+        //    }
+        //    else
+        //    {
+        //        oExchangeResult.Message = response.Content.ReadAsStringAsync().Result;
+        //    }
 
-            return oExchangeResult;
-        }
+        //    return oExchangeResult;
+        //}
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {

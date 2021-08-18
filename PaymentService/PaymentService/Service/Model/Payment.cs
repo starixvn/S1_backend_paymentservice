@@ -48,4 +48,9 @@ namespace PaymentService.Service.Model
     {
 
     }
+
+    public class ExchangeResult
+    {
+        public Dictionary<string, string> FormData { get; set; }
+    }
 }
