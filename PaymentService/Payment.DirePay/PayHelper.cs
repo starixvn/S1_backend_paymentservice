@@ -14,41 +14,42 @@ namespace Payment.DirePay
         private class CallBackWithdrawReq
         {
             public string txid { get; set; }
+            public string tx_hash { get; set; }
             public string amount { get; set; }
             public string token { get; set; }
             public string address { get; set; }
             public string customer_email { get; set; }
             public string client_reference_id { get; set; }
             public string status { get; set; }
-            public string tx_hash { get; set; }
             public string fee { get; set; }
+            public object fee_usd { get; set; }
             public string hash_code { get; set; }
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            var data = FromJson<CallBackDepositReq>(bodyContent);
+            var data = FromJson<CallBackWithdrawReq>(bodyContent);
 
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.client_reference_id;
             oNotify.ThirdId = data.status.ToString();
-            oNotify.Message = data.status.ToString();
+            oNotify.Message = data.txid.ToString();
 
-            if (data.status == "2")
+            if (data.status == "completed")
             {
                 oNotify.TransStatus = TransStatus.Success;
-                oNotify.RequestAmount = decimal.Parse(data.paid_amount);
-                oNotify.Response = "{\"status\":\"ok\"}";
+                oNotify.RequestAmount = decimal.Parse(data.amount);
+                oNotify.Response = "true";
             }
-            else if (data.status == "0")
+            else if (data.status == "rejected")
             {
-                oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Response = "{\"status\":\"ok\"}";
+                oNotify.TransStatus = TransStatus.Fail;
+                oNotify.Response = "true";
             }
             else
             {
-                oNotify.TransStatus = TransStatus.Fail;
-                oNotify.Response = "{\"status\":\"ok\"}";
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Response = "true";
             }
 
             return oNotify;
@@ -61,9 +62,12 @@ namespace Payment.DirePay
             public string tx_hash { get; set; }
             public string customer { get; set; }
             public string customer_email { get; set; }
+            public string invoice_amount { get; set; }
+            public string invoice_currency { get; set; }
+            public string payment_amount { get; set; }
+            public string payment_token { get; set; }
+            public string rates { get; set; }
             public string client_reference_id { get; set; }
-            public string paid_amount { get; set; }
-            public string paid_fiat { get; set; }
             public string status { get; set; }
             public string hash_code { get; set; }
         }
@@ -78,17 +82,22 @@ namespace Payment.DirePay
             oNotify.Comment = data.status;
             oNotify.Message = data.status;
 
-            if (data.status == "200")
+            if (data.status == "completed")
             {
                 oNotify.TransStatus = TransStatus.Success;
-                oNotify.RequestAmount = decimal.Parse(data.paid_amount);
-                oNotify.ActualAmount = decimal.Parse(data.paid_amount);
+                oNotify.RequestAmount = decimal.Parse(data.invoice_amount);
+                oNotify.ActualAmount = decimal.Parse(data.invoice_amount);
                 oNotify.RefThirdId = data.txid;
                 oNotify.Response = "true";
             }
             else if (data.status == "expired")
             {
                 oNotify.TransStatus = TransStatus.Fail;
+                oNotify.Response = "true";
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
                 oNotify.Response = "true";
             }
 
@@ -111,6 +120,7 @@ namespace Payment.DirePay
             public string address { get; set; }
             public string callback_url { get; set; }
             public string customer_uid { get; set; }
+            public string customer_reference_id { get; set; }
         }
 
         private class WithdrawGetWalletResp
@@ -156,6 +166,7 @@ namespace Payment.DirePay
                     withdrawGetWalletReq.callback_url = inputs["CallBackUrl"];
                     withdrawGetWalletReq.address = inputs["AccountNo"];
                     withdrawGetWalletReq.customer_uid = inputs["CustId"];
+                    withdrawGetWalletReq.customer_reference_id = inputs["TransID"];
                     withdrawGetWalletReq.hashCode = ToMD5("partner_withdraw" + inputs["key"]).ToLower();
                     var message = "";
                     decimal toAmount = getExchange(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency, withdrawGetWalletReq.withdrawal_token, inputs, out message);
@@ -226,6 +237,7 @@ namespace Payment.DirePay
             public string callback_url { get; set; }
             public string customer_uid { get; set; }
             public string customer_email { get; set; }
+            public string customer_reference_id { get; set; }
             public string client_reference_id { get; set; }
         }
 
@@ -286,6 +298,7 @@ namespace Payment.DirePay
                     depositGetWalletReq.token = $"{inputs["PayCurrencyId"]}-USDT";
                     depositGetWalletReq.callback_url = inputs["CallBackUrl"];
                     depositGetWalletReq.customer_uid = inputs["CustId"];
+                    depositGetWalletReq.customer_reference_id = inputs["TransID"];
                     depositGetWalletReq.hashCode = ToMD5("payment" + inputs["key"]).ToLower();
                     string sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json", depositResp.access_token, inputs["TransID"].ToLower());
 
