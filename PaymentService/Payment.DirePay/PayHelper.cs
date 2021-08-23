@@ -22,7 +22,7 @@ namespace Payment.DirePay
             public string client_reference_id { get; set; }
             public string status { get; set; }
             public string fee { get; set; }
-            public object fee_usd { get; set; }
+            public string fee_usd { get; set; }
             public string hash_code { get; set; }
         }
 
@@ -32,8 +32,8 @@ namespace Payment.DirePay
 
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.client_reference_id;
-            oNotify.ThirdId = data.status.ToString();
-            oNotify.Message = data.txid.ToString();
+            oNotify.ThirdId = data.status;
+            oNotify.Message = data.txid;
 
             if (data.status == "completed")
             {
@@ -120,7 +120,7 @@ namespace Payment.DirePay
             public string address { get; set; }
             public string callback_url { get; set; }
             public string customer_uid { get; set; }
-            public string customer_reference_id { get; set; }
+            public string client_reference_id { get; set; }
         }
 
         private class WithdrawGetWalletResp
@@ -166,7 +166,7 @@ namespace Payment.DirePay
                     withdrawGetWalletReq.callback_url = inputs["CallBackUrl"];
                     withdrawGetWalletReq.address = inputs["AccountNo"];
                     withdrawGetWalletReq.customer_uid = inputs["CustId"];
-                    withdrawGetWalletReq.customer_reference_id = inputs["TransID"];
+                    withdrawGetWalletReq.client_reference_id = inputs["TransID"];
                     withdrawGetWalletReq.hashCode = ToMD5("partner_withdraw" + inputs["key"]).ToLower();
                     var message = "";
                     decimal toAmount = getExchange(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency, withdrawGetWalletReq.withdrawal_token, inputs, out message);
@@ -237,7 +237,6 @@ namespace Payment.DirePay
             public string callback_url { get; set; }
             public string customer_uid { get; set; }
             public string customer_email { get; set; }
-            public string customer_reference_id { get; set; }
             public string client_reference_id { get; set; }
         }
 
@@ -298,7 +297,7 @@ namespace Payment.DirePay
                     depositGetWalletReq.token = $"{inputs["PayCurrencyId"]}-USDT";
                     depositGetWalletReq.callback_url = inputs["CallBackUrl"];
                     depositGetWalletReq.customer_uid = inputs["CustId"];
-                    depositGetWalletReq.customer_reference_id = inputs["TransID"];
+                    depositGetWalletReq.client_reference_id = inputs["TransID"];
                     depositGetWalletReq.hashCode = ToMD5("payment" + inputs["key"]).ToLower();
                     string sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json", depositResp.access_token, inputs["TransID"].ToLower());
 
