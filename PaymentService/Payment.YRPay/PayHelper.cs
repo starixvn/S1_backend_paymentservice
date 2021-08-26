@@ -88,7 +88,7 @@ namespace Payment.YRPay
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = decimal.Parse(data.orig_amount);
-                    oNotify.ActualAmount = decimal.Parse(data.amount);
+                    oNotify.ActualAmount = decimal.Parse(data.orig_amount);
 
                     oNotify.Response = "success";
                 }

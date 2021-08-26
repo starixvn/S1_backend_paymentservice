@@ -105,7 +105,7 @@ namespace Payment.Help2Pay
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = decimal.Parse(data.Amount);
-                    oNotify.ActualAmount = decimal.Parse(data.Amount) - decimal.Parse(data.DepositFee);
+                    oNotify.ActualAmount = decimal.Parse(data.Amount);
                     oNotify.ThirdId = data.ID;
                     oNotify.Comment = data.Status;
                     oNotify.Message = data.Status;

@@ -45,7 +45,7 @@ namespace Payment.AllpassPay
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = decimal.Parse(data.amount);
-                    oNotify.ActualAmount = decimal.Parse(data.actualPayAmount);
+                    oNotify.ActualAmount = decimal.Parse(data.amount);
                     oNotify.Response = "success";
                 }
                 else

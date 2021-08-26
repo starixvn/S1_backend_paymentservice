@@ -110,7 +110,7 @@ namespace Payment.FuliH5
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = decimal.Parse(data.totalPrice);
-                    oNotify.ActualAmount = decimal.Parse(data.tradeAmount);
+                    oNotify.ActualAmount = decimal.Parse(data.totalPrice);
                     oNotify.Comment = data.status;
                     oNotify.Response = "success";
                 }

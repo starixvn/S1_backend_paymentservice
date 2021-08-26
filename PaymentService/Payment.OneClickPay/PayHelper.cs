@@ -40,7 +40,7 @@ namespace Payment.OneClickPay
             {
                 oNotify.TransStatus = TransStatus.Success;
                 oNotify.RequestAmount = decimal.Parse(data.amount);
-                oNotify.ActualAmount = decimal.Parse(data.net_amount);
+                oNotify.ActualAmount = decimal.Parse(data.amount);
                 oNotify.ThirdId = data.tnx;
                 oNotify.Comment = data.description;
                 oNotify.Message = data.description;

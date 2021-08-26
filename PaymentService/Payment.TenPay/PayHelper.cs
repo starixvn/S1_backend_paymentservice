@@ -95,7 +95,7 @@ namespace Payment.TenPay
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = decimal.Parse(data.Amount);
-                    oNotify.ActualAmount = decimal.Parse(data.AmountPaid);
+                    oNotify.ActualAmount = decimal.Parse(data.Amount);
                     oNotify.ThirdId = data.TrackingNumber;
                     oNotify.Comment = data.TrackingNumber;
                     oNotify.Message = data.TrackingNumber;
