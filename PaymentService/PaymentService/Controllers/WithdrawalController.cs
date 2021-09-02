@@ -48,6 +48,7 @@ namespace PaymentService.Controllers
             public int SysId { get; set; }
             public string TransId { get; set; }
             public int PayId { get; set; }
+            public int ChannelId { get; set; }
             public int CustId { get; set; }
             public decimal Amount { get; set; }
             //public string ClientIP { set; get; }
@@ -140,7 +141,7 @@ namespace PaymentService.Controllers
             ApiResult apiResult = new ApiResult();
             var custId = reqWithdrawal.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var crypto = payBLL.GetCryptoListForPayout().Where(x => x.PayId == reqWithdrawal.PayId && custInfo.CurrencyId == x.CurrencyId).FirstOrDefault();
+            var crypto = payBLL.GetCryptoListForPayout().Where(x => x.PayId == reqWithdrawal.PayId && custInfo.CurrencyId == x.CurrencyId && reqWithdrawal.ChannelId == x.ChannelId).FirstOrDefault();
             if (crypto == null)
             {
                 logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
