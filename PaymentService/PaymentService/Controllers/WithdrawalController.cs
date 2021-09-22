@@ -71,7 +71,7 @@ namespace PaymentService.Controllers
             ApiResult apiResult = new ApiResult();
             var custId = reqWithdrawal.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var onlineBank = payBLL.GetOnlineBankListForPayout().Where(x => x.PayId == reqWithdrawal.PayId && reqWithdrawal.SysId == x.SysId).FirstOrDefault();
+            var onlineBank = payBLL.GetOnlineBankListForPayout().Where(x => x.PayId == reqWithdrawal.PayId && x.SysId == reqWithdrawal.SysId ).FirstOrDefault();
 
             if (custInfo.CurrencyId != onlineBank.CurrencyId)
             {
@@ -141,7 +141,7 @@ namespace PaymentService.Controllers
             ApiResult apiResult = new ApiResult();
             var custId = reqWithdrawal.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var crypto = payBLL.GetCryptoListForPayout().Where(x => x.PayId == reqWithdrawal.PayId && custInfo.CurrencyId == x.CurrencyId && reqWithdrawal.ChannelId == x.ChannelId).FirstOrDefault();
+            var crypto = payBLL.GetCryptoListForPayout().Where(x => x.PayId == reqWithdrawal.PayId && x.ChannelId == reqWithdrawal.ChannelId).FirstOrDefault();
             if (crypto == null)
             {
                 logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
