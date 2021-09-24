@@ -162,7 +162,7 @@ namespace Payment.DirePay
                     decimal amount = decimal.Parse(inputs["Amount"]);
                     withdrawGetWalletReq.amount = amount.ToString("#");
                     withdrawGetWalletReq.currency = currMapping(inputs["CurrencyId"]);
-                    withdrawGetWalletReq.withdrawal_token = $"{inputs["PayCurrencyId"]}-USDT";
+                    withdrawGetWalletReq.withdrawal_token = $"{FindCurrency(inputs["PayCurrencyId"])}-USDT";
                     withdrawGetWalletReq.callback_url = inputs["CallBackUrl"];
                     withdrawGetWalletReq.address = inputs["AccountNo"];
                     withdrawGetWalletReq.customer_uid = inputs["CustId"];
@@ -288,13 +288,13 @@ namespace Payment.DirePay
                     depositGetWalletReq.line_items = new line_items[1];
                     depositGetWalletReq.line_items[0] = new line_items();
                     depositGetWalletReq.line_items[0].name = "deposit";
-                    depositGetWalletReq.line_items[0].item_id = $"{inputs["PayCurrencyId"]}";
+                    depositGetWalletReq.line_items[0].item_id = $"{FindCurrency(inputs["PayCurrencyId"])}";
                     depositGetWalletReq.line_items[0].description = $"Deposit {currMapping(inputs["CurrencyId"])} via USDT";
                     decimal amount = decimal.Parse(inputs["Amount"]);
                     depositGetWalletReq.line_items[0].amount = amount.ToString("#");
                     depositGetWalletReq.line_items[0].quantity = "1";
                     depositGetWalletReq.currency = currMapping(inputs["CurrencyId"]);
-                    depositGetWalletReq.token = $"{inputs["PayCurrencyId"]}-USDT";
+                    depositGetWalletReq.token = $"{FindCurrency(inputs["PayCurrencyId"])}-USDT";
                     depositGetWalletReq.callback_url = inputs["CallBackUrl"];
                     depositGetWalletReq.customer_uid = inputs["CustId"];
                     depositGetWalletReq.client_reference_id = inputs["TransID"];
@@ -366,7 +366,7 @@ namespace Payment.DirePay
             };
 
             var from_currency = currMapping(payResource["CurrencyId"]);
-            var to_currency = $"{payResource["PayCurrencyId"]}-USDT";
+            var to_currency = $"{FindCurrency(payResource["PayCurrencyId"])}-USDT";
             var amount = payResource["Amount"];
             string message;
 
@@ -454,6 +454,13 @@ namespace Payment.DirePay
                 message = wex.ToString();
             }
             return 0;
+        }
+
+        private string FindCurrency(string currency)
+        {
+            string[] sArray = currency.Split('_');
+
+            return sArray[1];
         }
     }
 }
