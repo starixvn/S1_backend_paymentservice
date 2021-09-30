@@ -81,24 +81,22 @@ namespace Payment.DirePay
             oNotify.ThirdId = data.client_reference_id;
             oNotify.Comment = data.status;
             oNotify.Message = data.status;
+            oNotify.RefThirdId = data.txid;
+            oNotify.Response = "true";
 
             if (data.status == "completed")
             {
                 oNotify.TransStatus = TransStatus.Success;
                 oNotify.RequestAmount = decimal.Parse(data.invoice_amount);
                 oNotify.ActualAmount = decimal.Parse(data.invoice_amount);
-                oNotify.RefThirdId = data.txid;
-                oNotify.Response = "true";
             }
             else if (data.status == "expired")
             {
                 oNotify.TransStatus = TransStatus.Fail;
-                oNotify.Response = "true";
             }
             else
             {
                 oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Response = "true";
             }
 
             return oNotify;
