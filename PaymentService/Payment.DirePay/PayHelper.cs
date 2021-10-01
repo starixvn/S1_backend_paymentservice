@@ -32,8 +32,8 @@ namespace Payment.DirePay
 
             NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.client_reference_id;
-            oNotify.ThirdId = data.status;
-            oNotify.Message = data.txid;
+            oNotify.Message = data.status;
+            oNotify.ThirdId = data.txid;
 
             if (data.status == "completed")
             {

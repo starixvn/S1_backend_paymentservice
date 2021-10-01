@@ -234,6 +234,7 @@ namespace Payment.TruePay
             DepositResult oDepositResult = new DepositResult();
             if (depositRes.status == 0)
             {
+                oDepositResult.ThirdId = depositRes.d.id.ToString();
                 oDepositResult.Url = depositRes.d.url;
                 oDepositResult.Success = true;
                 oDepositResult.FormData = null;
