@@ -1,62 +1,37 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using System;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace PaymentService.Service.BLL
 {
     public class CustInfoBLL
     {
-        private readonly IMemoryCache cache;
         private readonly CustInfoService custInfoService;
         private readonly Common common;
+        private readonly CacheHelper _cacheHelper;
 
-        public CustInfoBLL(IMemoryCache cache, CustInfoService custInfoService, Common common)
+        public CustInfoBLL(IServiceProvider provider)
         {
-            this.cache = cache;
-            this.custInfoService = custInfoService;
-            this.common = common;
+            custInfoService = provider.GetRequiredService<CustInfoService>();
+            common = provider.GetRequiredService<Common>();
+            _cacheHelper = provider.GetRequiredService<CacheHelper>();
         }
         public int GetVipLevelWithCache(int custId)
         {
-            string key = $"VipLevelCache_{custId}";
-            var vipLevelCache = cache.Get<int?>(key) ?? -1;
-            if (vipLevelCache != -1)
-            {
-                return vipLevelCache;
-            }
-
-            vipLevelCache = custInfoService.GetVipLevel(custId);
-            if (vipLevelCache != 0)
-            {
-                cache.Set(key, vipLevelCache, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(1)));
-            }
-
-            return vipLevelCache;
+            var key = $"VipLevelCache_{custId}";
+            return _cacheHelper.TryGetOrCreate(key,
+                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(1)),
+                i => custInfoService.GetVipLevel(custId));
         }
         public Customer GetCustInfoWithCache(int custId)
         {
-            string key = $"CustInfo_{custId}";
-            var customer = cache.Get<Customer>(key);
-            if (customer != null)
-            {
-                return customer;
-            }
-
-            customer = custInfoService.GetCustInfo(custId);
-
-            if (customer != null)
-            {
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                .SetSlidingExpiration(TimeSpan.FromMinutes(5));
-                cache.Set(key, customer, cacheEntryOptions);
-            }
-
-            return customer;
+            var key = $"CustInfo_{custId}";
+            return _cacheHelper.TryGetOrCreate(key,
+                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)),
+                i => custInfoService.GetCustInfo(custId));
         }
 
         public decimal GetBalance(int custId)

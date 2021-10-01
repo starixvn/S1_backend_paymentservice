@@ -1,12 +1,10 @@
-﻿using PaymentCore;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using PaymentCore;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace PaymentService.Service.BLL
 {
