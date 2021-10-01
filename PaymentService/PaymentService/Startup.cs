@@ -50,6 +50,7 @@ namespace PaymentService
             services.AddSingleton<CourierAdapter>();
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<Log2File>();
+            services.AddSingleton<CacheHelper>();
             //services.AddSingleton<IBCDBLibrary>();
 
             /*DAL*/
