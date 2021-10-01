@@ -71,7 +71,7 @@ namespace PaymentService.Controllers
             ApiResult apiResult = new ApiResult();
             var custId = reqWithdrawal.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var onlineBank = payBLL.GetOnlineBankListForPayout().Where(x => x.PayId == reqWithdrawal.PayId && x.SysId == reqWithdrawal.SysId ).FirstOrDefault();
+            var onlineBank = payBLL.GetOnlineBankListForPayout().FirstOrDefault(x => x.PayId == reqWithdrawal.PayId && x.SysId == reqWithdrawal.SysId);
 
             if (custInfo.CurrencyId != onlineBank.CurrencyId)
             {
@@ -81,8 +81,8 @@ namespace PaymentService.Controllers
             }
 
       
-            var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqWithdrawal.PayId).FirstOrDefault();
-            var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
+            var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
+            var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x => x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
             if (pay == null)
             {
                 logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} pay Setting Not Found");
@@ -141,7 +141,7 @@ namespace PaymentService.Controllers
             ApiResult apiResult = new ApiResult();
             var custId = reqWithdrawal.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var crypto = payBLL.GetCryptoListForPayout().Where(x => x.PayId == reqWithdrawal.PayId && x.ChannelId == reqWithdrawal.ChannelId).FirstOrDefault();
+            var crypto = payBLL.GetCryptoListForPayout().FirstOrDefault(x => x.PayId == reqWithdrawal.PayId && x.ChannelId == reqWithdrawal.ChannelId);
             if (crypto == null)
             {
                 logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
@@ -149,8 +149,8 @@ namespace PaymentService.Controllers
                 return apiResult;
             }
 
-            var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqWithdrawal.PayId).FirstOrDefault();
-            var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
+            var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
+            var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x => x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId);
             if (pay == null)
             {
                 logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} pay Setting Not Found");
@@ -383,7 +383,7 @@ namespace PaymentService.Controllers
             ApiResult<Service.Model.ExchangeResult> apiResult = new ApiResult<Service.Model.ExchangeResult>();
             var custId = reqExchange.CustId;
             var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var crypto = payBLL.GetCryptoListForPayout().Where(x => x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId).FirstOrDefault();
+            var crypto = payBLL.GetCryptoListForPayout().FirstOrDefault(x => x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId);
             if (crypto == null)
             {
                 logger.LogError($"Method={GetCurrentMethod()}, Invalid Currency");
@@ -391,8 +391,8 @@ namespace PaymentService.Controllers
                 return apiResult;
             }
 
-            var pay = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqExchange.PayId).FirstOrDefault();
-            var payCurrency = payBLL.GetPayCurrency().Where(x => x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId).FirstOrDefault();
+            var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqExchange.PayId);
+            var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x => x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId);
             if (pay == null)
             {
                 logger.LogError($"Method={GetCurrentMethod()}, pay Setting Not Found");
