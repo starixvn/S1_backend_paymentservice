@@ -286,7 +286,7 @@ namespace PaymentService.Controllers
             }
             catch (Exception e)
             {
-                logger.LogError(e, e.Message);
+                logger.LogError(e, GetCurrentMethod());
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
                 apiResult.RawErrorCode = ((int)ErrorCode.Fail).ToString();
                 return apiResult;
@@ -399,7 +399,7 @@ namespace PaymentService.Controllers
             }
             catch (Exception e)
             {
-                logger.LogError(e, e.Message);
+                logger.LogError(e, GetCurrentMethod());
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
                 apiResult.RawErrorCode = ((int)ErrorCode.Fail).ToString();
                 return apiResult;
@@ -520,7 +520,7 @@ namespace PaymentService.Controllers
             }
             catch (Exception e)
             {
-                logger.LogError(e, e.Message);
+                logger.LogError(e, GetCurrentMethod());
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
                 apiResult.RawErrorCode = ((int)ErrorCode.Fail).ToString();
                 return apiResult;
@@ -648,7 +648,7 @@ namespace PaymentService.Controllers
             }
             catch (Exception e)
             {
-                logger.LogError(e, e.Message);
+                logger.LogError(e, GetCurrentMethod());
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
                 apiResult.RawErrorCode = ((int)ErrorCode.Fail).ToString();
                 return apiResult;
@@ -772,7 +772,7 @@ namespace PaymentService.Controllers
             }
             catch (Exception e)
             {
-                logger.LogError(e, e.Message);
+                logger.LogError(e, GetCurrentAsyncMethod());
                 return Content(ErrorCode.Fail.ToString());
             }
         }
