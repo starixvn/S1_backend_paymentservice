@@ -176,106 +176,121 @@ namespace PaymentService.Controllers
         public ApiResult<PayResult> DepositBank(ReqDepositBank reqDeposit)
         {
             ApiResult<PayResult> apiResult = new ApiResult<PayResult>();
-            var custId = reqDeposit.CustId;
-            var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-            var onlineBank = payBLL.GetOnlineBankList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) && x.PointLevel <= vipLevel);
-            //var PayCurrency = payBLL.GetPayCurrency().;
-            
-            if (onlineBank == null)
+            try
             {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Bank Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.BankNotFound;
-                return apiResult;
-            }
+                var custId = reqDeposit.CustId;
+                var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
+                var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
+                var onlineBank = payBLL.GetOnlineBankList(custInfo.SiteId).FirstOrDefault(x =>
+                    x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) &&
+                    x.PointLevel <= vipLevel);
+                //var PayCurrency = payBLL.GetPayCurrency().;
 
-            if (custInfo.CurrencyId != onlineBank.CurrencyId && onlineBank.CurrencyId != 0)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
-                apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
-                return apiResult;
-            }
-
-            if (reqDeposit.Amount % 1 != 0)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
-                apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
-                return apiResult;
-            }
-
-            var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase))?.PayLangId;
-            var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqDeposit.PayId);
-            var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x => x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
-            if (pay == null)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} pay Setting Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                return apiResult;
-            }
-
-            //DateTimeOffset
-            var payHelper = payBLL.GetPayHelper(pay.PayName);
-            if (payHelper == null)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                return apiResult;
-            }
-
-            var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-            DepReq.Add("PayCurrencyId", payCurrency.PayCurrencyId);
-            DepReq.Add("ClientIP", reqDeposit.ClientIP);
-            DepReq.Add("TransID", reqDeposit.TransId);
-            DepReq.Add("Amount", reqDeposit.Amount.ToString());
-            DepReq.Add("PayCode", onlineBank.PayCode);
-            DepReq.Add("BankName", onlineBank.BankName);
-            DepReq.Add("BankCode", onlineBank.BankCode);
-            DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
-            DepReq.Add("PayLangId", payLangId);
-            DepReq.Add("CustId", reqDeposit.CustId.ToString());
-            var callBackUrl = configuration.GetValue<string>("CallBack");
-            DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
-            DepReq.Add("IsTest", common.IsTest());
-
-            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
-            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositBank");
-
-            var result = payHelper.Debit(DepReq);
-            if (result.Success)
-            {
-                apiResult.ErrorCode = 0;
-                PayResult payResult = new PayResult();
-                payResult.Url = result.Url;
-                payResult.FormData = result.FormData;
-                payResult.ThirdId = result.ThirdId;
-                payResult.Mode = onlineBank.Mode;
-                apiResult.Data = payResult;
-
-                if (result.ThirdId != null)
+                if (onlineBank == null)
                 {
-                    paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Bank Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.BankNotFound;
+                    return apiResult;
                 }
-            }
-            else
-            {
-                DepositRequest depositRequest = new DepositRequest();
-                depositRequest.DepositType = (int)DepositType.OnlineBanking;
-                depositRequest.TransId = reqDeposit.TransId;
-                depositRequest.ActualDeposit = reqDeposit.Amount;
-                depositRequest.Amount = reqDeposit.Amount;
-                depositRequest.PayName = pay.PayName;
-                depositRequest.SiteId = custInfo.SiteId;
-                depositRequest.DepositInfo = JsonConvert.SerializeObject(onlineBank);
-                var rNotifyDepositResult = new NotifyDepositResult();
-                rNotifyDepositResult.Comment = result.Message;
-                rNotifyDepositResult.ThirdId = result.ThirdId;
-                paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
-                apiResult.ErrorCode = (int)ErrorCode.Fail;
-                apiResult.RawErrorCode = result.ErrorCode;
-                apiResult.RawMessage = result.Message;
-            }
 
-            return apiResult;
+                if (custInfo.CurrencyId != onlineBank.CurrencyId && onlineBank.CurrencyId != 0)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
+                    apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                    return apiResult;
+                }
+
+                if (reqDeposit.Amount % 1 != 0)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
+                    apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
+                    return apiResult;
+                }
+
+                var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x =>
+                    string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase))?.PayLangId;
+                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqDeposit.PayId);
+                var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x =>
+                    x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
+                if (pay == null)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} pay Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                //DateTimeOffset
+                var payHelper = payBLL.GetPayHelper(pay.PayName);
+                if (payHelper == null)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                DepReq.Add("PayCurrencyId", payCurrency.PayCurrencyId);
+                DepReq.Add("ClientIP", reqDeposit.ClientIP);
+                DepReq.Add("TransID", reqDeposit.TransId);
+                DepReq.Add("Amount", reqDeposit.Amount.ToString());
+                DepReq.Add("PayCode", onlineBank.PayCode);
+                DepReq.Add("BankName", onlineBank.BankName);
+                DepReq.Add("BankCode", onlineBank.BankCode);
+                DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
+                DepReq.Add("PayLangId", payLangId);
+                DepReq.Add("CustId", reqDeposit.CustId.ToString());
+                var callBackUrl = configuration.GetValue<string>("CallBack");
+                DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+                DepReq.Add("IsTest", common.IsTest());
+
+                logger.LogInformation(
+                    $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
+                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositBank");
+
+                var result = payHelper.Debit(DepReq);
+                if (result.Success)
+                {
+                    apiResult.ErrorCode = 0;
+                    PayResult payResult = new PayResult();
+                    payResult.Url = result.Url;
+                    payResult.FormData = result.FormData;
+                    payResult.ThirdId = result.ThirdId;
+                    payResult.Mode = onlineBank.Mode;
+                    apiResult.Data = payResult;
+
+                    if (result.ThirdId != null)
+                    {
+                        paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                    }
+                }
+                else
+                {
+                    DepositRequest depositRequest = new DepositRequest();
+                    depositRequest.DepositType = (int)DepositType.OnlineBanking;
+                    depositRequest.TransId = reqDeposit.TransId;
+                    depositRequest.ActualDeposit = reqDeposit.Amount;
+                    depositRequest.Amount = reqDeposit.Amount;
+                    depositRequest.PayName = pay.PayName;
+                    depositRequest.SiteId = custInfo.SiteId;
+                    depositRequest.DepositInfo = JsonConvert.SerializeObject(onlineBank);
+                    var rNotifyDepositResult = new NotifyDepositResult();
+                    rNotifyDepositResult.Comment = result.Message;
+                    rNotifyDepositResult.ThirdId = result.ThirdId;
+                    paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
+                    apiResult.ErrorCode = (int)ErrorCode.Fail;
+                    apiResult.RawErrorCode = result.ErrorCode;
+                    apiResult.RawMessage = result.Message;
+                }
+
+                return apiResult;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                apiResult.ErrorCode = (int)ErrorCode.Fail;
+                apiResult.RawErrorCode = ((int)ErrorCode.Fail).ToString();
+                return apiResult;
+            }
         }
 
         [HttpPost]
@@ -283,98 +298,112 @@ namespace PaymentService.Controllers
         public ApiResult<PayResult> DepositMobile(ReqDepositMobile reqDeposit)
         {
             ApiResult<PayResult> apiResult = new ApiResult<PayResult>();
-            var custId = reqDeposit.CustId;
-            var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-            var mobilePayInfo = payBLL.GetMobilePayInfoList(custInfo.SiteId).FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
-            //var PayCurrency = payBLL.GetPayCurrency().;
-           
-            if (mobilePayInfo == null)
+            try
             {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Channel Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.ChannelNotFound;
-                return apiResult;
-            }
+                var custId = reqDeposit.CustId;
+                var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
+                var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
+                var mobilePayInfo = payBLL.GetMobilePayInfoList(custInfo.SiteId)
+                    .FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
+                //var PayCurrency = payBLL.GetPayCurrency().;
 
-            if (custInfo.CurrencyId != mobilePayInfo.CurrencyId)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
-                apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
-                return apiResult;
-            }
-
-            if (reqDeposit.Amount % 1 != 0)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
-                apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
-                return apiResult;
-            }
-
-            var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == mobilePayInfo.PayId);
-            var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && (x.PayId == pay.PayId))?.PayLangId;
-
-            //DateTimeOffset
-            var payHelper = payBLL.GetPayHelper(pay.PayName);
-            if (payHelper == null)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                return apiResult;
-            }
-
-            var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-            DepReq.Add("PayCurrencyId", mobilePayInfo.PayCurrencyId);
-            DepReq.Add("ClientIP", reqDeposit.ClientIP);
-            DepReq.Add("TransID", reqDeposit.TransId);
-            DepReq.Add("Amount", reqDeposit.Amount.ToString());
-            DepReq.Add("PayCode", mobilePayInfo.PayCode);
-            DepReq.Add("BankCode", null);
-            DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
-            DepReq.Add("PayLangId", payLangId);
-            DepReq.Add("CustId", reqDeposit.CustId.ToString());
-            var callBackUrl = configuration.GetValue<string>("CallBack");
-            DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
-            DepReq.Add("IsTest", common.IsTest());
-
-            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
-            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositMobile");
-
-            var result = payHelper.Debit(DepReq);
-            if (result.Success)
-            {
-                apiResult.ErrorCode = 0;
-                PayResult payResult = new PayResult();
-                payResult.Url = result.Url;
-                payResult.FormData = result.FormData;
-                payResult.ThirdId = result.ThirdId;
-                payResult.Mode = mobilePayInfo.Mode;
-                apiResult.Data = payResult;
-
-                if (result.ThirdId != null)
+                if (mobilePayInfo == null)
                 {
-                    paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Channel Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.ChannelNotFound;
+                    return apiResult;
                 }
-            }
-            else
-            {
-                DepositRequest depositRequest = new DepositRequest();
-                depositRequest.DepositType = (int)DepositType.MobilePayment;
-                depositRequest.TransId = reqDeposit.TransId;
-                depositRequest.ActualDeposit = reqDeposit.Amount;
-                depositRequest.Amount = reqDeposit.Amount;
-                depositRequest.PayName = pay.PayName;
-                depositRequest.SiteId = custInfo.SiteId;
-                depositRequest.DepositInfo = JsonConvert.SerializeObject(mobilePayInfo);
-                var rNotifyDepositResult = new NotifyDepositResult();
-                rNotifyDepositResult.Comment = result.Message;
-                rNotifyDepositResult.ThirdId = result.ThirdId;
-                paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
-                apiResult.ErrorCode = (int)ErrorCode.Fail;
-                apiResult.RawErrorCode = result.ErrorCode;
-                apiResult.RawMessage = result.Message;
-            }
 
-            return apiResult;
+                if (custInfo.CurrencyId != mobilePayInfo.CurrencyId)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
+                    apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                    return apiResult;
+                }
+
+                if (reqDeposit.Amount % 1 != 0)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
+                    apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
+                    return apiResult;
+                }
+
+                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == mobilePayInfo.PayId);
+                var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x =>
+                    string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) &&
+                    (x.PayId == pay.PayId))?.PayLangId;
+
+                //DateTimeOffset
+                var payHelper = payBLL.GetPayHelper(pay.PayName);
+                if (payHelper == null)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                DepReq.Add("PayCurrencyId", mobilePayInfo.PayCurrencyId);
+                DepReq.Add("ClientIP", reqDeposit.ClientIP);
+                DepReq.Add("TransID", reqDeposit.TransId);
+                DepReq.Add("Amount", reqDeposit.Amount.ToString());
+                DepReq.Add("PayCode", mobilePayInfo.PayCode);
+                DepReq.Add("BankCode", null);
+                DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
+                DepReq.Add("PayLangId", payLangId);
+                DepReq.Add("CustId", reqDeposit.CustId.ToString());
+                var callBackUrl = configuration.GetValue<string>("CallBack");
+                DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+                DepReq.Add("IsTest", common.IsTest());
+
+                logger.LogInformation(
+                    $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
+                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositMobile");
+
+                var result = payHelper.Debit(DepReq);
+                if (result.Success)
+                {
+                    apiResult.ErrorCode = 0;
+                    PayResult payResult = new PayResult();
+                    payResult.Url = result.Url;
+                    payResult.FormData = result.FormData;
+                    payResult.ThirdId = result.ThirdId;
+                    payResult.Mode = mobilePayInfo.Mode;
+                    apiResult.Data = payResult;
+
+                    if (result.ThirdId != null)
+                    {
+                        paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                    }
+                }
+                else
+                {
+                    DepositRequest depositRequest = new DepositRequest();
+                    depositRequest.DepositType = (int)DepositType.MobilePayment;
+                    depositRequest.TransId = reqDeposit.TransId;
+                    depositRequest.ActualDeposit = reqDeposit.Amount;
+                    depositRequest.Amount = reqDeposit.Amount;
+                    depositRequest.PayName = pay.PayName;
+                    depositRequest.SiteId = custInfo.SiteId;
+                    depositRequest.DepositInfo = JsonConvert.SerializeObject(mobilePayInfo);
+                    var rNotifyDepositResult = new NotifyDepositResult();
+                    rNotifyDepositResult.Comment = result.Message;
+                    rNotifyDepositResult.ThirdId = result.ThirdId;
+                    paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
+                    apiResult.ErrorCode = (int)ErrorCode.Fail;
+                    apiResult.RawErrorCode = result.ErrorCode;
+                    apiResult.RawMessage = result.Message;
+                }
+
+                return apiResult;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                apiResult.ErrorCode = (int)ErrorCode.Fail;
+                apiResult.RawErrorCode = ((int)ErrorCode.Fail).ToString();
+                return apiResult;
+            }
         }
 
         public class ReqDepositCrpyto : ReqDeposit
@@ -387,100 +416,115 @@ namespace PaymentService.Controllers
         public ApiResult<PayResult> DepositCrpyto(ReqDepositCrpyto reqDeposit)
         {
             ApiResult<PayResult> apiResult = new ApiResult<PayResult>();
-            var custId = reqDeposit.CustId;
-            var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-            var cryptoPayInfo = payBLL.GetCryptoPayInfoList(custInfo.SiteId).FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel && x.CurrencyId == custInfo.CurrencyId);
-            //var PayCurrency = payBLL.GetPayCurrency().;
-            
-            if (cryptoPayInfo == null)
+            try
             {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Channel Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.ChannelNotFound;
-                return apiResult;
-            }
+                var custId = reqDeposit.CustId;
+                var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
+                var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
+                var cryptoPayInfo = payBLL.GetCryptoPayInfoList(custInfo.SiteId).FirstOrDefault(x =>
+                    reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel &&
+                    x.CurrencyId == custInfo.CurrencyId);
+                //var PayCurrency = payBLL.GetPayCurrency().;
 
-            if (custInfo.CurrencyId != cryptoPayInfo.CurrencyId)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
-                apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
-                return apiResult;
-            }
-
-            if (reqDeposit.Amount % 1 != 0)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
-                apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
-                return apiResult;
-            }
-
-            var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == cryptoPayInfo.PayId);
-            var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && (x.PayId == pay.PayId))?.PayLangId;
-
-            //DateTimeOffset
-            var payHelper = payBLL.GetPayHelper(pay.PayName);
-            if (payHelper == null)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                return apiResult;
-            }
-
-            var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-            var currency = (CurrencyMap)custInfo.CurrencyId;
-            DepReq.Add("CurrencyId", currency.ToString());
-            DepReq.Add("PayCurrencyId", cryptoPayInfo.PayCurrencyId);
-            DepReq.Add("ClientIP", reqDeposit.ClientIP);
-            DepReq.Add("TransID", reqDeposit.TransId);
-            DepReq.Add("Amount", reqDeposit.Amount.ToString());
-            DepReq.Add("PayCode", cryptoPayInfo.PayCode);
-            DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
-            DepReq.Add("PayLangId", payLangId);
-            DepReq.Add("CustId", reqDeposit.CustId.ToString());
-            var callBackUrl = configuration.GetValue<string>("CallBack");
-            DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
-            DepReq.Add("IsTest", common.IsTest());
-
-            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
-            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositCrpyto");
-
-            var result = payHelper.Debit(DepReq);
-            if (result.Success)
-            {
-                apiResult.ErrorCode = 0;
-                PayResult payResult = new PayResult();
-                payResult.Url = result.Url;
-                payResult.FormData = result.FormData;
-                payResult.ThirdId = result.ThirdId;
-                payResult.Mode = cryptoPayInfo.Mode;
-                apiResult.Data = payResult;
-
-                if (result.ThirdId != null)
+                if (cryptoPayInfo == null)
                 {
-                    paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Channel Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.ChannelNotFound;
+                    return apiResult;
                 }
-            }
-            else
-            {
-                DepositRequest depositRequest = new DepositRequest();
-                depositRequest.DepositType = (int)DepositType.CryptoPayPayment;
-                depositRequest.TransId = reqDeposit.TransId;
-                depositRequest.ActualDeposit = reqDeposit.Amount;
-                depositRequest.Amount = reqDeposit.Amount;
-                depositRequest.PayName = pay.PayName;
-                depositRequest.SiteId = custInfo.SiteId;
-                depositRequest.DepositInfo = JsonConvert.SerializeObject(cryptoPayInfo);
-                var rNotifyDepositResult = new NotifyDepositResult();
-                rNotifyDepositResult.Comment = result.Message;
-                rNotifyDepositResult.ThirdId = result.ThirdId;
-                paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
-                apiResult.ErrorCode = (int)ErrorCode.Fail;
-                apiResult.RawErrorCode = result.ErrorCode;
-                apiResult.RawMessage = result.Message;
-                apiResult.Message = result.Message;
-            }
 
-            return apiResult;
+                if (custInfo.CurrencyId != cryptoPayInfo.CurrencyId)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
+                    apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                    return apiResult;
+                }
+
+                if (reqDeposit.Amount % 1 != 0)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
+                    apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
+                    return apiResult;
+                }
+
+                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == cryptoPayInfo.PayId);
+                var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x =>
+                    string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) &&
+                    (x.PayId == pay.PayId))?.PayLangId;
+
+                //DateTimeOffset
+                var payHelper = payBLL.GetPayHelper(pay.PayName);
+                if (payHelper == null)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                var currency = (CurrencyMap)custInfo.CurrencyId;
+                DepReq.Add("CurrencyId", currency.ToString());
+                DepReq.Add("PayCurrencyId", cryptoPayInfo.PayCurrencyId);
+                DepReq.Add("ClientIP", reqDeposit.ClientIP);
+                DepReq.Add("TransID", reqDeposit.TransId);
+                DepReq.Add("Amount", reqDeposit.Amount.ToString());
+                DepReq.Add("PayCode", cryptoPayInfo.PayCode);
+                DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
+                DepReq.Add("PayLangId", payLangId);
+                DepReq.Add("CustId", reqDeposit.CustId.ToString());
+                var callBackUrl = configuration.GetValue<string>("CallBack");
+                DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+                DepReq.Add("IsTest", common.IsTest());
+
+                logger.LogInformation(
+                    $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
+                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositCrpyto");
+
+                var result = payHelper.Debit(DepReq);
+                if (result.Success)
+                {
+                    apiResult.ErrorCode = 0;
+                    PayResult payResult = new PayResult();
+                    payResult.Url = result.Url;
+                    payResult.FormData = result.FormData;
+                    payResult.ThirdId = result.ThirdId;
+                    payResult.Mode = cryptoPayInfo.Mode;
+                    apiResult.Data = payResult;
+
+                    if (result.ThirdId != null)
+                    {
+                        paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                    }
+                }
+                else
+                {
+                    DepositRequest depositRequest = new DepositRequest();
+                    depositRequest.DepositType = (int)DepositType.CryptoPayPayment;
+                    depositRequest.TransId = reqDeposit.TransId;
+                    depositRequest.ActualDeposit = reqDeposit.Amount;
+                    depositRequest.Amount = reqDeposit.Amount;
+                    depositRequest.PayName = pay.PayName;
+                    depositRequest.SiteId = custInfo.SiteId;
+                    depositRequest.DepositInfo = JsonConvert.SerializeObject(cryptoPayInfo);
+                    var rNotifyDepositResult = new NotifyDepositResult();
+                    rNotifyDepositResult.Comment = result.Message;
+                    rNotifyDepositResult.ThirdId = result.ThirdId;
+                    paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
+                    apiResult.ErrorCode = (int)ErrorCode.Fail;
+                    apiResult.RawErrorCode = result.ErrorCode;
+                    apiResult.RawMessage = result.Message;
+                    apiResult.Message = result.Message;
+                }
+
+                return apiResult;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                apiResult.ErrorCode = (int)ErrorCode.Fail;
+                apiResult.RawErrorCode = ((int)ErrorCode.Fail).ToString();
+                return apiResult;
+            }
         }
 
         public class ReqDepositLoadCard : ReqDeposit
@@ -495,107 +539,122 @@ namespace PaymentService.Controllers
         public ApiResult<PayResult> DepositLoadCard(ReqDepositLoadCard reqDeposit)
         {
             ApiResult<PayResult> apiResult = new ApiResult<PayResult>();
-            var custId = reqDeposit.CustId;
-            var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-            var loadCardPay = payBLL.GetLoadCardPayInfoList(custInfo.SiteId).FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
-            //var PayCurrency = payBLL.GetPayCurrency().;
-            
-            if (loadCardPay == null)
+            try
             {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Channel Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.ChannelNotFound;
-                return apiResult;
-            }
+                var custId = reqDeposit.CustId;
+                var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
+                var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
+                var loadCardPay = payBLL.GetLoadCardPayInfoList(custInfo.SiteId)
+                    .FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
+                //var PayCurrency = payBLL.GetPayCurrency().;
 
-            if (custInfo.CurrencyId != loadCardPay.CurrencyId)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
-                apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
-                return apiResult;
-            }
-
-            if (reqDeposit.Amount % 1 != 0)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
-                apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
-                return apiResult;
-            }
-
-            var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == loadCardPay.PayId);
-            var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x => string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && (x.PayId == pay.PayId))?.PayLangId;
-
-            //DateTimeOffset
-            var payHelper = payBLL.GetPayHelper(pay.PayName);
-            if (payHelper == null)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                return apiResult;
-            }
-
-            var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-            DepReq.Add("PayCurrencyId", loadCardPay.PayCurrencyId);
-            DepReq.Add("ClientIP", reqDeposit.ClientIP);
-            DepReq.Add("TransID", reqDeposit.TransId);
-            DepReq.Add("Amount", reqDeposit.Amount.ToString());
-            DepReq.Add("PayCode", loadCardPay.PayCode);
-            DepReq.Add("Code", reqDeposit.Code);
-            DepReq.Add("Serial", reqDeposit.Serial);
-            DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
-            DepReq.Add("PayLangId", payLangId);
-            DepReq.Add("CustId", reqDeposit.CustId.ToString());
-            var callBackUrl = configuration.GetValue<string>("CallBack");
-            DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
-            DepReq.Add("IsTest", common.IsTest());
-
-            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
-            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositLoadCard");
-            
-            var result = payHelper.Debit(DepReq);
-            if (result.Success)
-            {
-                apiResult.ErrorCode = 0;
-                PayResult payResult = new PayResult();
-                payResult.FormData = result.FormData;
-                payResult.ThirdId = result.ThirdId;
-                payResult.Mode = loadCardPay.Mode;
-                apiResult.Data = payResult;
-                apiResult.Message = result.Message;
-
-                if (result.ThirdId != null)
+                if (loadCardPay == null)
                 {
-                    paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Channel Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.ChannelNotFound;
+                    return apiResult;
                 }
-            }
-            else
-            {
-                DepositRequest depositRequest = new DepositRequest();
-                depositRequest.DepositType = (int)DepositType.LoadCardPayment;
-                depositRequest.TransId = reqDeposit.TransId;
-                depositRequest.ActualDeposit = reqDeposit.Amount;
-                depositRequest.Amount = reqDeposit.Amount;
-                depositRequest.PayName = pay.PayName;
-                depositRequest.SiteId = custInfo.SiteId;
-                depositRequest.DepositInfo = JsonConvert.SerializeObject(loadCardPay);
-                var rNotifyDepositResult = new NotifyDepositResult();
-                rNotifyDepositResult.Comment = result.Message;
-                rNotifyDepositResult.ThirdId = result.ThirdId;
-                paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
-                //apiResult.ErrorCode = (int)ErrorCode.Fail;
-                apiResult.ErrorCode = 0;
-                PayResult payResult = new PayResult();
-                payResult.FormData = result.FormData;
-                payResult.ThirdId = result.ThirdId;
-                payResult.Mode = loadCardPay.Mode;
-                apiResult.Data = payResult;
-                apiResult.RawErrorCode = ((int)ErrorCode.Fail).ToString();
-                apiResult.RawMessage = result.Message;
-                apiResult.Message = result.Message;
-            }
 
-            return apiResult;
+                if (custInfo.CurrencyId != loadCardPay.CurrencyId)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
+                    apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                    return apiResult;
+                }
+
+                if (reqDeposit.Amount % 1 != 0)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Amount Out Of Range");
+                    apiResult.ErrorCode = (int)ErrorCode.AmountOutOfRange;
+                    return apiResult;
+                }
+
+                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == loadCardPay.PayId);
+                var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x =>
+                    string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) &&
+                    (x.PayId == pay.PayId))?.PayLangId;
+
+                //DateTimeOffset
+                var payHelper = payBLL.GetPayHelper(pay.PayName);
+                if (payHelper == null)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} payHelper Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                DepReq.Add("PayCurrencyId", loadCardPay.PayCurrencyId);
+                DepReq.Add("ClientIP", reqDeposit.ClientIP);
+                DepReq.Add("TransID", reqDeposit.TransId);
+                DepReq.Add("Amount", reqDeposit.Amount.ToString());
+                DepReq.Add("PayCode", loadCardPay.PayCode);
+                DepReq.Add("Code", reqDeposit.Code);
+                DepReq.Add("Serial", reqDeposit.Serial);
+                DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
+                DepReq.Add("PayLangId", payLangId);
+                DepReq.Add("CustId", reqDeposit.CustId.ToString());
+                var callBackUrl = configuration.GetValue<string>("CallBack");
+                DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+                DepReq.Add("IsTest", common.IsTest());
+
+                logger.LogInformation(
+                    $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
+                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositLoadCard");
+
+                var result = payHelper.Debit(DepReq);
+                if (result.Success)
+                {
+                    apiResult.ErrorCode = 0;
+                    PayResult payResult = new PayResult();
+                    payResult.FormData = result.FormData;
+                    payResult.ThirdId = result.ThirdId;
+                    payResult.Mode = loadCardPay.Mode;
+                    apiResult.Data = payResult;
+                    apiResult.Message = result.Message;
+
+                    if (result.ThirdId != null)
+                    {
+                        paymentBLL.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                    }
+                }
+                else
+                {
+                    DepositRequest depositRequest = new DepositRequest();
+                    depositRequest.DepositType = (int)DepositType.LoadCardPayment;
+                    depositRequest.TransId = reqDeposit.TransId;
+                    depositRequest.ActualDeposit = reqDeposit.Amount;
+                    depositRequest.Amount = reqDeposit.Amount;
+                    depositRequest.PayName = pay.PayName;
+                    depositRequest.SiteId = custInfo.SiteId;
+                    depositRequest.DepositInfo = JsonConvert.SerializeObject(loadCardPay);
+                    var rNotifyDepositResult = new NotifyDepositResult();
+                    rNotifyDepositResult.Comment = result.Message;
+                    rNotifyDepositResult.ThirdId = result.ThirdId;
+                    paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
+                    //apiResult.ErrorCode = (int)ErrorCode.Fail;
+                    apiResult.ErrorCode = 0;
+                    PayResult payResult = new PayResult();
+                    payResult.FormData = result.FormData;
+                    payResult.ThirdId = result.ThirdId;
+                    payResult.Mode = loadCardPay.Mode;
+                    apiResult.Data = payResult;
+                    apiResult.RawErrorCode = ((int)ErrorCode.Fail).ToString();
+                    apiResult.RawMessage = result.Message;
+                    apiResult.Message = result.Message;
+                }
+
+                return apiResult;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                apiResult.ErrorCode = (int)ErrorCode.Fail;
+                apiResult.RawErrorCode = ((int)ErrorCode.Fail).ToString();
+                return apiResult;
+            }
         }
+
         bool IsWhiteList(string clientIP, string PaymentName, string transId)
         {
             logger.LogInformation($"Method={GetCurrentMethod()}, Request: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
@@ -629,77 +688,93 @@ namespace PaymentService.Controllers
 
             return true;
         }
-        
+
 
         [Route("Payment/DepositCallBack/{TransId}")]
         [HttpPost]
         [HttpGet]
         public async Task<IActionResult> DepositCallBackAsync(string transId)
         {
-            string bodyText = "";
-            using (StreamReader reader = new StreamReader(Request.Body))
+            try
             {
-                bodyText = await reader.ReadToEndAsync();
-            }
-
-            var absoluteUri = string.Concat(
-                        Request.Scheme,
-                        "://",
-                        Request.Host.ToUriComponent(),
-                        Request.PathBase.ToUriComponent(),
-                        Request.Path.ToUriComponent(),
-                        Request.QueryString.ToUriComponent());
-
-            Dictionary<string, string> dicParam = new Dictionary<string, string>();
-            bool isFormData = false;
-
-            if (Request.ContentType == null && Request.QueryString == null)
-            {
-                logger.LogError($"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
-                log2File.Error($"IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null", "DepositCallBack");
-                return Content("Request data is null");
-            }
-
-            if (Request.ContentType != null)
-            {
-                if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) || Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+                string bodyText = "";
+                using (StreamReader reader = new StreamReader(Request.Body))
                 {
-                    foreach (var vFormData in Request.Form)
+                    bodyText = await reader.ReadToEndAsync();
+                }
+
+                var absoluteUri = string.Concat(
+                    Request.Scheme,
+                    "://",
+                    Request.Host.ToUriComponent(),
+                    Request.PathBase.ToUriComponent(),
+                    Request.Path.ToUriComponent(),
+                    Request.QueryString.ToUriComponent());
+
+                Dictionary<string, string> dicParam = new Dictionary<string, string>();
+                bool isFormData = false;
+
+                if (Request.ContentType == null && Request.QueryString == null)
+                {
+                    logger.LogError(
+                        $"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
+                    log2File.Error(
+                        $"IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null",
+                        "DepositCallBack");
+                    return Content("Request data is null");
+                }
+
+                if (Request.ContentType != null)
+                {
+                    if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
+                        Request.ContentType.StartsWith("application/x-www-form-urlencoded",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        foreach (var vFormData in Request.Form)
+                        {
+                            dicParam.Add(vFormData.Key, vFormData.Value);
+                        }
+
+                        isFormData = true;
+                    }
+                }
+                else
+                {
+                    var query = QueryHelpers.ParseQuery(Request.QueryString.Value);
+
+                    foreach (var vFormData in query)
                     {
                         dicParam.Add(vFormData.Key, vFormData.Value);
                     }
 
                     isFormData = true;
                 }
-            }
-            else
-            {
-                var query = QueryHelpers.ParseQuery(Request.QueryString.Value);
 
-                foreach (var vFormData in query)
+                logger.LogInformation(
+                    $"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
+                log2File.Info(
+                    $"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}",
+                    "DepositCallBack");
+
+                int depositId = 0;
+
+                Match m = Regex.Match(transId, @"\d+");
+                int.TryParse(m.Value, out depositId);
+                string cTransId = $"D{common.GetEnv()}{depositId}";
+                if (cTransId != transId)
                 {
-                    dicParam.Add(vFormData.Key, vFormData.Value);
+                    var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)payBLL.GetPayHelper(transId);
+                    transId = payHelperNoCallBackUrl.FetchTransId(dicParam, bodyText);
                 }
 
-                isFormData = true;
+                var responseToPay = await CallBackHandlerAsync(transId, dicParam, bodyText, isFormData);
+                return Content(responseToPay);
             }
-
-            logger.LogInformation($"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
-            log2File.Info($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}", "DepositCallBack");
-
-            int depositId = 0;
-
-            Match m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out depositId);
-            string cTransId = $"D{common.GetEnv()}{depositId}";
-            if (cTransId != transId)
+            catch (Exception e)
             {
-                var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)payBLL.GetPayHelper(transId);
-                transId = payHelperNoCallBackUrl.FetchTransId(dicParam, bodyText);
+                logger.LogError(e, e.Message);
+                return Content(ErrorCode.Fail.ToString());
             }
-
-            var responseToPay = await CallBackHandlerAsync(transId, dicParam, bodyText, isFormData);
-            return Content(responseToPay);
         }
 
         private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
