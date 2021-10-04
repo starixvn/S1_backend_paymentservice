@@ -69,69 +69,82 @@ namespace PaymentService.Controllers
         public ApiResult Withdrawal(ReqWithdrawal reqWithdrawal)
         {
             ApiResult apiResult = new ApiResult();
-            var custId = reqWithdrawal.CustId;
-            var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var onlineBank = payBLL.GetOnlineBankListForPayout().FirstOrDefault(x => x.PayId == reqWithdrawal.PayId && x.SysId == reqWithdrawal.SysId);
-
-            if (custInfo.CurrencyId != onlineBank.CurrencyId)
+            try
             {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
-                apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                var custId = reqWithdrawal.CustId;
+                var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
+                var onlineBank = payBLL.GetOnlineBankListForPayout().FirstOrDefault(x =>
+                    x.PayId == reqWithdrawal.PayId && x.SysId == reqWithdrawal.SysId);
+
+                if (custInfo.CurrencyId != onlineBank.CurrencyId)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
+                    apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                    return apiResult;
+                }
+
+
+                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
+                var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x =>
+                    x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
+                if (pay == null)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} pay Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var payHelper = payBLL.GetPayHelper(pay.PayName);
+                if (payHelper == null)
+                {
+                    logger.LogError(
+                        $"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} payHelper Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
+                WithReq.Add("ClientIP", common.GetClientIP(HttpContext));
+                WithReq.Add("OutgoingIp", outgoingIp);
+                WithReq.Add("CustId", custInfo.CustId.ToString());
+                WithReq.Add("TransID", reqWithdrawal.TransId);
+                WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
+                WithReq.Add("PayCode", onlineBank.PayCode);
+                WithReq.Add("BankCode", onlineBank.BankCode);
+                WithReq.Add("BankName", onlineBank.BankName);
+                WithReq.Add("AccountName", reqWithdrawal.AccountName);
+                WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
+                WithReq.Add("IsTest", common.IsTest());
+                WithReq.Add("IFSCCode", reqWithdrawal.IFSCCode);
+
+                var callBackUrl = configuration.GetValue<string>("CallBack");
+                WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
+
+                logger.LogInformation(
+                    $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
+                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(WithReq)}", "Withdrawal");
+
+                var result = payHelper.Credit(WithReq);
+                if (result.Success)
+                {
+                    apiResult.ErrorCode = 0;
+                    apiResult.Message = result.Message;
+                }
+                else
+                {
+                    apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
+                    apiResult.Message = result.Message;
+                }
+
                 return apiResult;
             }
-
-      
-            var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
-            var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x => x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
-            if (pay == null)
+            catch (Exception e)
             {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} pay Setting Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                return apiResult;
-            }
-
-            var payHelper = payBLL.GetPayHelper(pay.PayName);
-            if (payHelper == null)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} payHelper Setting Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                return apiResult;
-            }
-
-            var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-            WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
-            WithReq.Add("ClientIP", common.GetClientIP(HttpContext));
-            WithReq.Add("OutgoingIp", outgoingIp);
-            WithReq.Add("CustId", custInfo.CustId.ToString());
-            WithReq.Add("TransID", reqWithdrawal.TransId);
-            WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
-            WithReq.Add("PayCode", onlineBank.PayCode);
-            WithReq.Add("BankCode", onlineBank.BankCode);
-            WithReq.Add("BankName", onlineBank.BankName); 
-            WithReq.Add("AccountName", reqWithdrawal.AccountName);
-            WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
-            WithReq.Add("IsTest", common.IsTest());
-            WithReq.Add("IFSCCode", reqWithdrawal.IFSCCode);
-            
-            var callBackUrl = configuration.GetValue<string>("CallBack");
-            WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
-
-            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
-            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(WithReq)}", "Withdrawal");
-            
-            var result = payHelper.Credit(WithReq);
-            if (result.Success)
-            {
-                apiResult.ErrorCode = 0;
-                apiResult.Message = result.Message;
-            }
-            else
-            {
+                logger.LogError(e, GetCurrentMethod());
                 apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
-                apiResult.Message = result.Message;
+                return apiResult;
             }
-
-            return apiResult;
         }
 
         [HttpPost]
@@ -139,118 +152,147 @@ namespace PaymentService.Controllers
         public ApiResult CryptoWithdrawal(ReqWithdrawal reqWithdrawal)
         {
             ApiResult apiResult = new ApiResult();
-            var custId = reqWithdrawal.CustId;
-            var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var crypto = payBLL.GetCryptoListForPayout().FirstOrDefault(x => x.PayId == reqWithdrawal.PayId && x.ChannelId == reqWithdrawal.ChannelId);
-            if (crypto == null)
+            try
             {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
-                apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                var custId = reqWithdrawal.CustId;
+                var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
+                var crypto = payBLL.GetCryptoListForPayout().FirstOrDefault(x =>
+                    x.PayId == reqWithdrawal.PayId && x.ChannelId == reqWithdrawal.ChannelId);
+                if (crypto == null)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
+                    apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                    return apiResult;
+                }
+
+                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
+                var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x =>
+                    x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId);
+                if (pay == null)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} pay Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var payHelper = payBLL.GetPayHelper(pay.PayName);
+                if (payHelper == null)
+                {
+                    logger.LogError(
+                        $"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} payHelper Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
+                //WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
+                WithReq.Add("OutgoingIp", outgoingIp);
+                WithReq.Add("CustId", custInfo.CustId.ToString());
+                WithReq.Add("TransID", reqWithdrawal.TransId);
+                WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
+                WithReq.Add("PayCode", crypto.PayCode);
+                WithReq.Add("AccountName", reqWithdrawal.AccountName);
+                WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
+                WithReq.Add("CurrencyId", custInfo.CurrencyId.ToString());
+                WithReq.Add("IsTest", common.IsTest());
+                var callBackUrl = configuration.GetValue<string>("CallBack");
+                WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
+
+                logger.LogInformation(
+                    $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
+                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(WithReq)}", "Withdrawal");
+
+                var result = payHelper.Credit(WithReq);
+                if (result.Success)
+                {
+                    apiResult.ErrorCode = 0;
+                    apiResult.Message = result.Message;
+                }
+                else
+                {
+                    apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
+                    apiResult.Message = result.Message;
+                }
+
                 return apiResult;
             }
-
-            var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
-            var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x => x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId);
-            if (pay == null)
+            catch (Exception e)
             {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} pay Setting Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                return apiResult;
-            }
-
-            var payHelper = payBLL.GetPayHelper(pay.PayName);
-            if (payHelper == null)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} payHelper Setting Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                return apiResult;
-            }
-
-            var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-            WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
-            //WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
-            WithReq.Add("OutgoingIp", outgoingIp);
-            WithReq.Add("CustId", custInfo.CustId.ToString());
-            WithReq.Add("TransID", reqWithdrawal.TransId);
-            WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
-            WithReq.Add("PayCode", crypto.PayCode);
-            WithReq.Add("AccountName", reqWithdrawal.AccountName);
-            WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
-            WithReq.Add("CurrencyId", custInfo.CurrencyId.ToString());
-            WithReq.Add("IsTest", common.IsTest());
-            var callBackUrl = configuration.GetValue<string>("CallBack");
-            WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
-
-            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
-            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(WithReq)}", "Withdrawal");
-
-            var result = payHelper.Credit(WithReq);
-            if (result.Success)
-            {
-                apiResult.ErrorCode = 0;
-                apiResult.Message = result.Message;
-            }
-            else
-            {
+                logger.LogError(e, GetCurrentMethod());
                 apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
-                apiResult.Message = result.Message;
+                return apiResult;
             }
-
-            return apiResult;
         }
 
         [Route("Payment/WithdrawalCallBack/{TransId}")]
         [HttpPost]
         public async Task<IActionResult> WithdrawalCallBackAsync(string transId)
         {
-            string bodyText = "";
-            using (StreamReader reader = new StreamReader(Request.Body))
+            try
             {
-                bodyText = await reader.ReadToEndAsync();
-            }
-
-            var absoluteUri = string.Concat(
-                        Request.Scheme,
-                        "://",
-                        Request.Host.ToUriComponent(),
-                        Request.PathBase.ToUriComponent(),
-                        Request.Path.ToUriComponent(),
-                        Request.QueryString.ToUriComponent());
-
-            Dictionary<string, string> dicParam = new Dictionary<string, string>();
-            bool isFormData = false;
-            if (Request.ContentType == null)
-            {
-                logger.LogError($"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
-                log2File.Info($"IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null", "WithdrawalCallBack");
-                return Content("Request data is null");
-            }
-
-            if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) || Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
-            {
-                foreach (var vFormData in Request.Form)
+                string bodyText = "";
+                using (StreamReader reader = new StreamReader(Request.Body))
                 {
-                    dicParam.Add(vFormData.Key, vFormData.Value);
+                    bodyText = await reader.ReadToEndAsync();
                 }
 
-                isFormData = true;
-            }
+                var absoluteUri = string.Concat(
+                    Request.Scheme,
+                    "://",
+                    Request.Host.ToUriComponent(),
+                    Request.PathBase.ToUriComponent(),
+                    Request.Path.ToUriComponent(),
+                    Request.QueryString.ToUriComponent());
 
-            logger.LogInformation($"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
-            log2File.Info($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}", "WithdrawalCallBack");
-            
-            int withdrawalId = 0;
-            Match m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out withdrawalId);
-            string cTransId = $"W{common.GetEnv()}{withdrawalId}";
-            if (cTransId != transId)
+                Dictionary<string, string> dicParam = new Dictionary<string, string>();
+                bool isFormData = false;
+                if (Request.ContentType == null)
+                {
+                    logger.LogError(
+                        $"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
+                    log2File.Info(
+                        $"IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null",
+                        "WithdrawalCallBack");
+                    return Content("Request data is null");
+                }
+
+                if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
+                    Request.ContentType.StartsWith("application/x-www-form-urlencoded",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (var vFormData in Request.Form)
+                    {
+                        dicParam.Add(vFormData.Key, vFormData.Value);
+                    }
+
+                    isFormData = true;
+                }
+
+                logger.LogInformation(
+                    $"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
+                log2File.Info(
+                    $"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}",
+                    "WithdrawalCallBack");
+
+                int withdrawalId = 0;
+                Match m = Regex.Match(transId, @"\d+");
+                int.TryParse(m.Value, out withdrawalId);
+                string cTransId = $"W{common.GetEnv()}{withdrawalId}";
+                if (cTransId != transId)
+                {
+                    var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)payBLL.GetPayHelper(transId);
+                    transId = payHelperNoCallBackUrl.FetchTransId(dicParam, bodyText);
+                }
+
+                var responseToPay = CallBackHandler(transId, dicParam, bodyText, isFormData);
+                return Content(responseToPay);
+            }
+            catch (Exception e)
             {
-                var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)payBLL.GetPayHelper(transId);
-                transId = payHelperNoCallBackUrl.FetchTransId(dicParam, bodyText);
+                logger.LogError(e, GetCurrentAsyncMethod());
+                return Content(ErrorCode.Fail.ToString());
             }
-
-            var responseToPay = CallBackHandler(transId, dicParam, bodyText, isFormData);
-            return Content(responseToPay);
         }
 
         private string CallBackHandler(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
@@ -358,20 +400,28 @@ namespace PaymentService.Controllers
         [HttpPost]
         public IActionResult verifytransaction(string transId, string key)
         {
-            logger.LogInformation($"Method={GetCurrentMethod()}, IP={common.GetClientIP(HttpContext)}, Url={Request.Path}, transId={transId}, key={key}");
-            log2File.Info($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n transId={transId},\r\n key={key}", "verifytransaction");
-            var withdrawalRequest = paymentBLL.GetWithdrawalRequest(transId);
-            if (withdrawalRequest != null) {
-
-                //var payHelper = payBLL.GetPayHelper(withdrawalRequest.PayName);
-                //payHelper.
-                //lib.ToMD5(transId,)
-                //withdrawalRequest.ISetting["key"];
-
-                return Content(true.ToString());
-            }
-            else
+            try
             {
+                logger.LogInformation($"Method={GetCurrentMethod()}, IP={common.GetClientIP(HttpContext)}, Url={Request.Path}, transId={transId}, key={key}");
+                log2File.Info($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n transId={transId},\r\n key={key}", "verifytransaction");
+                var withdrawalRequest = paymentBLL.GetWithdrawalRequest(transId);
+                if (withdrawalRequest != null) {
+
+                    //var payHelper = payBLL.GetPayHelper(withdrawalRequest.PayName);
+                    //payHelper.
+                    //lib.ToMD5(transId,)
+                    //withdrawalRequest.ISetting["key"];
+
+                    return Content(true.ToString());
+                }
+                else
+                {
+                    return Content(false.ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, GetCurrentMethod());
                 return Content(false.ToString());
             }
         }
@@ -381,58 +431,70 @@ namespace PaymentService.Controllers
         public ApiResult<Service.Model.ExchangeResult> CryptoExchange(ReqExchange reqExchange)
         {
             ApiResult<Service.Model.ExchangeResult> apiResult = new ApiResult<Service.Model.ExchangeResult>();
-            var custId = reqExchange.CustId;
-            var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-            var crypto = payBLL.GetCryptoListForPayout().FirstOrDefault(x => x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId);
-            if (crypto == null)
+            try
             {
-                logger.LogError($"Method={GetCurrentMethod()}, Invalid Currency");
-                apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                var custId = reqExchange.CustId;
+                var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
+                var crypto = payBLL.GetCryptoListForPayout().FirstOrDefault(x =>
+                    x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId);
+                if (crypto == null)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, Invalid Currency");
+                    apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                    return apiResult;
+                }
+
+                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqExchange.PayId);
+                var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x =>
+                    x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId);
+                if (pay == null)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, pay Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var payHelper = (IExchangeHelper)payBLL.GetPayHelper(pay.PayName);
+                if (payHelper == null)
+                {
+                    logger.LogError($"Method={GetCurrentMethod()}, payHelper Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var exchangeReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                exchangeReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
+                exchangeReq.Add("Amount", reqExchange.Amount.ToString());
+                exchangeReq.Add("PayCode", crypto.PayCode);
+                exchangeReq.Add("CurrencyId", custInfo.CurrencyId.ToString());
+
+                logger.LogInformation(
+                    $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(exchangeReq)}");
+                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(exchangeReq)}", "ExchangeRate");
+
+                var result = payHelper.GetExchange(exchangeReq);
+                if (result.ErrorCode == "0")
+                {
+                    apiResult.ErrorCode = (int)ErrorCode.Success;
+                    Service.Model.ExchangeResult exchangeResult = new Service.Model.ExchangeResult();
+                    exchangeResult.FormData = result.FormData;
+                    apiResult.Data = exchangeResult;
+                    apiResult.Message = result.Message;
+                }
+                else
+                {
+                    apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
+                    apiResult.Message = result.Message;
+                }
+
                 return apiResult;
             }
-
-            var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqExchange.PayId);
-            var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x => x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId);
-            if (pay == null)
+            catch (Exception e)
             {
-                logger.LogError($"Method={GetCurrentMethod()}, pay Setting Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                return apiResult;
-            }
-
-            var payHelper = (IExchangeHelper)payBLL.GetPayHelper(pay.PayName);
-            if (payHelper == null)
-            {
-                logger.LogError($"Method={GetCurrentMethod()}, payHelper Setting Not Found");
-                apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                return apiResult;
-            }
-
-            var exchangeReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-            exchangeReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
-            exchangeReq.Add("Amount", reqExchange.Amount.ToString());
-            exchangeReq.Add("PayCode", crypto.PayCode);
-            exchangeReq.Add("CurrencyId", custInfo.CurrencyId.ToString());
-
-            logger.LogInformation($"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(exchangeReq)}");
-            log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(exchangeReq)}", "ExchangeRate");
-
-            var result = payHelper.GetExchange(exchangeReq);
-            if (result.ErrorCode == "0")
-            {
-                apiResult.ErrorCode = (int)ErrorCode.Success;
-                Service.Model.ExchangeResult exchangeResult = new Service.Model.ExchangeResult();
-                exchangeResult.FormData = result.FormData;
-                apiResult.Data = exchangeResult;
-                apiResult.Message = result.Message;
-            }
-            else
-            {
+                logger.LogError(e, GetCurrentMethod());
                 apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
-                apiResult.Message = result.Message;
+                return apiResult;
             }
-
-            return apiResult;
         }
     }
 }
