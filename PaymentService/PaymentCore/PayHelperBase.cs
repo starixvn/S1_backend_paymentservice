@@ -11,7 +11,9 @@ using System.Web;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Security;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Crypto.Parameters;
+using Serilog.Context;
 
 namespace PaymentCore
 {
@@ -159,6 +161,7 @@ namespace PaymentCore
         public abstract EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs);
         public abstract NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
         public abstract NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
+        private static readonly ILogger<PayHelperBase> Logger = new LoggerFactory().CreateLogger<PayHelperBase>();   
         /// <summary>
         /// 1. 會夾帶Content-Type
         /// 2. 簡體字會變成亂碼，且無法還原
@@ -168,6 +171,9 @@ namespace PaymentCore
         public static int proxyPort;
         protected string HttpGet(string url, string parameters, string transID)
         {
+            LogContext.PushProperty("TpInfo", parameters);
+            LogContext.PushProperty("TransId", transID);
+            LogContext.PushProperty("Tp.Request.URL", url);
             WebRequest request = WebRequest.Create($"{url}?{parameters}");
             request.Method = "GET";
             if (!string.IsNullOrEmpty(proxyHost))
@@ -179,6 +185,7 @@ namespace PaymentCore
             using Stream dataStream = response.GetResponseStream();
             using StreamReader reader = new StreamReader(dataStream);
             string responseFromServer = reader.ReadToEnd();
+            Logger.LogInformation($"Tp.Request.Response:{responseFromServer}");
 
             InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
 
@@ -186,6 +193,9 @@ namespace PaymentCore
         }
         protected string HttpGet(string url, string parameters, string contentType, string accesstoken, string transID)
         {
+            LogContext.PushProperty("TpInfo", parameters);
+            LogContext.PushProperty("TransId", transID);
+            LogContext.PushProperty("Tp.Request.URL", url);
             WebRequest request = WebRequest.Create($"{url}?{parameters}");
             request.Method = "GET";
             if (!string.IsNullOrEmpty(proxyHost))
@@ -194,11 +204,13 @@ namespace PaymentCore
             }
             request.Headers.Add("accept", contentType);
             request.Headers.Add("x-api-key", accesstoken);
+            LogContext.PushProperty("Tp.Request.Header", JsonConvert.SerializeObject(request.Headers));
 
             using WebResponse response = request.GetResponse();
             using Stream dataStream = response.GetResponseStream();
             using StreamReader reader = new StreamReader(dataStream);
             string responseFromServer = reader.ReadToEnd();
+            Logger.LogInformation($"Tp.Request.Response:{responseFromServer}");
 
             InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
 
@@ -206,6 +218,9 @@ namespace PaymentCore
         }
         protected string HttpPost(string url, string parameters, string contentType, string transID)
         {
+            LogContext.PushProperty("TpInfo", parameters);
+            LogContext.PushProperty("TransId", transID);
+            LogContext.PushProperty("Tp.Request.URL", url);
             WebRequest request = WebRequest.Create(url);
 
             request.Method = "POST";
@@ -241,12 +256,16 @@ namespace PaymentCore
             reader.Close();
             dataStream.Close();
             response.Close();
+            Logger.LogInformation($"Tp.Request.Response:{responseFromServer}");
             InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
 
             return responseFromServer;
         }
         protected string HttpPost(string url, string parameters, string contentType, string accesstoken, string transID)
         {
+            LogContext.PushProperty("TpInfo", parameters);
+            LogContext.PushProperty("TransId", transID);
+            LogContext.PushProperty("Tp.Request.URL", url);
             WebRequest request = WebRequest.Create(url);
 
             request.Method = "POST";
@@ -262,6 +281,7 @@ namespace PaymentCore
             request.Headers.Add("Authorization", "Bearer " + accesstoken);
             request.Headers.Add("accept", contentType);
             request.Headers.Add("x-api-key", accesstoken);
+            LogContext.PushProperty("Tp.Request.Header", JsonConvert.SerializeObject(request.Headers));
 
             Stream dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);
@@ -274,12 +294,16 @@ namespace PaymentCore
             reader.Close();
             dataStream.Close();
             response.Close();
+            Logger.LogInformation($"Tp.Request.Response:{responseFromServer}");
             InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
 
             return responseFromServer;
         }
         protected string HttpPost(string url, string parameters, string contentType, string username, string password, string transID)
         {
+            LogContext.PushProperty("TpInfo", parameters);
+            LogContext.PushProperty("TransId", transID);
+            LogContext.PushProperty("Tp.Request.URL", url);
             WebRequest request = WebRequest.Create(url);
 
             request.Method = "POST";
@@ -295,6 +319,7 @@ namespace PaymentCore
 
             string svcCredentials = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(username + ":" + password));
             request.Headers.Add("Authorization", "Basic " + svcCredentials);
+            LogContext.PushProperty("Tp.Request.Header", JsonConvert.SerializeObject(request.Headers));
             Stream dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);
             dataStream.Close();
@@ -306,12 +331,16 @@ namespace PaymentCore
             reader.Close();
             dataStream.Close();
             response.Close();
+            Logger.LogInformation($"Tp.Request.Response:{responseFromServer}");
             InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
 
             return responseFromServer;
         }
         protected string HttpPostGBK(string url, string parameters, string contentType, string transID)
         {
+            LogContext.PushProperty("TpInfo", parameters);
+            LogContext.PushProperty("TransId", transID);
+            LogContext.PushProperty("Tp.Request.URL", url);
             WebRequest request = WebRequest.Create(url);
             request.Method = "POST";
             if (!string.IsNullOrEmpty(proxyHost))
@@ -335,6 +364,7 @@ namespace PaymentCore
             reader.Close();
             dataStream.Close();
             response.Close();
+            Logger.LogInformation($"Tp.Request.Response:{responseFromServer}");
             InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
 
             return responseFromServer;
