@@ -274,7 +274,8 @@ namespace Payment.DirePay
             oDepositResult.Success = false;
             try
             {
-                string sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower());
+                string sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded",
+                    inputs["TransID"].ToLower(), true);
 
                 DepositResp depositResp = new DepositResp();
                 depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
@@ -297,7 +298,8 @@ namespace Payment.DirePay
                     depositGetWalletReq.customer_uid = inputs["CustId"];
                     depositGetWalletReq.client_reference_id = inputs["TransID"];
                     depositGetWalletReq.hashCode = ToMD5("payment" + inputs["key"]).ToLower();
-                    string sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json", depositResp.access_token, inputs["TransID"].ToLower());
+                    string sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json",
+                        depositResp.access_token, inputs["TransID"].ToLower(), true);
 
                     DepositGetWalletResp depositGetWalletResp = new DepositGetWalletResp();
                     depositGetWalletResp = JsonConvert.DeserializeObject<DepositGetWalletResp>(sResponse1);

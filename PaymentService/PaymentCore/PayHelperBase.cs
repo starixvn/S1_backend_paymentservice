@@ -245,6 +245,87 @@ namespace PaymentCore
 
             return responseFromServer;
         }
+        
+        protected string HttpPost(string url, string parameters, string contentType, string transId, bool ignoreCertificate)
+        {
+            var request = WebRequest.CreateHttp(url);
+
+            request.Method = "POST";
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+
+            var postData = parameters;
+            var byteArray = Encoding.UTF8.GetBytes(postData);
+            request.ContentType = contentType;
+            request.ContentLength = byteArray.Length;
+            if (ignoreCertificate)
+            {
+                request.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            }
+
+            var dataStream = request.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            WebResponse response;
+
+            try
+            {
+                response = request.GetResponse();
+            }
+            catch (WebException e)
+            {
+                response = (HttpWebResponse)e.Response;
+            }
+
+            dataStream = response.GetResponseStream();
+            using var reader = new StreamReader(dataStream);
+            var responseFromServer = reader.ReadToEnd();
+            reader.Close();
+            dataStream.Close();
+            response.Close();
+            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transId);
+
+            return responseFromServer;
+        }
+        protected string HttpPost(string url, string parameters, string contentType, string accesstoken, string transID, bool ignoreCertificate)
+        {
+            var request = WebRequest.CreateHttp(url);
+
+            request.Method = "POST";
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+
+            string postData = parameters;
+            byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+            request.ContentType = contentType;
+            request.ContentLength = byteArray.Length;
+            if (ignoreCertificate)
+            {
+                request.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            }
+            request.Headers.Add("Authorization", "Bearer " + accesstoken);
+            request.Headers.Add("accept", contentType);
+            request.Headers.Add("x-api-key", accesstoken);
+
+            var dataStream = request.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            using var response = request.GetResponse();
+
+            dataStream = response.GetResponseStream();
+            using var reader = new StreamReader(dataStream);
+            var responseFromServer = reader.ReadToEnd();
+            reader.Close();
+            dataStream.Close();
+            response.Close();
+            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
+
+            return responseFromServer;
+        }
         protected string HttpPost(string url, string parameters, string contentType, string accesstoken, string transID)
         {
             WebRequest request = WebRequest.Create(url);
