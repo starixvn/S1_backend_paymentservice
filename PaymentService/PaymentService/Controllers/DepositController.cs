@@ -421,7 +421,7 @@ namespace PaymentService.Controllers
                 var custId = reqDeposit.CustId;
                 var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
                 var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-                var cryptoPayInfo = payBLL.GetCryptoPayInfoList(custInfo.SiteId).FirstOrDefault(x =>
+                var cryptoPayInfo = payBLL.GetCryptoPayInfoList(custInfo.SiteId)?.FirstOrDefault(x =>
                     reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel &&
                     x.CurrencyId == custInfo.CurrencyId);
                 //var PayCurrency = payBLL.GetPayCurrency().;
