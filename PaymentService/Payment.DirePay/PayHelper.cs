@@ -78,14 +78,14 @@ namespace Payment.DirePay
 
             NotifyDepositResult oNotify = new NotifyDepositResult();
             oNotify.DepositId = payResource["TransID"];
-            oNotify.ThirdId = data.client_reference_id;
             oNotify.Comment = data.status;
             oNotify.Message = data.status;
-            oNotify.RefThirdId = data.txid;
             oNotify.Response = "true";
 
             if (data.status == "completed")
             {
+                oNotify.RefThirdId = data.txid;
+                oNotify.ThirdId = data.txid;
                 oNotify.TransStatus = TransStatus.Success;
                 oNotify.RequestAmount = decimal.Parse(data.invoice_amount);
                 oNotify.ActualAmount = decimal.Parse(data.invoice_amount);

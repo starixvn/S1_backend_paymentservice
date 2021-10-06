@@ -105,6 +105,14 @@ namespace PaymentService.Service.BLL
                 i => payService.GetPaymentList(siteId));
         }
 
+        public IEnumerable<Pay> GetPaymentAllList(int siteId)
+        {
+            var key = $"PayAll_{siteId}";
+            return _cacheHelper.TryGetOrCreate(key,
+                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)),
+                i => payService.GetPaymentAllList(siteId));
+        }
+
         public IPayHelper GetPayHelper(string PayName)
         {
             if (!PayHelperContainer.ContainsKey(PayName))

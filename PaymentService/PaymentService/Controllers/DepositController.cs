@@ -789,7 +789,7 @@ namespace PaymentService.Controllers
                 var custId = depositRequest.CustId;
                 var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
                 IPay pay = (IPay)depositRequest.depositInfo;
-                var paySetting = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == pay.PayId);
+                var paySetting = payBLL.GetPaymentAllList(custInfo.SiteId).FirstOrDefault(x => x.PayId == pay.PayId);
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
                 DepReq.Add("TransID", depositRequest.TransId);
                 //DepReq.Add("Amount", depositRequest.Amount.ToString());
