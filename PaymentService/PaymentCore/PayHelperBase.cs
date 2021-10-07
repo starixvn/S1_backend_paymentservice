@@ -511,6 +511,17 @@ namespace PaymentCore
             return builder.ToString();
         }
 
+        protected string ToSHA512(string encodeStr)
+        {
+            var hash = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(encodeStr));
+            var result = new StringBuilder(hash.Length * 2);
+            foreach (var b in hash)
+            {
+                result.Append(b.ToString("X2"));
+            }
+            return result.ToString();
+        }
+
         protected string ToHMACSMD5(string encodeStr, string key)
         {
             var encoding = new System.Text.UTF8Encoding();

@@ -35,7 +35,6 @@ namespace PaymentService.Controllers
         private readonly Common common;
         private readonly Log2File log2File;
         private static Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>> ExchangeRateList = new Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>>();
-        private Timer timer;
 
         public DepositController(IConfiguration configuration, ILogger<DepositController> logger, CourierAdapter courierAdapter, PayBLL payBLL, CustInfoBLL custInfoBLL, PaymentBLL paymentBLL, Common common, Log2File log2File)
         {
