@@ -181,7 +181,7 @@ namespace PaymentService.Controllers
                 var custId = reqDeposit.CustId;
                 var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
                 var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-                var onlineBank = payBLL.GetOnlineBankList(custInfo.SiteId).FirstOrDefault(x =>
+                var onlineBank = payBLL.GetOnlineBankList(custInfo.SiteId)?.FirstOrDefault(x =>
                     x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) &&
                     x.PointLevel <= vipLevel);
                 //var PayCurrency = payBLL.GetPayCurrency().;
@@ -207,10 +207,10 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
-                var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x =>
+                var payLangId = payBLL.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase))?.PayLangId;
-                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqDeposit.PayId);
-                var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x =>
+                var pay = payBLL.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == reqDeposit.PayId);
+                var payCurrency = payBLL.GetPayCurrency()?.FirstOrDefault(x =>
                     x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
                 if (pay == null)
                 {
@@ -303,7 +303,7 @@ namespace PaymentService.Controllers
                 var custId = reqDeposit.CustId;
                 var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
                 var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-                var mobilePayInfo = payBLL.GetMobilePayInfoList(custInfo.SiteId)
+                var mobilePayInfo = payBLL.GetMobilePayInfoList(custInfo.SiteId)?
                     .FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
                 //var PayCurrency = payBLL.GetPayCurrency().;
 
@@ -328,8 +328,8 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
-                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == mobilePayInfo.PayId);
-                var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x =>
+                var pay = payBLL.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == mobilePayInfo.PayId);
+                var payLangId = payBLL.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) &&
                     (x.PayId == pay.PayId))?.PayLangId;
 
@@ -447,8 +447,8 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
-                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == cryptoPayInfo.PayId);
-                var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x =>
+                var pay = payBLL.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == cryptoPayInfo.PayId);
+                var payLangId = payBLL.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) &&
                     (x.PayId == pay.PayId))?.PayLangId;
 
@@ -544,7 +544,7 @@ namespace PaymentService.Controllers
                 var custId = reqDeposit.CustId;
                 var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
                 var vipLevel = custInfoBLL.GetVipLevelWithCache(custId);
-                var loadCardPay = payBLL.GetLoadCardPayInfoList(custInfo.SiteId)
+                var loadCardPay = payBLL.GetLoadCardPayInfoList(custInfo.SiteId)?
                     .FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
                 //var PayCurrency = payBLL.GetPayCurrency().;
 
@@ -569,8 +569,8 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
-                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == loadCardPay.PayId);
-                var payLangId = payBLL.GetPayLanguage().FirstOrDefault(x =>
+                var pay = payBLL.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == loadCardPay.PayId);
+                var payLangId = payBLL.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) &&
                     (x.PayId == pay.PayId))?.PayLangId;
 
@@ -789,7 +789,7 @@ namespace PaymentService.Controllers
                 var custId = depositRequest.CustId;
                 var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
                 IPay pay = (IPay)depositRequest.depositInfo;
-                var paySetting = payBLL.GetPaymentAllList(custInfo.SiteId).FirstOrDefault(x => x.PayId == pay.PayId);
+                var paySetting = payBLL.GetPaymentAllList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == pay.PayId);
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
                 DepReq.Add("TransID", depositRequest.TransId);
                 //DepReq.Add("Amount", depositRequest.Amount.ToString());
