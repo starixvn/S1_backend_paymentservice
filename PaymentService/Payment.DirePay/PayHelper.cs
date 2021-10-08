@@ -148,7 +148,7 @@ namespace Payment.DirePay
             WithdrawResult withdrawResult = new WithdrawResult();
             try
             {
-                sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower());
+                sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower(), true);
 
                 DepositResp depositResp = new DepositResp();
                 depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
@@ -172,7 +172,7 @@ namespace Payment.DirePay
                     if (toAmount > 0)
                     {
                         withdrawGetWalletReq.withdrawal_amount = toAmount.ToString();
-                        string sResponse1 = HttpPost(getWalletAddress, ToJson(withdrawGetWalletReq), "application/json", depositResp.access_token, inputs["TransID"].ToLower());
+                        string sResponse1 = HttpPost(getWalletAddress, ToJson(withdrawGetWalletReq), "application/json", depositResp.access_token, inputs["TransID"].ToLower(), true);
 
                         WithdrawGetWalletResp withdrawGetWalletResp = new WithdrawGetWalletResp();
                         withdrawGetWalletResp = JsonConvert.DeserializeObject<WithdrawGetWalletResp>(sResponse1);
@@ -421,7 +421,7 @@ namespace Payment.DirePay
             oDepositResult.Success = false;
             try
             {
-                string sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", "");
+                string sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", "", true);
 
                 DepositResp depositResp = new DepositResp();
                 depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
@@ -434,7 +434,7 @@ namespace Payment.DirePay
                     exchangeReq.from_currency = from_currency;
                     exchangeReq.to_currency = to_currency;
                     exchangeReq.type = "SELL";
-                    string sResponse1 = HttpPost(getWalletAddress, ToJson(exchangeReq), "application/json", depositResp.access_token, "");
+                    string sResponse1 = HttpPost(getWalletAddress, ToJson(exchangeReq), "application/json", depositResp.access_token, "", true);
 
                     ExchangeResp exchangeResp = new ExchangeResp();
                     exchangeResp = JsonConvert.DeserializeObject<ExchangeResp>(sResponse1);
