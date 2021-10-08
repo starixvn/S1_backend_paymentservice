@@ -73,7 +73,7 @@ namespace PaymentService.Controllers
             {
                 var custId = reqWithdrawal.CustId;
                 var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-                var onlineBank = payBLL.GetOnlineBankListForPayout().FirstOrDefault(x =>
+                var onlineBank = payBLL.GetOnlineBankListForPayout()?.FirstOrDefault(x =>
                     x.PayId == reqWithdrawal.PayId && x.SysId == reqWithdrawal.SysId);
 
                 if (custInfo.CurrencyId != onlineBank.CurrencyId)
@@ -85,7 +85,7 @@ namespace PaymentService.Controllers
 
 
                 var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
-                var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x =>
+                var payCurrency = payBLL.GetPayCurrency()?.FirstOrDefault(x =>
                     x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
                 if (pay == null)
                 {
@@ -156,7 +156,7 @@ namespace PaymentService.Controllers
             {
                 var custId = reqWithdrawal.CustId;
                 var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-                var crypto = payBLL.GetCryptoListForPayout().FirstOrDefault(x =>
+                var crypto = payBLL.GetCryptoListForPayout()?.FirstOrDefault(x =>
                     x.PayId == reqWithdrawal.PayId && x.ChannelId == reqWithdrawal.ChannelId);
                 if (crypto == null)
                 {
@@ -166,7 +166,7 @@ namespace PaymentService.Controllers
                 }
 
                 var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
-                var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x =>
+                var payCurrency = payBLL.GetPayCurrency()?.FirstOrDefault(x =>
                     x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId);
                 if (pay == null)
                 {
@@ -435,7 +435,7 @@ namespace PaymentService.Controllers
             {
                 var custId = reqExchange.CustId;
                 var custInfo = custInfoBLL.GetCustInfoWithCache(custId);
-                var crypto = payBLL.GetCryptoListForPayout().FirstOrDefault(x =>
+                var crypto = payBLL.GetCryptoListForPayout()?.FirstOrDefault(x =>
                     x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId);
                 if (crypto == null)
                 {
@@ -444,8 +444,8 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
-                var pay = payBLL.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqExchange.PayId);
-                var payCurrency = payBLL.GetPayCurrency().FirstOrDefault(x =>
+                var pay = payBLL.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == reqExchange.PayId);
+                var payCurrency = payBLL.GetPayCurrency()?.FirstOrDefault(x =>
                     x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId);
                 if (pay == null)
                 {
