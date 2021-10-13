@@ -212,7 +212,7 @@ namespace Payment.FattyPay
 
             Dictionary<string, string> formData = new Dictionary<string, string>();
             string[] findPayCode = FindPayCode(inputs["PayCode"]);
-            if (findPayCode[0] == "BankQR")
+            if (findPayCode[0] == "BankQr")
             {
                 formData.Add("PaymentMethod", findPayCode[0]); 
                 formData.Add("BankCode", findPayCode[1]);
@@ -275,9 +275,9 @@ namespace Payment.FattyPay
             throw new NotImplementedException();
         }
 
-        private string[] FindPayCode(string currency)
+        private string[] FindPayCode(string payCode)
         {
-            string[] sArray = currency.Split('_');
+            string[] sArray = payCode.Split('-');
 
             return sArray;
         }
