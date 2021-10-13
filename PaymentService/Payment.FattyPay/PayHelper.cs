@@ -182,7 +182,7 @@ namespace Payment.FattyPay
             formData.Add("Signature", ToSHA512(p).ToUpper());
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["MerchantTransactionId"]);
+            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["MerchantTransactionId"], true);
 
             WithdrawResult withdrawResult = new WithdrawResult();
             WithdrawalRes withdrawalRes = new WithdrawalRes();
@@ -247,7 +247,7 @@ namespace Payment.FattyPay
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData));
             var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"], true);
 
             DepositResult oDepositResult = new DepositResult();
             if (sResponse.Contains("http"))
