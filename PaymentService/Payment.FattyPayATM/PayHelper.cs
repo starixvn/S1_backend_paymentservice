@@ -161,11 +161,21 @@ namespace Payment.FattyPayATM
             string sUrl = inputs["host"] + "/api/v2/deposit/request";
 
             Dictionary<string, string> formData = new Dictionary<string, string>();
+            string[] findPayCode = FindPayCode(inputs["PayCode"]);
+            if (findPayCode[0] == "BankQR")
+            {
+                formData.Add("PaymentMethod", findPayCode[0]);
+                formData.Add("BankCode", findPayCode[1]);
+            }
+            else
+            {
+                formData.Add("PaymentMethod", findPayCode[0]);
+                formData.Add("BankCode", inputs["BankCode"]);
+            }
+
             formData.Add("ServiceProvider", "JSTPay");
-            formData.Add("PaymentMethod", inputs["PayCode"]);
             formData.Add("MerchantCode", inputs["merchant_no"]);
             formData.Add("MerchantTransactionId", inputs["TransID"]);
-            formData.Add("BankCode", inputs["BankCode"]);
             formData.Add("IsoCurrency", inputs["PayCurrencyId"]);
             decimal amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#0.0000"));
@@ -213,6 +223,13 @@ namespace Payment.FattyPayATM
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+
+        private string[] FindPayCode(string currency)
+        {
+            string[] sArray = currency.Split('_');
+
+            return sArray;
         }
     }
 }

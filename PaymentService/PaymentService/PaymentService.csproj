@@ -25,7 +25,6 @@
     <ProjectReference Include="..\Payment.DragonPay\Payment.DragonPay.csproj" />
     <ProjectReference Include="..\Payment.Eeziepay\Payment.Eeziepay.csproj" />
     <ProjectReference Include="..\Payment.FattyPayATM\Payment.FattyPayATM.csproj" />
-    <ProjectReference Include="..\Payment.FattyPayBankQR\Payment.FattyPayBankQR.csproj" />
     <ProjectReference Include="..\Payment.FattyPay\Payment.FattyPay.csproj" />
     <ProjectReference Include="..\Payment.FPay\Payment.FPay.csproj" />
     <ProjectReference Include="..\Payment.FuliH5\Payment.FuliH5.csproj" />
