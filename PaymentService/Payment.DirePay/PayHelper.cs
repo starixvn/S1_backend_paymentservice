@@ -70,6 +70,10 @@ namespace Payment.DirePay
             public string client_reference_id { get; set; }
             public string status { get; set; }
             public string hash_code { get; set; }
+            public string enable_promotion { get; set; }
+            public string promotion_rate { get; set; }
+            public string promotion_fiat_amount { get; set; }
+            public string paid_fiat { get; set; }
         }
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
@@ -88,7 +92,29 @@ namespace Payment.DirePay
                 oNotify.ThirdId = data.txid;
                 oNotify.TransStatus = TransStatus.Success;
                 oNotify.RequestAmount = decimal.Parse(data.invoice_amount);
-                oNotify.ActualAmount = decimal.Parse(data.invoice_amount);
+                if (data.enable_promotion == "false")
+                {
+                    oNotify.ActualAmount = decimal.Parse(data.invoice_amount);
+                }
+                else 
+                {
+                    oNotify.ActualAmount = decimal.Parse(data.invoice_amount) + decimal.Parse(data.promotion_fiat_amount);
+                }
+            }
+            else if (data.status == "too_little" || data.status == "too_much")
+            {
+                oNotify.RefThirdId = data.txid;
+                oNotify.ThirdId = data.txid;
+                oNotify.TransStatus = TransStatus.Success;
+                oNotify.RequestAmount = decimal.Parse(data.invoice_amount);
+                if (data.enable_promotion == "false")
+                {
+                    oNotify.ActualAmount = decimal.Parse(data.paid_fiat);
+                }
+                else
+                {
+                    oNotify.ActualAmount = decimal.Parse(data.paid_fiat) + decimal.Parse(data.promotion_fiat_amount);
+                }
             }
             else if (data.status == "expired")
             {
