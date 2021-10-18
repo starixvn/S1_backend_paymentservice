@@ -839,8 +839,10 @@ namespace PaymentService.Controllers
                     logger.LogError($"Method={GetCurrentAsyncMethod()},Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}");
                     log2File.Error($"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}", "CallBackHandlerAsync");
                     rNotifyDepositResult.Comment = $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
-                    paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
-                    return $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
+                    
+                    // When callback amount not equal, record and not reject
+                    //paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
+                    //return $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
                 }
 
                 IDepositResult iDepositResult = rNotifyDepositResult;
