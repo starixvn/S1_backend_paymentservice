@@ -283,6 +283,11 @@ namespace Payment.DirePay
             public string payment_token { get; set; }
             public string rates { get; set; }
             public string payment_address { get; set; }
+            public string payment_amount { get; set; }
+            public bool enable_promotion { get; set; }
+            public string promotion_rate { get; set; }
+            public string promotion_fiat_amount { get; set; }
+            public string promotion_crypto_amount { get; set; }
         }
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
@@ -325,7 +330,7 @@ namespace Payment.DirePay
                     depositGetWalletReq.client_reference_id = inputs["TransID"];
                     depositGetWalletReq.hashCode = ToMD5("payment" + inputs["key"]).ToLower();
                     string sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json",
-                        depositResp.access_token, inputs["TransID"].ToLower(), true);
+                    depositResp.access_token, inputs["TransID"].ToLower(), true);
 
                     DepositGetWalletResp depositGetWalletResp = new DepositGetWalletResp();
                     depositGetWalletResp = JsonConvert.DeserializeObject<DepositGetWalletResp>(sResponse1);
@@ -338,6 +343,18 @@ namespace Payment.DirePay
                         decimal requestAmount = decimal.Parse(depositGetWalletResp.invoice_amount) * decimal.Parse(depositGetWalletResp.rates);
                         ResData.Add("RequestAmount", requestAmount.ToString());
                         ResData.Add("Token", depositGetWalletResp.payment_token);
+
+                        if(depositGetWalletResp.enable_promotion)
+                        {
+                            ResData.Add("Promotion", "1");
+                            ResData.Add("PromotionRate", depositGetWalletResp.promotion_rate);
+                            decimal promotionAmount = requestAmount + decimal.Parse(depositGetWalletResp.promotion_fiat_amount);
+                            ResData.Add("PromotionAmount", promotionAmount.ToString());
+                        }
+                        else
+                        {
+                            ResData.Add("Promotion", "0");
+                        }
 
                         oDepositResult.Success = true;
                         oDepositResult.Url = depositGetWalletResp.payment_address;
