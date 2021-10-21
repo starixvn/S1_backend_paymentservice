@@ -348,7 +348,7 @@ namespace Payment.DirePay
                         {
                             ResData.Add("Promotion", "1");
                             ResData.Add("PromotionRate", depositGetWalletResp.promotion_rate);
-                            decimal promotionAmount = requestAmount + decimal.Parse(depositGetWalletResp.promotion_fiat_amount);
+                            decimal promotionAmount = amount + decimal.Parse(depositGetWalletResp.promotion_fiat_amount);
                             ResData.Add("PromotionAmount", promotionAmount.ToString());
                         }
                         else
