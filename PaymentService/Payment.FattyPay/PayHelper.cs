@@ -31,7 +31,7 @@ namespace Payment.FattyPay
 
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(formData1));
                 var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-                var sResponse = HttpGet(sUrl, sParam, data.MerchantTransactionId);
+                var sResponse = HttpGet(sUrl, sParam, data.MerchantTransactionId, true);
 
                 CallBackDebitReq2 callBackDebitReq2 = new CallBackDebitReq2();
                 callBackDebitReq2 = JsonConvert.DeserializeObject<CallBackDebitReq2>(sResponse);
@@ -116,7 +116,7 @@ namespace Payment.FattyPay
 
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(formData1));
                 var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-                var sResponse = HttpGet(sUrl, sParam, data.MerchantTransactionId);
+                var sResponse = HttpGet(sUrl, sParam, data.MerchantTransactionId, true);
 
                 CallBackDebitReq2 callBackDebitReq2 = new CallBackDebitReq2();
                 callBackDebitReq2 = JsonConvert.DeserializeObject<CallBackDebitReq2>(sResponse);

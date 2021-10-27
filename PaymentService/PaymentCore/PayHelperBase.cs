@@ -184,6 +184,31 @@ namespace PaymentCore
 
             return responseFromServer;
         }
+
+        protected string HttpGet(string url, string parameters, string transID, bool ignoreCertificate)
+        {
+            var request = WebRequest.CreateHttp($"{url}?{parameters}");
+            request.Method = "GET";
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+
+            if (ignoreCertificate)
+            {
+                request.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            }
+
+            using WebResponse response = request.GetResponse();
+            using Stream dataStream = response.GetResponseStream();
+            using StreamReader reader = new StreamReader(dataStream);
+            string responseFromServer = reader.ReadToEnd();
+
+            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
+
+            return responseFromServer;
+        }
+
         protected string HttpGet(string url, string parameters, string contentType, string accesstoken, string transID)
         {
             WebRequest request = WebRequest.Create($"{url}?{parameters}");
@@ -289,6 +314,7 @@ namespace PaymentCore
 
             return responseFromServer;
         }
+
         protected string HttpPost(string url, string parameters, string contentType, string accesstoken, string transID, bool ignoreCertificate)
         {
             var request = WebRequest.CreateHttp(url);
