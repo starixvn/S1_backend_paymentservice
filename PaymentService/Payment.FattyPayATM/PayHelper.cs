@@ -81,7 +81,7 @@ namespace Payment.FattyPayATM
                     oNotify.ActualAmount = decimal.Parse(callBackDebitReq2.actualAmount);
                     oNotify.ThirdId = callBackDebitReq2.merchantTransactionId;
                 }
-                else if (callBackDebitReq2.statusCode == 4 || callBackDebitReq2.statusCode == 6)
+                else if (callBackDebitReq2.statusCode == 4 || callBackDebitReq2.statusCode == 5)
                 {
                     oNotify.TransStatus = TransStatus.Fail;
                 }
