@@ -902,6 +902,19 @@ namespace PaymentService.Controllers
                         return "Update DepositFail error";
                     }
                 }
+                else
+                {
+                    try
+                    {
+                        paymentBLL.DepositPending(depositRequest, rNotifyDepositResult);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
+                        log2File.Error(ex.ToString(), "CallBackHandlerAsync");
+                        return "Update DepositPending error";
+                    }
+                }
 
                 return rNotifyDepositResult.Response;
             }

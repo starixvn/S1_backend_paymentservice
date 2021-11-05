@@ -50,6 +50,13 @@ namespace PaymentService.Service.BLL
             depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Rejected);
         }
 
+        public void DepositPending(DepositRequest depositRequest, IDepositResult iDepositResult)
+        {
+            List<int> forStatus = new List<int>();
+            forStatus.Add((int)DepositStatus.Pending);
+            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Pending);
+        }
+
         public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
         {
             return depoistService.GetDepositRequesPayEnquiry();
@@ -77,8 +84,17 @@ namespace PaymentService.Service.BLL
             List<int> forStatus = new List<int>();
             forStatus.Add((int)WithdrawalStatus.Process);
             //withdrawalRequest.PayName
-
+            
             withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Verify);
+        }
+
+        public void WithdrawalPending(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
+        {
+            List<int> forStatus = new List<int>();
+            forStatus.Add((int)WithdrawalStatus.Process);
+            //withdrawalRequest.PayName
+            
+            withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Process);
         }
 
         public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry()

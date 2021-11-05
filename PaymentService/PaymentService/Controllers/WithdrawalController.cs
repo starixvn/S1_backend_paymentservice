@@ -382,7 +382,21 @@ namespace PaymentService.Controllers
                     {
                         logger.LogError(ex, $"Method={GetCurrentMethod()}, transId={transId}");
                         log2File.Error(ex.ToString(), "CallBackHandler");
-                        return "Update DepositFail error";
+                        return "Update WithdrawalFail error";
+                    }
+                }
+                else 
+                {
+
+                    try
+                    {
+                        paymentBLL.WithdrawalPending(withdrawalRequest, rNotifyWithdrawalResult);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, $"Method={GetCurrentMethod()}, transId={transId}");
+                        log2File.Error(ex.ToString(), "CallBackHandler");
+                        return "Update WithdrawalPending error";
                     }
                 }
 
