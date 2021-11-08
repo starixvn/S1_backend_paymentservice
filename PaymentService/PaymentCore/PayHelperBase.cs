@@ -168,21 +168,8 @@ namespace PaymentCore
         public static int proxyPort;
         protected string HttpGet(string url, string parameters, string transID)
         {
-            WebRequest request = WebRequest.Create($"{url}?{parameters}");
-            request.Method = "GET";
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-
-            using WebResponse response = request.GetResponse();
-            using Stream dataStream = response.GetResponseStream();
-            using StreamReader reader = new StreamReader(dataStream);
-            string responseFromServer = reader.ReadToEnd();
-
-            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
-
-            return responseFromServer;
+           
+            return HttpGet(url, parameters, transID, false);
         }
 
         protected string HttpGet(string url, string parameters, string transID, bool ignoreCertificate)
@@ -229,46 +216,10 @@ namespace PaymentCore
 
             return responseFromServer;
         }
+
         protected string HttpPost(string url, string parameters, string contentType, string transID)
         {
-            WebRequest request = WebRequest.Create(url);
-
-            request.Method = "POST";
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-
-            string postData = parameters;
-            byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-            request.ContentType = contentType;
-            request.ContentLength = byteArray.Length;
-            Stream dataStream = request.GetRequestStream();
-            dataStream.Write(byteArray, 0, byteArray.Length);
-            dataStream.Close();
-            WebResponse response;
-
-            try
-            {
-                //執行Request
-                //若網站回應錯誤，就會在此引發WebException
-                response = request.GetResponse();
-            }
-            catch (WebException e)
-            {
-                //網站回應錯誤,
-                response = (HttpWebResponse)e.Response;
-            }
-
-            dataStream = response.GetResponseStream();
-            using StreamReader reader = new StreamReader(dataStream);
-            string responseFromServer = reader.ReadToEnd();
-            reader.Close();
-            dataStream.Close();
-            response.Close();
-            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
-
-            return responseFromServer;
+            return HttpPost(url, parameters, contentType, transID, false);
         }
         
         protected string HttpPost(string url, string parameters, string contentType, string transId, bool ignoreCertificate)
