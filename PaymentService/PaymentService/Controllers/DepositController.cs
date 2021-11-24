@@ -33,10 +33,9 @@ namespace PaymentService.Controllers
         private readonly string apiUrl;
         private readonly CourierAdapter courierAdapter;
         private readonly Common common;
-        private readonly Log2File log2File;
         private static Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>> ExchangeRateList = new Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>>();
 
-        public DepositController(IConfiguration configuration, ILogger<DepositController> logger, CourierAdapter courierAdapter, PayBLL payBLL, CustInfoBLL custInfoBLL, PaymentBLL paymentBLL, Common common, Log2File log2File)
+        public DepositController(IConfiguration configuration, ILogger<DepositController> logger, CourierAdapter courierAdapter, PayBLL payBLL, CustInfoBLL custInfoBLL, PaymentBLL paymentBLL, Common common)
         {
             this.payBLL = payBLL;
             this.custInfoBLL = custInfoBLL;
@@ -47,7 +46,6 @@ namespace PaymentService.Controllers
             apiUrl = configuration.GetValue<string>("TpService");
             this.courierAdapter = courierAdapter;
             this.common = common;
-            this.log2File = log2File;
         }
 
         public class ReqExchangeRate
@@ -142,7 +140,6 @@ namespace PaymentService.Controllers
         //    catch (Exception ex)
         //    {
         //        logger.LogError(ex, $"Method={GetCurrentMethod()}");
-        //        log2File.Error($"Exception={ex.Message}, DoTaskAsync Exception", "DoTaskAsync");
         //    }
         //    finally
         //    {
@@ -244,7 +241,6 @@ namespace PaymentService.Controllers
 
                 logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
-                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositBank");
 
                 var result = payHelper.Debit(DepReq);
                 if (result.Success)
@@ -357,7 +353,6 @@ namespace PaymentService.Controllers
 
                 logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
-                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "DepositMobile");
 
                 var result = payHelper.Debit(DepReq);
                 if (result.Success)
@@ -477,7 +472,6 @@ namespace PaymentService.Controllers
 
                 logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
-                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositCrpyto");
 
                 var result = payHelper.Debit(DepReq);
                 if (result.Success)
@@ -599,7 +593,6 @@ namespace PaymentService.Controllers
 
                 logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
-                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(DepReq)}", "ReqDepositLoadCard");
 
                 var result = payHelper.Debit(DepReq);
                 if (result.Success)
@@ -657,7 +650,6 @@ namespace PaymentService.Controllers
         bool IsWhiteList(string clientIP, string PaymentName, string transId)
         {
             logger.LogInformation($"Method={GetCurrentMethod()}, Request: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
-            log2File.Info($"{clientIP},{transId}", $"{PaymentName}_PaymentIPLog");
 
             string[] officeList = configuration.GetSection("OfficeIP")?.Get<string[]>();
 
@@ -677,7 +669,6 @@ namespace PaymentService.Controllers
                     if (!iplist.Any(x => x == clientIP))
                     {
                         logger.LogInformation($"Method={GetCurrentMethod()}, Reject: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
-                        log2File.Info($"{clientIP},{transId}", $"{PaymentName}_PaymentRejectIPLog");
                         return false;
                     }
                 }
@@ -741,9 +732,6 @@ namespace PaymentService.Controllers
 
                 logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
-                log2File.Info(
-                    $"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}",
-                    "DepositCallBack");
 
                 int depositId = 0;
 
@@ -786,7 +774,6 @@ namespace PaymentService.Controllers
                 if (!DepReq.ContainsKey("PayName"))
                 {
                     logger.LogError($"Method={GetCurrentAsyncMethod()}, {paySetting.PayName} of TransId={transId} is not exist");
-                    log2File.Error($"PayName of TransId={transId} is not exist", "CallBackHandlerAsync");
                     return $"PayName of TransId={transId} is not exist";
                 }
 
@@ -817,7 +804,6 @@ namespace PaymentService.Controllers
                 if (!string.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
                 {
                     logger.LogError($"Method={GetCurrentAsyncMethod()}, {transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
-                    log2File.Error($"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}", "CallBackHandlerAsync");
                     return $"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}";
                 }
 
@@ -826,8 +812,7 @@ namespace PaymentService.Controllers
 
                 if (rNotifyDepositResult.RequestAmount != depositRequest.Amount)
                 {
-                    logger.LogError($"Method={GetCurrentAsyncMethod()},Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}");
-                    log2File.Error($"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}", "CallBackHandlerAsync");
+                    logger.LogInformation($"Method={GetCurrentAsyncMethod()},Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}");
                     rNotifyDepositResult.Comment = $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
                     
                     // When callback amount not equal, record and not reject
@@ -855,14 +840,12 @@ namespace PaymentService.Controllers
                         errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
                         errorMessages.AppendLine($"Source: {SqlEx.Source}");
                         logger.LogError(SqlEx, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
-                        log2File.Error(errorMessages.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, errorMessages.ToString());
                         return "Update UserMoney error(SQL)";
                     }
                     catch (Exception exForEachTransaction)
                     {
                         logger.LogError(exForEachTransaction, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
-                        log2File.Error(exForEachTransaction.ToString(), "CallBackHandlerAsync");
                         //dblogger.Write(SerialId, exForEachTransaction.Message);
                         return "Update UserMoney error(Other)";
                     }
@@ -888,7 +871,6 @@ namespace PaymentService.Controllers
                     catch (Exception ex)
                     {
                         logger.LogError(ex, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
-                        log2File.Error(ex.ToString(), "CallBackHandlerAsync");
                         return "Update DepositFail error";
                     }
                 }
@@ -901,7 +883,6 @@ namespace PaymentService.Controllers
                     catch (Exception ex)
                     {
                         logger.LogError(ex, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
-                        log2File.Error(ex.ToString(), "CallBackHandlerAsync");
                         return "Update DepositPending error";
                     }
                 }
@@ -911,7 +892,6 @@ namespace PaymentService.Controllers
             else
             {
                 logger.LogError($"Method={GetCurrentAsyncMethod()}, SerialId={transId} is not exist");
-                log2File.Error($"SerialId={transId} is not exist", "CallBackHandlerAsync");
                 return $"SerialId={transId} is not exist";
             }
         }

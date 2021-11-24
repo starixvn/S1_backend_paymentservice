@@ -30,9 +30,8 @@ namespace PaymentService.Controllers
         private readonly ILogger<WithdrawalController> logger;
         private readonly Common common;
         private readonly PaymentBLL paymentBLL;
-        private readonly Log2File log2File;
 
-        public WithdrawalController(IConfiguration configuration, ILogger<WithdrawalController> logger, CustInfoBLL custInfoBLL, PayBLL payBLL, Common common, PaymentBLL paymentBLL, Log2File log2File)
+        public WithdrawalController(IConfiguration configuration, ILogger<WithdrawalController> logger, CustInfoBLL custInfoBLL, PayBLL payBLL, Common common, PaymentBLL paymentBLL)
         {
             this.custInfoBLL = custInfoBLL;
             this.payBLL = payBLL;
@@ -41,7 +40,6 @@ namespace PaymentService.Controllers
             this.logger = logger;
             this.common = common;
             this.paymentBLL = paymentBLL;
-            this.log2File = log2File;
         }
         public class ReqWithdrawal
         {
@@ -123,7 +121,6 @@ namespace PaymentService.Controllers
 
                 logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
-                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(WithReq)}", "Withdrawal");
 
                 var result = payHelper.Credit(WithReq);
                 if (result.Success)
@@ -201,7 +198,6 @@ namespace PaymentService.Controllers
 
                 logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
-                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(WithReq)}", "Withdrawal");
 
                 var result = payHelper.Credit(WithReq);
                 if (result.Success)
@@ -249,11 +245,8 @@ namespace PaymentService.Controllers
                 bool isFormData = false;
                 if (Request.ContentType == null)
                 {
-                    logger.LogError(
+                    logger.LogInformation(
                         $"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
-                    log2File.Info(
-                        $"IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null",
-                        "WithdrawalCallBack");
                     return Content("Request data is null");
                 }
 
@@ -271,9 +264,6 @@ namespace PaymentService.Controllers
 
                 logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
-                log2File.Info(
-                    $"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}",
-                    "WithdrawalCallBack");
 
                 int withdrawalId = 0;
                 Match m = Regex.Match(transId, @"\d+");
@@ -310,7 +300,6 @@ namespace PaymentService.Controllers
                 if (!WithReq.ContainsKey("PayName"))
                 {
                     logger.LogError($"Method={GetCurrentMethod()}, PayName of TransId={transId} is not exist");
-                    log2File.Error($"PayName of TransId={transId} is not exist", "CallBackHandler");
                     return $"PayName of TransId={transId} is not exist";
                 }
 
@@ -339,7 +328,6 @@ namespace PaymentService.Controllers
                 if (!string.Equals(transId, temp, StringComparison.OrdinalIgnoreCase))
                 {
                     logger.LogError($"Method={GetCurrentMethod()}, {transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
-                    log2File.Error($"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName},\r\n form={JsonConvert.SerializeObject(dicParam)},\r\n bodyText={bodyText}", "CallBackHandler");
                     return $"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}";
                 }
 
@@ -361,13 +349,11 @@ namespace PaymentService.Controllers
                         errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
                         errorMessages.AppendLine($"Source: {SqlEx.Source}");
                         logger.LogError(SqlEx, $"Method={GetCurrentMethod()}, transId={transId}");
-                        log2File.Error(errorMessages.ToString(), "CallBackHandler");
                         return "Update UserMoney error(SQL)";
                     }
                     catch (Exception exForEachTransaction)
                     {
                         logger.LogError(exForEachTransaction, $"Method={GetCurrentMethod()}, transId={transId}");
-                        log2File.Error(exForEachTransaction.ToString(), "CallBackHandler");
                         return "Update UserMoney error(Other)";
                     }
                     #endregion
@@ -381,7 +367,6 @@ namespace PaymentService.Controllers
                     catch (Exception ex)
                     {
                         logger.LogError(ex, $"Method={GetCurrentMethod()}, transId={transId}");
-                        log2File.Error(ex.ToString(), "CallBackHandler");
                         return "Update WithdrawalFail error";
                     }
                 }
@@ -395,7 +380,6 @@ namespace PaymentService.Controllers
                     catch (Exception ex)
                     {
                         logger.LogError(ex, $"Method={GetCurrentMethod()}, transId={transId}");
-                        log2File.Error(ex.ToString(), "CallBackHandler");
                         return "Update WithdrawalPending error";
                     }
                 }
@@ -405,7 +389,6 @@ namespace PaymentService.Controllers
             else
             {
                 logger.LogError($"Method={GetCurrentMethod()}, SerialId ={transId} is not exist");
-                log2File.Error($"SerialId={transId} is not exist", "CallBackHandler");
                 return $"SerialId={transId} is not exist";
             }
         }
@@ -417,7 +400,6 @@ namespace PaymentService.Controllers
             try
             {
                 logger.LogInformation($"Method={GetCurrentMethod()}, IP={common.GetClientIP(HttpContext)}, Url={Request.Path}, transId={transId}, key={key}");
-                log2File.Info($"IP={common.GetClientIP(HttpContext)},\r\n Url={Request.Path},\r\n transId={transId},\r\n key={key}", "verifytransaction");
                 var withdrawalRequest = paymentBLL.GetWithdrawalRequest(transId);
                 if (withdrawalRequest != null) {
 
@@ -484,7 +466,6 @@ namespace PaymentService.Controllers
 
                 logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(exchangeReq)}");
-                log2File.Info($"{pay.PayName}\r{JsonConvert.SerializeObject(exchangeReq)}", "ExchangeRate");
 
                 var result = payHelper.GetExchange(exchangeReq);
                 if (result.ErrorCode == "0")
