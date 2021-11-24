@@ -713,16 +713,6 @@ namespace PaymentService.Controllers
                 Dictionary<string, string> dicParam = new Dictionary<string, string>();
                 bool isFormData = false;
 
-                if (Request.ContentType == null && Request.QueryString == null)
-                {
-                    logger.LogError(
-                        $"Method={GetCurrentAsyncMethod()}, IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
-                    log2File.Error(
-                        $"IP={common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null",
-                        "DepositCallBack");
-                    return Content("Request data is null");
-                }
-
                 if (Request.ContentType != null)
                 {
                     if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
