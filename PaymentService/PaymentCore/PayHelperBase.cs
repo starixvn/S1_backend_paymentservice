@@ -166,13 +166,8 @@ namespace PaymentCore
         /// 
         public static string proxyHost;
         public static int proxyPort;
-        protected string HttpGet(string url, string parameters, string transID)
-        {
-           
-            return HttpGet(url, parameters, transID, false);
-        }
 
-        protected string HttpGet(string url, string parameters, string transID, bool ignoreCertificate)
+        protected string HttpGet(string url, string parameters, string transID, bool ignoreCertificate = false)
         {
             var request = WebRequest.CreateHttp($"{url}?{parameters}");
             request.Method = "GET";
@@ -217,12 +212,7 @@ namespace PaymentCore
             return responseFromServer;
         }
 
-        protected string HttpPost(string url, string parameters, string contentType, string transID)
-        {
-            return HttpPost(url, parameters, contentType, transID, false);
-        }
-        
-        protected string HttpPost(string url, string parameters, string contentType, string transId, bool ignoreCertificate)
+        protected string HttpPost(string url, string parameters, string contentType, string transId, bool ignoreCertificate = false)
         {
             var request = WebRequest.CreateHttp(url);
 
