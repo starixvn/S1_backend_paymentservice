@@ -10,6 +10,7 @@ namespace PaymentService.Service.Model
         int PayId { get; set; }
         int ChannelId { get; set; }
         int CurrencyId { get; set; }
+        string BankCode { get; set; }
     }
     public class PayResult
     {

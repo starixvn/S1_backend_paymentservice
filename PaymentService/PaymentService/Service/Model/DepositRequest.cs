@@ -71,6 +71,7 @@ namespace PaymentService.Service.Model
         public int PayId { get; set; }
         public int ChannelId { get; set; }
         public int CurrencyId { get; set; }
+        public string BankCode { get; set; }
     }
     public class DepositInfoGeneral_1 : IDepositInfo, IPay
     {
@@ -78,6 +79,7 @@ namespace PaymentService.Service.Model
         public int PayId { get; set; }
         public int ChannelId { get; set; }
         public int CurrencyId { get; set; }
+        public string BankCode { get; set; }
     }
     public class DepositInfo3_1 : IDepositInfo
     {

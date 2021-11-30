@@ -16,6 +16,7 @@ namespace PaymentService.Service.Model
         public int ChannelId { set; get; }
         public int CurrencyId { set; get; }
         public decimal Amount { set; get; }
+        public string BankCode { get; set; }
 
         //public virtual IEnumerable<Comments> Comments { get; set; }
     }
