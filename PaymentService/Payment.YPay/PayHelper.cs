@@ -1,0 +1,148 @@
+﻿using Newtonsoft.Json;
+using PaymentCore;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+
+namespace Payment.YPay
+{
+    class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
+    {
+        private class CallBackCreditReq : CallBackDebitReq
+        {
+            public string bankCode { get; set; }
+            public string province { get; set; }
+            public string city { get; set; }
+            public string bankBranch { get; set; }
+        }
+
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        {
+            throw new NotImplementedException();
+ }
+
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        {
+            var oNotify = new NotifyDepositResult();
+            var data = FromJson<CallBackDebitReq>(ToJson(formData));
+
+            var p = data.sn;
+            var sign = GetSignature(Convert.ToInt32(payResource["transfer_appid"]), data.order, data.amount, data.uid, payResource["transfer_key"]);
+
+            oNotify.DepositId = data.order;
+            oNotify.ThirdId = data.transaction_id;
+
+            if (sign == p)
+            {
+                oNotify.TransStatus = TransStatus.Success;
+                oNotify.RequestAmount = data.amount;
+                oNotify.ActualAmount = data.amount;
+                oNotify.Response = "success";
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Comment = "Signature error";
+                oNotify.Message = "Signature error";
+                oNotify.Response = "fail";
+            }
+
+            return oNotify;
+        }
+
+        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override WithdrawResult Credit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override DepositResult Debit(Dictionary<string, string> inputs)
+        {
+            var appid = Convert.ToInt32(inputs["transfer_appid"]);
+            var key = inputs["transfer_key"];
+            if (inputs["PayCode"] != null)
+            {
+                appid = Convert.ToInt32(inputs["scan_appid"]);
+                key = inputs["scan_Key"];
+            }
+
+            var depositReq = new DepositReq
+            {
+                appid = appid,
+                cliIP = inputs["ClientIP"],
+                cliNA = "PC",
+                uid = inputs["CustId"],
+                order = inputs["TransID"],
+                price = Convert.ToDecimal(inputs["Amount"]).ToString("#"),
+                payType = inputs["BankCode"],
+                notifyUrl = UrlEncode(inputs["CallBackUrl"]),
+            };
+
+            depositReq.sn = GetSignature(depositReq.appid, depositReq.cliIP, depositReq.cliNA, depositReq.order,
+                depositReq.payType, depositReq.price, depositReq.uid, key);
+
+            var sUrl = inputs["host"] + inputs["deposit"];
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(depositReq));
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpGet(sUrl, sParam, inputs["TransID"], true);
+
+            var depositRes = new DepositRes();
+            depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
+            var depositResult = new DepositResult();
+            if (depositRes.e == (int)DepositStatus.Success)
+            {
+                // oDepositResult.ThirdId = depositRes.data.orderNo;
+                var responseData = new Dictionary<string, string>
+                {
+                    { "DepositAmount", depositReq.price },
+                    { "BankName", depositRes.d.bankType },
+                    { "AccountName", depositRes.d.accountName },
+                    { "AccountNumber", depositRes.d.account }
+                };
+                depositResult.Url = depositRes.d.h5;
+                depositResult.FormData = responseData;
+                depositResult.Success = true;
+                depositResult.Message = "";
+            }
+            else
+            {
+                depositResult.Success = false;
+                depositResult.Message = depositRes.m;
+            }
+
+            return depositResult;
+        }
+        
+        private string GetSignature(int appid,string cliIp, string cliNa, string order, string payType, string price, string uid, string key)
+        {
+            var parameter = $"appid={appid}cliIP={cliIp}cliNA={cliNa}order={order}payType={payType}price={price}uid={uid}secret={key}";
+            return ToMD5(parameter).ToLower();
+        }
+
+        private string GetSignature(int appid, string order, decimal price, string uid, string key)
+        {
+            var parameter = $"appid={appid}gid=0mode=2order={order}price={price}uid={uid}secret={key}";
+            return ToMD5(parameter).ToLower();
+        }
+
+        public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
