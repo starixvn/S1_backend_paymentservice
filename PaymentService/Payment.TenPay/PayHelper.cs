@@ -164,7 +164,7 @@ namespace Payment.TenPay
 
             formData["PayeeBankName"] = UrlEncode(inputs["BankName"]);
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["ShopOrderId"]);
+            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["ShopOrderId"], true);
 
             WithdrawRes withdrawRes = new WithdrawRes();
             withdrawRes = JsonConvert.DeserializeObject<WithdrawRes>(sResponse);
@@ -223,7 +223,7 @@ namespace Payment.TenPay
             formData.Add("EncryptValue", ToSHA256(p.ToLower()).ToUpper());
 
             string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["ShopOrderId"]);
+            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["ShopOrderId"], true);
 
             DepositRes depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
