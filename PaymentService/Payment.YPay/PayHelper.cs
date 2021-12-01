@@ -17,7 +17,6 @@ namespace Payment.YPay
             public string bankBranch { get; set; }
         }
 
-        private const string ClientIp = "125.227.148.97";
         private const string CliNa = "PC";
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
@@ -28,18 +27,15 @@ namespace Payment.YPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var oNotify = new NotifyDepositResult();
-            var data = FromJson<CallBackDebitReq>(ToJson(formData));
-            var appid = Convert.ToInt32(payResource["transfer_appid"]);
+            var data = FromJson<CallBackDebitReq>(bodyContent);
             var key = payResource["transfer_key"];
-            if (payResource["BankCode"] != null)
+            if (string.IsNullOrEmpty(payResource["BankCode"]))
             {
-                appid = Convert.ToInt32(payResource["scan_appid"]);
                 key = payResource["scan_Key"];
             }
 
             var p = data.sn;
-            var sign = GetSignature(appid, ClientIp, CliNa, data.order, payResource["BankCode"],
-                data.amount.ToString("#"), data.uid, key);
+            var sign = GetSignature(data.amount.ToString("#"), data.gid, data.order, data.transaction_id, data.uid, key);
 
             oNotify.DepositId = data.order;
             oNotify.ThirdId = data.transaction_id;
@@ -76,10 +72,12 @@ namespace Payment.YPay
         {
             var appid = Convert.ToInt32(inputs["transfer_appid"]);
             var key = inputs["transfer_key"];
+            var payType = inputs["BankCode"];
             if (inputs["PayCode"] != null)
             {
                 appid = Convert.ToInt32(inputs["scan_appid"]);
                 key = inputs["scan_Key"];
+                payType = inputs["PayCode"];
             }
 
             var depositReq = new DepositReq
@@ -87,10 +85,10 @@ namespace Payment.YPay
                 appid = appid,
                 cliIP = inputs["ClientIP"],
                 cliNA = CliNa,
-                uid = ClientIp,
+                uid = inputs["CustId"],
                 order = inputs["TransID"],
                 price = Convert.ToDecimal(inputs["Amount"]).ToString("#"),
-                payType = inputs["BankCode"],
+                payType = payType,
                 notifyUrl = UrlEncode(inputs["CallBackUrl"]),
             };
 
@@ -131,7 +129,21 @@ namespace Payment.YPay
         
         private string GetSignature(int appid,string cliIp, string cliNa, string order, string payType, string price, string uid, string key)
         {
-            var parameter = $"appid={appid}cliIP={cliIp}cliNA={cliNa}order={order}payType={payType}price={price}uid={uid}secret={key}";
+            var type = string.Empty;
+            if (!string.IsNullOrEmpty(payType))
+            {
+                type = $"payType={payType}";
+            }
+            var parameter = $"appid={appid}cliIP={cliIp}cliNA={cliNa}order={order}{type}price={price}uid={uid}secret={key}";
+            
+            return ToMD5(parameter).ToLower();
+        }
+
+        private string GetSignature(string amount, string gid, string order, string transactionId, string uid,
+            string key)
+        {
+
+            var parameter = $"amount={amount}gid={gid}order={order}transaction_id={transactionId}uid={uid}secret={key}";
             return ToMD5(parameter).ToLower();
         }
 
