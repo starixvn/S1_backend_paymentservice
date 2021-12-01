@@ -27,7 +27,7 @@ namespace Payment.YPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var oNotify = new NotifyDepositResult();
-            var data = FromJson<CallBackDebitReq>(bodyContent);
+            var data = FromJson<CallBackDebitReq>(!string.IsNullOrEmpty(bodyContent) ? bodyContent : ToJson(formData));
             var key = payResource["transfer_key"];
             if (string.IsNullOrEmpty(payResource["BankCode"]))
             {
