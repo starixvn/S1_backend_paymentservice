@@ -14,21 +14,21 @@ namespace Payment.YPay
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
-            var p = $"amount={data.amount.ToString("#")}24000completeTime={data.completeTime}order={data.order}remark={data.remark}status={data.status}secret={payResource["key"]}";
-            var sign = ToMD5(p).ToLower();
+            var parameter = $"amount={data.amount.ToString("#")}completeTime={data.completeTime}order={data.order}remark={data.remark}status={data.status}secret={payResource["key"]}";
+            var sign = ToMD5(parameter).ToLower();
 
             var oNotify = new NotifyWithdrawResult
             {
                 WithdrawId = data.order,
             };
 
-            if (p == sign)
+            if (sign == data.sn)
             {
                 switch (data.status)
                 {
                     case (int)WithdrawalCallbackStatus.Completed:
                         oNotify.TransStatus = TransStatus.Success;
-                        oNotify.RequestAmount = data.amount / 100;
+                        oNotify.RequestAmount = data.amount;
                         oNotify.Response = "success";
                         break;
                     case (int)WithdrawalCallbackStatus.Rejected:
