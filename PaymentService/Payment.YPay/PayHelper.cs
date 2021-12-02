@@ -9,20 +9,47 @@ namespace Payment.YPay
 {
     class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
-        private class CallBackCreditReq : CallBackDebitReq
-        {
-            public string bankCode { get; set; }
-            public string province { get; set; }
-            public string city { get; set; }
-            public string bankBranch { get; set; }
-        }
-
         private const string CliNa = "PC";
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
- }
+            var data = FromJson<CallBackCreditReq>(ToJson(formData));
+            var p = $"amount={data.amount.ToString("#")}24000completeTime={data.completeTime}order={data.order}remark={data.remark}status={data.status}secret={payResource["key"]}";
+            var sign = ToMD5(p).ToLower();
+
+            var oNotify = new NotifyWithdrawResult
+            {
+                WithdrawId = data.order,
+            };
+
+            if (p == sign)
+            {
+                switch (data.status)
+                {
+                    case (int)WithdrawalCallbackStatus.Completed:
+                        oNotify.TransStatus = TransStatus.Success;
+                        oNotify.RequestAmount = data.amount / 100;
+                        oNotify.Response = "success";
+                        break;
+                    case (int)WithdrawalCallbackStatus.Rejected:
+                        oNotify.TransStatus = TransStatus.Fail;
+                        oNotify.Response = "success";
+                        break;
+                    default:
+                        oNotify.TransStatus = TransStatus.Pending;
+                        oNotify.Response = "fail";
+                        break;
+                }
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Message = "Signature error";
+                oNotify.Response = "fail";
+            }
+
+            return oNotify;
+        }
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
@@ -35,7 +62,7 @@ namespace Payment.YPay
             }
 
             var p = data.sn;
-            var sign = GetSignature(data.amount.ToString("#"), data.gid, data.order, data.transaction_id, data.uid, key);
+            var sign = GetCallbackSignature(data.amount.ToString("#"), data.gid, data.order, data.transaction_id, data.uid, key);
 
             oNotify.DepositId = data.order;
             oNotify.ThirdId = data.transaction_id;
@@ -65,7 +92,40 @@ namespace Payment.YPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var request = new WithdrawalReq
+            {
+                appid = Convert.ToInt32(inputs["appid"]),
+                orderId = inputs["TransID"],
+                name = inputs["AccountName"],
+                money = Convert.ToDecimal(inputs["Amount"]).ToString("#"),
+                bankMark = inputs["BankCode"],
+                recAcc = inputs["AccountNo"],
+                notifyUrl = UrlEncode(inputs["CallBackUrl"])
+            };
+            var parameter = $"appid={request.appid}bankMark={request.bankMark}money={request.money}name={request.name}orderId={request.orderId}recAcc={request.recAcc}secret={inputs["key"]}";
+            request.sn = ToMD5(parameter).ToLower();
+            
+            var sUrl = inputs["withdrawalhost"] + inputs["withdraw"];
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(request));
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpGet(sUrl, sParam, inputs["TransID"], true);
+            
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
+            if (withdrawalRes.code == (int)WithdrawalStatus.Success)
+            {
+                withdrawResult.Success = true;
+                withdrawResult.Message = withdrawalRes.desc;
+                withdrawResult.RawContent = withdrawalRes.data.ToString();
+            }
+            else
+            {
+                withdrawResult.Success = false;
+                withdrawResult.Message = withdrawalRes.desc;
+                withdrawResult.RawContent = withdrawalRes.data.ToString();
+            }
+
+            return withdrawResult;
         }
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
@@ -89,7 +149,7 @@ namespace Payment.YPay
                 order = inputs["TransID"],
                 price = Convert.ToDecimal(inputs["Amount"]).ToString("#"),
                 payType = payType,
-                notifyUrl = UrlEncode(inputs["CallBackUrl"]),
+                notifyUrl = UrlEncode(inputs["CallBackUrl"])
             };
 
             depositReq.sn = GetSignature(depositReq.appid, depositReq.cliIP, depositReq.cliNA, depositReq.order,
@@ -139,7 +199,7 @@ namespace Payment.YPay
             return ToMD5(parameter).ToLower();
         }
 
-        private string GetSignature(string amount, string gid, string order, string transactionId, string uid,
+        private string GetCallbackSignature(string amount, string gid, string order, string transactionId, string uid,
             string key)
         {
 

@@ -84,4 +84,71 @@ namespace Payment.YPay
         [Description("Signature verification value, same as the order interface algorithm")]
         public string sn { get; set; }
     }
+
+    public class WithdrawalReq
+    {
+        [Required]
+        public int appid { get; set; }
+        
+        [Required]
+        public string orderId { get; set; }
+        
+        [Required]
+        [Description("Name of bank account holder")]
+        public string name { get; set; }
+        
+        [Required]
+        [Description("Withdraw amount")]
+        public string money { get; set; }
+        
+        [Required]
+        [Description("Abbreviation of bank name")]
+        public string bankMark { get; set; }
+        
+        [Required]
+        [Description("Bank card number")]
+        public string recAcc { get; set; }
+        
+        [Description("Remarks (not required)")]
+        public string remark { get; set; }
+        
+        [Required]
+        [Description("Callback url,don’t participate in encryption, no callback if you don’t pass ")]
+        public string notifyUrl { get; set; }
+        
+        [Required]
+        [Description("Signature verification value")]
+        public string sn { get; set; }
+    }
+
+    public class WithdrawalRes
+    {
+        [Description("0 is normal,-1 is error")]
+        public int code { get; set; }
+        
+        public dynamic data { get; set; }
+        
+        [Description("Error message")]
+        public string desc { get; set; }
+    }
+
+    public class CallBackCreditReq
+    {
+        [Description("Order Id")]
+        public string order { get; set; }
+        
+        [Description("Amount")]
+        public decimal amount { get; set; }
+
+        [Description("Processing Timestamp")]
+        public string completeTime { get; set; }
+
+        [Description("Order status (completed: 4 rejected: 5)")]
+        public int status { get; set; }
+
+        [Description("Signature verification value")]
+        public string sn { get; set; }
+
+        public string remark { get; set; }
+    }
 }

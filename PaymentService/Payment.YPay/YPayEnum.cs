@@ -6,6 +6,17 @@ namespace Payment.YPay
     {
         Success = 0
     }
+    
+    public enum WithdrawalStatus
+    {
+        Success = 0
+    }
+    
+    public enum WithdrawalCallbackStatus
+    {
+        Completed = 4,
+        Rejected = 5
+    }
 
     public enum DepositCallbackStatus
     {
