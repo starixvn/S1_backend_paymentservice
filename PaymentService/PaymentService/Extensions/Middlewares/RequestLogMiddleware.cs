@@ -18,11 +18,11 @@ namespace PaymentService.Extensions.Middlewares
         private readonly RequestDelegate _next;
         private readonly Common _common;
 
-        public RequestLogMiddleware(IServiceProvider provider)
+        public RequestLogMiddleware(RequestDelegate next, ILoggerFactory factory, Common common)
         {
-            _next = provider.GetRequiredService<RequestDelegate>();
-            _logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("RequestLog");
-            _common = provider.GetRequiredService<Common>();
+            _next = next;
+            _logger = factory.CreateLogger("RequestLog");
+            _common = common;
         }
 
         public async Task Invoke(HttpContext context)

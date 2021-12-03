@@ -15,10 +15,10 @@ namespace PaymentService.Extensions.Middlewares
         private readonly ILogger _logger;
         private readonly RequestDelegate _next;
 
-        public ResponseLogMiddleware(IServiceProvider provider)
+        public ResponseLogMiddleware(RequestDelegate next, ILoggerFactory factory)
         {
-            _next = provider.GetRequiredService<RequestDelegate>();
-            _logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("ResponseLog");
+            _next = next;
+            _logger = factory.CreateLogger("ResponseLog");
         }
 
         public async Task Invoke(HttpContext context)
