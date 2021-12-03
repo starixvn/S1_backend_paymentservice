@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Hosting;
@@ -9,7 +8,6 @@ using Microsoft.Extensions.Hosting;
 using PaymentService.Service.Workers;
 using Serilog;
 using Serilog.Exceptions;
-using Serilog.Formatting.Json;
 
 namespace PaymentService
 {

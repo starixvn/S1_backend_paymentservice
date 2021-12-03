@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace PaymentService.Service.Model.enums
+﻿namespace PaymentService.Service.Model.enums
 {
     public enum ErrorCode : int
     {
