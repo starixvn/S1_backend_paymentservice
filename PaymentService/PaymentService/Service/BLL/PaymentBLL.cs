@@ -21,8 +21,8 @@ namespace PaymentService.Service.BLL
 
         public DepositRequest GetDepositRequest(string transId)
         {
-            int depositId = 0;
-            Match m = Regex.Match(transId, @"\d+");
+            var depositId = 0;
+            var m = Regex.Match(transId, @"\d+");
             int.TryParse(m.Value, out depositId);
 
             return _depositService.GetDepositRequest(depositId);
@@ -30,7 +30,7 @@ namespace PaymentService.Service.BLL
 
         public void DepositSuccess(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
-            List<int> forStatus = new List<int>();
+            var forStatus = new List<int>();
             forStatus.Add((int)DepositStatus.Pending);
             forStatus.Add((int)DepositStatus.Rejected);
             try
@@ -45,14 +45,14 @@ namespace PaymentService.Service.BLL
 
         public void DepositFail(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
-            List<int> forStatus = new List<int>();
+            var forStatus = new List<int>();
             forStatus.Add((int)DepositStatus.Pending);
             _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Rejected);
         }
 
         public void DepositPending(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
-            List<int> forStatus = new List<int>();
+            var forStatus = new List<int>();
             forStatus.Add((int)DepositStatus.Pending);
             _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Pending);
         }
@@ -64,8 +64,8 @@ namespace PaymentService.Service.BLL
 
         public WithdrawalRequest GetWithdrawalRequest(string transId)
         {
-            int withdrawalId = 0;
-            Match m = Regex.Match(transId, @"\d+");
+            var withdrawalId = 0;
+            var m = Regex.Match(transId, @"\d+");
             int.TryParse(m.Value, out withdrawalId);
 
             return withdrawalService.GetWithdrawalRequest(withdrawalId);
@@ -73,7 +73,7 @@ namespace PaymentService.Service.BLL
 
         public void WithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
-            List<int> forStatus = new List<int>();
+            var forStatus = new List<int>();
             forStatus.Add((int)WithdrawalStatus.Process);
 
             withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
@@ -81,7 +81,7 @@ namespace PaymentService.Service.BLL
 
         public void WithdrawalFail(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
-            List<int> forStatus = new List<int>();
+            var forStatus = new List<int>();
             forStatus.Add((int)WithdrawalStatus.Process);
             //withdrawalRequest.PayName
             
@@ -90,7 +90,7 @@ namespace PaymentService.Service.BLL
 
         public void WithdrawalPending(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
-            List<int> forStatus = new List<int>();
+            var forStatus = new List<int>();
             forStatus.Add((int)WithdrawalStatus.Process);
             //withdrawalRequest.PayName
             

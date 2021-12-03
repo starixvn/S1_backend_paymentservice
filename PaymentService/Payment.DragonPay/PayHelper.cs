@@ -20,10 +20,10 @@ namespace Payment.DragonPay
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
 
-            string p = $"{payResource["merchant_no"]}{data.transactionId}{data.amount}{data.timestamp}";
-            string sign = UrlEncode(RSADecryptWithPrivateKey(RSAPrivateKeyJava2DotNet(payResource["PrivateKey"]), data.sign));
+            var p = $"{payResource["merchant_no"]}{data.transactionId}{data.amount}{data.timestamp}";
+            var sign = UrlEncode(RSADecryptWithPrivateKey(RSAPrivateKeyJava2DotNet(payResource["PrivateKey"]), data.sign));
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             //oNotify.WithdrawId = data.transactionId.Remove(0, data.transactionId.IndexOf("-") + 1);
             oNotify.WithdrawId = data.transactionId.Substring(data.transactionId.IndexOf("-") + 1);
             oNotify.ThirdId = data.transactionStatus.ToString();
@@ -74,11 +74,11 @@ namespace Payment.DragonPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
 
-            string p = $"{payResource["merchant_no"]}{data.transactionId}{data.amount}{data.timestamp}";
-            string sign = UrlEncode(RSADecryptWithPrivateKey(RSAPrivateKeyJava2DotNet(payResource["PrivateKey"]), data.sign));
+            var p = $"{payResource["merchant_no"]}{data.transactionId}{data.amount}{data.timestamp}";
+            var sign = UrlEncode(RSADecryptWithPrivateKey(RSAPrivateKeyJava2DotNet(payResource["PrivateKey"]), data.sign));
 
             //oNotify.DepositId = data.transactionId.Remove(0, data.transactionId.IndexOf("-") + 1);
             oNotify.DepositId = data.transactionId.Substring(data.transactionId.IndexOf("-") + 1);
@@ -131,26 +131,26 @@ namespace Payment.DragonPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"] + "/pms/api/payout/request";
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["PayOut"] + "/pms/api/payout/request";
+            var formData = new Dictionary<string, string>();
 
             formData.Add("orderNo", inputs["TransID"]);
             formData.Add("merchantCode", inputs["merchant_no"]);
             formData.Add("beneficiaryAccount", inputs["AccountNo"]);
             formData.Add("beneficiaryName", inputs["AccountName"]);
             formData.Add("bankCode", inputs["BankCode"]);
-            decimal amount = decimal.Parse(inputs["Amount"]) * 100;
+            var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             formData.Add("currencyCode", inputs["PayCurrencyId"]);
 
-            string p = $"{formData["merchantCode"]}{formData["orderNo"]}{formData["bankCode"]}{formData["beneficiaryAccount"]}{formData["amount"]}";
+            var p = $"{formData["merchantCode"]}{formData["orderNo"]}{formData["bankCode"]}{formData["beneficiaryAccount"]}{formData["amount"]}";
             formData.Add("sign", UrlEncode(RSAEncryptWithPrivateKey(RSAPrivateKeyJava2DotNet(inputs["PrivateKey"]), p)));
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderNo"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderNo"]);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
             if (withdrawalRes.statusCode == 200)
@@ -197,13 +197,13 @@ namespace Payment.DragonPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = "";
-            string p = "";
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = "";
+            var p = "";
+            var formData = new Dictionary<string, string>();
             formData.Add("merchantCode", inputs["merchant_no"]);
             formData.Add("orderNo", inputs["TransID"]);
             formData.Add("currencyCode", inputs["PayCurrencyId"]);
-            decimal amount = decimal.Parse(inputs["Amount"]) * 100;
+            var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
 
             if (inputs["PayCode"] != null)
@@ -222,18 +222,18 @@ namespace Payment.DragonPay
 
             formData.Add("sign", UrlEncode(RSAEncryptWithPrivateKey(RSAPrivateKeyJava2DotNet(inputs["PrivateKey"]), p)));
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderNo"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderNo"]);
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (depositRes.statusCode == "200")
             {
                 oDepositResult.ThirdId = depositRes.data.orderNo;
                 oDepositResult.Url = depositRes.data.qrCodeImagePath;
-                Dictionary<string, string> ResData = new Dictionary<string, string>();
-                decimal reqamount = decimal.Parse(depositRes.data.systemAmount) / 100;
+                var ResData = new Dictionary<string, string>();
+                var reqamount = decimal.Parse(depositRes.data.systemAmount) / 100;
                 ResData.Add("DepositAmount", reqamount.ToString("#"));
                 ResData.Add("BankName", depositRes.data.bankName);
                 ResData.Add("AccountName", depositRes.data.accountName);

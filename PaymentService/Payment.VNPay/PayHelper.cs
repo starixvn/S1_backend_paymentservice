@@ -29,14 +29,14 @@ namespace Payment.VNPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
-            string merchant_no = payResource["merchant_no"];
-            string key = payResource["key"];
-            decimal amount = decimal.Parse(data.amount);
+            var merchant_no = payResource["merchant_no"];
+            var key = payResource["key"];
+            var amount = decimal.Parse(data.amount);
 
-            string p = $"{data.merchant_no}|{data.order_no}|{data.ylt_order_no}|{data.amount}|{data.channel}|{key}";
-            string sign = ToMD5(p).ToLower();
+            var p = $"{data.merchant_no}|{data.order_no}|{data.ylt_order_no}|{data.amount}|{data.channel}|{key}";
+            var sign = ToMD5(p).ToLower();
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.order_no;
             if (sign == data.sign)
             {
@@ -71,11 +71,11 @@ namespace Payment.VNPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["host"];
+            var formData = new Dictionary<string, string>();
             formData.Add("merchant_no", inputs["merchant_no"]);
             formData.Add("order_no", inputs["TransID"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("channel", inputs["PayCode"]);
             formData.Add("bank_code", inputs["BankCode"]);
@@ -84,10 +84,10 @@ namespace Payment.VNPay
             formData.Add("c_ip", "");
             formData.Add("extra_param", "");
 
-            string p = $"{formData["merchant_no"]}|{formData["order_no"]}|{formData["amount"]}|{formData["channel"]}|{inputs["key"]}";
+            var p = $"{formData["merchant_no"]}|{formData["order_no"]}|{formData["amount"]}|{formData["channel"]}|{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             oDepositResult.Url = sUrl;
             oDepositResult.FormData = formData;
             oDepositResult.Success = true;
@@ -119,24 +119,24 @@ namespace Payment.VNPay
 
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["CheckURL"];
-            CreditReq creditReq = new CreditReq();
+            var sUrl = inputs["CheckURL"];
+            var creditReq = new CreditReq();
             creditReq.merchant_no = inputs["merchant_no"];
             creditReq.order_no = inputs["TransID"];
             creditReq.amount = inputs["Amount"]; ;
             creditReq.channel = inputs["PayCode"];
 
-            string p = $"{creditReq.merchant_no}|{creditReq.order_no}|{creditReq.amount}|{creditReq.channel}|{inputs["key"]}";
+            var p = $"{creditReq.merchant_no}|{creditReq.order_no}|{creditReq.amount}|{creditReq.channel}|{inputs["key"]}";
             creditReq.sign = ToMD5(p).ToLower();
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.order_no);
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.order_no);
 
-            CreditResult creditResult = new CreditResult();
+            var creditResult = new CreditResult();
             creditResult = JsonConvert.DeserializeObject<CreditResult>(sResponse);
 
-            EnquiryDepositResult enquiryDepositResult = new EnquiryDepositResult();
+            var enquiryDepositResult = new EnquiryDepositResult();
             if (creditResult.status == "1" )
             {
                 enquiryDepositResult.TransStatus = TransStatus.Success;

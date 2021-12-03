@@ -27,11 +27,11 @@ namespace Payment.MangoPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(bodyContent);
 
-            string p = $"{data.merchantId}{data.orderSn}{data.amount}{payResource["key"]}";
-            string sign = ToMD5(p).ToLower();
+            var p = $"{data.merchantId}{data.orderSn}{data.amount}{payResource["key"]}";
+            var sign = ToMD5(p).ToLower();
 
             oNotify.DepositId = data.orderSn;
             oNotify.ThirdId = data.queryId;
@@ -90,13 +90,13 @@ namespace Payment.MangoPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["PayOut"];
+            var formData = new Dictionary<string, string>();
 
             formData.Add("merchantId", inputs["merchant_no"]);
             formData.Add("orderSn", inputs["TransID"]);
             formData.Add("currency", inputs["PayCurrencyId"]);
-            decimal amount = decimal.Parse(inputs["Amount"]) * 100;
+            var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             formData.Add("type", "bank");
             formData.Add("userName", inputs["AccountName"]);
@@ -110,14 +110,14 @@ namespace Payment.MangoPay
             formData.Add("unionCode", inputs["BankCode"]);
             formData.Add("bankMobile", inputs["BankCode"]);
 
-            string p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["type"]}{formData["userName"]}{formData["cardNo"]}{inputs["key"]}";
+            var p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["type"]}{formData["userName"]}{formData["cardNo"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
             if (withdrawalRes.code == 200)
@@ -153,8 +153,8 @@ namespace Payment.MangoPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = "";
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = "";
+            var formData = new Dictionary<string, string>();
             if (inputs["PayCode"] != null)
             {
                 sUrl = inputs["host"];
@@ -170,22 +170,22 @@ namespace Payment.MangoPay
             formData.Add("merchantId", inputs["merchant_no"]);
             formData.Add("orderSn", inputs["TransID"]);
             formData.Add("currency", inputs["PayCurrencyId"]);
-            decimal amount = decimal.Parse(inputs["Amount"]) * 100;
+            var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             formData.Add("returnUrl", inputs["ReturnUrl"]);
             formData.Add("notifyUrl", inputs["CallBackUrl"]);
             formData.Add("language", inputs["PayLangId"]);
             formData.Add("goodsName", "N/A");
             
-            string p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["notifyUrl"]}{formData["type"]}{inputs["key"]}";
+            var p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["notifyUrl"]}{formData["type"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (depositRes.code == "200")
             {
                 if (depositRes.data.type == 1)
@@ -228,24 +228,24 @@ namespace Payment.MangoPay
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOutQuery"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["PayOutQuery"];
+            var formData = new Dictionary<string, string>();
             formData.Add("merchantId", inputs["merchant_no"]);
             formData.Add("orderSn", inputs["TransID"]);
             formData.Add("currency", payCurrencyIdMapping[inputs["CurrencyId"]]);
-            decimal amount = decimal.Parse(inputs["Amount"]) * 100;
+            var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             formData.Add("type", "bank");
 
-            string p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["type"]}{inputs["key"]}";
+            var p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["type"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
 
-            EnquiryWithdrawRes enquiryWithdrawRes = new EnquiryWithdrawRes();
+            var enquiryWithdrawRes = new EnquiryWithdrawRes();
             enquiryWithdrawRes = JsonConvert.DeserializeObject<EnquiryWithdrawRes>(sResponse);
-            EnquiryWithdrawResult oNotify = new EnquiryWithdrawResult();
+            var oNotify = new EnquiryWithdrawResult();
             if (enquiryWithdrawRes.code == "200")
             {
                 if (enquiryWithdrawRes.data.status == "2" || enquiryWithdrawRes.data.status == "3")

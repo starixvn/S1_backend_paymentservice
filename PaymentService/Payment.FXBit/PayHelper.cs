@@ -105,10 +105,10 @@ namespace Payment.FXBit
 
             var data = FromJson<CallBackDepositReq>(bodyContent);
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("signature", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&{payResource["key"]}";
-            string sign = ToSHA256(p).ToLower();
+            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("signature", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&{payResource["key"]}";
+            var sign = ToSHA256(p).ToLower();
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = payResource["TransID"];
             oNotify.ThirdId = data.receipt_token;
             oNotify.Comment = data.status;
@@ -184,47 +184,47 @@ namespace Payment.FXBit
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            string apiKey = inputs["key"];
-            string getReceptionToken = sUrl + "getReceiptToken";
-            string getWalletAddress = sUrl + "getWalletAddress";
-            string H5Url = inputs["H5host"];
+            var sUrl = inputs["host"];
+            var apiKey = inputs["key"];
+            var getReceptionToken = sUrl + "getReceiptToken";
+            var getWalletAddress = sUrl + "getWalletAddress";
+            var H5Url = inputs["H5host"];
 
-            DepositReq depositReq = new DepositReq();
+            var depositReq = new DepositReq();
             depositReq.marked_currency = inputs["PayCurrencyId"];
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             depositReq.marked_price = amount.ToString("#");
             depositReq.remark = inputs["TransID"];
             depositReq.callback_url = inputs["CallBackUrl"];
             string sResponse = null;
 
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             oDepositResult.Success = false;
 
             try
             {
                 sResponse = HttpPost(getReceptionToken, ToJson(depositReq), "application/json", apiKey, depositReq.remark);
 
-                DepositResp depositResp = new DepositResp();
+                var depositResp = new DepositResp();
                 depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
 
                 if (depositResp.error == 0)
                 {
-                    DepositGetWalletReq depositGetWalletReq = new DepositGetWalletReq();
+                    var depositGetWalletReq = new DepositGetWalletReq();
                     depositGetWalletReq.receipt_token = depositResp.receipt_token;
                     depositGetWalletReq.billed_currency = inputs["PayCode"];
 
-                    string sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json", apiKey, depositReq.remark);
+                    var sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json", apiKey, depositReq.remark);
 
-                    DepositGetWalletResp depositGetWalletResp = new DepositGetWalletResp();
+                    var depositGetWalletResp = new DepositGetWalletResp();
                     depositGetWalletResp = JsonConvert.DeserializeObject<DepositGetWalletResp>(sResponse1);
 
                     if (depositGetWalletResp.error == 0)
                     {
-                        Dictionary<string, string> depositGetH5Req = new Dictionary<string, string>();
+                        var depositGetH5Req = new Dictionary<string, string>();
                         depositGetH5Req.Add("receipt_token", depositGetWalletReq.receipt_token);
                         depositGetH5Req.Add("wallet_addr", depositGetWalletResp.public_address);
-                        string sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                        var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
                         oDepositResult.Success = true;
                         oDepositResult.Url = $"{H5Url}?{sParam}";
@@ -289,21 +289,21 @@ namespace Payment.FXBit
 
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            string apiKey = inputs["key"];
-            string getReceptionToken = sUrl + "getTransactionDetail";
-            CreditReq creditReq = new CreditReq();
+            var sUrl = inputs["host"];
+            var apiKey = inputs["key"];
+            var getReceptionToken = sUrl + "getTransactionDetail";
+            var creditReq = new CreditReq();
             creditReq.receipt_token = inputs["ThirdID"];
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            string sResponse = HttpGet(getReceptionToken, sParam, "application/json", apiKey, inputs["TransID"]);
+            var sResponse = HttpGet(getReceptionToken, sParam, "application/json", apiKey, inputs["TransID"]);
 
-            CreditResp creditResp = new CreditResp();
+            var creditResp = new CreditResp();
             creditResp = JsonConvert.DeserializeObject<CreditResp>(sResponse);
 
-            EnquiryDepositResult enquiryDepositResult = new EnquiryDepositResult();
+            var enquiryDepositResult = new EnquiryDepositResult();
             enquiryDepositResult.DepositId = inputs["TransID"];
             enquiryDepositResult.ThirdId = inputs["ThirdID"];
             enquiryDepositResult.Comment = creditResp.payment_status;

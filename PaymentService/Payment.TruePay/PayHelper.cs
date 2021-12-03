@@ -23,10 +23,10 @@ namespace Payment.TruePay
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
 
-            string p = $"{payResource["Merchant"]}-{payResource["key"]}-{data.id}-{data.amount}-{data.ts}";
-            string sign = ToMD5(p).ToLower();
+            var p = $"{payResource["Merchant"]}-{payResource["key"]}-{data.id}-{data.amount}-{data.ts}";
+            var sign = ToMD5(p).ToLower();
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.id;
 
             //if (sign == data.token)
@@ -78,11 +78,11 @@ namespace Payment.TruePay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
 
-            string p = $"{payResource["Merchant"]}-{payResource["key"]}-{data.id}-{data.amount}-{data.ts}";
-            string sign = ToMD5(p).ToLower();
+            var p = $"{payResource["Merchant"]}-{payResource["key"]}-{data.id}-{data.amount}-{data.ts}";
+            var sign = ToMD5(p).ToLower();
 
             oNotify.DepositId = data.id;
             oNotify.ThirdId = data.id;
@@ -144,32 +144,32 @@ namespace Payment.TruePay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"] + "/a/sPayout";
+            var sUrl = inputs["host"] + "/a/sPayout";
 
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>();
 
             formData.Add("mCode", inputs["Merchant"]);
             formData.Add("ts", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
             formData.Add("bCode", inputs["BankCode"]);
             formData.Add("trxid", inputs["TransID"]);
             formData.Add("user", inputs["CustId"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amt", amount.ToString("#"));
             formData.Add("bAccName", inputs["AccountName"]);
             formData.Add("bAccNo", inputs["AccountNo"]);
             formData.Add("notifyUrl", inputs["CallBackUrl"]);
 
-            string p = $"{formData["mCode"]}-{inputs["key"]}-sPayout-{formData["ts"]}";
+            var p = $"{formData["mCode"]}-{inputs["key"]}-sPayout-{formData["ts"]}";
             formData.Add("token", ToMD5(p).ToLower());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["trxid"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["trxid"]);
 
             sResponse = sResponse.Replace("[", "{");
             sResponse = sResponse.Replace("]", "}");
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
             if (withdrawalRes.status == 0)
@@ -203,8 +203,8 @@ namespace Payment.TruePay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"] + "/a/getDPLink";
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["host"] + "/a/getDPLink";
+            var formData = new Dictionary<string, string>();
 
             formData.Add("mCode", inputs["Merchant"]);
             formData.Add("ts", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
@@ -212,25 +212,25 @@ namespace Payment.TruePay
                 formData.Add("bCode", inputs["PayCode"]);
             else
                 formData.Add("bCode", inputs["BankCode"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amt", amount.ToString("#"));
             formData.Add("user", inputs["CustId"]);
             formData.Add("trxid", inputs["TransID"]);
             formData.Add("notifyUrl", inputs["CallBackUrl"]);
             formData.Add("webUrl", inputs["ReturnUrl"]);
 
-            string p = $"{formData["mCode"]}-{inputs["key"]}-getDPLink-{formData["ts"]}";
+            var p = $"{formData["mCode"]}-{inputs["key"]}-getDPLink-{formData["ts"]}";
             formData.Add("token", ToMD5(p).ToLower());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["trxid"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["trxid"]);
 
             sResponse = sResponse.Replace("[", "{");
             sResponse = sResponse.Replace("]", "}");
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (depositRes.status == 0)
             {
                 oDepositResult.ThirdId = depositRes.d.id.ToString();

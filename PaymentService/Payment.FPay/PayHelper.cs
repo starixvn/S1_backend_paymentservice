@@ -30,11 +30,11 @@ namespace Payment.FPay
         {
             var data = FromJson<CallBackDebitReq>(bodyContent);
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.order_id;
 
-            string p = payResource["secretkey"] + data.order_id;
-            string sign = ToMD5(p).ToLower();
+            var p = payResource["secretkey"] + data.order_id;
+            var sign = ToMD5(p).ToLower();
 
             if (sign == data.token)
             {
@@ -120,29 +120,29 @@ namespace Payment.FPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            AuthReq authReq = new AuthReq();
+            var sUrl = inputs["host"];
+            var authReq = new AuthReq();
             authReq.username = inputs["Username"];
             authReq.api_key = inputs["key"];
             string sResponse = null;
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             oDepositResult.Success = false;
 
             try
             {
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(authReq));
-                string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
                 sResponse = HttpPost(sUrl + "merchant/auth", sParam, "application/x-www-form-urlencoded", "0");
 
-                AuthResp authResp = new AuthResp();
+                var authResp = new AuthResp();
                 authResp = JsonConvert.DeserializeObject<AuthResp>(sResponse);
 
                 if (authResp.status)
                 {
-                    DepositReq depositReq = new DepositReq();
+                    var depositReq = new DepositReq();
                     depositReq.username = inputs["Username"];
                     depositReq.auth = authResp.auth;
-                    decimal amount = decimal.Parse(inputs["Amount"]);
+                    var amount = decimal.Parse(inputs["Amount"]);
                     depositReq.amount = amount.ToString("#");
                     depositReq.currency = inputs["PayCurrencyId"];
                     depositReq.orderid = inputs["TransID"];
@@ -154,7 +154,7 @@ namespace Payment.FPay
 
                     sResponse = HttpPost(sUrl + "merchant/generate_orders", sParam, "application/x-www-form-urlencoded", depositReq.orderid);
 
-                    DepositResp depositResp = new DepositResp();
+                    var depositResp = new DepositResp();
                     depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
 
                     if (depositResp.status)

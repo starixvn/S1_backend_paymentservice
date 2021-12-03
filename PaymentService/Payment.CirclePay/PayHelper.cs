@@ -26,7 +26,7 @@ namespace Payment.CirclePay
             //string p = $"{data.total_amount}{data.bank_code}{data.card_fullname}{data.card_number}{data.partner_tran_id}";
             //string sign = ToHMACSHA256(p, payResource["key"]);
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.partner_tran_id;
 
             //if (sign == data.token)
@@ -80,10 +80,10 @@ namespace Payment.CirclePay
         {
             var data = FromJson<CallBackDebitReq>(bodyContent);
 
-            string p = $"{payResource["email"]}{data.partner_tran_id}{data.amount}";
-            string sign = ToHMACSHA256(p, payResource["key"]);
+            var p = $"{payResource["email"]}{data.partner_tran_id}{data.amount}";
+            var sign = ToHMACSHA256(p, payResource["key"]);
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.partner_tran_id;
             if (sign == data.token)
             {
@@ -156,30 +156,30 @@ namespace Payment.CirclePay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            CreditReq creditReq = new CreditReq();
+            var sUrl = inputs["PayOut"];
+            var creditReq = new CreditReq();
             creditReq.partner_tran_id = inputs["TransID"];
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             creditReq.total_amount = amount.ToString("#");
             creditReq.card_fullname = inputs["AccountName"];
             creditReq.card_number = inputs["AccountNo"];
             creditReq.bank_code = inputs["BankCode"];
             creditReq.reason = "payout";
 
-            string p = $"{creditReq.total_amount}{creditReq.bank_code}{creditReq.card_fullname}{creditReq.card_number}{creditReq.partner_tran_id}";
+            var p = $"{creditReq.total_amount}{creditReq.bank_code}{creditReq.card_fullname}{creditReq.card_number}{creditReq.partner_tran_id}";
             creditReq.token = ToHMACSHA256(p, inputs["key"]);
 
             var username = inputs["email"];
             var password = ToHMACSHA256(username, inputs["key"]);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", username, password, creditReq.partner_tran_id);
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", username, password, creditReq.partner_tran_id);
 
-            Payout payout = new Payout();
+            var payout = new Payout();
             payout = JsonConvert.DeserializeObject<Payout>(sResponse);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
+            var withdrawResult = new WithdrawResult();
             if (payout.error_code == "00")
             {
                 withdrawResult.Success = true;
@@ -198,20 +198,20 @@ namespace Payment.CirclePay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            string user_code = inputs["user_code"];
+            var sUrl = inputs["host"];
+            var user_code = inputs["user_code"];
 
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>();
 
             formData.Add("partner_tran_id", inputs["TransID"].ToLower());
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
 
-            string p = $"{inputs["email"]}{formData["partner_tran_id"]}{formData["amount"]}";
+            var p = $"{inputs["email"]}{formData["partner_tran_id"]}{formData["amount"]}";
             formData.Add("token", ToHMACSHA256(p, inputs["key"]));
             sUrl += "/" + user_code + "/?partner_tran_id=" + inputs["TransID"].ToLower() + "&amount=" + amount.ToString("#") + "&token=" + ToHMACSHA256(p, inputs["key"]);
 
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             oDepositResult.Success = true;
             oDepositResult.Url = sUrl;
 

@@ -31,10 +31,10 @@ namespace Payment.YRPay
         {
             var data = FromJson<CallBackDebitReq>(bodyContent);
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
-            string sign = ToMD5(p);
+            var p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
+            var sign = ToMD5(p);
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.orderid;
             oNotify.ThirdId = data.orderid;
             oNotify.Message = data.status;
@@ -73,10 +73,10 @@ namespace Payment.YRPay
             var data = FromJson<CallBackDebitReq>(bodyContent);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
-            string sign = ToMD5(p);
+            var p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
+            var sign = ToMD5(p);
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.orderid;
             oNotify.ThirdId = data.orderid;
             oNotify.Comment = data.status;
@@ -143,12 +143,12 @@ namespace Payment.YRPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            CreditReq creditReq = new CreditReq();
+            var sUrl = inputs["PayOut"];
+            var creditReq = new CreditReq();
             creditReq.merid = inputs["CID"];
             creditReq.orderid = inputs["TransID"];
             creditReq.userid = inputs["CustId"];
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             creditReq.amount = amount.ToString("#");
             creditReq.to_cardname = inputs["AccountName"];
             creditReq.to_cardnumber = inputs["AccountNo"];
@@ -159,13 +159,13 @@ namespace Payment.YRPay
             creditReq.notifyurl = inputs["CallBackUrl"];
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string P = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
+            var P = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
             dicP.Add("sign", ToMD5(P).ToUpper());
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.orderid);
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.orderid);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            CreditResult creditRes = new CreditResult();
+            var withdrawResult = new WithdrawResult();
+            var creditRes = new CreditResult();
             creditRes = JsonConvert.DeserializeObject<CreditResult>(sResponse);
 
             if (creditRes.success)
@@ -184,8 +184,8 @@ namespace Payment.YRPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["host"];
+            var formData = new Dictionary<string, string>();
             formData.Add("merid", inputs["CID"]);
             formData.Add("userid", inputs["CustId"]);
             formData.Add("amount", Convert.ToInt32(decimal.Parse(inputs["Amount"])).ToString());
@@ -211,10 +211,10 @@ namespace Payment.YRPay
             formData.Add("extend", "");
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
+            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
             formData.Add("sign", ToMD5(p));
 
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             oDepositResult.Url = sUrl;
             oDepositResult.FormData = formData;
             oDepositResult.Success = true;

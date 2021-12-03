@@ -27,10 +27,10 @@ namespace Payment.Porttopup
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
             var tmp = ToBase64Decode(data.data);
-            string[] sArray = tmp.Split('|');
+            var sArray = tmp.Split('|');
             data.code = sArray[0];
             data.message = sArray[1];
             data.price = sArray[2];
@@ -40,8 +40,8 @@ namespace Payment.Porttopup
             data.partner_code = sArray[6];
             data.signature = sArray[7];
 
-            string p = $"{data.code}|{data.message}|{data.price}|{data.request_id}|{data.tran_id}|{data.acc_game}|{data.partner_code}";
-            string sign = ToHMACSHA256Base64(p,payResource["secret"]);
+            var p = $"{data.code}|{data.message}|{data.price}|{data.request_id}|{data.tran_id}|{data.acc_game}|{data.partner_code}";
+            var sign = ToHMACSHA256Base64(p,payResource["secret"]);
 
             oNotify.DepositId = data.request_id;
             oNotify.ThirdId = data.tran_id;
@@ -101,32 +101,32 @@ namespace Payment.Porttopup
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["host"];
+            var formData = new Dictionary<string, string>();
 
             formData.Add("request_id", inputs["TransID"]);
             formData.Add("partner_code", inputs["merchant_no"]);
             formData.Add("card_code", inputs["Code"]);
             formData.Add("card_serial", inputs["Serial"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("card_value", amount.ToString("#")); 
             formData.Add("acc_game", inputs["CustId"]);
             formData.Add("telco", inputs["PayCode"]);
             formData.Add("access_key", inputs["key"]);
 
-            string p = $"{formData["request_id"]}|{formData["partner_code"]}|{formData["acc_game"]}|{formData["card_code"]}|{formData["card_serial"]}|" +
-                        $"{formData["card_value"]}|{formData["telco"]}|{formData["access_key"]}";
+            var p = $"{formData["request_id"]}|{formData["partner_code"]}|{formData["acc_game"]}|{formData["card_code"]}|{formData["card_serial"]}|" +
+                    $"{formData["card_value"]}|{formData["telco"]}|{formData["access_key"]}";
 
             formData.Add("signature", ToHMACSHA256Base64(p, inputs["secret"]));
-            string sParam = $"{formData["request_id"]}|{formData["partner_code"]}|{formData["acc_game"]}|{formData["card_code"]}|{formData["card_serial"]}|" +
-                            $"{formData["card_value"]}|{formData["telco"]}|{formData["access_key"]}|{formData["signature"]}";
-            string sResponse = HttpGet(sUrl, $"data={ToBase64Encode(sParam)}", formData["request_id"]);
+            var sParam = $"{formData["request_id"]}|{formData["partner_code"]}|{formData["acc_game"]}|{formData["card_code"]}|{formData["card_serial"]}|" +
+                         $"{formData["card_value"]}|{formData["telco"]}|{formData["access_key"]}|{formData["signature"]}";
+            var sResponse = HttpGet(sUrl, $"data={ToBase64Encode(sParam)}", formData["request_id"]);
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
 
-            Dictionary<string, string> ResData = new Dictionary<string, string>();
+            var ResData = new Dictionary<string, string>();
             ResData.Add("Message", depositRes.rd);
             oDepositResult.FormData = ResData;
             oDepositResult.Message = depositRes.rd;
@@ -157,7 +157,7 @@ namespace Payment.Porttopup
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
             var tmp = ToBase64Decode(data.data);
-            string[] sArray = tmp.Split('|');
+            var sArray = tmp.Split('|');
             data.code = sArray[0];
             data.message = sArray[1];
             data.price = sArray[2];

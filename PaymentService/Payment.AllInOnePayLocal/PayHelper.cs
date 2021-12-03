@@ -25,10 +25,10 @@ namespace Payment.AllInOnePayLocal
             var data = FromJson<CallBackWithdrawalReq>(ToJson(formData));
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"{payResource["merchant_passcode"]}";
-            string sign = ToMD5(p).ToLower();
+            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"{payResource["merchant_passcode"]}";
+            var sign = ToMD5(p).ToLower();
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.app_order_no;
 
             if (sign == data.sign)
@@ -86,10 +86,10 @@ namespace Payment.AllInOnePayLocal
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"{payResource["merchant_passcode"]}";
-            string sign = ToMD5(p).ToLower();
+            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"{payResource["merchant_passcode"]}";
+            var sign = ToMD5(p).ToLower();
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.app_order_no;
             if (sign == data.sign)
             {
@@ -133,23 +133,23 @@ namespace Payment.AllInOnePayLocal
         }
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
+            var sUrl = inputs["host"];
             sUrl += "withdrawal/create";
 
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>();
             formData.Add("app_id", inputs["merchant_site_code"]);
             formData.Add("app_order_no", inputs["TransID"]);
-            int length = inputs["TransID"].Length;
-            string transid = "";
+            var length = inputs["TransID"].Length;
+            var transid = "";
             if (length < 18)
             {
-                for (int i = length; i < 18; i++)
+                for (var i = length; i < 18; i++)
                 {
                     transid += "0";
                 }
             }
             formData.Add("app_user", transid);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("card_name", inputs["AccountName"]);
             formData.Add("card_no", inputs["AccountNo"]);
@@ -158,16 +158,16 @@ namespace Payment.AllInOnePayLocal
             formData.Add("notify_url", inputs["CallBackUrl"]);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"{inputs["merchant_passcode"]}";
+            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"{inputs["merchant_passcode"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower());
 
-            PayoutRes payoutRes = new PayoutRes();
+            var payoutRes = new PayoutRes();
             payoutRes = JsonConvert.DeserializeObject<PayoutRes>(sResponse);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
+            var withdrawResult = new WithdrawResult();
             if (payoutRes.success == "1")
             {
                 withdrawResult.Success = true;
@@ -198,10 +198,10 @@ namespace Payment.AllInOnePayLocal
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
+            var sUrl = inputs["host"];
             sUrl += "deposit/create";
 
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>();
             formData.Add("app_id", inputs["merchant_site_code"]);
             formData.Add("app_order_no", inputs["TransID"].ToLower());
             formData.Add("type_id", inputs["PayCode"]);
@@ -209,21 +209,21 @@ namespace Payment.AllInOnePayLocal
             {
                 formData.Add("bank_id", inputs["BankCode"]);
             }
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("app_user", inputs["CustId"]);
             formData.Add("notify_url", inputs["CallBackUrl"]);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"{inputs["merchant_passcode"]}";
+            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"{inputs["merchant_passcode"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower());
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (depositRes.success == "1")
             {
                 oDepositResult.Url = depositRes.pay_url;

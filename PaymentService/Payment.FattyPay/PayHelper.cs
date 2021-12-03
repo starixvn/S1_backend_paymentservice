@@ -10,18 +10,18 @@ namespace Payment.FattyPay
     {
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            string sUrl = payResource["host"] + "/api/v1/transaction";
+            var sUrl = payResource["host"] + "/api/v1/transaction";
             var data = FromJson<CallBackDebitReq>(bodyContent);
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.MerchantTransactionId;
 
-            string p = $"{payResource["merchant_no"]}&{data.MerchantTransactionId}&{payResource["key"]}";
-            string sign = ToSHA512(p).ToUpper();
+            var p = $"{payResource["merchant_no"]}&{data.MerchantTransactionId}&{payResource["key"]}";
+            var sign = ToSHA512(p).ToUpper();
 
             if (sign == data.Signature)
             {
-                Dictionary<string, string> formData1 = new Dictionary<string, string>();
+                var formData1 = new Dictionary<string, string>();
                 formData1.Add("MerchantTransactionId", data.MerchantTransactionId);
                 formData1.Add("MerchantCode", payResource["merchant_no"]);
                 formData1.Add("Timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
@@ -33,7 +33,7 @@ namespace Payment.FattyPay
                 var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
                 var sResponse = HttpGet(sUrl, sParam, data.MerchantTransactionId, true);
 
-                CallBackDebitReq2 callBackDebitReq2 = new CallBackDebitReq2();
+                var callBackDebitReq2 = new CallBackDebitReq2();
                 callBackDebitReq2 = JsonConvert.DeserializeObject<CallBackDebitReq2>(sResponse);
                 oNotify.Message = callBackDebitReq2.message;
 
@@ -95,18 +95,18 @@ namespace Payment.FattyPay
         }
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            string sUrl = payResource["host"] + "/api/v1/transaction";
+            var sUrl = payResource["host"] + "/api/v1/transaction";
             var data = FromJson<CallBackDebitReq>(bodyContent);
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = payResource["TransID"];
 
-            string p = $"{payResource["merchant_no"]}&{data.MerchantTransactionId}&{payResource["key"]}";
-            string sign = ToSHA512(p).ToUpper();
+            var p = $"{payResource["merchant_no"]}&{data.MerchantTransactionId}&{payResource["key"]}";
+            var sign = ToSHA512(p).ToUpper();
 
             if (sign == data.Signature)
             {
-                Dictionary<string, string> formData1 = new Dictionary<string, string>();
+                var formData1 = new Dictionary<string, string>();
                 formData1.Add("MerchantTransactionId", data.MerchantTransactionId);
                 formData1.Add("MerchantCode", payResource["merchant_no"]);
                 formData1.Add("Timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
@@ -118,7 +118,7 @@ namespace Payment.FattyPay
                 var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
                 var sResponse = HttpGet(sUrl, sParam, data.MerchantTransactionId, true);
 
-                CallBackDebitReq2 callBackDebitReq2 = new CallBackDebitReq2();
+                var callBackDebitReq2 = new CallBackDebitReq2();
                 callBackDebitReq2 = JsonConvert.DeserializeObject<CallBackDebitReq2>(sResponse);
                 oNotify.Comment = callBackDebitReq2.message;
                 oNotify.Message = callBackDebitReq2.message;
@@ -162,30 +162,30 @@ namespace Payment.FattyPay
         }
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"] + "/api/v1/withdraw";
+            var sUrl = inputs["host"] + "/api/v1/withdraw";
 
-            Dictionary<string, string> formData = new Dictionary<string, string>();
-            string[] findPayCode = FindPayCode(inputs["PayCode"]);
+            var formData = new Dictionary<string, string>();
+            var findPayCode = FindPayCode(inputs["PayCode"]);
             formData.Add("PaymentMethod", findPayCode[1]);
             formData.Add("BankCode", inputs["BankCode"]);
             formData.Add("ServiceProvider", "JSTPay");
             formData.Add("MerchantCode", inputs["merchant_no"]);
             formData.Add("MerchantTransactionId", inputs["TransID"]);
             formData.Add("CustomerIsoCurrency", inputs["PayCurrencyId"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#0.0000"));
             formData.Add("FirstName", inputs["AccountName"]);
             formData.Add("CustomerAccount", inputs["AccountNo"]);
             formData.Add("NotifyUrl", inputs["CallBackUrl"]);
             formData.Add("CustomerId", inputs["CustId"]);
-            string p = $"{inputs["key"]}&{formData["MerchantTransactionId"]}&{formData["Amount"]}&{formData["CustomerIsoCurrency"]}&{formData["CustomerAccount"]}";
+            var p = $"{inputs["key"]}&{formData["MerchantTransactionId"]}&{formData["Amount"]}&{formData["CustomerIsoCurrency"]}&{formData["CustomerAccount"]}";
             formData.Add("Signature", ToSHA512(p).ToUpper());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["MerchantTransactionId"], true);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["MerchantTransactionId"], true);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
             if (withdrawalRes.errorCode == 0)
@@ -208,10 +208,10 @@ namespace Payment.FattyPay
         }
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"] + "/api/v2/deposit/request";
+            var sUrl = inputs["host"] + "/api/v2/deposit/request";
 
-            Dictionary<string, string> formData = new Dictionary<string, string>();
-            string[] findPayCode = FindPayCode(inputs["PayCode"]);
+            var formData = new Dictionary<string, string>();
+            var findPayCode = FindPayCode(inputs["PayCode"]);
             if (findPayCode[0] == "BankQr")
             {
                 formData.Add("PaymentMethod", findPayCode[0]); 
@@ -227,7 +227,7 @@ namespace Payment.FattyPay
             formData.Add("MerchantCode", inputs["merchant_no"]);
             formData.Add("MerchantTransactionId", inputs["TransID"]);
             formData.Add("IsoCurrency", inputs["PayCurrencyId"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#0.0000"));
             formData.Add("FirstName", "FirstName");
             formData.Add("LastName", "LastName");
@@ -241,15 +241,15 @@ namespace Payment.FattyPay
             formData.Add("HomeUrl", inputs["ReturnUrl"]);
             formData.Add("RequestIp", inputs["ClientIP"]);
 
-            string p = $"{inputs["key"]}&{formData["MerchantTransactionId"]}&{formData["ServiceProvider"]}&{formData["PaymentMethod"]}&{formData["IsoCurrency"]}&" +
-                        $"{formData["Amount"]}&{formData["Email"]}";
+            var p = $"{inputs["key"]}&{formData["MerchantTransactionId"]}&{formData["ServiceProvider"]}&{formData["PaymentMethod"]}&{formData["IsoCurrency"]}&" +
+                    $"{formData["Amount"]}&{formData["Email"]}";
             formData.Add("Signature", ToSHA512(p).ToUpper());
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData));
             var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"], true);
 
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (sResponse.Contains("http"))
             {
                 oDepositResult.Success = true;
@@ -277,7 +277,7 @@ namespace Payment.FattyPay
 
         private string[] FindPayCode(string payCode)
         {
-            string[] sArray = payCode.Split('-');
+            var sArray = payCode.Split('-');
 
             return sArray;
         }

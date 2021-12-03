@@ -29,7 +29,7 @@ namespace Payment.TenPay
         {
             var data = FromJson<CallBackCreditReq>(bodyContent);
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.ShopOrderId;
 
             if (data.DepositOrderStatusId == "2")
@@ -84,10 +84,10 @@ namespace Payment.TenPay
             var data = FromJson<CallBackDebitReq>(bodyContent);
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).Where(f => f.Value.Length > 0).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             dicP.Remove("EncryptValue");
-            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={payResource["key"]}";
-            string sign = ToSHA256(p.ToLower()).ToUpper();
+            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={payResource["key"]}";
+            var sign = ToSHA256(p.ToLower()).ToUpper();
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.ShopOrderId;
             if (sign == data.EncryptValue)
             {
@@ -143,9 +143,9 @@ namespace Payment.TenPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var sUrl = inputs["PayOut"];
+            var formData = new Dictionary<string, string>();
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("CurrencyId", inputs["PayCurrencyId"]);
             formData.Add("IsTest", inputs["IsTest"]);
@@ -159,16 +159,16 @@ namespace Payment.TenPay
             formData.Add("ShopUserLongId", inputs["merchant_no"]);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={inputs["key"]}";
+            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={inputs["key"]}";
             formData.Add("EncryptValue", ToSHA256(p.ToLower()).ToUpper());
 
             formData["PayeeBankName"] = UrlEncode(inputs["BankName"]);
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["ShopOrderId"], true);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["ShopOrderId"], true);
 
-            WithdrawRes withdrawRes = new WithdrawRes();
+            var withdrawRes = new WithdrawRes();
             withdrawRes = JsonConvert.DeserializeObject<WithdrawRes>(sResponse);
-            WithdrawResult oWithdrawResult = new WithdrawResult();
+            var oWithdrawResult = new WithdrawResult();
 
             if (withdrawRes.Success)
             {
@@ -204,9 +204,9 @@ namespace Payment.TenPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var sUrl = inputs["host"];
+            var formData = new Dictionary<string, string>();
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("CurrencyId", inputs["PayCurrencyId"]);
             formData.Add("IsTest", inputs["IsTest"]);
@@ -219,15 +219,15 @@ namespace Payment.TenPay
             formData.Add("ShopUserLongId", inputs["merchant_no"]);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={inputs["key"]}";
+            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={inputs["key"]}";
             formData.Add("EncryptValue", ToSHA256(p.ToLower()).ToUpper());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["ShopOrderId"], true);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["ShopOrderId"], true);
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (depositRes.Success == "true")
             {
                 oDepositResult.Url = depositRes.PayUrl;

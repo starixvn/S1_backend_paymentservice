@@ -66,7 +66,7 @@ namespace PaymentService.Controllers
         [Route("Payment/Withdrawal")]
         public ApiResult Withdrawal(ReqWithdrawal reqWithdrawal)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             try
             {
                 var custId = reqWithdrawal.CustId;
@@ -148,7 +148,7 @@ namespace PaymentService.Controllers
         [Route("Payment/CryptoWithdrawal")]
         public ApiResult CryptoWithdrawal(ReqWithdrawal reqWithdrawal)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             try
             {
                 var custId = reqWithdrawal.CustId;
@@ -227,8 +227,8 @@ namespace PaymentService.Controllers
         {
             try
             {
-                string bodyText = "";
-                using (StreamReader reader = new StreamReader(Request.Body))
+                var bodyText = "";
+                using (var reader = new StreamReader(Request.Body))
                 {
                     bodyText = await reader.ReadToEndAsync();
                 }
@@ -241,8 +241,8 @@ namespace PaymentService.Controllers
                     Request.Path.ToUriComponent(),
                     Request.QueryString.ToUriComponent());
 
-                Dictionary<string, string> dicParam = new Dictionary<string, string>();
-                bool isFormData = false;
+                var dicParam = new Dictionary<string, string>();
+                var isFormData = false;
                 if (Request.ContentType == null)
                 {
                     _logger.LogInformation(
@@ -265,10 +265,10 @@ namespace PaymentService.Controllers
                 _logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
 
-                int withdrawalId = 0;
-                Match m = Regex.Match(transId, @"\d+");
+                var withdrawalId = 0;
+                var m = Regex.Match(transId, @"\d+");
                 int.TryParse(m.Value, out withdrawalId);
-                string cTransId = $"W{_common.GetEnv()}{withdrawalId}";
+                var cTransId = $"W{_common.GetEnv()}{withdrawalId}";
                 if (cTransId != transId)
                 {
                     var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)_payBll.GetPayHelper(transId);
@@ -308,7 +308,7 @@ namespace PaymentService.Controllers
 
                 //取得每家金流的成果 
                 var rNotifyWithdrawalResult = payHelper.CallBackCredit(dicParam, bodyText, WithReq);
-                string sInput = "";
+                var sInput = "";
                 if (isFormData)
                 {
                     sInput = JsonConvert.SerializeObject(dicParam);
@@ -320,7 +320,7 @@ namespace PaymentService.Controllers
 
                 //oDBLog.InsertPaymentLog("", sInput, JsonConvert.SerializeObject(rNotifyDepositResult));
 
-                string temp = rNotifyWithdrawalResult.WithdrawId;
+                var temp = rNotifyWithdrawalResult.WithdrawId;
                 while(temp.Substring(0,1) == "0")
                 {
                     temp = temp.Remove(0, 1);
@@ -331,7 +331,7 @@ namespace PaymentService.Controllers
                     return $"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}";
                 }
 
-                NotifyWithdrawResult notifyWithdrawResult = rNotifyWithdrawalResult;
+                var notifyWithdrawResult = rNotifyWithdrawalResult;
                 if (rNotifyWithdrawalResult.TransStatus == TransStatus.Success)
                 {
                     #region Transaction is Success
@@ -342,7 +342,7 @@ namespace PaymentService.Controllers
                     catch (MySqlException SqlEx)
                     {
                         /*Need Check Transaction Status*/
-                        StringBuilder errorMessages = new StringBuilder();
+                        var errorMessages = new StringBuilder();
                         errorMessages.AppendLine($"Message: {SqlEx.Message}");
                         errorMessages.AppendLine($"Error Number: {SqlEx.Number}");
                         errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
@@ -426,7 +426,7 @@ namespace PaymentService.Controllers
         [Route("Payment/CryptoExchange")]
         public ApiResult<Service.Model.ExchangeResult> CryptoExchange(ReqExchange reqExchange)
         {
-            ApiResult<Service.Model.ExchangeResult> apiResult = new ApiResult<Service.Model.ExchangeResult>();
+            var apiResult = new ApiResult<Service.Model.ExchangeResult>();
             try
             {
                 var custId = reqExchange.CustId;
@@ -471,7 +471,7 @@ namespace PaymentService.Controllers
                 if (result.ErrorCode == "0")
                 {
                     apiResult.ErrorCode = (int)ErrorCode.Success;
-                    Service.Model.ExchangeResult exchangeResult = new Service.Model.ExchangeResult();
+                    var exchangeResult = new Service.Model.ExchangeResult();
                     exchangeResult.FormData = result.FormData;
                     apiResult.Data = exchangeResult;
                     apiResult.Message = result.Message;

@@ -24,11 +24,11 @@ namespace Payment.HonorPay
         {
             var data = FromJson<CallBackWithdrawalReq>(ToJson(formData));
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"+key={payResource["key"]}";
+            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"+key={payResource["key"]}";
 
-            string sign = ToHMACSHA256(p, payResource["key"]).ToUpper();
+            var sign = ToHMACSHA256(p, payResource["key"]).ToUpper();
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.orderNo;
             oNotify.ThirdId = data.uuid;
             oNotify.Message = data.status;
@@ -73,11 +73,11 @@ namespace Payment.HonorPay
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
+            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
 
-            string sign = ToHMACSHA256(p, payResource["key"]).ToUpper();
+            var sign = ToHMACSHA256(p, payResource["key"]).ToUpper();
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.orderNo;
             oNotify.ThirdId = data.uuid;
             oNotify.Comment = data.payStatus;
@@ -127,12 +127,12 @@ namespace Payment.HonorPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["PayOut"];
+            var formData = new Dictionary<string, string>();
    
             formData.Add("account", inputs["merchant_no"]);
             formData.Add("orderNo", inputs["TransID"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("bankName", UrlEncode(inputs["BankName"]));
             formData.Add("bankHolder", UrlEncode(inputs["AccountName"]));
@@ -145,17 +145,17 @@ namespace Payment.HonorPay
 
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
+            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
             formData.Add("sign", ToHMACSHA256(p, inputs["key"]).ToUpper());
             formData["bankName"] = inputs["BankName"];
             formData["bankHolder"] = inputs["AccountName"];
             formData["notifyURL"] = inputs["CallBackUrl"];
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"]);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
             if (withdrawalRes.retCode == "0")
@@ -188,22 +188,22 @@ namespace Payment.HonorPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["host"];
+            var formData = new Dictionary<string, string>();
             formData.Add("account", inputs["merchant_no"]);
             formData.Add("payType", inputs["PayCode"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("payMoney", amount.ToString("#"));
             formData.Add("ip", inputs["ClientIP"]);
             formData.Add("notifyURL", inputs["CallBackUrl"]);
             formData.Add("orderNo", inputs["TransID"]);
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"]);
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (depositRes.retCode == "0")
             {
                 oDepositResult.Url = depositRes.qrContent;

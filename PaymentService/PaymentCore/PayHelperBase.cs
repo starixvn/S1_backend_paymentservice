@@ -181,10 +181,10 @@ namespace PaymentCore
                 request.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
             }
 
-            using WebResponse response = request.GetResponse();
-            using Stream dataStream = response.GetResponseStream();
-            using StreamReader reader = new StreamReader(dataStream);
-            string responseFromServer = reader.ReadToEnd();
+            using var response = request.GetResponse();
+            using var dataStream = response.GetResponseStream();
+            using var reader = new StreamReader(dataStream);
+            var responseFromServer = reader.ReadToEnd();
 
             InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
 
@@ -193,7 +193,7 @@ namespace PaymentCore
 
         protected string HttpGet(string url, string parameters, string contentType, string accesstoken, string transID)
         {
-            WebRequest request = WebRequest.Create($"{url}?{parameters}");
+            var request = WebRequest.Create($"{url}?{parameters}");
             request.Method = "GET";
             if (!string.IsNullOrEmpty(proxyHost))
             {
@@ -202,10 +202,10 @@ namespace PaymentCore
             request.Headers.Add("accept", contentType);
             request.Headers.Add("x-api-key", accesstoken);
 
-            using WebResponse response = request.GetResponse();
-            using Stream dataStream = response.GetResponseStream();
-            using StreamReader reader = new StreamReader(dataStream);
-            string responseFromServer = reader.ReadToEnd();
+            using var response = request.GetResponse();
+            using var dataStream = response.GetResponseStream();
+            using var reader = new StreamReader(dataStream);
+            var responseFromServer = reader.ReadToEnd();
 
             InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
 
@@ -266,8 +266,8 @@ namespace PaymentCore
                 request.Proxy = new WebProxy(proxyHost, proxyPort);
             }
 
-            string postData = parameters;
-            byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+            var postData = parameters;
+            var byteArray = Encoding.UTF8.GetBytes(postData);
             request.ContentType = contentType;
             request.ContentLength = byteArray.Length;
             if (ignoreCertificate)
@@ -295,7 +295,7 @@ namespace PaymentCore
         }
         protected string HttpPost(string url, string parameters, string contentType, string accesstoken, string transID)
         {
-            WebRequest request = WebRequest.Create(url);
+            var request = WebRequest.Create(url);
 
             request.Method = "POST";
             if (!string.IsNullOrEmpty(proxyHost))
@@ -303,22 +303,22 @@ namespace PaymentCore
                 request.Proxy = new WebProxy(proxyHost, proxyPort);
             }
 
-            string postData = parameters;
-            byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+            var postData = parameters;
+            var byteArray = Encoding.UTF8.GetBytes(postData);
             request.ContentType = contentType;
             request.ContentLength = byteArray.Length;
             request.Headers.Add("Authorization", "Bearer " + accesstoken);
             request.Headers.Add("accept", contentType);
             request.Headers.Add("x-api-key", accesstoken);
 
-            Stream dataStream = request.GetRequestStream();
+            var dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);
             dataStream.Close();
-            using WebResponse response = request.GetResponse();
+            using var response = request.GetResponse();
 
             dataStream = response.GetResponseStream();
-            using StreamReader reader = new StreamReader(dataStream);
-            string responseFromServer = reader.ReadToEnd();
+            using var reader = new StreamReader(dataStream);
+            var responseFromServer = reader.ReadToEnd();
             reader.Close();
             dataStream.Close();
             response.Close();
@@ -328,7 +328,7 @@ namespace PaymentCore
         }
         protected string HttpPost(string url, string parameters, string contentType, string username, string password, string transID)
         {
-            WebRequest request = WebRequest.Create(url);
+            var request = WebRequest.Create(url);
 
             request.Method = "POST";
             if (!string.IsNullOrEmpty(proxyHost))
@@ -336,21 +336,21 @@ namespace PaymentCore
                 request.Proxy = new WebProxy(proxyHost, proxyPort);
             }
 
-            string postData = parameters;
-            byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+            var postData = parameters;
+            var byteArray = Encoding.UTF8.GetBytes(postData);
             request.ContentType = contentType;
             request.ContentLength = byteArray.Length;
 
-            string svcCredentials = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(username + ":" + password));
+            var svcCredentials = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(username + ":" + password));
             request.Headers.Add("Authorization", "Basic " + svcCredentials);
-            Stream dataStream = request.GetRequestStream();
+            var dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);
             dataStream.Close();
-            using WebResponse response = request.GetResponse();
+            using var response = request.GetResponse();
 
             dataStream = response.GetResponseStream();
-            using StreamReader reader = new StreamReader(dataStream);
-            string responseFromServer = reader.ReadToEnd();
+            using var reader = new StreamReader(dataStream);
+            var responseFromServer = reader.ReadToEnd();
             reader.Close();
             dataStream.Close();
             response.Close();
@@ -360,26 +360,26 @@ namespace PaymentCore
         }
         protected string HttpPostGBK(string url, string parameters, string contentType, string transID)
         {
-            WebRequest request = WebRequest.Create(url);
+            var request = WebRequest.Create(url);
             request.Method = "POST";
             if (!string.IsNullOrEmpty(proxyHost))
             {
                 request.Proxy = new WebProxy(proxyHost, proxyPort);
             }
 
-            string postData = parameters;
-            byte[] byteArray = UTF8ToGBK(parameters);
+            var postData = parameters;
+            var byteArray = UTF8ToGBK(parameters);
             request.ContentType = contentType;
             request.ContentLength = byteArray.Length;
 
-            Stream dataStream = request.GetRequestStream();
+            var dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);
             dataStream.Close();
-            using WebResponse response = request.GetResponse();
+            using var response = request.GetResponse();
 
             dataStream = response.GetResponseStream();
-            using StreamReader reader = new StreamReader(dataStream);
-            string responseFromServer = reader.ReadToEnd();
+            using var reader = new StreamReader(dataStream);
+            var responseFromServer = reader.ReadToEnd();
             reader.Close();
             dataStream.Close();
             response.Close();
@@ -399,9 +399,9 @@ namespace PaymentCore
         /// </summary>
         protected async System.Threading.Tasks.Task<string> HttpPostAsync(string url, Dictionary<string, string> parameters, string SerialID)
         {
-            string responseBody = "";
+            var responseBody = "";
 
-            using (HttpClient client = new HttpClient())
+            using (var client = new HttpClient())
             {
                 client.Timeout = TimeSpan.FromSeconds(30);
                 var content = new FormUrlEncodedContent(parameters);
@@ -443,11 +443,11 @@ namespace PaymentCore
         protected string ToHMACSHA256(string encodeStr, string key)
         {
             var encoding = new System.Text.UTF8Encoding();
-            byte[] keyByte = encoding.GetBytes(key);
-            byte[] messageBytes = encoding.GetBytes(encodeStr);
+            var keyByte = encoding.GetBytes(key);
+            var messageBytes = encoding.GetBytes(encodeStr);
             using (var hmacSHA256 = new HMACSHA256(keyByte))
             {
-                byte[] hashMessage = hmacSHA256.ComputeHash(messageBytes);
+                var hashMessage = hmacSHA256.ComputeHash(messageBytes);
                 return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
             }
         }
@@ -455,22 +455,22 @@ namespace PaymentCore
         // To Base64
         public static string ToHMACSHA256Base64(string message, string secretKey)
         {
-            byte[] keyBytes = System.Text.Encoding.UTF8.GetBytes(secretKey);
-            byte[] messageBytes = System.Text.Encoding.UTF8.GetBytes(message);
-            System.Security.Cryptography.HMACSHA256 cryptographer = new System.Security.Cryptography.HMACSHA256(keyBytes);
-            byte[] bytes = cryptographer.ComputeHash(messageBytes);
-            string base64String = Convert.ToBase64String(bytes, 0, bytes.Length);
+            var keyBytes = System.Text.Encoding.UTF8.GetBytes(secretKey);
+            var messageBytes = System.Text.Encoding.UTF8.GetBytes(message);
+            var cryptographer = new System.Security.Cryptography.HMACSHA256(keyBytes);
+            var bytes = cryptographer.ComputeHash(messageBytes);
+            var base64String = Convert.ToBase64String(bytes, 0, bytes.Length);
             return base64String;
         }
 
 
         protected string ToSHA256(string encodeStr)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(encodeStr);
-            byte[] hash = SHA256Managed.Create().ComputeHash(bytes);
+            var bytes = Encoding.UTF8.GetBytes(encodeStr);
+            var hash = SHA256Managed.Create().ComputeHash(bytes);
 
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < hash.Length; i++)
+            var builder = new StringBuilder();
+            for (var i = 0; i < hash.Length; i++)
             {
                 builder.Append(hash[i].ToString("X2"));
             }
@@ -492,11 +492,11 @@ namespace PaymentCore
         protected string ToHMACSMD5(string encodeStr, string key)
         {
             var encoding = new System.Text.UTF8Encoding();
-            byte[] keyByte = encoding.GetBytes(key);
-            byte[] messageBytes = encoding.GetBytes(encodeStr);
+            var keyByte = encoding.GetBytes(key);
+            var messageBytes = encoding.GetBytes(encodeStr);
             using (var hmacMD5 = new HMACMD5(keyByte))
             {
-                byte[] hashMessage = hmacMD5.ComputeHash(messageBytes);
+                var hashMessage = hmacMD5.ComputeHash(messageBytes);
                 return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
             }
         }
@@ -518,8 +518,8 @@ namespace PaymentCore
         }
         protected string unicode_js_1(string str)
         {
-            string outStr = "";
-            Regex reg = new Regex(@"(?i)\\u([0-9a-f]{4})");
+            var outStr = "";
+            var reg = new Regex(@"(?i)\\u([0-9a-f]{4})");
             try
             {
                 outStr = reg.Replace(str, delegate (Match m1)
@@ -574,7 +574,7 @@ namespace PaymentCore
 
             if (str.IndexOf('.') > 0 && str.IndexOf('.') != str.Length)
             {
-                string result = str.Substring(str.IndexOf('.') + 1, str.Length - str.IndexOf('.') - 1);
+                var result = str.Substring(str.IndexOf('.') + 1, str.Length - str.IndexOf('.') - 1);
                 if (result == "")
                     return 0;
                 else if (int.Parse(result) == 0)
@@ -589,31 +589,31 @@ namespace PaymentCore
         }
         protected byte[] UTF8ToGBK(string str)
         {
-            Encoding GBK = Encoding.GetEncoding("GB2312"); // GBK 编码
+            var GBK = Encoding.GetEncoding("GB2312"); // GBK 编码
             Encoding UTF8 = new UTF8Encoding(true); // UTF-8 编码
 
-            byte[] utf8bytes = Encoding.UTF8.GetBytes(str);
-            byte[] gbkbytes = Encoding.Convert(UTF8, GBK, utf8bytes);
+            var utf8bytes = Encoding.UTF8.GetBytes(str);
+            var gbkbytes = Encoding.Convert(UTF8, GBK, utf8bytes);
 
             return gbkbytes;
         }
 
         protected string GBKToUTF8(string str)
         {
-            Encoding GBK = Encoding.GetEncoding("GB2312"); // GBK 编码
+            var GBK = Encoding.GetEncoding("GB2312"); // GBK 编码
             Encoding UTF8 = new UTF8Encoding(true); // UTF-8 编码
 
-            byte[] gbkbytes = GBK.GetBytes(str);
-            byte[] utf8bytes = Encoding.Convert(GBK, UTF8, gbkbytes);
-            string toString = UTF8.GetString(utf8bytes);
+            var gbkbytes = GBK.GetBytes(str);
+            var utf8bytes = Encoding.Convert(GBK, UTF8, gbkbytes);
+            var toString = UTF8.GetString(utf8bytes);
 
             return toString;
         }
 
         protected string UrlEncode(string str)
         {
-            StringBuilder builder = new StringBuilder();
-            foreach (char c in str)
+            var builder = new StringBuilder();
+            foreach (var c in str)
             {
                 if (HttpUtility.UrlEncode(c.ToString()).Length > 1)
                 {
@@ -651,91 +651,91 @@ namespace PaymentCore
 
         protected static string RSAPublicKeyJava2DotNet(string publicKey)
         {
-            RsaKeyParameters publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
+            var publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
             return DotNetUtilities.ToRSA(publicKeyParam).ToXmlString(false);
         }
 
         protected static string RSAPrivateKeyJava2DotNet(string privateKey)
         {
-            RsaPrivateCrtKeyParameters privateKeyParam = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
+            var privateKeyParam = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
             return DotNetUtilities.ToRSA(privateKeyParam).ToXmlString(true);
         }
         
         protected string RSAEncryptWithPublicKey(string publickey, string content)
         {
-            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+            var rsa = new RSACryptoServiceProvider();
             //byte[] cipherbytes;
             rsa.FromXmlString(publickey);
-            RSAParameters rp = rsa.ExportParameters(false);
+            var rp = rsa.ExportParameters(false);
 
             //转换密钥
             AsymmetricKeyParameter pbk = DotNetUtilities.GetRsaPublicKey(rp);
 
-            IBufferedCipher c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
+            var c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
             //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
             c.Init(true, pbk);
 
-            byte[] DataToEncrypt = Encoding.UTF8.GetBytes(content);
-            byte[] outBytes = c.DoFinal(DataToEncrypt);
+            var DataToEncrypt = Encoding.UTF8.GetBytes(content);
+            var outBytes = c.DoFinal(DataToEncrypt);
             return Convert.ToBase64String(outBytes);
         }
 
         protected string RSAEncryptWithPrivateKey(string privateKey, string content)
         {
             //加载私钥
-            RSACryptoServiceProvider privateRsa = new RSACryptoServiceProvider();
+            var privateRsa = new RSACryptoServiceProvider();
             privateRsa.FromXmlString(privateKey);
 
             //转换密钥
-            AsymmetricCipherKeyPair keyPair = DotNetUtilities.GetKeyPair(privateRsa);
-            IBufferedCipher c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding"); //使用RSA/ECB/PKCS1Padding格式
+            var keyPair = DotNetUtilities.GetKeyPair(privateRsa);
+            var c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding"); //使用RSA/ECB/PKCS1Padding格式
 
             //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
             c.Init(true, keyPair.Private);
-            byte[] DataToEncrypt = Encoding.UTF8.GetBytes(content);
-            byte[] outBytes = c.DoFinal(DataToEncrypt);//加密
+            var DataToEncrypt = Encoding.UTF8.GetBytes(content);
+            var outBytes = c.DoFinal(DataToEncrypt);//加密
             return Convert.ToBase64String(outBytes);
         }
 
         protected string RSADecryptWithPublicKey(string publicKey, string content)
         {
-            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+            var rsa = new RSACryptoServiceProvider();
             rsa.FromXmlString(publicKey);
-            RSAParameters rp = rsa.ExportParameters(false);
+            var rp = rsa.ExportParameters(false);
 
             //转换密钥
             AsymmetricKeyParameter pbk = DotNetUtilities.GetRsaPublicKey(rp);
 
-            IBufferedCipher c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
+            var c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
 
             //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
             c.Init(false, pbk);
 
-            byte[] DataToDecrypt = Convert.FromBase64String(content);
-            byte[] outBytes = c.DoFinal(DataToDecrypt);//解密
+            var DataToDecrypt = Convert.FromBase64String(content);
+            var outBytes = c.DoFinal(DataToDecrypt);//解密
             return Encoding.UTF8.GetString(outBytes);
         }
 
         protected string RSADecryptWithPrivateKey(string privatekey, string content)
         {
             //加载私钥
-            RSACryptoServiceProvider privateRsa = new RSACryptoServiceProvider();
+            var privateRsa = new RSACryptoServiceProvider();
             privateRsa.FromXmlString(privatekey);
 
             //转换密钥
-            AsymmetricCipherKeyPair keyPair = DotNetUtilities.GetKeyPair(privateRsa);
-            IBufferedCipher c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding"); //使用RSA/ECB/PKCS1Padding格式
+            var keyPair = DotNetUtilities.GetKeyPair(privateRsa);
+            var c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding"); //使用RSA/ECB/PKCS1Padding格式
 
             //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
             c.Init(false, keyPair.Private);
-            byte[] DataToEncrypt = Convert.FromBase64String(content);
-            byte[] outBytes = c.DoFinal(DataToEncrypt);//加密
+            var DataToEncrypt = Convert.FromBase64String(content);
+            var outBytes = c.DoFinal(DataToEncrypt);//加密
             return Encoding.UTF8.GetString(outBytes);
         }
 
         protected string currMapping(string currencyId)
         {
-            Dictionary<string, string> currMapping = new Dictionary<string, string>
+            var currMapping = new Dictionary<string, string>
             {
                 {"2", "MYR"},
                 {"4", "THB"},

@@ -27,12 +27,12 @@ namespace Payment.OneClickPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
-            string secret_key = payResource["secret_key"];
+            var secret_key = payResource["secret_key"];
 
-            string p = $"{data.merchant_txn}{data.merchant_customer}{data.amount}{data.net_amount}{data.tnx}{secret_key}";
-            string sign = ToMD5(p).ToLower();
+            var p = $"{data.merchant_txn}{data.merchant_customer}{data.amount}{data.net_amount}{data.tnx}{secret_key}";
+            var sign = ToMD5(p).ToLower();
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.merchant_txn;
             if (sign == data.sign)
             {
@@ -88,28 +88,28 @@ namespace Payment.OneClickPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            CreditReq creditReq = new CreditReq();
+            var sUrl = inputs["PayOut"];
+            var creditReq = new CreditReq();
             creditReq.merchant_id = inputs["merchant_no"];
             creditReq.merchant_txn = inputs["TransID"];
             creditReq.merchant_customer = inputs["CustId"];
             creditReq.bank_account_no = inputs["AccountNo"];
             creditReq.bank_account_name = inputs["AccountName"];
             creditReq.bank_code = inputs["BankCode"];
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             creditReq.amount = amount.ToString("#");
 
-            string p = $"{creditReq.merchant_id}{creditReq.merchant_txn}{creditReq.bank_account_no}{creditReq.bank_code}{creditReq.amount}{inputs["secret_key"]}";
+            var p = $"{creditReq.merchant_id}{creditReq.merchant_txn}{creditReq.bank_account_no}{creditReq.bank_code}{creditReq.amount}{inputs["secret_key"]}";
             creditReq.sign = ToMD5(p).ToLower();
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.merchant_txn);
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.merchant_txn);
 
-            Payout payout = new Payout();
+            var payout = new Payout();
             payout = JsonConvert.DeserializeObject<Payout>(sResponse);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
+            var withdrawResult = new WithdrawResult();
             if (payout.code == 0)
             {
                 withdrawResult.Success = true;
@@ -154,29 +154,29 @@ namespace Payment.OneClickPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            DepositReq depositReq = new DepositReq();
+            var sUrl = inputs["host"];
+            var depositReq = new DepositReq();
             depositReq.merchant_id = inputs["merchant_no"];
             depositReq.merchant_txn = inputs["TransID"];
             depositReq.merchant_customer = inputs["CustId"];
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             depositReq.amount = amount.ToString("#");
             depositReq.bank_code = inputs["BankCode"];
             depositReq.description = "";
             depositReq.url_success = inputs["ReturnUrl"];
             depositReq.url_error = inputs["ReturnUrl"];
 
-            string p = $"{depositReq.merchant_id}{depositReq.merchant_txn}{depositReq.merchant_customer}{depositReq.amount}{depositReq.bank_code}{inputs["secret_key"]}";
+            var p = $"{depositReq.merchant_id}{depositReq.merchant_txn}{depositReq.merchant_customer}{depositReq.amount}{depositReq.bank_code}{inputs["secret_key"]}";
             depositReq.sign = ToMD5(p).ToLower();
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(depositReq));
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", depositReq.merchant_txn);
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", depositReq.merchant_txn);
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
 
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (depositRes.code == 0)
             {
                 oDepositResult.Success = true;
@@ -225,20 +225,20 @@ namespace Payment.OneClickPay
         }
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
-            EnquiryWithdrawResult enquiryWithdrawResult = new EnquiryWithdrawResult();
-            string sUrl = inputs["PayOutQuery"];
-            CreditReq creditReq = new CreditReq();
+            var enquiryWithdrawResult = new EnquiryWithdrawResult();
+            var sUrl = inputs["PayOutQuery"];
+            var creditReq = new CreditReq();
             creditReq.merchant_id = inputs["merchant_no"];
             creditReq.merchant_txn = inputs["TransID"];
 
-            string p = $"{creditReq.merchant_id}{creditReq.merchant_txn}{inputs["secret_key"]}";
+            var p = $"{creditReq.merchant_id}{creditReq.merchant_txn}{inputs["secret_key"]}";
             creditReq.sign = ToMD5(p).ToLower();
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpGet(sUrl, sParam, creditReq.merchant_txn);
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpGet(sUrl, sParam, creditReq.merchant_txn);
             enquiryWithdrawResult.RawContent = sResponse;
-            PayoutQueryRes payoutQueryRes = new PayoutQueryRes();
+            var payoutQueryRes = new PayoutQueryRes();
             payoutQueryRes = JsonConvert.DeserializeObject<PayoutQueryRes>(sResponse);
 
             if (payoutQueryRes.code == 0)
@@ -319,22 +319,22 @@ namespace Payment.OneClickPay
 
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PaymentQuery"];
-            EnquiryDepositReq enquiryDepositReq = new EnquiryDepositReq();
+            var sUrl = inputs["PaymentQuery"];
+            var enquiryDepositReq = new EnquiryDepositReq();
             enquiryDepositReq.merchant_id = inputs["merchant_no"];
             enquiryDepositReq.mer_txn = inputs["TransID"];
 
-            string p = $"{enquiryDepositReq.merchant_id}{enquiryDepositReq.mer_txn}{inputs["secret_key"]}";
+            var p = $"{enquiryDepositReq.merchant_id}{enquiryDepositReq.mer_txn}{inputs["secret_key"]}";
             enquiryDepositReq.sign = ToMD5(p).ToLower();
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(enquiryDepositReq));
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", enquiryDepositReq.mer_txn);
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", enquiryDepositReq.mer_txn);
 
-            DepositQueryRes depositQueryRes = new DepositQueryRes();
+            var depositQueryRes = new DepositQueryRes();
             depositQueryRes = JsonConvert.DeserializeObject<DepositQueryRes>(sResponse);
 
-            EnquiryDepositResult enquiryDepositResult = new EnquiryDepositResult();
+            var enquiryDepositResult = new EnquiryDepositResult();
             if (depositQueryRes.code == 0)
             {
                 enquiryDepositResult.TransStatus = TransStatus.Success;

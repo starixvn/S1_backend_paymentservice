@@ -41,7 +41,7 @@ namespace Payment.Eeziepay
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.partner_orderid;
 
             if (data.status == "000")
@@ -81,13 +81,13 @@ namespace Payment.Eeziepay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
-            string merchant_no = payResource["merchant_no"];
-            string key = payResource["key"];
-            decimal amount = decimal.Parse(data.amount) / 100;
-            string p = $"service_version={data.service_version}&billno={data.billno}&partner_orderid={data.partner_orderid}&currency={data.currency}&amount={data.amount}&status={data.status}&key={key}";
-            string sign = ToSHA1(p).ToUpper();
+            var merchant_no = payResource["merchant_no"];
+            var key = payResource["key"];
+            var amount = decimal.Parse(data.amount) / 100;
+            var p = $"service_version={data.service_version}&billno={data.billno}&partner_orderid={data.partner_orderid}&currency={data.currency}&amount={data.amount}&status={data.status}&key={key}";
+            var sign = ToSHA1(p).ToUpper();
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.partner_orderid;
             if (sign == data.sign)
             {
@@ -168,14 +168,14 @@ namespace Payment.Eeziepay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            CreditReq creditReq = new CreditReq();
+            var sUrl = inputs["PayOut"];
+            var creditReq = new CreditReq();
             creditReq.service_version = "2.1";
             creditReq.partner_code = inputs["merchant_no"];
             creditReq.partner_orderid = inputs["TransID"];
             creditReq.member_id = inputs["CustId"];
             creditReq.currency = inputs["PayCurrencyId"];
-            decimal amount = decimal.Parse(inputs["Amount"]) * 100;
+            var amount = decimal.Parse(inputs["Amount"]) * 100;
             creditReq.amount = amount.ToString("#");
             creditReq.account_name = inputs["AccountName"];
             creditReq.account_number = inputs["AccountNo"];
@@ -186,18 +186,18 @@ namespace Payment.Eeziepay
             creditReq.bank_code = inputs["BankCode"];
             creditReq.notify_url = inputs["CallBackUrl"];
 
-            string p = $"service_version={creditReq.service_version}&partner_code={creditReq.partner_code}&partner_orderid={creditReq.partner_orderid}&" +
-                $"member_id={creditReq.member_id}&currency={creditReq.currency}&amount={creditReq.amount}&account_name={creditReq.account_name}&" +
-                $"account_number={creditReq.account_number}&bank_province={creditReq.bank_province}&bank_city={creditReq.bank_city}&bank_branch={creditReq.bank_branch}&" +
-                $"bank_code={creditReq.bank_code}&notify_url={creditReq.notify_url}&key={inputs["key"]}";
+            var p = $"service_version={creditReq.service_version}&partner_code={creditReq.partner_code}&partner_orderid={creditReq.partner_orderid}&" +
+                    $"member_id={creditReq.member_id}&currency={creditReq.currency}&amount={creditReq.amount}&account_name={creditReq.account_name}&" +
+                    $"account_number={creditReq.account_number}&bank_province={creditReq.bank_province}&bank_city={creditReq.bank_city}&bank_branch={creditReq.bank_branch}&" +
+                    $"bank_code={creditReq.bank_code}&notify_url={creditReq.notify_url}&key={inputs["key"]}";
             creditReq.sign = ToSHA1(p).ToUpper();
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.partner_orderid);
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.partner_orderid);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(Payout));
+            var withdrawResult = new WithdrawResult();
+            var xmlSerializer = new XmlSerializer(typeof(Payout));
             using var reader = new System.IO.StringReader(sResponse);
             var payout = (Payout)xmlSerializer.Deserialize(reader);
             if (payout.status == "000" || payout.status == "001")
@@ -216,13 +216,13 @@ namespace Payment.Eeziepay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["host"];
+            var formData = new Dictionary<string, string>();
             formData.Add("service_version", "2.1");
             formData.Add("partner_code", inputs["merchant_no"]);
             formData.Add("currency", inputs["PayCurrencyId"]);
             formData.Add("partner_orderid", inputs["TransID"]);
-            decimal amount = decimal.Parse(inputs["Amount"]) * 100;
+            var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             var time = new DateTimeOffset(DateTime.Now);
             formData.Add("trans_time", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
@@ -235,12 +235,12 @@ namespace Payment.Eeziepay
             formData.Add("member_ip", "");
             formData.Add("member_id", inputs["CustId"]);
 
-            string p = $"service_version={formData["service_version"]}&partner_code={formData["partner_code"]}&partner_orderid={formData["partner_orderid"]}&" +
-                $"member_id={formData["member_id"]}&member_ip={formData["member_ip"]}&currency={formData["currency"]}&amount={formData["amount"]}&" +
-                $"backend_url={formData["backend_url"]}&redirect_url={formData["redirect_url"]}&bank_code={formData["bank_code"]}&trans_time={formData["trans_time"]}&key={inputs["key"]}";
+            var p = $"service_version={formData["service_version"]}&partner_code={formData["partner_code"]}&partner_orderid={formData["partner_orderid"]}&" +
+                    $"member_id={formData["member_id"]}&member_ip={formData["member_ip"]}&currency={formData["currency"]}&amount={formData["amount"]}&" +
+                    $"backend_url={formData["backend_url"]}&redirect_url={formData["redirect_url"]}&bank_code={formData["bank_code"]}&trans_time={formData["trans_time"]}&key={inputs["key"]}";
             formData.Add("sign", ToSHA1(p).ToUpper());
 
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             oDepositResult.Url = sUrl;
             oDepositResult.FormData = formData;
             oDepositResult.Success = true;

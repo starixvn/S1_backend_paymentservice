@@ -28,9 +28,9 @@ namespace Payment.Xingji
             var p = $"amount={data.amount}&datetime={data.datetime}&memberid={data.memberid}&orderid={data.orderid}&returncode={data.returncode}&" +
                 $"transaction_code={data.transaction_code}&transaction_id={data.transaction_id}&transaction_msg={data.transaction_msg}&key={payResource["key"]}";
 
-            string sign = ToMD5(p).ToUpper();
+            var sign = ToMD5(p).ToUpper();
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.orderid;
             oNotify.ThirdId = data.transaction_id;
             oNotify.Message = data.transaction_msg;
@@ -77,9 +77,9 @@ namespace Payment.Xingji
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
             var p = $"amount={data.amount}&datetime={data.datetime}&memberid={data.memberid}&orderid={data.orderid}&" +
                     $"returncode={data.returncode}&transaction_id={data.transaction_id}&key={payResource["key"]}";
-            string sign = ToMD5(p).ToUpper();
+            var sign = ToMD5(p).ToUpper();
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.orderid;
             oNotify.ThirdId = data.transaction_id;
             oNotify.Comment = data.returncode;
@@ -147,11 +147,11 @@ namespace Payment.Xingji
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            WithdrawalReq withdrawalReq = new WithdrawalReq();
+            var sUrl = inputs["PayOut"];
+            var withdrawalReq = new WithdrawalReq();
             withdrawalReq.pay_memberid = inputs["custid"];
             withdrawalReq.pay_out_trade_no = inputs["TransID"];
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             withdrawalReq.pay_money = amount.ToString("#");
             withdrawalReq.pay_bankname = inputs["BankCode"];
             withdrawalReq.pay_subbranch = "无";
@@ -162,14 +162,14 @@ namespace Payment.Xingji
             withdrawalReq.pay_notifyurl = inputs["CallBackUrl"];
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(withdrawalReq)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
+            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
             dicP.Add("pay_md5sign", ToMD5(p).ToUpper());
 
             var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", withdrawalReq.pay_out_trade_no);
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", withdrawalReq.pay_out_trade_no);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
             if (withdrawalRes.status == "success")
@@ -223,8 +223,8 @@ namespace Payment.Xingji
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            DepositReq depositReq = new DepositReq();
+            var sUrl = inputs["host"];
+            var depositReq = new DepositReq();
             depositReq.pay_memberid = inputs["custid"];
             depositReq.pay_orderid = inputs["TransID"];
             var time = new DateTimeOffset(DateTime.Now);
@@ -234,16 +234,16 @@ namespace Payment.Xingji
             depositReq.pay_bankcode = inputs["PayCode"];
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(depositReq)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
+            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
             dicP.Add("pay_md5sign", ToMD5(p).ToUpper());
             dicP.Add("format","json");
             dicP.Add("pay_productname","payment");
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", depositReq.pay_orderid);
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", depositReq.pay_orderid);
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (depositRes.status == "ok")
             {
                 oDepositResult.Url = depositRes.Data.pay_url;

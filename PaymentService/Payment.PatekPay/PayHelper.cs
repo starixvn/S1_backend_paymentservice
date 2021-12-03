@@ -24,11 +24,11 @@ namespace Payment.PatekPay
         {
             var data = FromJson<CallBackWithdrawalReq>(ToJson(formData));
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&secret={payResource["key"]}";
+            var p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&secret={payResource["key"]}";
 
-            string sign = ToMD5(p);
+            var sign = ToMD5(p);
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.outtransferno;
             oNotify.ThirdId = data.transferno;
             oNotify.Message = data.status;
@@ -75,15 +75,15 @@ namespace Payment.PatekPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
             oNotify.Comment = $"{data.status}-{data.remark}";
             data.endtime = System.Web.HttpUtility.UrlEncode(data.endtime).ToLower();
             data.remark = System.Web.HttpUtility.UrlEncode(data.remark).ToLower();
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&secret={payResource["key"]}";
-            string sign = ToMD5(p).ToLower();
+            var p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&secret={payResource["key"]}";
+            var sign = ToMD5(p).ToLower();
 
             oNotify.DepositId = data.outtradeno;
             oNotify.ThirdId = data.tradeno;
@@ -139,12 +139,12 @@ namespace Payment.PatekPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["PayOut"];
+            var formData = new Dictionary<string, string>();
 
             formData.Add("merchant", inputs["merchant_no"]);
             formData.Add("outtransferno", inputs["TransID"].ToLower());
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("bankname", UrlEncode(inputs["BankName"]).ToLower());
             formData.Add("cardname", UrlEncode(inputs["AccountName"]).ToLower());
@@ -153,17 +153,17 @@ namespace Payment.PatekPay
 
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&secret={inputs["key"]}";
+            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&secret={inputs["key"]}";
             formData.Add("sign", ToMD5(p));
             formData["bankname"] = inputs["BankName"];
             formData["cardname"] = inputs["AccountName"];
             formData["notifyurl"] = inputs["CallBackUrl"];
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["outtransferno"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["outtransferno"]);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
             if (withdrawalRes.retCode == "0")
@@ -196,11 +196,11 @@ namespace Payment.PatekPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["host"];
+            var formData = new Dictionary<string, string>();
             formData.Add("merchant", inputs["merchant_no"]);
             formData.Add("paytype", inputs["PayCode"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("notifyurl", UrlEncode(inputs["CallBackUrl"]).ToLower());
             formData.Add("outtradeno", inputs["TransID"].ToLower());
@@ -208,11 +208,11 @@ namespace Payment.PatekPay
             formData.Add("returndataformat", "clienthtml");
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&secret={inputs["key"]}";
+            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&secret={inputs["key"]}";
             formData.Add("sign", ToMD5(p));
             formData["notifyurl"] = inputs["CallBackUrl"];
 
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             oDepositResult.Url = sUrl;
             oDepositResult.FormData = formData;
             oDepositResult.Success = true;

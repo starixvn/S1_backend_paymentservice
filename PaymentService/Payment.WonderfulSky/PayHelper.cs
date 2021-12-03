@@ -38,12 +38,12 @@ namespace Payment.WonderfulSky
         {
             var data = FromJson<WithdrawalRes>(ToJson(formData));
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
+            var p = string.Join("&", dicP.Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
 
             var rsa = new RSAHelper(RSAType.RSA, Encoding.Unicode, payResource["private_key"], payResource["public_key"]);
-            string sign = rsa.Encrypt(p);
+            var sign = rsa.Encrypt(p);
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.merchantid;
             oNotify.ThirdId = data.merchantid;
             oNotify.Message = data.code;
@@ -92,13 +92,13 @@ namespace Payment.WonderfulSky
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
-            string p = $"amount={data.amount}&merchantid={data.merchantid}&mid={data.mid}&status={data.status}&" +
-                         $"systemid={data.systemid}&time={data.time}&{payResource["key"]}";
+            var p = $"amount={data.amount}&merchantid={data.merchantid}&mid={data.mid}&status={data.status}&" +
+                    $"systemid={data.systemid}&time={data.time}&{payResource["key"]}";
 
             var rsa = new RSAHelper(RSAType.RSA, Encoding.Unicode, payResource["private_key"], payResource["public_key"]);
             var sign= rsa.Encrypt(p);
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.merchantid;
             oNotify.ThirdId = data.systemid;
             oNotify.Comment = data.status;
@@ -148,12 +148,12 @@ namespace Payment.WonderfulSky
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["PayOut"];
+            var formData = new Dictionary<string, string>();
             formData.Add("service", "Withdraw");
             formData.Add("mid", inputs["merchant_no"]);
             formData.Add("merchantid", inputs["TransID"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("currency", "CNY");
             formData.Add("AccountNo", inputs["ReturnUrl"]);
@@ -166,10 +166,10 @@ namespace Payment.WonderfulSky
             formData.Add("channel", "bank");
             //“bank”: 網銀 “alipay”: 支付寶 “wechat”:微信 “qqpay”: QQ支付
 
-            string p = $"amount={formData["amount"]}&bankbranchname={formData["bankbranchname"]}&ankcity={formData["bankcity"]}&bankcode={formData["bankcode"]}&" +
-                        $"bankname={formData["bankname"]}&bankprovince={formData["bankprovince"]}&cardname={formData["cardname"]}&cardno={formData["cardno"]}&" +
-                        $"cardtype={formData["cardtype"]}&channel={formData["channel"]}&currency={formData["currency"]}&merchantid={formData["merchantid"]}&" +
-                        $"mid={formData["mid"]}&service={formData["service"]}&{inputs["key"]}";
+            var p = $"amount={formData["amount"]}&bankbranchname={formData["bankbranchname"]}&ankcity={formData["bankcity"]}&bankcode={formData["bankcode"]}&" +
+                    $"bankname={formData["bankname"]}&bankprovince={formData["bankprovince"]}&cardname={formData["cardname"]}&cardno={formData["cardno"]}&" +
+                    $"cardtype={formData["cardtype"]}&channel={formData["channel"]}&currency={formData["currency"]}&merchantid={formData["merchantid"]}&" +
+                    $"mid={formData["mid"]}&service={formData["service"]}&{inputs["key"]}";
 
             //var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             //string p = string.Join("&", dicP.Where(x => !x.Key.Equals("remark", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&{inputs["key"]}";
@@ -178,11 +178,11 @@ namespace Payment.WonderfulSky
             var rsa = new RSAHelper(RSAType.RSA, Encoding.Unicode, inputs["private_key"], inputs["public_key"]);
             formData.Add("sign", rsa.Encrypt(p));
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["merchantid"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["merchantid"]);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
             if (withdrawalRes.code == "00000" || withdrawalRes.code == "00001")
@@ -212,12 +212,12 @@ namespace Payment.WonderfulSky
         {
             var rsa = new RSAHelper(RSAType.RSA, Encoding.UTF8, inputs["private_key"], inputs["public_key"]);
 
-            string sUrl = inputs["host"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["host"];
+            var formData = new Dictionary<string, string>();
             formData.Add("service", "Payment");
             formData.Add("mid", inputs["merchant_no"]);
             formData.Add("merchantid", inputs["TransID"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("currency", "CNY");
             formData.Add("returnurl", inputs["ReturnUrl"]);
@@ -226,7 +226,7 @@ namespace Payment.WonderfulSky
             formData.Add("remark", "");
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = string.Join("&", dicP.Where(x => !x.Key.Equals("remark", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&{inputs["key"]}";
+            var p = string.Join("&", dicP.Where(x => !x.Key.Equals("remark", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&{inputs["key"]}";
             // formData.Add("sign", rsa.Sign(p));
 
             // formData.Add("sign", RSASign(inputs["private_key"], p));
@@ -242,12 +242,12 @@ namespace Payment.WonderfulSky
 
 
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["merchantid"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["merchantid"]);
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (depositRes.result == "1")
             {
                 oDepositResult.Url = depositRes.qrcodeurl;

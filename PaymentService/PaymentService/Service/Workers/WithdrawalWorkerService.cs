@@ -68,7 +68,7 @@ namespace PaymentService.Service.Workers
                             catch (MySqlException SqlEx)
                             {
                                 /*Need Check Transaction Status*/
-                                StringBuilder errorMessages = new StringBuilder();
+                                var errorMessages = new StringBuilder();
                                 //errorMessages.AppendLine(Newtonsoft.Json.JsonConvert.SerializeObject(dataParam));
                                 errorMessages.AppendLine($"PayName: {withdrawalRequest.PayName}");
                                 errorMessages.AppendLine($"Message: {SqlEx.Message}");
@@ -111,7 +111,7 @@ namespace PaymentService.Service.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(30);
+                var dueTimeSpan = TimeSpan.FromSeconds(30);
                 if (environment.IsDevelopment() || environment.IsEnvironment("QA"))
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);

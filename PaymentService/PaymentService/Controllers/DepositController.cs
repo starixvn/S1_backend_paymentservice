@@ -171,7 +171,7 @@ namespace PaymentService.Controllers
         [Route("Payment/ReqDepositBank")]
         public ApiResult<PayResult> DepositBank(ReqDepositBank reqDeposit)
         {
-            ApiResult<PayResult> apiResult = new ApiResult<PayResult>();
+            var apiResult = new ApiResult<PayResult>();
             try
             {
                 var custId = reqDeposit.CustId;
@@ -246,7 +246,7 @@ namespace PaymentService.Controllers
                 if (result.Success)
                 {
                     apiResult.ErrorCode = 0;
-                    PayResult payResult = new PayResult();
+                    var payResult = new PayResult();
                     payResult.Url = result.Url;
                     payResult.FormData = result.FormData;
                     payResult.ThirdId = result.ThirdId;
@@ -260,7 +260,7 @@ namespace PaymentService.Controllers
                 }
                 else
                 {
-                    DepositRequest depositRequest = new DepositRequest();
+                    var depositRequest = new DepositRequest();
                     depositRequest.DepositType = (int)DepositType.OnlineBanking;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
@@ -292,7 +292,7 @@ namespace PaymentService.Controllers
         [Route("Payment/ReqDepositMobile")]
         public ApiResult<PayResult> DepositMobile(ReqDepositMobile reqDeposit)
         {
-            ApiResult<PayResult> apiResult = new ApiResult<PayResult>();
+            var apiResult = new ApiResult<PayResult>();
             try
             {
                 var custId = reqDeposit.CustId;
@@ -358,7 +358,7 @@ namespace PaymentService.Controllers
                 if (result.Success)
                 {
                     apiResult.ErrorCode = 0;
-                    PayResult payResult = new PayResult();
+                    var payResult = new PayResult();
                     payResult.Url = result.Url;
                     payResult.FormData = result.FormData;
                     payResult.ThirdId = result.ThirdId;
@@ -372,7 +372,7 @@ namespace PaymentService.Controllers
                 }
                 else
                 {
-                    DepositRequest depositRequest = new DepositRequest();
+                    var depositRequest = new DepositRequest();
                     depositRequest.DepositType = (int)DepositType.MobilePayment;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
@@ -409,7 +409,7 @@ namespace PaymentService.Controllers
         [Route("Payment/ReqDepositCrpyto")]
         public ApiResult<PayResult> DepositCrpyto(ReqDepositCrpyto reqDeposit)
         {
-            ApiResult<PayResult> apiResult = new ApiResult<PayResult>();
+            var apiResult = new ApiResult<PayResult>();
             try
             {
                 var custId = reqDeposit.CustId;
@@ -477,7 +477,7 @@ namespace PaymentService.Controllers
                 if (result.Success)
                 {
                     apiResult.ErrorCode = 0;
-                    PayResult payResult = new PayResult();
+                    var payResult = new PayResult();
                     payResult.Url = result.Url;
                     payResult.FormData = result.FormData;
                     payResult.ThirdId = result.ThirdId;
@@ -491,7 +491,7 @@ namespace PaymentService.Controllers
                 }
                 else
                 {
-                    DepositRequest depositRequest = new DepositRequest();
+                    var depositRequest = new DepositRequest();
                     depositRequest.DepositType = (int)DepositType.CryptoPayPayment;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
@@ -531,7 +531,7 @@ namespace PaymentService.Controllers
         [Route("Payment/ReqDepositLoadCard")]
         public ApiResult<PayResult> DepositLoadCard(ReqDepositLoadCard reqDeposit)
         {
-            ApiResult<PayResult> apiResult = new ApiResult<PayResult>();
+            var apiResult = new ApiResult<PayResult>();
             try
             {
                 var custId = reqDeposit.CustId;
@@ -598,7 +598,7 @@ namespace PaymentService.Controllers
                 if (result.Success)
                 {
                     apiResult.ErrorCode = 0;
-                    PayResult payResult = new PayResult();
+                    var payResult = new PayResult();
                     payResult.FormData = result.FormData;
                     payResult.ThirdId = result.ThirdId;
                     payResult.Mode = loadCardPay.Mode;
@@ -612,7 +612,7 @@ namespace PaymentService.Controllers
                 }
                 else
                 {
-                    DepositRequest depositRequest = new DepositRequest();
+                    var depositRequest = new DepositRequest();
                     depositRequest.DepositType = (int)DepositType.LoadCardPayment;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
@@ -626,7 +626,7 @@ namespace PaymentService.Controllers
                     _paymentBll.DepositFail(depositRequest, rNotifyDepositResult);
                     //apiResult.ErrorCode = (int)ErrorCode.Fail;
                     apiResult.ErrorCode = 0;
-                    PayResult payResult = new PayResult();
+                    var payResult = new PayResult();
                     payResult.FormData = result.FormData;
                     payResult.ThirdId = result.ThirdId;
                     payResult.Mode = loadCardPay.Mode;
@@ -651,7 +651,7 @@ namespace PaymentService.Controllers
         {
             _logger.LogInformation($"Method={GetCurrentMethod()}, Request: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
 
-            string[] officeList = _configuration.GetSection("OfficeIP")?.Get<string[]>();
+            var officeList = _configuration.GetSection("OfficeIP")?.Get<string[]>();
 
             if (officeList.Any(x => x == clientIP))
             {
@@ -687,8 +687,8 @@ namespace PaymentService.Controllers
         {
             try
             {
-                string bodyText = "";
-                using (StreamReader reader = new StreamReader(Request.Body))
+                var bodyText = "";
+                using (var reader = new StreamReader(Request.Body))
                 {
                     bodyText = await reader.ReadToEndAsync();
                 }
@@ -701,8 +701,8 @@ namespace PaymentService.Controllers
                     Request.Path.ToUriComponent(),
                     Request.QueryString.ToUriComponent());
 
-                Dictionary<string, string> dicParam = new Dictionary<string, string>();
-                bool isFormData = false;
+                var dicParam = new Dictionary<string, string>();
+                var isFormData = false;
 
                 if (Request.ContentType != null)
                 {
@@ -733,11 +733,11 @@ namespace PaymentService.Controllers
                 _logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
 
-                int depositId = 0;
+                var depositId = 0;
 
-                Match m = Regex.Match(transId, @"\d+");
+                var m = Regex.Match(transId, @"\d+");
                 int.TryParse(m.Value, out depositId);
-                string cTransId = $"D{_common.GetEnv()}{depositId}";
+                var cTransId = $"D{_common.GetEnv()}{depositId}";
                 if (cTransId != transId)
                 {
                     var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)_payBll.GetPayHelper(transId);
@@ -765,7 +765,7 @@ namespace PaymentService.Controllers
             {
                 var custId = depositRequest.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                IPay pay = (IPay)depositRequest.depositInfo;
+                var pay = (IPay)depositRequest.depositInfo;
                 var paySetting = _payBll.GetPaymentAllList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == pay.PayId);
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
                 DepReq.Add("TransID", depositRequest.TransId);
@@ -791,7 +791,7 @@ namespace PaymentService.Controllers
 
                 //取得每家金流的成果 
                 var rNotifyDepositResult = payHelper.CallBackDebit(dicParam, bodyText, DepReq);
-                string sInput = "";
+                var sInput = "";
                 if (isFormData)
                 {
                     sInput = JsonConvert.SerializeObject(dicParam);
@@ -833,7 +833,7 @@ namespace PaymentService.Controllers
                     catch (MySqlException SqlEx)
                     {
                         /*Need Check Transaction Status*/
-                        StringBuilder errorMessages = new StringBuilder();
+                        var errorMessages = new StringBuilder();
                         //errorMessages.AppendLine(Newtonsoft.Json.JsonConvert.SerializeObject(dataParam));
 
                         errorMessages.AppendLine($"Message: {SqlEx.Message}");
@@ -913,7 +913,7 @@ namespace PaymentService.Controllers
         }
         private async Task<ApiResult<TransferResult>> TransferToSabaAsync(TpTransfer inTpTransfer)
         {
-            decimal amount = inTpTransfer.Amount;
+            var amount = inTpTransfer.Amount;
             if (amount.ToString().IndexOf(".") > -1)
             {
                 decimal.TryParse(amount.ToString("#.##"), out amount);

@@ -49,9 +49,9 @@ namespace Payment.Fuli
         {
             var data = FromJson<CallBackWithdrawalReq>(ToJson(formData));
             var p = $"{data.requestId}{data.result}{data.sum}{data.balance}";
-            string sign = ToHMACSMD5(p, payResource["key"]);
+            var sign = ToHMACSMD5(p, payResource["key"]);
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.requestId;
             oNotify.ThirdId = data.requestId;
             oNotify.Message = data.result;
@@ -67,7 +67,7 @@ namespace Payment.Fuli
                 {
                     oNotify.TransStatus = TransStatus.Fail;
                     oNotify.Response = "success";
-                    string failReason = "";
+                    var failReason = "";
                     try
                     {
                         //failReason = System.Web.HttpUtility.UrlDecode(data.failReason, System.Text.Encoding.GetEncoding("GB2312"));
@@ -115,9 +115,9 @@ namespace Payment.Fuli
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
             var p = $"{data.requestId}{data.tradeId}{data.fiscalDate}{data.description}{data.totalPrice}{data.tradeAmount}{data.tradeFee}";
-            string sign = ToHMACSMD5(p, payResource["key"]);
+            var sign = ToHMACSMD5(p, payResource["key"]);
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.requestId;
             oNotify.ThirdId = data.tradeId;
             oNotify.Comment = data.description;
@@ -166,12 +166,12 @@ namespace Payment.Fuli
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["PayOut"];
+            var formData = new Dictionary<string, string>();
             formData.Add("requestId", inputs["TransID"]);
             formData.Add("merchantCode", inputs["merchant_no"]);
             formData.Add("transferType", "1");
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("sum", amount.ToString("#"));
             formData.Add("accountType", "1");
             formData.Add("unionBankNum", "000000");
@@ -185,16 +185,16 @@ namespace Payment.Fuli
             formData.Add("reason", "无");
             formData.Add("noticeUrl", inputs["CallBackUrl"]);
 
-            string p = $"{formData["requestId"]}{formData["merchantCode"]}{formData["transferType"]}{formData["sum"]}{formData["accountType"]}{formData["unionBankNum"]}" +
-                        $"{formData["branchBankName"]}{formData["openBankName"]}{formData["openBankProvince"]}{formData["openBankCity"]}{formData["accountName"]}{formData["bankCode"]}" +
-                        $"{formData["bankAccount"]}{formData["reason"]}{formData["noticeUrl"]}";
+            var p = $"{formData["requestId"]}{formData["merchantCode"]}{formData["transferType"]}{formData["sum"]}{formData["accountType"]}{formData["unionBankNum"]}" +
+                    $"{formData["branchBankName"]}{formData["openBankName"]}{formData["openBankProvince"]}{formData["openBankCity"]}{formData["accountName"]}{formData["bankCode"]}" +
+                    $"{formData["bankAccount"]}{formData["reason"]}{formData["noticeUrl"]}";
             formData.Add("signature", ToHMACSMD5(p, inputs["key"]));
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPostGBK(sUrl, sParam, "application/x-www-form-urlencoded", formData["requestId"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPostGBK(sUrl, sParam, "application/x-www-form-urlencoded", formData["requestId"]);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
             if (withdrawalRes.result == "00000" || withdrawalRes.result == "00001")
@@ -225,13 +225,13 @@ namespace Payment.Fuli
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["host"];
+            var formData = new Dictionary<string, string>();
             formData.Add("tradeCode", "IAZ1002");
             formData.Add("requestId", inputs["TransID"]);
             formData.Add("merchantCode", inputs["merchant_no"]);
             formData.Add("totalBizType", "BIZ01100");
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("totalPrice", amount.ToString("#"));
             formData.Add("goodsDesc", "无");
             formData.Add("rePayTimeOut", "0");
@@ -245,15 +245,15 @@ namespace Payment.Fuli
             formData.Add("merAcct", inputs["TransID"]);
             formData.Add("bizType", "BIZ01100");
             formData.Add("productNumber", "1");
-            string p = $"{formData["requestId"]}{formData["merchantCode"]}{formData["totalBizType"]}{formData["totalPrice"]}{formData["noticeurl"]}{formData["remoteIp"]}{formData["payType"]}";
+            var p = $"{formData["requestId"]}{formData["merchantCode"]}{formData["totalBizType"]}{formData["totalPrice"]}{formData["noticeurl"]}{formData["remoteIp"]}{formData["payType"]}";
             formData.Add("mersignature", ToHMACSMD5(p, inputs["key"]));
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPostGBK(sUrl, sParam, "application/x-www-form-urlencoded", formData["requestId"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPostGBK(sUrl, sParam, "application/x-www-form-urlencoded", formData["requestId"]);
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (depositRes.result == "00000")
             {
                 oDepositResult.Url = depositRes.codeUrl;

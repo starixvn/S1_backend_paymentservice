@@ -45,7 +45,7 @@ namespace PaymentCore
         /// <returns></returns>
         public string Sign(string data)
         {
-            byte[] dataBytes = _encoding.GetBytes(data);
+            var dataBytes = _encoding.GetBytes(data);
 
             var signatureBytes = _privateKeyRsaProvider.SignData(dataBytes, _hashAlgorithmName, RSASignaturePadding.Pkcs1);
 
@@ -64,8 +64,8 @@ namespace PaymentCore
         /// <returns></returns>
         public bool Verify(string data, string sign)
         {
-            byte[] dataBytes = _encoding.GetBytes(data);
-            byte[] signBytes = Convert.FromBase64String(sign);
+            var dataBytes = _encoding.GetBytes(data);
+            var signBytes = Convert.FromBase64String(sign);
 
             var verify = _publicKeyRsaProvider.VerifyData(dataBytes, signBytes, _hashAlgorithmName, RSASignaturePadding.Pkcs1);
 
@@ -109,7 +109,7 @@ namespace PaymentCore
             var rsa = RSA.Create();
             var rsaParameters = new RSAParameters();
 
-            using (BinaryReader binr = new BinaryReader(new MemoryStream(privateKeyBits)))
+            using (var binr = new BinaryReader(new MemoryStream(privateKeyBits)))
             {
                 byte bt = 0;
                 ushort twobytes = 0;
@@ -151,14 +151,14 @@ namespace PaymentCore
         {
             // encoded OID sequence for  PKCS #1 rsaEncryption szOID_RSA_RSA = "1.2.840.113549.1.1.1"
             byte[] seqOid = { 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01, 0x05, 0x00 };
-            byte[] seq = new byte[15];
+            var seq = new byte[15];
 
             var x509Key = Convert.FromBase64String(publicKeyString);
 
             // ---------  Set up stream to read the asn.1 encoded SubjectPublicKeyInfo blob  ------
-            using (MemoryStream mem = new MemoryStream(x509Key))
+            using (var mem = new MemoryStream(x509Key))
             {
-                using (BinaryReader binr = new BinaryReader(mem))  //wrap Memory Stream with BinaryReader for easy reading
+                using (var binr = new BinaryReader(mem))  //wrap Memory Stream with BinaryReader for easy reading
                 {
                     byte bt = 0;
                     ushort twobytes = 0;
@@ -209,25 +209,25 @@ namespace PaymentCore
                     else
                         return null;
                     byte[] modint = { lowbyte, highbyte, 0x00, 0x00 };   //reverse byte order since asn.1 key uses big endian order
-                    int modsize = BitConverter.ToInt32(modint, 0);
+                    var modsize = BitConverter.ToInt32(modint, 0);
 
-                    int firstbyte = binr.PeekChar();
+                    var firstbyte = binr.PeekChar();
                     if (firstbyte == 0x00)
                     {   //if first byte (highest order) of modulus is zero, don't include it
                         binr.ReadByte();    //skip this null byte
                         modsize -= 1;   //reduce modulus buffer size by 1
                     }
 
-                    byte[] modulus = binr.ReadBytes(modsize);   //read the modulus bytes
+                    var modulus = binr.ReadBytes(modsize);   //read the modulus bytes
 
                     if (binr.ReadByte() != 0x02)            //expect an Integer for the exponent data
                         return null;
-                    int expbytes = (int)binr.ReadByte();        // should only need one byte for actual exponent data (for all useful values)
-                    byte[] exponent = binr.ReadBytes(expbytes);
+                    var expbytes = (int)binr.ReadByte();        // should only need one byte for actual exponent data (for all useful values)
+                    var exponent = binr.ReadBytes(expbytes);
 
                     // ------- create RSACryptoServiceProvider instance and initialize with public key -----
                     var rsa = RSA.Create();
-                    RSAParameters rsaKeyInfo = new RSAParameters
+                    var rsaKeyInfo = new RSAParameters
                     {
                         Modulus = modulus,
                         Exponent = exponent
@@ -247,7 +247,7 @@ namespace PaymentCore
         private int GetIntegerSize(BinaryReader binr)
         {
             byte bt = 0;
-            int count = 0;
+            var count = 0;
             bt = binr.ReadByte();
             if (bt != 0x02)
                 return 0;
@@ -280,8 +280,8 @@ namespace PaymentCore
         {
             if (a.Length != b.Length)
                 return false;
-            int i = 0;
-            foreach (byte c in a)
+            var i = 0;
+            foreach (var c in a)
             {
                 if (c != b[i])
                     return false;

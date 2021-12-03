@@ -27,14 +27,14 @@ namespace Payment.Help2Pay
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
-            string merchant_no = payResource["merchant_no"];
-            string key = payResource["key"];
-            decimal amount = 0m;
+            var merchant_no = payResource["merchant_no"];
+            var key = payResource["key"];
+            var amount = 0m;
             decimal.TryParse(data.Amount, out amount);
-            string p = $"{merchant_no}{data.TransactionID}{data.MemberCode}{amount.ToString("#.00")}{data.CurrencyCode}{data.Status}{key}";
-            string sign = ToMD5(p).ToUpper();
+            var p = $"{merchant_no}{data.TransactionID}{data.MemberCode}{amount.ToString("#.00")}{data.CurrencyCode}{data.Status}{key}";
+            var sign = ToMD5(p).ToUpper();
 
-            NotifyWithdrawResult oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.TransactionID;
             if (sign == data.Key)
             {
@@ -92,12 +92,12 @@ namespace Payment.Help2Pay
             //new DateTimeOffset()
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
             //var json = FromJson<Dictionary<string, string>>(payResource["JSONstr"]);
-            string merchant_no = payResource["merchant_no"];
-            string key = payResource["key"];
-            string p = $"{merchant_no}{data.Reference}{data.Customer}{data.Amount}{data.Currency}{data.Status}{key}";
-            string sign = ToMD5(p).ToUpper();
+            var merchant_no = payResource["merchant_no"];
+            var key = payResource["key"];
+            var p = $"{merchant_no}{data.Reference}{data.Customer}{data.Amount}{data.Currency}{data.Status}{key}";
+            var sign = ToMD5(p).ToUpper();
 
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.Reference;
             if (sign == data.Key)
             {
@@ -166,8 +166,8 @@ namespace Payment.Help2Pay
         }
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"];
-            CreditReq creditReq = new CreditReq();
+            var sUrl = inputs["PayOut"];
+            var creditReq = new CreditReq();
             creditReq.ClientIP = inputs["OutgoingIp"];
             creditReq.ReturnURI = inputs["CallBackUrl"];
             creditReq.MerchantCode = inputs["merchant_no"];
@@ -182,14 +182,14 @@ namespace Payment.Help2Pay
             creditReq.toBankAccountNumber = inputs["AccountNo"];
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
-            string P = $"{creditReq.MerchantCode}{creditReq.TransactionID}{creditReq.MemberCode}{creditReq.Amount}{creditReq.CurrencyCode}{time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss")}{creditReq.toBankAccountNumber}{inputs["key"]}";
+            var P = $"{creditReq.MerchantCode}{creditReq.TransactionID}{creditReq.MemberCode}{creditReq.Amount}{creditReq.CurrencyCode}{time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss")}{creditReq.toBankAccountNumber}{inputs["key"]}";
             dicP.Add("Key", ToMD5(P).ToUpper());
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.TransactionID);
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.TransactionID);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
+            var withdrawResult = new WithdrawResult();
 
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(Payout));
+            var xmlSerializer = new XmlSerializer(typeof(Payout));
             using var reader = new System.IO.StringReader(sResponse);
             var payout = (Payout)xmlSerializer.Deserialize(reader);
             if (payout.statusCode == "000")
@@ -208,8 +208,8 @@ namespace Payment.Help2Pay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"];
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["host"];
+            var formData = new Dictionary<string, string>();
             formData.Add("Merchant", inputs["merchant_no"]);
             formData.Add("Currency", inputs["PayCurrencyId"]);
             formData.Add("Reference", inputs["TransID"]);
@@ -225,10 +225,10 @@ namespace Payment.Help2Pay
             formData.Add("Customer", "");
             //formData.Add("key", inputs["key"]);
             //var dicP = FromJson<Dictionary<string, string>>(ToJson(oDebitReq)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string p = $"{formData["Merchant"]}{formData["Reference"]}{""}{formData["Amount"]}{formData["Currency"]}{time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss")}{inputs["key"]}{formData["ClientIP"]}";
+            var p = $"{formData["Merchant"]}{formData["Reference"]}{""}{formData["Amount"]}{formData["Currency"]}{time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss")}{inputs["key"]}{formData["ClientIP"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             oDepositResult.Url = sUrl;
             oDepositResult.FormData = formData;
             oDepositResult.Success = true;

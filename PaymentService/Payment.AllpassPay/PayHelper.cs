@@ -28,11 +28,11 @@ namespace Payment.AllpassPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            NotifyDepositResult oNotify = new NotifyDepositResult();
+            var oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
 
-            string p = $"{data.state}{data.merchantNum}{data.orderNo}{data.amount}{payResource["key"]}";
-            string sign = ToMD5(p).ToLower();
+            var p = $"{data.state}{data.merchantNum}{data.orderNo}{data.amount}{payResource["key"]}";
+            var sign = ToMD5(p).ToLower();
 
             oNotify.DepositId = data.orderNo;
             oNotify.ThirdId = data.platformOrderNo;
@@ -82,25 +82,25 @@ namespace Payment.AllpassPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["PayOut"] + "/withdraw";
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var sUrl = inputs["PayOut"] + "/withdraw";
+            var formData = new Dictionary<string, string>();
 
             formData.Add("merchantNum", inputs["merchant_no"]);
             formData.Add("orderNo", inputs["TransID"]);
             formData.Add("bankCardAccount", inputs["AccountNo"]);
             formData.Add("accountHolder", inputs["AccountName"]);
             formData.Add("openAccountBank", inputs["BankCode"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("withdrawAmount", amount.ToString("#"));
 
-            string p = $"{formData["merchantNum"]}{formData["orderNo"]}{formData["openAccountBank"]}{formData["bankCardAccount"]}{formData["accountHolder"]}{formData["withdrawAmount"]}{inputs["key"]}";
+            var p = $"{formData["merchantNum"]}{formData["orderNo"]}{formData["openAccountBank"]}{formData["bankCardAccount"]}{formData["accountHolder"]}{formData["withdrawAmount"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderNo"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderNo"]);
 
-            WithdrawResult withdrawResult = new WithdrawResult();
-            WithdrawalRes withdrawalRes = new WithdrawalRes();
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
             withdrawResult.Message = withdrawalRes.msg;
             withdrawResult.RawContent = withdrawalRes.msg;
@@ -137,26 +137,26 @@ namespace Payment.AllpassPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"] + "/startOrder";
+            var sUrl = inputs["host"] + "/startOrder";
 
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>();
             formData.Add("merchantNum", inputs["merchant_no"]);
             formData.Add("orderNo", inputs["TransID"]);
-            decimal amount = decimal.Parse(inputs["Amount"]);
+            var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("payType", inputs["PayCode"]);
             formData.Add("notifyUrl", inputs["CallBackUrl"]);
             formData.Add("returnUrl", inputs["ReturnUrl"]);
 
-            string p = $"{formData["merchantNum"]}{formData["orderNo"]}{formData["amount"]}{formData["notifyUrl"]}{inputs["key"]}";
+            var p = $"{formData["merchantNum"]}{formData["orderNo"]}{formData["amount"]}{formData["notifyUrl"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderNo"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderNo"]);
 
-            DepositRes depositRes = new DepositRes();
+            var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            DepositResult oDepositResult = new DepositResult();
+            var oDepositResult = new DepositResult();
             if (depositRes.code == "200")
             {
                 oDepositResult.Url = depositRes.data.payUrl;
@@ -198,21 +198,21 @@ namespace Payment.AllpassPay
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
-            string sUrl = inputs["host"] + "/withdrawState";
+            var sUrl = inputs["host"] + "/withdrawState";
 
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>();
             formData.Add("merchantNum", inputs["merchant_no"]);
             formData.Add("orderNo", inputs["TransID"]);
 
-            string p = $"{formData["merchantNum"]}{formData["orderNo"]}{inputs["key"]}";
+            var p = $"{formData["merchantNum"]}{formData["orderNo"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            string sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderNo"]);
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderNo"]);
 
-            EnquiryWithdrawResultRes enquiryWithdrawResultRes = new EnquiryWithdrawResultRes();
+            var enquiryWithdrawResultRes = new EnquiryWithdrawResultRes();
             enquiryWithdrawResultRes = JsonConvert.DeserializeObject<EnquiryWithdrawResultRes>(sResponse);
-            EnquiryWithdrawResult oNotify = new EnquiryWithdrawResult();
+            var oNotify = new EnquiryWithdrawResult();
 
             if (enquiryWithdrawResultRes.code == "200")
             {
