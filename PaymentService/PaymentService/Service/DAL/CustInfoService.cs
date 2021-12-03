@@ -1,36 +1,30 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using PaymentService.Service.Model;
+﻿using PaymentService.Service.Model;
 using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using PaymentService.Model;
+using PaymentService.Service.Library;
 
 namespace PaymentService.Service.DAL
 {
     public class CustInfoService
     {
-        private readonly IConfiguration configuration;
-        public CustInfoService(IConfiguration configuration)
+        private readonly MySqlClient _reportDbClient;
+        public CustInfoService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
         public int GetVipLevel(int custId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
-            return conn.ExecuteScalar<int>("VipLevel_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
+            return _reportDbClient.ExecuteScalar<int>("VipLevel_Get", new { CustId = custId });
         }
         public Customer GetCustInfo(int custId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
-            return conn.QueryFirstOrDefault<Customer>("Customer_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
+            return _reportDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
         }
         public decimal GetBalance(int custId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
-            return conn.ExecuteScalar<decimal>("Balance_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
+            return _reportDbClient.ExecuteScalar<decimal>("Balance_Get", new { CustId = custId });
         }
     }
 }

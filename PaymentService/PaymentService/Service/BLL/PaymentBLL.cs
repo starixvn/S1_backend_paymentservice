@@ -10,12 +10,12 @@ namespace PaymentService.Service.BLL
 {
     public class PaymentBLL
     {
-        private readonly DepoistService depoistService;
+        private readonly DepositService _depositService;
         private readonly WithdrawalService withdrawalService;
 
-        public PaymentBLL(DepoistService depoistService, WithdrawalService withdrawalService)
+        public PaymentBLL(DepositService depositService, WithdrawalService withdrawalService)
         {
-            this.depoistService = depoistService;
+            this._depositService = depositService;
             this.withdrawalService = withdrawalService;
         }
 
@@ -25,7 +25,7 @@ namespace PaymentService.Service.BLL
             Match m = Regex.Match(transId, @"\d+");
             int.TryParse(m.Value, out depositId);
 
-            return depoistService.GetDepositRequest(depositId);
+            return _depositService.GetDepositRequest(depositId);
         }
 
         public void DepositSuccess(DepositRequest depositRequest, IDepositResult iDepositResult)
@@ -35,7 +35,7 @@ namespace PaymentService.Service.BLL
             forStatus.Add((int)DepositStatus.Rejected);
             try
             {
-                depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, iDepositResult.ActualAmount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
+                _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, iDepositResult.ActualAmount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
             }
             catch (Exception ex)
             {
@@ -47,19 +47,19 @@ namespace PaymentService.Service.BLL
         {
             List<int> forStatus = new List<int>();
             forStatus.Add((int)DepositStatus.Pending);
-            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Rejected);
+            _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Rejected);
         }
 
         public void DepositPending(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
             List<int> forStatus = new List<int>();
             forStatus.Add((int)DepositStatus.Pending);
-            depoistService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Pending);
+            _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Pending);
         }
 
         public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
         {
-            return depoistService.GetDepositRequesPayEnquiry();
+            return _depositService.GetDepositRequesPayEnquiry();
         }
 
         public WithdrawalRequest GetWithdrawalRequest(string transId)
@@ -104,7 +104,7 @@ namespace PaymentService.Service.BLL
 
         public void SetThirdId(string transId, string thirdID)
         {
-            depoistService.SetThirdId(transId, thirdID);
+            _depositService.SetThirdId(transId, thirdID);
         }
     }
 }

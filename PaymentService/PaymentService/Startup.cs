@@ -28,6 +28,7 @@ namespace PaymentService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMemoryCache();
+            services.AddDatabaseConnection(Configuration);
 
             if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))
             {
@@ -57,7 +58,7 @@ namespace PaymentService
             services.AddSingleton<PayService>();
             services.AddSingleton<CustInfoService>();
             services.AddSingleton<WithdrawalLimitService>();
-            services.AddSingleton<DepoistService>();
+            services.AddSingleton<DepositService>();
             services.AddSingleton<WalletService>();
             services.AddSingleton<WithdrawalService>();
 
