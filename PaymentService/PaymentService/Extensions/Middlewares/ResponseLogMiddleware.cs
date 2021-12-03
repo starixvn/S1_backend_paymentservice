@@ -1,9 +1,12 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 
 namespace PaymentService.Extensions.Middlewares
 {
@@ -12,39 +15,32 @@ namespace PaymentService.Extensions.Middlewares
         private readonly ILogger _logger;
         private readonly RequestDelegate _next;
 
-        public ResponseLogMiddleware(RequestDelegate next, ILoggerFactory factory)
+        public ResponseLogMiddleware(IServiceProvider provider)
         {
-            _next = next;
-            _logger = factory.CreateLogger("ResponseLog");
+            _next = provider.GetRequiredService<RequestDelegate>();
+            _logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("ResponseLog");
         }
 
         public async Task Invoke(HttpContext context)
         {
             var sw = Stopwatch.StartNew();
-            var path = context.Request.Path.Value;
-            if (path.EndsWith("home.html"))
+            var bodyStream = context.Response.Body;
+
+            var responseBodyStream = new MemoryStream();
+            context.Response.Body = responseBodyStream;
+
+            await _next(context);
+
+            responseBodyStream.Seek(0, SeekOrigin.Begin);
+            var recordContent = await new StreamReader(responseBodyStream, Encoding.UTF8, true, 1024, true)
+                .ReadToEndAsync();
+            using (LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds))
             {
-                await _next(context);
+                _logger.LogInformation($"RESPONSE: {recordContent}");
             }
-            else
-            {
-                var bodyStream = context.Response.Body;
 
-                var responseBodyStream = new MemoryStream();
-                context.Response.Body = responseBodyStream;
-
-                await _next(context);
-
-                responseBodyStream.Seek(0, SeekOrigin.Begin);
-                var recordContent = await new StreamReader(responseBodyStream, Encoding.UTF8, true, 1024, true).ReadToEndAsync();
-                using (_logger.BeginScope("ElapsedMilliseconds: {ElapsedMilliseconds}", sw.Elapsed.TotalMilliseconds))
-                {
-                    _logger.LogInformation($"RESPONSE: {recordContent}");
-                }
-
-                responseBodyStream.Seek(0, SeekOrigin.Begin);
-                await responseBodyStream.CopyToAsync(bodyStream);
-            }
+            responseBodyStream.Seek(0, SeekOrigin.Begin);
+            await responseBodyStream.CopyToAsync(bodyStream);
         }
     }
 }

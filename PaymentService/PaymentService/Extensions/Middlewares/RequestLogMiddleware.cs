@@ -4,8 +4,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using PaymentService.Service.Library;
+using Serilog.Context;
 
 namespace PaymentService.Extensions.Middlewares
 {
@@ -13,11 +16,13 @@ namespace PaymentService.Extensions.Middlewares
     {
         private readonly ILogger _logger;
         private readonly RequestDelegate _next;
+        private readonly Common _common;
 
-        public RequestLogMiddleware(RequestDelegate next, ILoggerFactory factory)
+        public RequestLogMiddleware(IServiceProvider provider)
         {
-            _next = next;
-            _logger = factory.CreateLogger("RequestLog");
+            _next = provider.GetRequiredService<RequestDelegate>();
+            _logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("RequestLog");
+            _common = provider.GetRequiredService<Common>();
         }
 
         public async Task Invoke(HttpContext context)
@@ -45,6 +50,7 @@ namespace PaymentService.Extensions.Middlewares
                     ? await requestBody.ReadToEndAsync()
                     : content;
 
+                LogContext.PushProperty("ClientIp", _common.GetClientIP(context));
                 _logger.LogInformation(
                     $"REQUEST METHOD: {context.Request.Method}, CodePage: {codePage}, REQUEST BODY: {content}, REQUEST URL: {url}");
             }
