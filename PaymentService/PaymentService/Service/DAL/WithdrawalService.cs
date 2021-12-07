@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
@@ -9,6 +8,7 @@ using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
+using PaymentService.Extensions;
 using PaymentService.Model;
 using PaymentService.Service.Library;
 
@@ -23,8 +23,7 @@ namespace PaymentService.Service.DAL
         
         public WithdrawalService(IServiceProvider provider)
         {
-            var configuration = provider.GetRequiredService<IConfiguration>();
-            _connectionString = configuration.GetConnectionString("ConnectionString");
+            _connectionString = ServiceCollectionExtension.ConnectionString;
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _walletService = provider.GetRequiredService<WalletService>();
