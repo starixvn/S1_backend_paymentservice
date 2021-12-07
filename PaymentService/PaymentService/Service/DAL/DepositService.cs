@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -7,6 +6,7 @@ using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
+using PaymentService.Extensions;
 using PaymentService.Model;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model.enums;
@@ -24,8 +24,7 @@ namespace PaymentService.Service.DAL
 
         public DepositService(IServiceProvider provider)
         {
-            var configuration = provider.GetRequiredService<IConfiguration>();
-            _connectionString = configuration.GetConnectionString("ConnectionString");
+            _connectionString = ServiceCollectionExtension.ConnectionString;
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _walletService = provider.GetRequiredService<WalletService>();
             _withdrawalLimitService = provider.GetRequiredService<WithdrawalLimitService>();
