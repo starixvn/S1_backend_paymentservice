@@ -61,6 +61,12 @@ namespace PaymentService.Service.DAL
                         result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, -1 * amount, conn, trans);
                     }
 
+                    if (result > 0 && (status == WithdrawalStatus.Approved || status == WithdrawalStatus.Rejected))
+                    {
+                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",
+                            new { _WithdrawalId = withdrawalId }, conn, trans);
+                    }
+
                     SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator);
                     if (result > 0)
                     {
