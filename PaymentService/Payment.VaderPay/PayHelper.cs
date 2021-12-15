@@ -179,7 +179,7 @@ namespace Payment.VaderPay
                 {
                     { "DepositAmount", depositRes.Amount.ToString() }
                 };
-                depositResult.Url = depositRes.redirect_to;
+                depositResult.Url = depositRes.redirect_to.Replace("redirectlink=", "");
                 depositResult.FormData = responseData;
                 depositResult.Success = true;
             }
