@@ -63,6 +63,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.FattyPayATM", "Paym
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.YPay", "Payment.YPay\Payment.YPay.csproj", "{E49E470E-E0E5-4EE4-AA9C-A05A3AE76B3B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.VaderPay", "Payment.VaderPay\Payment.VaderPay.csproj", "{80479E10-0D51-4B87-838F-119F0C311FF1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -189,6 +191,10 @@ Global
 		{E49E470E-E0E5-4EE4-AA9C-A05A3AE76B3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E49E470E-E0E5-4EE4-AA9C-A05A3AE76B3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E49E470E-E0E5-4EE4-AA9C-A05A3AE76B3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80479E10-0D51-4B87-838F-119F0C311FF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80479E10-0D51-4B87-838F-119F0C311FF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80479E10-0D51-4B87-838F-119F0C311FF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80479E10-0D51-4B87-838F-119F0C311FF1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
