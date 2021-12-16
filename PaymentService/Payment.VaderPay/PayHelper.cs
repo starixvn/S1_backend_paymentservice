@@ -234,7 +234,7 @@ namespace Payment.VaderPay
 
             var depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
             var depositResult = new DepositResult();
-            if ((onlineBank && depositRes.status == (int)DepositStatus.Initiated || depositRes.status == (int)DepositStatus.Accepted) ||
+            if ((onlineBank && (depositRes.status == (int)DepositStatus.Initiated || depositRes.status == (int)DepositStatus.Accepted)) ||
                 (!onlineBank && depositRes.error_code == (int)MobileDepositStatus.OperationSuccess))
             {
                 depositResult.ThirdId = onlineBank ? depositRes.transaction : depositRes.invoice_number;
