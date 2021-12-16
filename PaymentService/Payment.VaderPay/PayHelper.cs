@@ -240,7 +240,7 @@ namespace Payment.VaderPay
                 depositResult.ThirdId = onlineBank ? depositRes.transaction : depositRes.invoice_number;
                 var responseData = new Dictionary<string, string>
                 {
-                    { "DepositAmount", depositRes.Amount.ToString() }
+                    { "DepositAmount", onlineBank ? depositRes.Amount.ToString() : depositRes.amount.ToString() }
                 };
                 depositResult.Url = depositRes.redirect_to.Replace("redirectlink=", "");
                 depositResult.FormData = responseData;
