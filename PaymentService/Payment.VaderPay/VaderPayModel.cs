@@ -174,8 +174,6 @@ namespace Payment.VaderPay
 
         [Description("the client’s ifsc (required for INR transaction only)")]
         public string ifsc { get; set; }
-
-        public string CallBackURL { get; set; }
     }
 
     public class WithdrawalRes

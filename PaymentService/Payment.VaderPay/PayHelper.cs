@@ -6,7 +6,7 @@ using PaymentCore;
 
 namespace Payment.VaderPay
 {
-    class PayHelper : PayHelperBase
+    class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
@@ -117,8 +117,7 @@ namespace Payment.VaderPay
                 amount = Convert.ToDecimal(inputs["Amount"]).ToString(),
                 bank_code = inputs["BankCode"],
                 beneficiary_account = inputs["AccountNo"],
-                beneficiary_name = inputs["AccountName"],
-                CallBackURL = UrlEncode(inputs["CallBackUrl"])
+                beneficiary_name = inputs["AccountName"]
             };
             if (request.currency_code == "INR")
             {
@@ -202,6 +201,12 @@ namespace Payment.VaderPay
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+        
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        {
+            var data = FromJson<CallBackCreditReq>(ToJson(formData));
+            return data.RefId;
         }
     }
 }
