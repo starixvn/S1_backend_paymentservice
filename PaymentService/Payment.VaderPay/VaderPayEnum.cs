@@ -11,8 +11,15 @@ namespace Payment.VaderPay
         Pending = -3
     }
     
+    public enum MobileDepositStatus
+    {
+        OperationSuccess = 0,
+        InvalidParameter = 1
+    }
+    
     public enum DepositCallbackStatus
     {
+        Pending = 0,
         Success = 1,
         Rejected = 2,
         Approved = 3
