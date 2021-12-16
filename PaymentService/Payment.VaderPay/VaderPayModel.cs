@@ -43,6 +43,41 @@ namespace Payment.VaderPay
         public string ClientName { get; set; }
     }
 
+    public class MobileDepositReq
+    {
+        [Required]
+        [Description("Merchant Username")]
+        public string merchant_code { get; set; }
+
+        [Required]
+        [Description("Merchant provided transaction identifier(Unique Key)")]
+        public string ref_id { get; set; }
+        
+        [Required]
+        [Description("The client’s player user name")]
+        public string player_username { get; set; }
+
+        [Required]
+        [Description("The client’s player ip")]
+        public string player_ip { get; set; }
+
+        [Required]
+        [Description("The transaction’s currency")]
+        public string currency_code { get; set; }
+
+        [Required]
+        [Description("Amount credit to beneficiary bank account. Decimal point must be zero.")]
+        public decimal amount { get; set; }
+
+        [Required]
+        [Description("The client’s page url")]
+        public string client_url { get; set; }
+
+        [Required]
+        [Description("xxxxxxxxxxxxxxxxxxx")]
+        public string hash { get; set; }
+    }
+
     public class DepositRes
     {
         public string transaction { get; set; }
@@ -56,6 +91,9 @@ namespace Payment.VaderPay
         public int error_code { get; set; }
         public string message { get; set; }
         public string error_message { get; set; }
+        public string invoice_number { get; set; }
+        public string currency_code { get; set; }
+        public decimal amount { get; set; }
     }
 
     public class CallBackDebitReq
@@ -128,6 +166,52 @@ namespace Payment.VaderPay
         public string bank_reference { get; set; }
 
         public string decline_reason { get; set; }
+    }
+
+    public class CallBackDebitMobileReq
+    {
+        [Required]
+        [Description("An unique identifier for the contract involved")]
+        public string InvoiceNo { get; set; }
+        
+        [Required]
+        [Description("The client’s bank code")]
+        public string ReceiverBank { get; set; }
+        
+        [Required]
+        [Description("The client’s bank account number")]
+        public string ReceiverAccount { get; set; }
+        
+        [Required]
+        [Description("The transaction’s currency")]
+        public string Currency { get; set; }
+        
+        [Required]
+        [Description("Amount credit to Receiver bank account")]
+        public decimal Amount { get; set; }
+        
+        [Required]
+        [Description("Original amount credit to Receiver bank account")]
+        public decimal OriginalAmount { get; set; }
+        
+        [Required]
+        [Description("Payment date at the timezone of the API key’s owner")]
+        public DateTime PaymentDate { get; set; }
+        
+        [Required]
+        [Description("Merchant Username")]
+        public string MerchantCode { get; set; }
+        
+        [Required]
+        [Description("Merchant provided transaction identifier")]
+        public string RefId { get; set; }
+        
+        [Required]
+        [Description("Latest transaction status")]
+        public DepositCallbackStatus Status { get; set; }
+        
+        [Required]
+        public string Signature { get; set; }
     }
 
     public class WithdrawalReq
