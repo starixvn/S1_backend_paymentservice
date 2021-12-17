@@ -108,6 +108,9 @@ namespace Payment.VaderPay
                 var data = FromJson<CallBackDebitMobileReq>(bodyContent);
                 var parameter = $"{data.InvoiceNo }{data.ReceiverBank}{data.ReceiverAccount}{data.Currency}{data.Amount}{data.PaymentDate}";
                 var sign = ToHMACSHA256(parameter, payResource["key"]);
+                oNotify.DepositId = data.RefId;
+                oNotify.ThirdId = data.InvoiceNo;
+                oNotify.Comment = $"ReceiverBank:{data.ReceiverBank}, ReceiverAccount:{data.ReceiverAccount}";
                 
                 if (sign == data.Signature)
                 {
