@@ -59,7 +59,7 @@ namespace Payment.VaderPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            var onlineBank = !(formData.TryGetValue("InvoiceNo", out var invoiceNo) && !string.IsNullOrEmpty(invoiceNo));
+            var onlineBank = (formData != null && formData.Count > 0);
             var oNotify = new NotifyDepositResult();
 
             if (onlineBank)
@@ -105,7 +105,7 @@ namespace Payment.VaderPay
             }
             else
             {
-                var data = FromJson<CallBackDebitMobileReq>(ToJson(bodyContent));
+                var data = FromJson<CallBackDebitMobileReq>(bodyContent);
                 var parameter = $"{data.InvoiceNo }{data.ReceiverBank}{data.ReceiverAccount}{data.Currency}{data.Amount}{data.PaymentDate}";
                 var sign = ToHMACSHA256(parameter, payResource["key"]);
                 
@@ -269,8 +269,18 @@ namespace Payment.VaderPay
         
         public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
         {
-            var data = FromJson<CallBackCreditReq>(ToJson(formData));
-            return data.RefId;
+            string refId;
+            if (formData != null && formData.Count > 0)
+            {
+                formData.TryGetValue("RefId", out refId);
+            }
+            else
+            {
+                var data = FromJson<CallBackCreditReq>(bodyContent);
+                refId = data.RefId;
+            }
+
+            return refId;
         }
     }
 }
