@@ -18,7 +18,6 @@ namespace PaymentService.Service.BLL
     {
         private readonly PayService payService;
         private readonly IHostEnvironment environment;
-        private readonly IConfiguration configuration;
         private readonly ILogger<PayBLL> logger;
         private static ConcurrentDictionary<string, IPayHelper> PayHelperContainer = new ConcurrentDictionary<string, IPayHelper>();
         private readonly CacheHelper _cacheHelper;
@@ -27,7 +26,6 @@ namespace PaymentService.Service.BLL
         {
             payService = provider.GetRequiredService<PayService>();
             environment = provider.GetRequiredService<IHostEnvironment>();
-            configuration = provider.GetRequiredService<IConfiguration>();
             logger = provider.GetRequiredService<ILogger<PayBLL>>();
             PayHelperBase.HttpHelper = provider.GetRequiredService<HttpHelper>();
             _cacheHelper = provider.GetRequiredService<CacheHelper>();
