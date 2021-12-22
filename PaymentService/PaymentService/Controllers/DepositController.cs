@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
@@ -677,6 +678,19 @@ namespace PaymentService.Controllers
             }
 
             return true;
+        }
+        
+        [HttpGet, HttpPost]
+        public string GetClientIp()
+        {
+            var clientIp = _common.GetClientIP(HttpContext);
+            return clientIp;
+        }
+        
+        [HttpGet("getheaders")]
+        public ActionResult<Dictionary<string, StringValues>> GetHeaders()
+        {
+            return Ok(Request.Headers.ToDictionary(d => d.Key));
         }
 
 
