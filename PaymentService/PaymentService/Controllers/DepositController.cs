@@ -680,6 +680,7 @@ namespace PaymentService.Controllers
             return true;
         }
         
+        [Route("Payment/GetClientIp")]
         [HttpGet, HttpPost]
         public string GetClientIp()
         {
@@ -687,7 +688,8 @@ namespace PaymentService.Controllers
             return clientIp;
         }
         
-        [HttpGet("getheaders")]
+        [Route("Payment/getheaders")]
+        [HttpGet]
         public ActionResult<Dictionary<string, StringValues>> GetHeaders()
         {
             return Ok(Request.Headers.ToDictionary(d => d.Key));
