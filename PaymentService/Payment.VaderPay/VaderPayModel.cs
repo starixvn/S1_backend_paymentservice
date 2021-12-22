@@ -144,11 +144,11 @@ namespace Payment.VaderPay
         
         [Required]
         [Description("creation date at the timezone of the API key’s owner")]
-        public DateTime created_at { get; set; }
+        public string created_at { get; set; }
         
         [Required]
         [Description("last update at the timezone of the API key’s owner")]
-        public DateTime updated_at { get; set; }
+        public string updated_at { get; set; }
 
         [Description("the name of the transfer’s originating bank")]
         public string bank_name { get; set; }
@@ -196,7 +196,7 @@ namespace Payment.VaderPay
         
         [Required]
         [Description("Payment date at the timezone of the API key’s owner")]
-        public DateTime PaymentDate { get; set; }
+        public string PaymentDate { get; set; }
         
         [Required]
         [Description("Merchant Username")]
@@ -290,7 +290,7 @@ namespace Payment.VaderPay
 
         [Required]
         [Description("Submission Date at the timezone of the API key’s owner")]
-        public DateTime SubmissionDate { get; set; }
+        public string SubmissionDate { get; set; }
 
         [Required]
         public WithdrawalCallbackStatus Status { get; set; }
@@ -316,7 +316,7 @@ namespace Payment.VaderPay
 
         [Required]
         [Description("Payment date at the timezone of the API key’s owner")]
-        public DateTime PaymentDate { get; set; }
+        public string PaymentDate { get; set; }
 
         [Required]
         public string Signature { get; set; }
