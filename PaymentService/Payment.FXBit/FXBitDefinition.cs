@@ -1,37 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
+using PaymentCore;
 
 namespace Payment.FXBit
 {
     internal class FXBitDefinition
     {
-        public static Dictionary<int, string> ToFXBitCurrencyMap =>
-            new Dictionary<int, string>()
+        public static Dictionary<string, TransStatus> DepositTransStatusMap =>
+            new Dictionary<string, TransStatus>()
             {
-                { 2, "MYR" },
-                { 96, "USDT_ERC20" }
+                { "0", TransStatus.Pending },
+                { "1", TransStatus.Pending },
+                { "2", TransStatus.Success },
+                { "3", TransStatus.Fail },
+                { "4", TransStatus.Fail },
+                { "5", TransStatus.Fail },
+                { "6", TransStatus.Fail }
             };
 
-        public static string GetFXBitCurrency(int currencyId)
+        public static TransStatus GetDepositTransStatus(string status)
         {
-            if (ToFXBitCurrencyMap.TryGetValue(currencyId, out var result))
+            if (DepositTransStatusMap.TryGetValue(status, out var result))
             {
                 return result;
             }
 
-            throw new ArgumentException($"CurrencyId: {currencyId} mapping to FXBitCurrency failed.");
+            return TransStatus.Pending;
         }
+
     }
 
     internal class ErrorCode
     {
         public const string Success = "0";
 
+        public const string GetExchangeRateFailed = "9000";
+
         public const string GetReceptionTokenFailed = "9001";
 
         public const string GetWalletAddressFailed = "9002";
-
-        public const string GetExchangeRateFailed = "9000";
     }
 
     internal class MediaType
@@ -72,5 +79,10 @@ namespace Payment.FXBit
         public const string QueryTransactionStatus = "/v1/api/pollPaymentStatus";
     }
 
-    
+    internal class CallbackResponse
+    {
+        public const string Success = "success";
+
+        public const string Failed = "failed";
+    }
 }

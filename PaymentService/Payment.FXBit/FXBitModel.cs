@@ -136,15 +136,30 @@ namespace Payment.FXBit
         public string from { get; set; }
     }
 
-    internal class CallBackDepositReq
+    internal class DepositCallBackReq
     {
-        public string receipt_token { get; set; }
-        public string marked_currency { get; set; }
-        public string marked_price { get; set; }
-        public string billed_currency { get; set; }
-        public string billed_price { get; set; }
-        public string received_amount { get; set; }
-        public string status { get; set; }
-        public string signature { get; set; }
+        [JsonProperty("receipt_token")]
+        public string ReceiptToken { get; set; }
+
+        [JsonProperty("marked_currency")]
+        public string MarkedCurrency { get; set; }
+
+        [JsonProperty("marked_price")]
+        public string MarkedPrice { get; set; }
+
+        [JsonProperty("billed_currency")]
+        public string BilledCurrency { get; set; }
+
+        [JsonProperty("billed_price")]
+        public string BilledPrice { get; set; }
+
+        [JsonProperty("received_amount")]
+        public string ReceivedAmount { get; set; }
+        
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("signature")]
+        public string Signature { get; set; }
     }
 }

@@ -10,7 +10,7 @@ namespace Payment.FXBit
     class PayHelper : PayHelperBase, IExchangeHelper
     {
         #region ExchangeRate
-        
+
         public ExchangeResult GetExchange(Dictionary<string, string> input)
         {
             var baseApiUrl = input["host"];
@@ -42,7 +42,7 @@ namespace Payment.FXBit
         #endregion
 
         #region Debit
-        
+
         public override DepositResult Debit(Dictionary<string, string> input)
         {
             var baseApiUrl = input["host"];
@@ -83,6 +83,7 @@ namespace Payment.FXBit
                 {
                     Success = true,
                     ErrorCode = ErrorCode.Success,
+                    ThirdId = getTokenResp.ReceiptToken,
                     Url = h5Url
                 };
 
@@ -94,90 +95,39 @@ namespace Payment.FXBit
             }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> input)
         {
-            // User serivce to pull ticket status because need to get txid
-            throw new NotImplementedException();
-
-
-            var data = FromJson<CallBackDepositReq>(bodyContent);
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("signature", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&{payResource["key"]}";
-            var sign = ToSHA256(p).ToLower();
-
-            var oNotify = new NotifyDepositResult();
-            oNotify.DepositId = payResource["TransID"];
-            oNotify.ThirdId = data.receipt_token;
-            oNotify.Comment = data.status;
-            oNotify.Message = data.status;
-
-            if (sign == data.signature)
+            var apiKey = input["key"];
+            var req = FromJson<DepositCallBackReq>(bodyContent);
+            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+            
+            if (!VerifySign(dicReq, apiKey, req.Signature))
             {
-                if (data.status == "2")
+                return new NotifyDepositResult
                 {
-                    oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.marked_price);
-                    oNotify.ActualAmount = decimal.Parse(data.marked_price);
-                    oNotify.Comment = data.status;
-                    oNotify.Response = "success";
-                }
-                else if (data.status == "3")
-                {
-                    oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.Response = "success";
-                }
-            }
-            else
-            {
-                oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Comment = "Signature error";
-                oNotify.Message = "Signature error";
-                oNotify.Response = "failed";
+                    TransStatus = TransStatus.Pending,
+                    Comment = "Signature verification failed.",
+                    Response = CallbackResponse.Failed
+                };
             }
 
-            return oNotify;
+            var transId = input["TransID"];
+            var transStatus = FXBitDefinition.GetDepositTransStatus(req.Status);
+            var result = new NotifyDepositResult
+            {
+                DepositId = transId,
+                ThirdId = req.ReceiptToken,
+                Comment = req.Status,
+                TransStatus = transStatus,
+                Response = CallbackResponse.Success
+            };
+
+            return result;
         }
 
-        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> input)
         {
             throw new NotImplementedException();
-            //var sUrl = inputs["host"];
-            //var apiKey = inputs["key"];
-            //var getReceptionToken = sUrl + "getTransactionDetail";
-            //var creditReq = new CreditReq();
-            //creditReq.receipt_token = inputs["ThirdID"];
-
-            //var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
-            //var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            //var sResponse = HttpGet(getReceptionToken, sParam, "application/json", apiKey, inputs["TransID"]);
-
-            //var creditResp = new CreditResp();
-            //creditResp = JsonConvert.DeserializeObject<CreditResp>(sResponse);
-
-            //var enquiryDepositResult = new EnquiryDepositResult();
-            //enquiryDepositResult.DepositId = inputs["TransID"];
-            //enquiryDepositResult.ThirdId = inputs["ThirdID"];
-            //enquiryDepositResult.Comment = creditResp.payment_status;
-            //enquiryDepositResult.Message = creditResp.payment_status;
-
-            //if (creditResp.payment_status == "3")
-            //{
-            //    enquiryDepositResult.TransStatus = TransStatus.Fail;
-            //}
-            //else if (creditResp.payment_status == "2")
-            //{
-            //    enquiryDepositResult.TransStatus = TransStatus.Success;
-            //    enquiryDepositResult.RequestAmount = decimal.Parse(creditResp.marked_price);
-            //    enquiryDepositResult.ActualAmount = decimal.Parse(creditResp.marked_price);
-            //    enquiryDepositResult.RefThirdId = creditResp.transaction_hash;
-            //}
-            //else
-            //{
-            //    enquiryDepositResult.TransStatus = TransStatus.Pending;
-            //}
-
-            //return enquiryDepositResult;
         }
 
         #endregion
@@ -200,7 +150,7 @@ namespace Payment.FXBit
         }
 
         #endregion
-        
+
         public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
@@ -210,8 +160,8 @@ namespace Payment.FXBit
 
 
         private FxBitExchangeRate GetExchangeRateInfo(string baseApiUrl,
-            string apiKey, 
-            string fromCurrency, 
+            string apiKey,
+            string fromCurrency,
             string toCurrency)
         {
             var fxBitRateList = GetExchangeRate(apiKey, baseApiUrl);
@@ -273,6 +223,10 @@ namespace Payment.FXBit
                 ErrorCode.GetReceptionTokenFailed,
                 transId);
 
+            if (response.Error != 0)
+                throw new FXBitException($"GetReceptionToken response error code: {response.Error}",
+                    ErrorCode.GetReceptionTokenFailed);
+
             return response;
         }
 
@@ -287,6 +241,11 @@ namespace Payment.FXBit
                 req,
                 ErrorCode.GetWalletAddressFailed,
                 transId);
+
+            if (response.Error != 0)
+                throw new FXBitException(
+                    $"GetReceptionToken response error: {response.Error}, message: {response.ErrorMessage}",
+                    ErrorCode.GetWalletAddressFailed);
 
             return response;
         }
@@ -313,6 +272,22 @@ namespace Payment.FXBit
             {
                 throw new FXBitException("WebException: " + ex.Message, errorCode);
             }
+        }
+        
+        private string GetSign(IDictionary<string, string> param, string apiKey)
+        {
+            var sortedParam = param.OrderBy(x => x.Key);
+            var str = sortedParam.Select(x => $"{x.Key}={x.Value}")
+                      + $"&{apiKey}";
+            var sign = base.ToSHA256(str);
+
+            return sign;
+        }
+
+        private bool VerifySign(IDictionary<string, string> param, string apiKey, string target)
+        {
+            var sign = GetSign(param, apiKey);
+            return sign.Equals(target, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion
