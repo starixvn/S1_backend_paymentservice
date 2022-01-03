@@ -1,100 +1,97 @@
-﻿using Newtonsoft.Json;
-using PaymentCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
+using Newtonsoft.Json;
+using PaymentCore;
 
 namespace Payment.FXBit
 {
-    //class PayHelper : PayHelperBase, IExchangeHelper
-    class PayHelper : PayHelperBase
+    class PayHelper : PayHelperBase, IExchangeHelper
     {
-        //private class FxBitExchanegRete
-        //{
-        //    public DateTime updated_timestamp { get; set; }
-        //    public string buyRate { get; set; }
-        //    public string sellRate { get; set; }
-        //}
-
-        //Dictionary<string, int> currMapping = new Dictionary<string, int>
-        //{
-        //    {"CNY",13}, {"USDT",96}
-        //};
-
-        //public async Task<ExchangeResult> GetExchangeAsync(Dictionary<string, string> payResource)
-        //{
-        //    ExchangeResult oExchangeResult = new ExchangeResult
-        //    {
-        //        ErrorCode = "9000"
-        //    };
-
-        //    string sUrl = payResource["host"];
-        //    string getExchangeRate = sUrl + "getExchangeRate";
-        //    string apiKey = payResource["key"];
-
-        //    var httpClient = HttpHelper.GetClient();
-        //    //httpClient.DefaultRequestHeaders.Add("accept", "application/json");
-        //    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));//ACCEPT header
-        //    httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
-
-        //    var response = await httpClient.GetAsync(getExchangeRate);
-        //    if (response.IsSuccessStatusCode)
-        //    {
-        //        var result = response.Content.ReadAsStringAsync().Result;
-        //        var data = FromJson<Dictionary<string, Dictionary<string, FxBitExchanegRete>>>(result);
-        //        oExchangeResult.ExchangeRateList = new Dictionary<string, Dictionary<int, ExchangeRate>>();
-        //        //ExchangeRate
-        //        foreach (var a1 in data)
-        //        {
-        //            foreach (var a2 in a1.Value)
-        //            {
-        //                if (currMapping.ContainsKey(a2.Key))
-        //                {
-        //                    Dictionary<int, ExchangeRate> refa1 = null;
-
-        //                    if (!oExchangeResult.ExchangeRateList.ContainsKey(a1.Key))
-        //                    {
-        //                        oExchangeResult.ExchangeRateList.Add(a1.Key, new Dictionary<int, ExchangeRate>());
-        //                    }
-
-        //                    refa1 = oExchangeResult.ExchangeRateList[a1.Key];
-        //                    ExchangeRate exchangeRate = new ExchangeRate();
-        //                    exchangeRate.Updated_timestamp = new DateTimeOffset(a2.Value.updated_timestamp).ToUnixTimeSeconds();
-        //                    exchangeRate.SellRate = decimal.Parse(a2.Value.sellRate);
-        //                    exchangeRate.BuyRate = decimal.Parse(a2.Value.buyRate);
-        //                    refa1.Add(currMapping[a2.Key], exchangeRate);
-        //                }
-        //            }
-        //        }
-
-        //        oExchangeResult.Message = "";
-        //        oExchangeResult.ErrorCode = "0";
-        //    }
-        //    else
-        //    {
-        //        oExchangeResult.Message = response.Content.ReadAsStringAsync().Result;
-        //    }
-
-        //    return oExchangeResult;
-        //}
-
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        #region ExchangeRate
+        
+        public ExchangeResult GetExchange(Dictionary<string, string> input)
         {
-            throw new NotImplementedException();
+            var baseApiUrl = input["host"];
+            var apiKey = input["key"];
+
+            try
+            {
+                var fromCurrency = input["PayCurrencyId"];
+                var toCurrency = input["PayCode"];
+                var reqAmount = input["Amount"];
+
+                var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
+                var exchangeAmount = decimal.Parse(reqAmount) / decimal.Parse(rateInfo.BuyRate);
+                var exchangeRate = new Dictionary<string, string>
+                {
+                    { "To_Amount", exchangeAmount.ToString() },
+                    { "Rate", rateInfo.BuyRate },
+                    { "Updated_timestamp", rateInfo.UpdatedTimestamp.ToUnixTimeSeconds().ToString() }
+                };
+
+                return new ExchangeResult(ErrorCode.Success, "Success", exchangeRate);
+            }
+            catch (FXBitException ex)
+            {
+                return new ExchangeResult(ex.Code, ex.Message);
+            }
         }
 
-        private class CallBackDepositReq
+        #endregion
+
+        #region Debit
+        
+        public override DepositResult Debit(Dictionary<string, string> input)
         {
-            public string receipt_token { get; set; }
-            public string marked_currency { get; set; }
-            public string marked_price { get; set; }
-            public string billed_currency { get; set; }
-            public string billed_price { get; set; }
-            public string received_amount { get; set; }
-            public string status { get; set; }
-            public string signature { get; set; }
+            var baseApiUrl = input["host"];
+            var apiKey = input["key"];
+            var apiUrl = baseApiUrl + Path.H5;
+            var fromCurrency = input["PayCurrencyId"];
+            var toCurrency = input["PayCode"];
+            var reqAmount = input["Amount"];
+            var transId = input["TransID"];
+
+            try
+            {
+                // Step 1: 取得當下匯率並換算為加密貨幣金額
+                var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
+                var exchangeAmount = decimal.Parse(reqAmount) / decimal.Parse(rateInfo.BuyRate);
+
+                // Step 2: 建立交易
+                var getTokenReq = new GetReceptionTokenReq
+                {
+                    MarkedCurrency = toCurrency,
+                    MarkedPrice = exchangeAmount,
+                    Remark = transId,
+                    CallbackUrl = input["CallBackUrl"]
+                };
+                var getTokenResp = GetReceptionToken(baseApiUrl, apiKey, getTokenReq, transId);
+
+                // Step 3: 取得錢包位址
+                var getWalletReq = new GetWalletAddressReq
+                {
+                    BilledCurrency = toCurrency,
+                    ReceiptToken = getTokenResp.ReceiptToken
+                };
+                var getWalletResp = GetWalletAddress(baseApiUrl, apiKey, getWalletReq, transId);
+
+                // Step 4: 組成 H5 支付頁網址並回傳
+                var h5Url = $"{apiUrl}?receipt_token={getTokenResp.ReceiptToken}&wallet_addr={getWalletResp.PublicAddress}";
+                var response = new DepositResult
+                {
+                    Success = true,
+                    ErrorCode = ErrorCode.Success,
+                    Url = h5Url
+                };
+
+                return response;
+            }
+            catch (FXBitException ex)
+            {
+                return new DepositResult(false, ex.Code, ex.Message);
+            }
         }
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
@@ -141,123 +138,60 @@ namespace Payment.FXBit
             return oNotify;
         }
 
-        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
+        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+            //var sUrl = inputs["host"];
+            //var apiKey = inputs["key"];
+            //var getReceptionToken = sUrl + "getTransactionDetail";
+            //var creditReq = new CreditReq();
+            //creditReq.receipt_token = inputs["ThirdID"];
+
+            //var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
+            //var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            //var sResponse = HttpGet(getReceptionToken, sParam, "application/json", apiKey, inputs["TransID"]);
+
+            //var creditResp = new CreditResp();
+            //creditResp = JsonConvert.DeserializeObject<CreditResp>(sResponse);
+
+            //var enquiryDepositResult = new EnquiryDepositResult();
+            //enquiryDepositResult.DepositId = inputs["TransID"];
+            //enquiryDepositResult.ThirdId = inputs["ThirdID"];
+            //enquiryDepositResult.Comment = creditResp.payment_status;
+            //enquiryDepositResult.Message = creditResp.payment_status;
+
+            //if (creditResp.payment_status == "3")
+            //{
+            //    enquiryDepositResult.TransStatus = TransStatus.Fail;
+            //}
+            //else if (creditResp.payment_status == "2")
+            //{
+            //    enquiryDepositResult.TransStatus = TransStatus.Success;
+            //    enquiryDepositResult.RequestAmount = decimal.Parse(creditResp.marked_price);
+            //    enquiryDepositResult.ActualAmount = decimal.Parse(creditResp.marked_price);
+            //    enquiryDepositResult.RefThirdId = creditResp.transaction_hash;
+            //}
+            //else
+            //{
+            //    enquiryDepositResult.TransStatus = TransStatus.Pending;
+            //}
+
+            //return enquiryDepositResult;
         }
+
+        #endregion
+
+        #region Credit
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
         }
 
-        private class DepositReq
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            public string marked_currency { get; set; }
-            public string marked_price { get; set; }
-            public string remark { get; set; }
-            public string callback_url { get; set; }
-        }
-        private class DepositResp
-        {
-            public int error { get; set; }
-            public string shop_identifier { get; set; }
-            public string receipt_token { get; set; }
-        }
-
-        private class DepositGetWalletReq
-        {
-            public string receipt_token { get; set; }
-            public string billed_currency { get; set; }
-        }
-
-        private class DepositGetWalletResp
-        {
-            public string public_address { get; set; }
-            public string billed_price { get; set; }
-            public string index { get; set; }
-            public string rate { get; set; }
-            public string expire { get; set; }
-            public int error { get; set; }
-            public int error_message { get; set; }
-        }
-
-        public override DepositResult Debit(Dictionary<string, string> inputs)
-        {
-            var sUrl = inputs["host"];
-            var apiKey = inputs["key"];
-            var getReceptionToken = sUrl + "getReceiptToken";
-            var getWalletAddress = sUrl + "getWalletAddress";
-            var H5Url = inputs["H5host"];
-
-            var depositReq = new DepositReq();
-            depositReq.marked_currency = inputs["PayCurrencyId"];
-            var amount = decimal.Parse(inputs["Amount"]);
-            depositReq.marked_price = amount.ToString("#");
-            depositReq.remark = inputs["TransID"];
-            depositReq.callback_url = inputs["CallBackUrl"];
-            string sResponse = null;
-
-            var oDepositResult = new DepositResult();
-            oDepositResult.Success = false;
-
-            try
-            {
-                sResponse = HttpPost(getReceptionToken, ToJson(depositReq), "application/json", apiKey, depositReq.remark);
-
-                var depositResp = new DepositResp();
-                depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
-
-                if (depositResp.error == 0)
-                {
-                    var depositGetWalletReq = new DepositGetWalletReq();
-                    depositGetWalletReq.receipt_token = depositResp.receipt_token;
-                    depositGetWalletReq.billed_currency = inputs["PayCode"];
-
-                    var sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json", apiKey, depositReq.remark);
-
-                    var depositGetWalletResp = new DepositGetWalletResp();
-                    depositGetWalletResp = JsonConvert.DeserializeObject<DepositGetWalletResp>(sResponse1);
-
-                    if (depositGetWalletResp.error == 0)
-                    {
-                        var depositGetH5Req = new Dictionary<string, string>();
-                        depositGetH5Req.Add("receipt_token", depositGetWalletReq.receipt_token);
-                        depositGetH5Req.Add("wallet_addr", depositGetWalletResp.public_address);
-                        var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-                        oDepositResult.Success = true;
-                        oDepositResult.Url = $"{H5Url}?{sParam}";
-                        oDepositResult.ThirdId = depositGetWalletReq.receipt_token;
-                    }
-                    else
-                    {
-                        oDepositResult.Message = $"{depositGetWalletResp.error}-{depositGetWalletResp.error_message}";
-                        oDepositResult.RawContent = sResponse1;
-                    }
-                }
-                else
-                {
-                    oDepositResult.Message = $"{depositResp.error}";
-                    oDepositResult.RawContent = sResponse;
-                }
-            }
-            catch (WebException wEx)
-            {
-                var err = FromJson<Dictionary<string, string>>(new StreamReader(wEx.Response?.GetResponseStream()).ReadToEnd());
-                if (err.ContainsKey("error"))
-                {
-                    oDepositResult.Message = $"{err["error"]}-{err["error_message"]}";
-                    oDepositResult.RawContent = $"{err["error"]}-{err["error_message"]}";
-                }
-                if (err.ContainsKey("err"))
-                {
-                    oDepositResult.Message = $"{err["err"]}";
-                    oDepositResult.RawContent = $"{err["err"]}";
-                }
-            }
-
-            return oDepositResult;
+            throw new NotImplementedException();
         }
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
@@ -265,67 +199,122 @@ namespace Payment.FXBit
             throw new NotImplementedException();
         }
 
-        private class CreditReq
+        #endregion
+        
+        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
         {
-            public string receipt_token { get; set; }
+            throw new NotImplementedException();
         }
 
-        private class CreditResp
+        #region Private Methods
+
+
+        private FxBitExchangeRate GetExchangeRateInfo(string baseApiUrl,
+            string apiKey, 
+            string fromCurrency, 
+            string toCurrency)
         {
-            public string error { get; set; }
-            public string receipt_token { get; set; }
-            public string shop_name { get; set; }
-            public string marked_currency { get; set; }
-            public string marked_price { get; set; }
-            public string billed_currency { get; set; }
-            public string billed_price { get; set; }
-            public string received_amount { get; set; }
-            public string payment_status { get; set; }
-            public string net { get; set; }
-            public string fee { get; set; }
-            public string transaction_hash { get; set; }
-            public string from { get; set; }
+            var fxBitRateList = GetExchangeRate(apiKey, baseApiUrl);
+
+            if (!fxBitRateList.Any())
+                throw new FXBitException("Response is empty.",
+                    ErrorCode.GetExchangeRateFailed);
+
+            var rateInfoList =
+                fxBitRateList.FirstOrDefault(x => x.Key == toCurrency).Value;
+
+            if (rateInfoList == null)
+                throw new FXBitException($"{toCurrency} has no rate data.",
+                    ErrorCode.GetExchangeRateFailed);
+
+            var rateInfo =
+                rateInfoList.FirstOrDefault(x => x.Key == fromCurrency).Value;
+
+            if (rateInfo == null)
+                throw new FXBitException($"{fromCurrency} has no rate data.",
+                    ErrorCode.GetExchangeRateFailed);
+
+            return rateInfo;
         }
 
-        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+        private IDictionary<string, Dictionary<string, FxBitExchangeRate>> GetExchangeRate(string apiKey,
+            string baseApiUrl,
+            string transId = "")
         {
-            var sUrl = inputs["host"];
-            var apiKey = inputs["key"];
-            var getReceptionToken = sUrl + "getTransactionDetail";
-            var creditReq = new CreditReq();
-            creditReq.receipt_token = inputs["ThirdID"];
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
-            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            var sResponse = HttpGet(getReceptionToken, sParam, "application/json", apiKey, inputs["TransID"]);
-
-            var creditResp = new CreditResp();
-            creditResp = JsonConvert.DeserializeObject<CreditResp>(sResponse);
-
-            var enquiryDepositResult = new EnquiryDepositResult();
-            enquiryDepositResult.DepositId = inputs["TransID"];
-            enquiryDepositResult.ThirdId = inputs["ThirdID"];
-            enquiryDepositResult.Comment = creditResp.payment_status;
-            enquiryDepositResult.Message = creditResp.payment_status;
-
-            if (creditResp.payment_status == "3")
+            var apiUrl = baseApiUrl + Path.GetExchangeRate;
+            try
             {
-                enquiryDepositResult.TransStatus = TransStatus.Fail;
-            }
-            else if (creditResp.payment_status == "2")
-            {
-                enquiryDepositResult.TransStatus = TransStatus.Success;
-                enquiryDepositResult.RequestAmount = decimal.Parse(creditResp.marked_price);
-                enquiryDepositResult.ActualAmount = decimal.Parse(creditResp.marked_price);
-                enquiryDepositResult.RefThirdId = creditResp.transaction_hash;
-            }
-            else
-            {
-                enquiryDepositResult.TransStatus = TransStatus.Pending;
-            }
+                var responseStr = HttpGet(apiUrl, string.Empty, MediaType.Json, apiKey, transId);
 
-            return enquiryDepositResult;
+                if (string.IsNullOrEmpty(responseStr))
+                    throw new FXBitException("GetExchangeRate response is empty.",
+                        ErrorCode.GetExchangeRateFailed);
+
+                var fxBitRateList = JsonConvert
+                    .DeserializeObject<Dictionary<string, Dictionary<string, FxBitExchangeRate>>>(responseStr);
+
+                return fxBitRateList;
+            }
+            catch (WebException ex)
+            {
+                throw new FXBitException(ex.Message, ErrorCode.GetExchangeRateFailed);
+            }
         }
+
+        private GetReceptionTokenResp GetReceptionToken(string baseApiUrl,
+            string apiKey,
+            GetReceptionTokenReq req,
+            string transId)
+        {
+            var apiUrl = baseApiUrl + Path.CreateTransaction;
+            var response = GeneralFxBitPost<GetReceptionTokenReq, GetReceptionTokenResp>(apiUrl,
+                apiKey,
+                req,
+                ErrorCode.GetReceptionTokenFailed,
+                transId);
+
+            return response;
+        }
+
+        private GetWalletAddressResp GetWalletAddress(string baseApiUrl,
+            string apiKey,
+            GetWalletAddressReq req,
+            string transId)
+        {
+            var apiUrl = baseApiUrl + Path.GetWalletAddress;
+            var response = GeneralFxBitPost<GetWalletAddressReq, GetWalletAddressResp>(apiUrl,
+                apiKey,
+                req,
+                ErrorCode.GetWalletAddressFailed,
+                transId);
+
+            return response;
+        }
+
+        private TResponse GeneralFxBitPost<TRequest, TResponse>(string apiUrl,
+            string apiKey,
+            TRequest request,
+            string errorCode,
+            string transId = "")
+        {
+            try
+            {
+                var responseStr = HttpPost(apiUrl, ToJson(request), MediaType.Json, apiKey, transId);
+
+                if (string.IsNullOrEmpty(responseStr))
+                    throw new FXBitException("Response is empty.", errorCode);
+
+                var response = JsonConvert
+                    .DeserializeObject<TResponse>(responseStr);
+
+                return response;
+            }
+            catch (WebException ex)
+            {
+                throw new FXBitException("WebException: " + ex.Message, errorCode);
+            }
+        }
+
+        #endregion
     }
 }
