@@ -9,13 +9,13 @@ namespace Payment.FXBit
         public static Dictionary<string, TransStatus> DepositTransStatusMap =>
             new Dictionary<string, TransStatus>()
             {
-                { "0", TransStatus.Pending },
-                { "1", TransStatus.Pending },
-                { "2", TransStatus.Success },
-                { "3", TransStatus.Fail },
-                { "4", TransStatus.Fail },
-                { "5", TransStatus.Fail },
-                { "6", TransStatus.Fail }
+                { FxBitStatus.New, TransStatus.Pending },
+                { FxBitStatus.Confirming, TransStatus.Pending },
+                { FxBitStatus.Confirmed, TransStatus.Success },
+                { FxBitStatus.Failed, TransStatus.Fail },
+                { FxBitStatus.Insufficient, TransStatus.Success },
+                { FxBitStatus.Expired, TransStatus.Fail },
+                { FxBitStatus.IncorrectAmount, TransStatus.Success }
             };
 
         public static TransStatus GetDepositTransStatus(string status)
@@ -30,15 +30,58 @@ namespace Payment.FXBit
 
     }
 
+    internal class FxBitStatus
+    {
+        /// <summary>
+        /// 尚未入帳
+        /// </summary>
+        public const string New = "0";
+
+        /// <summary>
+        /// 監控到有金額入帳
+        /// </summary>
+        public const string Confirming = "1";
+
+        /// <summary>
+        /// 訂單完成
+        /// </summary>
+        public const string Confirmed = "2";
+
+        /// <summary>
+        /// 交易錯誤
+        /// </summary>
+        public const string Failed = "3";
+
+        /// <summary>
+        /// 入帳金額不足
+        /// </summary>
+        public const string Insufficient = "4";
+
+        /// <summary>
+        /// 訂單已過期
+        /// </summary>
+        public const string Expired = "5";
+
+        /// <summary>
+        /// 入帳金額超出
+        /// </summary>
+        public const string IncorrectAmount = "6";
+
+        /// <summary>
+        /// 訂單過期後收到入金
+        /// </summary>
+        public const string PayInAfterExpired = "7";
+    }
+
     internal class ErrorCode
     {
         public const string Success = "0";
 
-        public const string GetExchangeRateFailed = "9000";
+        public const string GetExchangeRateFailed = "9900";
 
-        public const string GetReceptionTokenFailed = "9001";
+        public const string GetReceptionTokenFailed = "9901";
 
-        public const string GetWalletAddressFailed = "9002";
+        public const string GetWalletAddressFailed = "9902";
     }
 
     internal class MediaType

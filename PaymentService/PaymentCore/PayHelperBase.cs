@@ -80,6 +80,10 @@ namespace PaymentCore
         public string ThirdId { get; set; }
         public string Memo { get; set; }
         public string RawContent { get; set; }
+        /// <summary>
+        /// 需要更新 DepositInfo.DepositInfo 時使用此欄位
+        /// </summary>
+        public string DepositInfo { get; set; }
     }
     public class WithdrawResult
     {

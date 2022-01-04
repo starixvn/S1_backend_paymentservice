@@ -46,7 +46,7 @@ namespace Payment.FXBit
         public string PublicAddress { get; set; }
 
         [JsonProperty("billed_price")]
-        public string BilledPrice { get; set; }
+        public decimal BilledPrice { get; set; }
 
         [JsonProperty("index")]
         public string Index { get; set; }
@@ -145,7 +145,7 @@ namespace Payment.FXBit
         public string MarkedCurrency { get; set; }
 
         [JsonProperty("marked_price")]
-        public string MarkedPrice { get; set; }
+        public decimal MarkedPrice { get; set; }
 
         [JsonProperty("billed_currency")]
         public string BilledCurrency { get; set; }
@@ -154,7 +154,7 @@ namespace Payment.FXBit
         public string BilledPrice { get; set; }
 
         [JsonProperty("received_amount")]
-        public string ReceivedAmount { get; set; }
+        public decimal ReceivedAmount { get; set; }
         
         [JsonProperty("status")]
         public string Status { get; set; }

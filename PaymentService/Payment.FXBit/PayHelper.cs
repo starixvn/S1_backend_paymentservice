@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PaymentCore;
 
 namespace Payment.FXBit
@@ -52,13 +53,18 @@ namespace Payment.FXBit
             var toCurrency = input["PayCode"];
             var reqAmount = input["Amount"];
             var transId = input["TransID"];
+            var depositInfo = input["DepositInfo"];
 
             try
             {
                 // Step 1: 取得當下匯率並換算為加密貨幣金額
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
                 var exchangeAmount = decimal.Parse(reqAmount) / decimal.Parse(rateInfo.BuyRate);
-
+                
+                // 將匯率資訊加入 DepositInfo
+                var jObj = JObject.Parse(depositInfo);
+                jObj.Add("ExchangeRate", rateInfo.BuyRate);
+                
                 // Step 2: 建立交易
                 var getTokenReq = new GetReceptionTokenReq
                 {
@@ -77,6 +83,10 @@ namespace Payment.FXBit
                 };
                 var getWalletResp = GetWalletAddress(baseApiUrl, apiKey, getWalletReq, transId);
 
+                // 將回傳支付金額加入 DepositInfo
+                jObj.Add("ExchangeAmount", getWalletResp.BilledPrice);
+                depositInfo = jObj.ToString();
+
                 // Step 4: 組成 H5 支付頁網址並回傳
                 var h5Url = $"{apiUrl}?receipt_token={getTokenResp.ReceiptToken}&wallet_addr={getWalletResp.PublicAddress}";
                 var response = new DepositResult
@@ -84,6 +94,7 @@ namespace Payment.FXBit
                     Success = true,
                     ErrorCode = ErrorCode.Success,
                     ThirdId = getTokenResp.ReceiptToken,
+                    DepositInfo = depositInfo,
                     Url = h5Url
                 };
 
@@ -121,6 +132,34 @@ namespace Payment.FXBit
                 TransStatus = transStatus,
                 Response = CallbackResponse.Success
             };
+
+            if (transStatus == TransStatus.Success)
+            {
+                /*
+                 * FxBit 若到帳金額和申請金額不符會自動更新訂單資訊申請金額自動完成訂單
+                 * 需取出 DepositInfo 中的匯率資訊確認入帳金額和申請金額是否相符
+                 */
+                var depositInfo = input["DepositInfo"];
+                var jObj = JObject.Parse(depositInfo);
+                
+                if (!jObj.TryGetValue("ExchangeRate", StringComparison.OrdinalIgnoreCase, out var jExchangeRate)
+                    || !jObj.TryGetValue("ExchangeAmount", StringComparison.OrdinalIgnoreCase, out var jExchangeAmount))
+                {
+                    return new NotifyDepositResult
+                    {
+                        TransStatus = TransStatus.Pending,
+                        Comment = "DepositInfo has no exchange rate data.",
+                        Response = CallbackResponse.Failed
+                    };
+                }
+
+                var requestAmount = decimal.Parse(input["RequestAmount"]);
+                var requestCryptoAmount = jExchangeAmount.ToObject<decimal>();
+                var exchangeRate = jExchangeRate.ToObject<decimal>();
+
+                result.ActualAmount =
+                    GetActualAmount(requestAmount, requestCryptoAmount, req.ReceivedAmount, exchangeRate);
+            }
 
             return result;
         }
@@ -274,20 +313,35 @@ namespace Payment.FXBit
             }
         }
         
-        private string GetSign(IDictionary<string, string> param, string apiKey)
+        private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiKey)
         {
-            var sortedParam = param.OrderBy(x => x.Key);
-            var str = sortedParam.Select(x => $"{x.Key}={x.Value}")
-                      + $"&{apiKey}";
+            var str = string.Join('&', param
+                .Where(x => !x.Key.Equals("signature", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(x => x.Key)
+                .Select(x => $"{x.Key}={x.Value}")) + $"&{apiKey}";
+
             var sign = base.ToSHA256(str);
 
             return sign;
         }
 
-        private bool VerifySign(IDictionary<string, string> param, string apiKey, string target)
+        private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)
         {
             var sign = GetSign(param, apiKey);
             return sign.Equals(target, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private decimal GetActualAmount(decimal requestAmount,
+            decimal requestCryptoAmount,
+            decimal receivedCryptoAmount,
+            decimal exchangeRate)
+        {
+            if (receivedCryptoAmount == requestCryptoAmount)
+                return requestAmount;
+
+            // 使用匯率回推平台金額，保留小數 2 位
+            var actualAmount = decimal.Round(receivedCryptoAmount * exchangeRate, 2);
+            return actualAmount;
         }
 
         #endregion
