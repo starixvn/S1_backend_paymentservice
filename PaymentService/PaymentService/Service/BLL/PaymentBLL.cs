@@ -106,5 +106,9 @@ namespace PaymentService.Service.BLL
         {
             _depositService.SetThirdId(transId, thirdID);
         }
+        public void UpdateDepositInfo(string transId, string depositInfo)
+        {
+            _depositService.UpdateDepositInfo(transId, depositInfo);
+        }
     }
 }

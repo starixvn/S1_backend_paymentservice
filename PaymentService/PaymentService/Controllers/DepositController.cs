@@ -404,6 +404,7 @@ namespace PaymentService.Controllers
         public class ReqDepositCrpyto : ReqDeposit
         {
             public int ChannelId { get; set; }
+            public string DepositInfo { get; set; }
         }
 
         [HttpPost]
@@ -470,6 +471,7 @@ namespace PaymentService.Controllers
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("IsTest", _common.IsTest());
+                DepReq.Add("DepositInfo", reqDeposit.DepositInfo);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
@@ -488,6 +490,11 @@ namespace PaymentService.Controllers
                     if (result.ThirdId != null)
                     {
                         _paymentBll.SetThirdId(reqDeposit.TransId, result.ThirdId);
+                    }
+
+                    if (!string.IsNullOrEmpty(result.DepositInfo))
+                    {
+                        _paymentBll.UpdateDepositInfo(reqDeposit.TransId, result.DepositInfo);
                     }
                 }
                 else
@@ -786,6 +793,8 @@ namespace PaymentService.Controllers
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
                 DepReq.Add("TransID", depositRequest.TransId);
                 DepReq.Add("BankCode", pay.BankCode);
+                DepReq.Add("DepositInfo", depositRequest.DepositInfo);
+                DepReq.Add("RequestAmount", depositRequest.Amount.ToString());
 
                 //DepReq.Add("Amount", depositRequest.Amount.ToString());
                 //檢查namespace是否存在 

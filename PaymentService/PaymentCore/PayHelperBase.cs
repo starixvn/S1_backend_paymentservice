@@ -31,7 +31,27 @@ namespace PaymentCore
 
     public class ExchangeResult
     {
-        public Dictionary<string, Dictionary<int, ExchangeRate>> ExchangeRateList { get; set; }
+        public ExchangeResult()
+        {
+        }
+
+        public ExchangeResult(string errorCode)
+            : this(errorCode, null, null)
+        {
+        }
+
+        public ExchangeResult(string errorCode, string message)
+            : this(errorCode, message, null)
+        {
+        }
+
+        public ExchangeResult(string errorCode, string message, Dictionary<string, string> formData)
+        {
+            this.ErrorCode = errorCode;
+            this.Message = message;
+            this.FormData = formData;
+        }
+
         public string Message { get; set; }
         public Dictionary<string, string> FormData { get; set; }
         public string ErrorCode { get; set; }
@@ -39,6 +59,17 @@ namespace PaymentCore
 
     public class DepositResult
     {
+        public DepositResult()
+        {
+        }
+
+        public DepositResult(bool success, string errorCode, string message = "")
+        {
+            this.Success = success;
+            this.ErrorCode = errorCode;
+            this.Message = message;
+        }
+        
         public bool Success { get; set; }
         public string Message { get; set; }
         public string ErrorCode { get; set; }
@@ -49,6 +80,10 @@ namespace PaymentCore
         public string ThirdId { get; set; }
         public string Memo { get; set; }
         public string RawContent { get; set; }
+        /// <summary>
+        /// 需要更新 DepositInfo.DepositInfo 時使用此欄位
+        /// </summary>
+        public string DepositInfo { get; set; }
     }
     public class WithdrawResult
     {
