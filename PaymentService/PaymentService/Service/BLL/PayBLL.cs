@@ -11,6 +11,7 @@ using PaymentCore;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
+using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.BLL
 {
@@ -39,12 +40,11 @@ namespace PaymentService.Service.BLL
                 i => payService.GetOnlineBankList(siteId));
         }
 
-        public IEnumerable<MobilePayInfo> GetMobilePayInfoList(int siteId)
+        public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
         {
-            var key = $"MobilePayInfoList_{siteId}";
-            return _cacheHelper.TryGetOrCreate(key,
+            return _cacheHelper.TryGetOrCreate($"PayInfoList_{siteId}_{depositType}",
                 new MemoryCacheEntryOptions().SetSlidingExpiration(GetExpireTime()),
-                i => payService.GetMobilePayInfo(siteId));
+                i => payService.GetPayInfo(siteId, depositType));
         }
 
         public IEnumerable<CryptoPayInfo> GetCryptoPayInfoList(int siteId)
