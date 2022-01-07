@@ -71,6 +71,11 @@ namespace Payment.VaderPay
                 oNotify.ThirdId = data.transaction;
                 oNotify.Message = data.status_message;
                 oNotify.Comment = data.status_message;
+                oNotify.Response = ToJson(new CallBackCreditRes
+                {
+                    error_code = (int)DepositResponseStatus.OperationSuccess,
+                    message = DepositResponseStatus.OperationSuccess.ToString()
+                });
 
                 if (sign == data.signature2)
                 {
@@ -92,15 +97,17 @@ namespace Payment.VaderPay
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
-
-                    oNotify.Response = "success";
                 }
                 else
                 {
                     oNotify.TransStatus = TransStatus.Pending;
                     oNotify.Comment = "Signature error";
                     oNotify.Message = "Signature error";
-                    oNotify.Response = "fail";
+                    oNotify.Response = ToJson(new CallBackCreditRes
+                    {
+                        error_code = (int)DepositResponseStatus.InvalidParameter,
+                        message = "Signature error"
+                    });
                 }
             }
             else
@@ -111,6 +118,11 @@ namespace Payment.VaderPay
                 oNotify.DepositId = data.RefId;
                 oNotify.ThirdId = data.InvoiceNo;
                 oNotify.Comment = $"ReceiverBank:{data.ReceiverBank}, ReceiverAccount:{data.ReceiverAccount}";
+                oNotify.Response = ToJson(new CallBackCreditRes
+                {
+                    error_code = (int)DepositResponseStatus.OperationSuccess,
+                    message = DepositResponseStatus.OperationSuccess.ToString()
+                });
                 
                 if (sign == data.Signature)
                 {
@@ -131,15 +143,17 @@ namespace Payment.VaderPay
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
-                    
-                    oNotify.Response = "success";
                 }
                 else
                 {
                     oNotify.TransStatus = TransStatus.Pending;
                     oNotify.Comment = "Signature error";
                     oNotify.Message = "Signature error";
-                    oNotify.Response = "fail";
+                    oNotify.Response = ToJson(new CallBackCreditRes
+                    {
+                        error_code = (int)DepositResponseStatus.InvalidParameter,
+                        message = "Signature error"
+                    });
                 }
             }
 

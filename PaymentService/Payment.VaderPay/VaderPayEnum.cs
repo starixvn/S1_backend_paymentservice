@@ -56,4 +56,13 @@ namespace Payment.VaderPay
         OperationFailed = 1001,
         SystemMaintenance = 1002
     }
+    
+    public enum DepositResponseStatus
+    {
+        OperationSuccess = 0,
+        InvalidTransaction = 1,
+        DuplicateTransaction = 2,
+        InvalidParameter = 3,
+        OperationFailed = 4
+    }
 }
