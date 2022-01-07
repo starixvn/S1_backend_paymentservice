@@ -67,7 +67,8 @@
         MobilePayment = 2,
         LocalBank = 3,
         CryptoPayPayment = 4,
-        LoadCardPayment = 5
+        LoadCardPayment = 5,
+        QRPayPayment = 6,
     }
 
     /// <summary>
