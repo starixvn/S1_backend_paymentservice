@@ -163,7 +163,7 @@ namespace PaymentService.Controllers
         {
             public int SysId { get; set; }
         }
-        public class ReqDepositMobile : ReqDeposit
+        public class ReqDepositPay : ReqDeposit
         {
             public int ChannelId { get; set; }
         }
@@ -290,27 +290,29 @@ namespace PaymentService.Controllers
         }
 
         [HttpPost]
+        [Route("Payment/ReqDepositQR")]
         [Route("Payment/ReqDepositMobile")]
-        public ApiResult<PayResult> DepositMobile(ReqDepositMobile reqDeposit)
+        public ApiResult<PayResult> DepositPay(ReqDepositPay reqDeposit)
         {
             var apiResult = new ApiResult<PayResult>();
             try
             {
+                var depositType = Request.Path.Value.IndexOf("QR", StringComparison.OrdinalIgnoreCase) > 1
+                    ? DepositType.QRPayPayment : DepositType.MobilePayment;
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
-                var mobilePayInfo = _payBll.GetMobilePayInfoList(custInfo.SiteId)?
+                var payInfo = _payBll.GetPayInfoList(custInfo.SiteId, depositType)?
                     .FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
-                //var PayCurrency = payBLL.GetPayCurrency().;
 
-                if (mobilePayInfo == null)
+                if (payInfo == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Channel Not Found");
                     apiResult.ErrorCode = (int)ErrorCode.ChannelNotFound;
                     return apiResult;
                 }
 
-                if (custInfo.CurrencyId != mobilePayInfo.CurrencyId)
+                if (custInfo.CurrencyId != payInfo.CurrencyId)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
                     apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
@@ -324,7 +326,7 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
-                var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == mobilePayInfo.PayId);
+                var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == payInfo.PayId);
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) &&
                     (x.PayId == pay.PayId))?.PayLangId;
@@ -339,11 +341,11 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-                DepReq.Add("PayCurrencyId", mobilePayInfo.PayCurrencyId);
+                DepReq.Add("PayCurrencyId", payInfo.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
                 DepReq.Add("Amount", reqDeposit.Amount.ToString());
-                DepReq.Add("PayCode", mobilePayInfo.PayCode);
+                DepReq.Add("PayCode", payInfo.PayCode);
                 DepReq.Add("BankCode", null);
                 DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
                 DepReq.Add("PayLangId", payLangId);
@@ -359,12 +361,13 @@ namespace PaymentService.Controllers
                 if (result.Success)
                 {
                     apiResult.ErrorCode = 0;
-                    var payResult = new PayResult();
-                    payResult.Url = result.Url;
-                    payResult.FormData = result.FormData;
-                    payResult.ThirdId = result.ThirdId;
-                    payResult.Mode = mobilePayInfo.Mode;
-                    apiResult.Data = payResult;
+                    apiResult.Data = new PayResult
+                    {
+                        Url = result.Url,
+                        FormData = result.FormData,
+                        ThirdId = result.ThirdId,
+                        Mode = payInfo.Mode
+                    };
 
                     if (result.ThirdId != null)
                     {
@@ -373,17 +376,21 @@ namespace PaymentService.Controllers
                 }
                 else
                 {
-                    var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = (int)DepositType.MobilePayment;
-                    depositRequest.TransId = reqDeposit.TransId;
-                    depositRequest.ActualDeposit = reqDeposit.Amount;
-                    depositRequest.Amount = reqDeposit.Amount;
-                    depositRequest.PayName = pay.PayName;
-                    depositRequest.SiteId = custInfo.SiteId;
-                    depositRequest.DepositInfo = JsonConvert.SerializeObject(mobilePayInfo);
-                    var rNotifyDepositResult = new NotifyDepositResult();
-                    rNotifyDepositResult.Comment = result.Message;
-                    rNotifyDepositResult.ThirdId = result.ThirdId;
+                    var depositRequest = new DepositRequest
+                    {
+                        DepositType = (int)depositType,
+                        TransId = reqDeposit.TransId,
+                        ActualDeposit = reqDeposit.Amount,
+                        Amount = reqDeposit.Amount,
+                        PayName = pay.PayName,
+                        SiteId = custInfo.SiteId,
+                        DepositInfo = JsonConvert.SerializeObject(payInfo)
+                    };
+                    var rNotifyDepositResult = new NotifyDepositResult
+                    {
+                        Comment = result.Message,
+                        ThirdId = result.ThirdId
+                    };
                     _paymentBll.DepositFail(depositRequest, rNotifyDepositResult);
                     apiResult.ErrorCode = (int)ErrorCode.Fail;
                     apiResult.RawErrorCode = result.ErrorCode;

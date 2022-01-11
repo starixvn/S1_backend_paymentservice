@@ -27,7 +27,7 @@ namespace PaymentService.Service.Model
         public string PayCode { get; set; }
         public bool SelBank { get; set; }
     }
-    public class MobilePayInfo
+    public class PayInfo
     {
         public int PayId { get; set; }
         public string PayName { get; set; }
