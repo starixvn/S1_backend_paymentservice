@@ -26,7 +26,7 @@ namespace Payment.NAP3SPay
                 { "card_code", inputs["Code"] },
                 { "request_id", inputs["TransID"] },
                 { "card_amount", inputs["Amount"] },
-                { "card_type", "VT" },
+                { "card_type", inputs["PayCode"] },
                 { "signature", ToMD5($"{inputs["key"]}{inputs["Amount"]}{inputs["Code"]}{inputs["Serial"]}").ToLower() }
             };
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));

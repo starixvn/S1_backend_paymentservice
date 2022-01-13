@@ -28,11 +28,17 @@ namespace PaymentService.IntegrationTest
             };
         }
 
-        [TestCase("10000143730031", "616170038453502", 10000)]
-        public void DebitTest(string serial, string code, decimal amount)
+    
+        [TestCase("094581000110649", "626505814575", "Mobi", 1)]
+        //[TestCase("094581000110650", "189864065110", "Mobi", 1)]
+        //[TestCase("20000147501695", "624480651839201", "VT", 1)]
+        //[TestCase("20000147504104", "626608369258630", "VT", 1)]
+        //[TestCase("59000018335292", "58361564714690", "Vina", 1)]
+        public void DebitTest(string serial, string code, string payCode, decimal amount)
         {
             _inputs.Add("Serial", serial);
             _inputs.Add("Code", code);
+            _inputs.Add("PayCode", payCode);
             _inputs.Add("TransID", Guid.NewGuid().ToString());
             _inputs.Add("Amount", amount.ToString());
             var result = _payHelper.Debit(_inputs);
