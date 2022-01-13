@@ -19,8 +19,8 @@ namespace Payment.DirePay
                 ErrorCode = "9000"
             };
 
-            var from_currency = currMapping(payResource["CurrencyId"]);
-            var to_currency = payResource["PayCurrencyId"];//$"{FindCurrency(payResource["PayCurrencyId"])}-USDT";
+            var from_currency = GetPayCurrency(payResource["PayCurrencyId"]);
+            var to_currency = payResource["PayCode"];
             var amount = payResource["Amount"];
             string message;
 
@@ -69,6 +69,8 @@ namespace Payment.DirePay
 
                 var depositResp = new DepositResp();
                 depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
+                var payCode = inputs["PayCode"];
+                var itemId = GetItemId(payCode);
 
                 if (depositResp != null && depositResp.access_token != null)
                 {
@@ -77,13 +79,13 @@ namespace Payment.DirePay
                     depositGetWalletReq.line_items = new line_items[1];
                     depositGetWalletReq.line_items[0] = new line_items();
                     depositGetWalletReq.line_items[0].name = "deposit";
-                    depositGetWalletReq.line_items[0].item_id = inputs["PayCurrencyId"];//$"{FindCurrency(inputs["PayCurrencyId"])}";
-                    depositGetWalletReq.line_items[0].description = $"Deposit {currMapping(inputs["CurrencyId"])} via USDT";
+                    depositGetWalletReq.line_items[0].item_id = itemId;
+                    depositGetWalletReq.line_items[0].description = $"Deposit {currMapping(inputs["CurrencyId"])} via {itemId}";
                     var amount = decimal.Parse(inputs["Amount"]);
                     depositGetWalletReq.line_items[0].amount = amount.ToString("#");
                     depositGetWalletReq.line_items[0].quantity = "1";
                     depositGetWalletReq.currency = currMapping(inputs["CurrencyId"]);
-                    depositGetWalletReq.token = inputs["PayCurrencyId"];//$"{FindCurrency(inputs["PayCurrencyId"])}-USDT";
+                    depositGetWalletReq.token = payCode;
                     depositGetWalletReq.callback_url = inputs["CallBackUrl"];
                     depositGetWalletReq.customer_uid = inputs["CustId"];
                     depositGetWalletReq.client_reference_id = inputs["TransID"];
@@ -235,7 +237,7 @@ namespace Payment.DirePay
                     var amount = decimal.Parse(inputs["Amount"]);
                     withdrawGetWalletReq.amount = amount.ToString("#");
                     withdrawGetWalletReq.currency = currMapping(inputs["CurrencyId"]);
-                    withdrawGetWalletReq.withdrawal_token = inputs["PayCurrencyId"];//$"{FindCurrency(inputs["PayCurrencyId"])}-USDT";
+                    withdrawGetWalletReq.withdrawal_token = inputs["PayCode"];
                     withdrawGetWalletReq.callback_url = inputs["CallBackUrl"];
                     withdrawGetWalletReq.address = inputs["AccountNo"];
                     withdrawGetWalletReq.customer_uid = inputs["CustId"];
@@ -395,6 +397,20 @@ namespace Payment.DirePay
                 message = wex.ToString();
             }
             return 0;
+        }
+
+        private string GetItemId(string payCode)
+        {
+            var splitStr = payCode.Split('-');
+
+            return splitStr[1];
+        }
+
+        private string GetPayCurrency(string payCurrencyId)
+        {
+            var splitStr = payCurrencyId.Split('_');
+
+            return splitStr[0];
         }
 
         #endregion

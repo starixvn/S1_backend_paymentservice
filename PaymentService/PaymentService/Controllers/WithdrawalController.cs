@@ -58,6 +58,7 @@ namespace PaymentService.Controllers
         public class ReqExchange
         {
             public int PayId { get; set; }
+            public int ChannelId { get; set; }
             public int CustId { get; set; }
             public decimal Amount { get; set; }
         }
@@ -431,8 +432,13 @@ namespace PaymentService.Controllers
             {
                 var custId = reqExchange.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var crypto = _payBll.GetCryptoListForPayout()?.FirstOrDefault(x =>
-                    x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId);
+                var cryptoList = _payBll.GetCryptoListForPayout().ToList();
+                var crypto = reqExchange.ChannelId == 0 // 新舊相容過度，以後沒問題再拿掉
+                    ? cryptoList?.FirstOrDefault(x =>
+                        x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId)
+                    : cryptoList?.FirstOrDefault(x =>
+                        x.ChannelId == reqExchange.ChannelId && custInfo.CurrencyId == x.CurrencyId);
+
                 if (crypto == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, Invalid Currency");
