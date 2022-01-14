@@ -19,15 +19,16 @@ namespace Payment.NAP3SPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
+            var amount = decimal.Parse(inputs["Amount"]).ToString("#");
             var formData = new Dictionary<string, string>
             {
                 { "api_key", inputs["key"] },
                 { "card_seri", inputs["Serial"] },
                 { "card_code", inputs["Code"] },
                 { "request_id", inputs["TransID"] },
-                { "card_amount", decimal.Parse(inputs["Amount"]).ToString("#") },
+                { "card_amount", amount },
                 { "card_type", inputs["PayCode"] },
-                { "signature", ToMD5($"{inputs["key"]}{inputs["Amount"]}{inputs["Code"]}{inputs["Serial"]}").ToLower() }
+                { "signature", ToMD5($"{inputs["key"]}{amount}{inputs["Code"]}{inputs["Serial"]}").ToLower() }
             };
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(inputs["host"], sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower());
