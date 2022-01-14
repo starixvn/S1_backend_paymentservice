@@ -365,32 +365,37 @@ namespace Payment.DirePay
         {
             message = "";
             var sUrl = inputs["host"];
-            var getReceptionToken = sUrl + "/api/login";
-            var getWalletAddress = sUrl + "/api/callBack";
+            var getReceptionTokenUrl = sUrl + "/api/login";
+            var getExchangeUrl = sUrl + "/api/callBack";
 
-            var depositGetH5Req = new Dictionary<string, string>();
-            depositGetH5Req.Add("email", inputs["Email"]);
-            depositGetH5Req.Add("password", inputs["Password"]);
-            var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var depositGetTokenReq = new Dictionary<string, string>();
+            depositGetTokenReq.Add("email", inputs["Email"]);
+            depositGetTokenReq.Add("password", inputs["Password"]);
+            var sParam = string.Join("&", depositGetTokenReq.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var oDepositResult = new DepositResult();
             oDepositResult.Success = false;
             try
             {
-                var sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", "", true);
+                _logger.LogInformation("getExchange > getReceptionToken START");
+                var sResponse = HttpPost(getReceptionTokenUrl, sParam, "application/x-www-form-urlencoded", "", true);
                 var depositResp = new DepositResp();
                 depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
+                _logger.LogInformation("getExchange > getReceptionToken END");
 
                 if (depositResp != null && depositResp.access_token != null)
                 {
+
+                    _logger.LogInformation("getExchange > getExchange START");
                     var exchangeReq = new ExchangeReq();
                     exchangeReq.command = "rates";
                     exchangeReq.amount = amount.ToString();
                     exchangeReq.from_currency = from_currency;
                     exchangeReq.to_currency = to_currency;
                     exchangeReq.type = "SELL";
-                    var sResponse1 = HttpPost(getWalletAddress, ToJson(exchangeReq), "application/json", depositResp.access_token, "", true);
-
+                    _logger.LogInformation("getExchange > getExchange req: " + base.ToJson(exchangeReq));
+                    var sResponse1 = HttpPost(getExchangeUrl, ToJson(exchangeReq), "application/json", depositResp.access_token, "", true);
+                    _logger.LogInformation("getExchange > getExchange END");
                     var exchangeResp = new ExchangeResp();
                     exchangeResp = JsonConvert.DeserializeObject<ExchangeResp>(sResponse1);
 
