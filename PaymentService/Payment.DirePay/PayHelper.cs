@@ -5,11 +5,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Payment.DirePay
 {
     class PayHelper : PayHelperBase, IExchangeHelper
     {
+        private readonly ILogger<PayHelper> _logger;
+
+        public PayHelper(IServiceProvider provider)
+        {
+            _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+        }
+
         #region Exchange Rate
 
         ExchangeResult IExchangeHelper.GetExchange(Dictionary<string, string> payResource)
@@ -146,6 +155,8 @@ namespace Payment.DirePay
                     oDepositResult.Message = $"{err["err"]}";
                     oDepositResult.RawContent = $"{err["err"]}";
                 }
+
+                _logger.LogError(wEx.InnerException, wEx.Message);
             }
 
             return oDepositResult;
@@ -291,6 +302,8 @@ namespace Payment.DirePay
                     oDepositResult.Message = $"{err["err"]}";
                     oDepositResult.RawContent = $"{err["err"]}";
                 }
+
+                _logger.LogError(wEx.InnerException, wEx.Message);
             }
 
             return withdrawResult;
@@ -365,7 +378,6 @@ namespace Payment.DirePay
             try
             {
                 var sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", "", true);
-
                 var depositResp = new DepositResp();
                 depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
 
@@ -395,6 +407,7 @@ namespace Payment.DirePay
             catch (WebException wex)
             {
                 message = wex.ToString();
+                _logger.LogError(message);
             }
             return 0;
         }
