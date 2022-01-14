@@ -13,6 +13,8 @@ using Flurl.Http.Content;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
 using Serilog.Context;
 
 namespace PaymentCore.Helpers
@@ -50,6 +52,12 @@ namespace PaymentCore.Helpers
             where TResult : class
         {
             var returnObj = PostData(url, body, ContentType.Text);
+
+            if (!CompareExtension.IsJson(returnObj.Result))
+            {
+                throw new CustomException("Invalid JSON string, Cannot DeserializeObject.");
+            }
+
             var result = JsonConvert.DeserializeObject<TResult>(returnObj.Result);
 
             return (result, returnObj.StatusCode);
@@ -94,6 +102,12 @@ namespace PaymentCore.Helpers
             where TResult : class
         {
             var returnObj = PostData(url, data, ContentType.Json);
+
+            if (!CompareExtension.IsJson(returnObj.Result))
+            {
+                throw new CustomException("Invalid JSON string, Cannot DeserializeObject.");
+            }
+
             var result = JsonConvert.DeserializeObject<TResult>(returnObj.Result);
             return (result, returnObj.StatusCode);
         }

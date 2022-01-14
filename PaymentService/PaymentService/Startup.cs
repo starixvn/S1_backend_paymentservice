@@ -54,6 +54,7 @@ namespace PaymentService
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<CacheHelper>();
             services.AddSingleton<IFlurlHttpHelper, FlurlHttpHelper>();
+            services.AddTransient<JsonNetSerializer, JsonNetSerializer>();
             //services.AddSingleton<IBCDBLibrary>();
 
             /*DAL*/

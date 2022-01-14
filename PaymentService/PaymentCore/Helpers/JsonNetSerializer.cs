@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace PaymentCore.Helpers
 {
-    internal class JsonNetSerializer
+    public class JsonNetSerializer
     {
         public string SerializeToString<T>(T input)
         {
