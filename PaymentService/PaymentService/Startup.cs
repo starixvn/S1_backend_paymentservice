@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using PaymentCore;
+using PaymentCore.Helpers;
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
@@ -51,6 +53,7 @@ namespace PaymentService
             services.AddSingleton<CourierAdapter>();
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<CacheHelper>();
+            services.AddSingleton<IFlurlHttpHelper, FlurlHttpHelper>();
             //services.AddSingleton<IBCDBLibrary>();
 
             /*DAL*/

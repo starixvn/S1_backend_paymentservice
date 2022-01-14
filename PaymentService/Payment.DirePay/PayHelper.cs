@@ -12,11 +12,13 @@ namespace Payment.DirePay
 {
     class PayHelper : PayHelperBase, IExchangeHelper
     {
+        private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
 
         public PayHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+            _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
         }
 
         #region Exchange Rate
