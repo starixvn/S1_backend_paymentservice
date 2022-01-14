@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -22,6 +21,7 @@ namespace PaymentService.Service.BLL
         private readonly ILogger<PayBLL> logger;
         private static ConcurrentDictionary<string, IPayHelper> PayHelperContainer = new ConcurrentDictionary<string, IPayHelper>();
         private readonly CacheHelper _cacheHelper;
+        private readonly IServiceProvider _provider;
 
         public PayBLL(IServiceProvider provider)
         {
@@ -30,6 +30,7 @@ namespace PaymentService.Service.BLL
             logger = provider.GetRequiredService<ILogger<PayBLL>>();
             PayHelperBase.HttpHelper = provider.GetRequiredService<HttpHelper>();
             _cacheHelper = provider.GetRequiredService<CacheHelper>();
+            _provider = provider;
         }
 
         public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
@@ -118,7 +119,8 @@ namespace PaymentService.Service.BLL
                 var assembly = Assembly.Load($"Payment.{PayName}");
                 var assemblyType = assembly.GetType($"Payment.{PayName}.PayHelper");
 
-                if (PayHelperContainer.TryAdd(PayName, (IPayHelper)Activator.CreateInstance(assemblyType)))
+                if (PayHelperContainer.TryAdd(PayName
+                        , (IPayHelper)ActivatorUtilities.CreateInstance(_provider, assemblyType)))
                 {
                     PayHelperContainer[PayName].InsertPaymentLog += InsertPaymentLog;
                 }
