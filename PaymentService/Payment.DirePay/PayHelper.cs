@@ -5,23 +5,29 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
 
 namespace Payment.DirePay
 {
     class PayHelper : PayHelperBase, IExchangeHelper
     {
+        private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
 
         public PayHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+            _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
         }
 
         #region Exchange Rate
 
-        ExchangeResult IExchangeHelper.GetExchange(Dictionary<string, string> payResource)
+        /*ExchangeResult IExchangeHelper.GetExchange(Dictionary<string, string> payResource)
         {
             var oExchangeResult = new ExchangeResult
             {
@@ -50,6 +56,39 @@ namespace Payment.DirePay
             }
 
             return oExchangeResult;
+        }*/
+
+        ExchangeResult IExchangeHelper.GetExchange(Dictionary<string, string> input)
+        {
+            try
+            {
+                var fromCurrency = GetPayCurrency(input["PayCurrencyId"]);
+                var toCurrency = input["PayCode"];
+                var amount = input["Amount"];
+                var toAmount = GetExchangeAmountAsync(amount, fromCurrency, toCurrency, input).Result;
+                var strToAmount = toAmount.ToString();
+
+                if (toAmount > 0)
+                {
+                    var rateData = new Dictionary<string, string>
+                    {
+                        { "To_Amount", strToAmount },
+                        { "Rate", (toAmount / decimal.Parse(amount)).ToString() },
+                        { "Updated_timestamp", new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString() }
+                    };
+
+                    return new ExchangeResult(ErrorCode.Success, "success", rateData);
+                }
+
+                throw new CustomException("Incorrect exchange amount: " + strToAmount,
+                    ErrorCode.GetExchangeRateFailed);
+            }
+            catch (CustomException ex)
+            {
+                _logger.LogInformation($"GetExchange failed, Code:{ex.Code}, Message:{ex.Message}");
+
+                return new ExchangeResult(ex.Code, ex.Message);
+            }
         }
 
         #endregion
@@ -253,7 +292,7 @@ namespace Payment.DirePay
                     withdrawGetWalletReq.client_reference_id = inputs["TransID"];
                     withdrawGetWalletReq.hashCode = ToMD5("partner_withdraw" + inputs["key"]).ToLower();
                     var message = "";
-                    var toAmount = getExchange(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency, withdrawGetWalletReq.withdrawal_token, inputs, out message);
+                    var toAmount = GetExchangeAmountAsync(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency, withdrawGetWalletReq.withdrawal_token, inputs).Result;
 
                     if (toAmount > 0)
                     {
@@ -359,7 +398,7 @@ namespace Payment.DirePay
 
         #region Private Methods
 
-        private decimal getExchange(string amount, string from_currency, string to_currency, Dictionary<string, string> inputs, out string message)
+        /*private decimal GetExchangeRate(string amount, string from_currency, string to_currency, Dictionary<string, string> inputs, out string message)
         {
             message = "";
             var sUrl = inputs["host"];
@@ -415,6 +454,70 @@ namespace Payment.DirePay
                 _logger.LogError(message);
             }
             return 0;
+        }*/
+
+        private async Task<string> GetAccessTokenAsync(Dictionary<string, string> inputs)
+        {
+            var baseApiUrl = inputs["host"];
+            var loginUrl = baseApiUrl + Path.Login;
+
+            var request = new Dictionary<string, string>
+            {
+                { "email", inputs["Email"] },
+                { "password", inputs["Password"] }
+            };
+
+            var result = await _httpHelper
+                .PostUrlEncodedAsync<Dictionary<string, string>, DepositResp>(loginUrl, request);
+
+            if (!result.HttpStatusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"DirePay login failed, HttpStatus: {(int)result.HttpStatusCode} {result.HttpStatusCode}" +
+                        $", Message: {result.Result.message}",
+                    ErrorCode.GetExchangeRateFailed);
+            }
+
+            if (string.IsNullOrEmpty(result.Result.access_token))
+            {
+                throw new CustomException(
+                    "DirePay login response access_token is empty",
+                    ErrorCode.GetExchangeRateFailed);
+            }
+
+            return result.Result.access_token;
+        }
+
+        private async Task<decimal> GetExchangeAmountAsync(string amount, string fromCurrency, string toCurrency, Dictionary<string, string> inputs)
+        {
+            var baseApiUrl = inputs["host"];
+            var getExchangeUrl = baseApiUrl + Path.ExchangeRate;
+
+            var accessToken = await GetAccessTokenAsync(inputs);
+            var request = new Dictionary<string, string>
+                {
+                    { "command", "rates" },
+                    { "amount", amount },
+                    { "from_currency", fromCurrency },
+                    { "to_currency", toCurrency },
+                    { "type", "SELL" }
+                };
+
+            var result = await _httpHelper
+                .WithOAuthBearerToken(accessToken)
+                .PostUrlEncodedAsync<Dictionary<string, string>, ExchangeResp>(getExchangeUrl, request);
+
+            if (!result.HttpStatusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"DirePay GetExchangeRate failed, HttpStatus: {(int)result.HttpStatusCode} {result.HttpStatusCode}" +
+                        $", Message: {result.Result.message}",
+                    ErrorCode.GetExchangeRateFailed);
+            }
+
+            var exchangeAmount = decimal.Parse(result.Result.amount);
+
+            return exchangeAmount;
         }
 
         private string GetItemId(string payCode)
