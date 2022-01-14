@@ -48,16 +48,15 @@ namespace Payment.NAP3SPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            var transStatus = int.Parse(formData["status"]) switch
-            {
-                0 => TransStatus.Success,
-                100 => TransStatus.Success,
-                101 => TransStatus.Pending,
-                _ => TransStatus.Fail,
-            };
             return new NotifyDepositResult
             {
-                TransStatus = transStatus,
+                TransStatus = int.Parse(formData["status"]) switch
+                {
+                    0 => TransStatus.Success,
+                    100 => TransStatus.Success,
+                    101 => TransStatus.Pending,
+                    _ => TransStatus.Fail,
+                },
                 Message = formData["message"],
                 Comment = formData["message"],
                 RequestAmount = decimal.Parse(formData["amount"]),
