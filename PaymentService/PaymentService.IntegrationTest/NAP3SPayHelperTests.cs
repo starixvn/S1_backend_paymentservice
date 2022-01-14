@@ -6,6 +6,8 @@ using System.Web;
 using System.Diagnostics;
 using System;
 using Payment.NAP3SPay;
+using NSubstitute;
+using PaymentCore;
 
 namespace PaymentService.IntegrationTest
 {
@@ -18,7 +20,7 @@ namespace PaymentService.IntegrationTest
         [SetUp]
         public void Setup()
         {
-            //Arrange
+            //Arrange           
             _payHelper = new PayHelper();
 
             _inputs = new Dictionary<string, string>
@@ -29,20 +31,23 @@ namespace PaymentService.IntegrationTest
         }
 
     
-        [TestCase("094581000110649", "626505814575", "Mobi", 1)]
-        //[TestCase("094581000110650", "189864065110", "Mobi", 1)]
-        //[TestCase("20000147501695", "624480651839201", "VT", 1)]
-        //[TestCase("20000147504104", "626608369258630", "VT", 1)]
-        //[TestCase("59000018335292", "58361564714690", "Vina", 1)]
-        public void DebitTest(string serial, string code, string payCode, decimal amount)
+        [TestCase("094581000110649", "626505814575", "Mobi", 50000,ExpectedResult = true)]
+        [TestCase("094581000110650", "189864065110", "Mobi", 50000, ExpectedResult = true)]
+        [TestCase("20000147501695", "624480651839201", "VT", 50000, ExpectedResult = true)]
+        [TestCase("20000147504104", "626608369258630", "VT", 50000, ExpectedResult = true)]
+        [TestCase("59000018335292", "58361564714690", "Vina", 50000, ExpectedResult = true)]
+        public bool DebitTest(string serial, string code, string payCode, decimal amount)
         {
+            _payHelper = Substitute.For<PayHelper>();
+            _payHelper.Debit(Arg.Any<Dictionary<string, string>>()).Returns(new DepositResult() { Success = true });
+
             _inputs.Add("Serial", serial);
             _inputs.Add("Code", code);
             _inputs.Add("PayCode", payCode);
             _inputs.Add("TransID", Guid.NewGuid().ToString());
             _inputs.Add("Amount", amount.ToString());
             var result = _payHelper.Debit(_inputs);
-            result.Success.Should().BeTrue();
+            return result.Success; 
         }
 
 
