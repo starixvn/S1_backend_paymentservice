@@ -393,7 +393,9 @@ namespace Payment.DirePay
                     exchangeReq.from_currency = from_currency;
                     exchangeReq.to_currency = to_currency;
                     exchangeReq.type = "SELL";
+                    _logger.LogInformation("getExchange > getExchange url: " + getExchangeUrl);
                     _logger.LogInformation("getExchange > getExchange req: " + base.ToJson(exchangeReq));
+                    _logger.LogInformation("getExchange > getExchange token: " + depositResp.access_token);
                     var sResponse1 = HttpPost(getExchangeUrl, ToJson(exchangeReq), "application/json", depositResp.access_token, "", true);
                     _logger.LogInformation("getExchange > getExchange END");
                     var exchangeResp = new ExchangeResp();
