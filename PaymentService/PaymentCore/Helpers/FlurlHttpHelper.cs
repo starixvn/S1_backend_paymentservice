@@ -213,6 +213,10 @@ namespace PaymentCore.Helpers
             var request = CreateFlurlRequest(url);
             request = _header.Aggregate(request, (current, item) => current.WithHeader(item.Key, item.Value));
 
+            _logger.LogInformation($"POST ({postType}): {url}");
+            _logger.LogInformation("Headers:"
+                + JsonConvert.SerializeObject(request.Headers.ToDictionary(x => x.Name, x => x.Value)));
+            _logger.LogInformation(JsonConvert.SerializeObject(data));
             IFlurlResponse response = default(FlurlResponse);
             if (postType == ContentType.Json)
             {
