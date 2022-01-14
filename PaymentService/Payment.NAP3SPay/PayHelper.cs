@@ -38,7 +38,10 @@ namespace Payment.NAP3SPay
                 Success = result.status == 0,
                 ErrorCode = result.status.ToString(),
                 Message = result.message,
-                FormData = null,
+                FormData = new Dictionary<string, string>()
+                {
+                    { "Message", result.message } ,
+                },
                 DepositAmount = result.amount,
                 SuggestAmount = result.real_amount,
                 RawContent = sResponse,
