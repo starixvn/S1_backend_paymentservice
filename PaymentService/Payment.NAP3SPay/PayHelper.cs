@@ -25,7 +25,7 @@ namespace Payment.NAP3SPay
                 { "card_seri", inputs["Serial"] },
                 { "card_code", inputs["Code"] },
                 { "request_id", inputs["TransID"] },
-                { "card_amount", inputs["Amount"] },
+                { "card_amount", decimal.Parse(inputs["Amount"]).ToString("#") },
                 { "card_type", inputs["PayCode"] },
                 { "signature", ToMD5($"{inputs["key"]}{inputs["Amount"]}{inputs["Code"]}{inputs["Serial"]}").ToLower() }
             };
@@ -62,7 +62,7 @@ namespace Payment.NAP3SPay
                 RequestAmount = decimal.Parse(formData["amount"]),
                 ActualAmount = decimal.Parse(formData["real_amount"]),
                 DepositId = formData["request_id"],
-                RefThirdId = formData["tran_id"],         
+                RefThirdId = formData["tran_id"],
                 ThirdId = formData["tran_id"],
                 Response = "success"
             };
@@ -92,7 +92,7 @@ namespace Payment.NAP3SPay
         {
             throw new NotImplementedException();
         }
-        
+
         public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
         {
             return formData["request_id"];
