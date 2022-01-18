@@ -10,57 +10,55 @@ namespace Payment.ComitPay
     {
         private class CallBackWithdrawReq
         {
-            public string id { set; get; }
-            public int status { set; get; }
-            public string amount { set; get; }
-            public string fee { set; get; }
-            public string message { set; get; }
-            public string token { set; get; }
-            public string ts { set; get; }
+            public string MerchantCode { set; get; }
+            public string TransactionID { set; get; }
+            public string CurrencyCode { set; get; }
+            public string Amount { set; get; }
+            public string TransactionDateTime { set; get; }
+            public string Membercode { set; get; }
+            public string ID { set; get; }
+            public string Status { set; get; }
+            public string Message { set; get; }
+            public string Key { set; get; }
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            var data = FromJson<CallBackDebitReq>(ToJson(formData));
+            var data = FromJson<CallBackWithdrawReq>(ToJson(formData));
 
-            var p = $"{payResource["Merchant"]}-{payResource["key"]}-{data.id}-{data.amount}-{data.ts}";
+            var p = $"{data.MerchantCode}{data.TransactionID}{data.Membercode}{data.Amount}{data.CurrencyCode}{data.Status}{payResource["key"]}";
             var sign = ToMD5(p).ToLower();
 
             var oNotify = new NotifyWithdrawResult();
-            oNotify.WithdrawId = data.id;
+            oNotify.WithdrawId = data.TransactionID;
+            oNotify.ThirdId = data.ID;
+            oNotify.Message = data.Message;
 
-            //if (sign == data.token)
-            //{
-            if (data.status == 1)
+            if (sign == data.Key)
+            {
+            if (data.Status == "000")
             {
                 oNotify.TransStatus = TransStatus.Success;
-                oNotify.RequestAmount = decimal.Parse(data.amount);
-                oNotify.ThirdId = data.id;
-                oNotify.Message = data.status + "-" + data.message;
+                oNotify.RequestAmount = decimal.Parse(data.Amount);
                 oNotify.Response = "OK";
             }
-            else if (data.status == -1)
+            else if (data.Status == "001")
             {
                 oNotify.TransStatus = TransStatus.Fail;
-                oNotify.ThirdId = data.id;
-                oNotify.Message = data.status + "-" + data.message;
                 oNotify.Response = "OK";
             }
             else
             {
                 oNotify.TransStatus = TransStatus.Pending;
-                oNotify.ThirdId = data.id;
-                oNotify.Message = data.status + "-" + data.message;
                 oNotify.Response = "OK";
             }
-            //}
-            //else
-            //{
-            //    oNotify.TransStatus = TransStatus.Pending;
-            //    oNotify.ThirdId = data.id;
-            //    oNotify.Message = "Signature error";
-            //    oNotify.Response = "Signature error";
-            //}
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Message = "Signature error";
+                oNotify.Response = "Signature error";
+            }
 
             return oNotify;
         }
@@ -134,47 +132,41 @@ namespace Payment.ComitPay
 
         private class WithdrawalRes
         {
-            public int status { get; set; }
-            public string msg { get; set; }
-            public WithdrawalResData d { get; set; }
-        }
-
-        public class WithdrawalResData
-        {
-            public string id { get; set; }
+            public string statusCode { get; set; }
+            public string message { get; set; }
         }
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var sUrl = inputs["host"] + "/a/sPayout";
+            var sUrl = inputs["PayOut"] + "/"+ inputs["merchant_no"];
 
             var formData = new Dictionary<string, string>();
-
-            formData.Add("mCode", inputs["Merchant"]);
-            formData.Add("ts", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
-            formData.Add("bCode", inputs["BankCode"]);
-            formData.Add("trxid", inputs["TransID"]);
-            formData.Add("user", inputs["CustId"]);
+            formData.Add("MerchantCode", inputs["merchant_no"]);
+            formData.Add("CurrencyCode", inputs["PayCurrencyId"]);
+            formData.Add("TransactionID", inputs["TransID"]);
+            formData.Add("MerchantCode", inputs["merchant_no"]);
             var amount = decimal.Parse(inputs["Amount"]);
-            formData.Add("amt", amount.ToString("#"));
-            formData.Add("bAccName", inputs["AccountName"]);
-            formData.Add("bAccNo", inputs["AccountNo"]);
-            formData.Add("notifyUrl", inputs["CallBackUrl"]);
+            formData.Add("Amount", amount.ToString("#"));
+            formData.Add("Membercode", inputs["CustId"]);
+            formData.Add("TransactionDateTime", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
+            formData.Add("ClientIP", inputs["ClientIP"]);
+            formData.Add("ReturnURI", inputs["CallBackUrl"]);
+            formData.Add("BankCode", inputs["BankCode"]);
+            formData.Add("toBankAccountName", inputs["AccountName"]);
+            formData.Add("toBankAccountNumber", inputs["AccountNo"]);
 
-            var p = $"{formData["mCode"]}-{inputs["key"]}-sPayout-{formData["ts"]}";
-            formData.Add("token", ToMD5(p).ToLower());
+            var p = $"{formData["MerchantCode"]}{inputs["TransactionID"]}{formData["Membercode"]}{formData["Amount"]}{formData["CurrencyCode"]}{formData["TransactionDateTime"]}" +
+                        $"{formData["ToBankAccountNumber"]}{inputs["key"]}";
+            formData.Add("Key", ToMD5(p).ToUpper());
 
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["trxid"]);
-
-            sResponse = sResponse.Replace("[", "{");
-            sResponse = sResponse.Replace("]", "}");
 
             var withdrawResult = new WithdrawResult();
             var withdrawalRes = new WithdrawalRes();
             withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
 
-            if (withdrawalRes.status == 0)
+            if (withdrawalRes.statusCode == "000")
             {
                 withdrawResult.Success = true;
             }
@@ -183,7 +175,7 @@ namespace Payment.ComitPay
                 withdrawResult.Success = false;
             }
 
-            withdrawResult.Message = withdrawalRes.msg;
+            withdrawResult.Message = withdrawalRes.message;
 
             return withdrawResult;
         }
