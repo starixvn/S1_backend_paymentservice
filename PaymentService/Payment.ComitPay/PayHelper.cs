@@ -2,6 +2,7 @@
 using PaymentCore;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Payment.ComitPay
@@ -148,7 +149,8 @@ namespace Payment.ComitPay
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("Membercode", inputs["CustId"]);
-            formData.Add("TransactionDateTime", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
+            var time = new DateTimeOffset(DateTime.Now);
+            formData.Add("Datetime", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
             formData.Add("ClientIP", inputs["ClientIP"]);
             formData.Add("ReturnURI", inputs["CallBackUrl"]);
             formData.Add("BankCode", inputs["BankCode"]);
@@ -191,7 +193,8 @@ namespace Payment.ComitPay
             formData.Add("Reference", inputs["TransID"]);
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#"));
-            formData.Add("Datetime", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
+            var time = new DateTimeOffset(DateTime.Now);
+            formData.Add("Datetime", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
             formData.Add("Bank", inputs["BankCode"]);
             formData.Add("Language", inputs["PayLangId"]);
             formData.Add("FrontURI", inputs["ReturnUrl"]);
@@ -202,11 +205,25 @@ namespace Payment.ComitPay
             var p = $"{formData["Merchant"]}{formData["Reference"]}{formData["Customer"]}{formData["Amount"]}{formData["Currency"]}{formData["Datetime"]}{inputs["key"]}{formData["ClientIP"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["trxid"]);
+
+            var depositRes = new WithdrawalRes();
+            depositRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
             var oDepositResult = new DepositResult();
-            oDepositResult.Url = sUrl;
-            oDepositResult.FormData = formData;
-            oDepositResult.Success = true;
-            oDepositResult.Message = "";
+            if (depositRes.statusCode == "000")
+            {
+                oDepositResult.Url = depositRes.message;
+                oDepositResult.Success = true;
+                oDepositResult.FormData = null;
+                oDepositResult.Message = "";
+            }
+            else
+            {
+                oDepositResult.Success = false;
+                oDepositResult.Message = depositRes.message;
+            }
+
             return oDepositResult;
         }
 
