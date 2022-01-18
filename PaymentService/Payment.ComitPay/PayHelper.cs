@@ -93,28 +93,28 @@ namespace Payment.ComitPay
             oNotify.DepositId = data.Reference;
             oNotify.ThirdId = data.ID;
             oNotify.Message = data.Status;
-            oNotify.Comment = { data.Status};
+            oNotify.Comment = data.Status;
 
             if (sign == data.Key)
             {
-            if (data.Status == "000" || data.Status == "006")
-            {
-                oNotify.TransStatus = TransStatus.Success;
-                oNotify.RequestAmount = decimal.Parse(data.Amount);
-                oNotify.ActualAmount = decimal.Parse(data.Amount);
-                
-                oNotify.Response = "OK";
-            }
-            else if (data.Status == "001" || data.Status == "007" || data.Status == "008")
-            {
-                oNotify.TransStatus = TransStatus.Fail;
-                oNotify.Response = "OK";
-            }
-            else
-            {
-                oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Response = "OK";
-            }
+                if (data.Status == "000" || data.Status == "006")
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = decimal.Parse(data.Amount);
+                    oNotify.ActualAmount = decimal.Parse(data.Amount);
+
+                    oNotify.Response = "OK";
+                }
+                else if (data.Status == "001" || data.Status == "007" || data.Status == "008")
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Response = "OK";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Pending;
+                    oNotify.Response = "OK";
+                }
             }
             else
             {
@@ -205,7 +205,7 @@ namespace Payment.ComitPay
             formData.Add("FrontURI", inputs["ReturnUrl"]);
             formData.Add("BackURI", inputs["CallBackUrl"]);
             formData.Add("ClientIP", inputs["ClientIP"]);
-            formData.Add("Customer", inputs["CustId"]);  
+            formData.Add("Customer", inputs["CustId"]);
 
             var p = $"{formData["Merchant"]}{inputs["Reference"]}{formData["Customer"]}{formData["Amount"]}{formData["Currency"]}{formData["Datetime"]}{inputs["key"]}{formData["ClientIP"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
