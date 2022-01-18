@@ -36,22 +36,22 @@ namespace Payment.ComitPay
 
             if (sign == data.Key)
             {
-            if (data.Status == "000")
-            {
-                oNotify.TransStatus = TransStatus.Success;
-                oNotify.RequestAmount = decimal.Parse(data.Amount);
-                oNotify.Response = "OK";
-            }
-            else if (data.Status == "001")
-            {
-                oNotify.TransStatus = TransStatus.Fail;
-                oNotify.Response = "OK";
-            }
-            else
-            {
-                oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Response = "OK";
-            }
+                if (data.Status == "000")
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = decimal.Parse(data.Amount);
+                    oNotify.Response = "OK";
+                }
+                else if (data.Status == "001")
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Response = "OK";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Pending;
+                    oNotify.Response = "OK";
+                }
             }
             else
             {
@@ -138,7 +138,7 @@ namespace Payment.ComitPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var sUrl = inputs["PayOut"] + "/"+ inputs["merchant_no"];
+            var sUrl = inputs["PayOut"] + "/" + inputs["merchant_no"];
 
             var formData = new Dictionary<string, string>();
             formData.Add("MerchantCode", inputs["merchant_no"]);
@@ -199,7 +199,7 @@ namespace Payment.ComitPay
             formData.Add("ClientIP", inputs["ClientIP"]);
             formData.Add("Customer", inputs["CustId"]);
 
-            var p = $"{formData["Merchant"]}{inputs["Reference"]}{formData["Customer"]}{formData["Amount"]}{formData["Currency"]}{formData["Datetime"]}{inputs["key"]}{formData["ClientIP"]}";
+            var p = $"{formData["Merchant"]}{formData["Reference"]}{formData["Customer"]}{formData["Amount"]}{formData["Currency"]}{formData["Datetime"]}{inputs["key"]}{formData["ClientIP"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 
             var oDepositResult = new DepositResult();
