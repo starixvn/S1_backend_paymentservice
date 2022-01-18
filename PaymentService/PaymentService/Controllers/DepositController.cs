@@ -205,7 +205,7 @@ namespace PaymentService.Controllers
                 }
 
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
-                    string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && x.LangId == custInfo.UserLang)?.PayLangId;
+                    string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && x.PayId == reqDeposit.PayId)?.PayLangId;
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == reqDeposit.PayId);
                 var payCurrency = _payBll.GetPayCurrency()?.FirstOrDefault(x =>
                     x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
