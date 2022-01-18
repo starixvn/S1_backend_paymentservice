@@ -205,26 +205,33 @@ namespace Payment.ComitPay
             var p = $"{formData["Merchant"]}{formData["Reference"]}{formData["Customer"]}{formData["Amount"]}{formData["Currency"]}{formData["Datetime"]}{inputs["key"]}{formData["ClientIP"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["Reference"]);
-
-            var depositRes = new WithdrawalRes();
-            depositRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
             var oDepositResult = new DepositResult();
-            if (depositRes.statusCode == "000")
-            {
-                oDepositResult.Url = depositRes.message;
-                oDepositResult.Success = true;
-                oDepositResult.FormData = null;
-                oDepositResult.Message = "";
-            }
-            else
-            {
-                oDepositResult.Success = false;
-                oDepositResult.Message = depositRes.message;
-            }
-
+            oDepositResult.Url = sUrl;
+            oDepositResult.FormData = formData;
+            oDepositResult.Success = true;
+            oDepositResult.Message = "";
             return oDepositResult;
+
+            //var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            //var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["Reference"]);
+
+            //var depositRes = new WithdrawalRes();
+            //depositRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
+            //var oDepositResult = new DepositResult();
+            //if (depositRes.statusCode == "000")
+            //{
+            //    oDepositResult.Url = depositRes.message;
+            //    oDepositResult.Success = true;
+            //    oDepositResult.FormData = null;
+            //    oDepositResult.Message = "";
+            //}
+            //else
+            //{
+            //    oDepositResult.Success = false;
+            //    oDepositResult.Message = depositRes.message;
+            //}
+            //
+            //return oDepositResult;
         }
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
