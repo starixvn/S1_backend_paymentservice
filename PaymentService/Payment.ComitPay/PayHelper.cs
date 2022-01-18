@@ -157,12 +157,12 @@ namespace Payment.ComitPay
             formData.Add("toBankAccountName", inputs["AccountName"]);
             formData.Add("toBankAccountNumber", inputs["AccountNo"]);
 
-            var p = $"{formData["MerchantCode"]}{inputs["TransactionID"]}{formData["Membercode"]}{formData["Amount"]}{formData["CurrencyCode"]}{formData["TransactionDateTime"]}" +
+            var p = $"{formData["MerchantCode"]}{formData["TransactionID"]}{formData["Membercode"]}{formData["Amount"]}{formData["CurrencyCode"]}{formData["TransactionDateTime"]}" +
                         $"{formData["ToBankAccountNumber"]}{inputs["key"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["trxid"]);
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["TransactionID"]);
 
             var withdrawResult = new WithdrawResult();
             var withdrawalRes = new WithdrawalRes();
@@ -206,7 +206,7 @@ namespace Payment.ComitPay
             formData.Add("Key", ToMD5(p).ToUpper());
 
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["trxid"]);
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["Reference"]);
 
             var depositRes = new WithdrawalRes();
             depositRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
