@@ -63,7 +63,7 @@ namespace Payment.NAP3SPay
                 Message = formData["message"],
                 Comment = formData["message"],
                 RequestAmount = decimal.Parse(formData["amount"]),
-                ActualAmount = decimal.Parse(formData["real_amount"]),
+                ActualAmount = decimal.Parse(formData["real_amount"]) * decimal.Parse(payResource["Rate"]),
                 DepositId = formData["request_id"],
                 RefThirdId = formData["tran_id"],
                 ThirdId = formData["tran_id"],
