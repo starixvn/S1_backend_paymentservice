@@ -71,6 +71,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.NAP3SPay", "Payment
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PaymentService.IntegrationTest", "PaymentService.IntegrationTest\PaymentService.IntegrationTest.csproj", "{46317689-9755-42CA-A60E-B8C04A1892C0}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.ComitPay", "Payment.ComitPay\Payment.ComitPay.csproj", "{D4B7E6E2-9407-4699-A77C-07B9A2F14432}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -209,6 +211,10 @@ Global
 		{46317689-9755-42CA-A60E-B8C04A1892C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46317689-9755-42CA-A60E-B8C04A1892C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46317689-9755-42CA-A60E-B8C04A1892C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4B7E6E2-9407-4699-A77C-07B9A2F14432}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4B7E6E2-9407-4699-A77C-07B9A2F14432}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4B7E6E2-9407-4699-A77C-07B9A2F14432}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4B7E6E2-9407-4699-A77C-07B9A2F14432}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -244,6 +250,7 @@ Global
 		{E49E470E-E0E5-4EE4-AA9C-A05A3AE76B3B} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{80479E10-0D51-4B87-838F-119F0C311FF1} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{D9F816F0-1569-499A-AAE0-CA19B0DA64FC} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{D4B7E6E2-9407-4699-A77C-07B9A2F14432} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
