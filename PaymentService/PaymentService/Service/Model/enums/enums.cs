@@ -83,6 +83,7 @@
         Rejected = 4,
         Canceled = 5,
         Expired = 6,
+        OnHold = 7,
         Error = 99
     }
 

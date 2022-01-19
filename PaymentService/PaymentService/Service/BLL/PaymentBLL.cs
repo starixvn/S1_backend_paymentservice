@@ -21,11 +21,21 @@ namespace PaymentService.Service.BLL
 
         public DepositRequest GetDepositRequest(string transId)
         {
-            var depositId = 0;
-            var m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out depositId);
-
+            var depositId = GetDepositId(transId);
             return _depositService.GetDepositRequest(depositId);
+        }
+        
+        public DepositInfoData GetDepositInfo(string transId)
+        {
+            var depositId = GetDepositId(transId);
+            return _depositService.GetDepositInfo(depositId);
+        }
+
+        private int GetDepositId(string transId)
+        {
+            var m = Regex.Match(transId, @"\d+");
+            int.TryParse(m.Value, out var depositId);
+            return depositId;
         }
 
         public void DepositSuccess(DepositRequest depositRequest, IDepositResult iDepositResult)
@@ -36,6 +46,39 @@ namespace PaymentService.Service.BLL
             try
             {
                 _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, iDepositResult.ActualAmount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        
+        public int DepositManualSuccess(DepositInfoData depositInfoData)
+        {
+            var forStatus = new List<int>
+            {
+                (int)DepositStatus.Draft,
+                (int)DepositStatus.Pending,
+                (int)DepositStatus.Rejected,
+                (int)DepositStatus.Canceled,
+                (int)DepositStatus.Expired,
+                (int)DepositStatus.OnHold,
+                (int)DepositStatus.Error
+            };
+            
+            try
+            {
+                return _depositService.SetDepositInfo(
+                    depositInfoData.TransId, 
+                    depositInfoData.SiteId,
+                    (IPay)depositInfoData.depositInfo, 
+                    depositInfoData.ActualDeposit, 
+                    depositInfoData.Comment, 
+                    null,
+                    depositInfoData.RefId, 
+                    depositInfoData.Operator, 
+                    forStatus, 
+                    DepositStatus.Approved);
             }
             catch (Exception ex)
             {

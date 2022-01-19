@@ -709,6 +709,74 @@ namespace PaymentService.Controllers
             return Ok(Request.Headers.ToDictionary(d => d.Key));
         }
 
+        [Route("Payment/DepositManual")]
+        [HttpPost]
+        public ActionResult<DepositManualResponse> DepositManual(DepositManualRequest request)
+        {
+
+            try
+            {
+                var response = new DepositManualResponse
+                {
+                    ErrorCode = (int)ErrorCode.Fail,
+                    Message = ErrorCode.Fail.ToString(),
+                    Amount = 0
+                };
+                const string payName = "Manual";
+                var clientIp = _common.GetClientIP(HttpContext);
+                if (!IsWhiteList(clientIp, payName, request.TransId))
+                {
+                    _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
+                    response.ErrorCode = (int)ErrorCode.Fail;
+                    response.Message = "Invalid IP!";
+                    response.Amount = 0;
+                    return response;
+                }
+                
+                var depositInfo = _paymentBll.GetDepositInfo(request.TransId);
+                if (depositInfo == null)
+                {
+                    response.ErrorCode = (int)ErrorCode.Fail;
+                    response.Message = $"{request.TransId} is not exist";
+                    response.Amount = 0;
+                    return response;
+                }
+
+                if (depositInfo.Status == (int)DepositStatus.Approved)
+                {
+                    response.ErrorCode = (int)ErrorCode.Fail;
+                    response.Message = $"{request.TransId} status is already approved and cannot be changed";
+                    response.Amount = 0;
+                    return response;
+                }
+
+                depositInfo.ActualDeposit = (request.Amount == 0) ? depositInfo.Amount : request.Amount;
+                depositInfo.Comment = "Manual Approved";
+                depositInfo.Status = (int)DepositStatus.Approved;
+                depositInfo.RefId = string.IsNullOrEmpty(request.ThirdId) ? null : request.ThirdId;
+                depositInfo.Operator = string.IsNullOrEmpty(request.Operator) ? "Manual" : request.Operator;
+                
+                var result = _paymentBll.DepositManualSuccess(depositInfo);
+                if (result > 0)
+                {
+                    response.ErrorCode = (int)ErrorCode.Success;
+                    response.Message = ErrorCode.Success.ToString();
+                    response.Amount = depositInfo.ActualDeposit;
+                }
+
+                return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, GetCurrentAsyncMethod());
+                return new DepositManualResponse
+                {
+                    ErrorCode = (int)ErrorCode.SystemError,
+                    Message = ErrorCode.SystemError.ToString(),
+                    Amount = 0
+                };
+            }
+        }
 
         [Route("Payment/DepositCallBack/{TransId}")]
         [HttpPost]
