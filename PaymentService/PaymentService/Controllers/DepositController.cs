@@ -248,11 +248,20 @@ namespace PaymentService.Controllers
                 {
                     apiResult.ErrorCode = 0;
                     var payResult = new PayResult();
-                    payResult.Url = result.Url;
-                    payResult.FormData = result.FormData;
-                    payResult.ThirdId = result.ThirdId;
-                    payResult.Mode = onlineBank.Mode;
-                    apiResult.Data = payResult;
+
+
+                    if (string.IsNullOrEmpty(payResult.Url))
+                    {
+                        apiResult.Message = result.Message;
+                    }
+                    else
+                    { 
+                        apiResult.Data = payResult;
+                        payResult.Url = result.Url;
+                        payResult.FormData = result.FormData;
+                        payResult.ThirdId = result.ThirdId;
+                        payResult.Mode = onlineBank.Mode;
+                    }
 
                     if (result.ThirdId != null)
                     {
