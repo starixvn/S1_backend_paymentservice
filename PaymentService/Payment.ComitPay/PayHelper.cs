@@ -25,7 +25,6 @@ namespace Payment.ComitPay
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            //var data = FromJson<CallBackWithdrawReq>(ToJson(formData));
             var data = FromJson<CallBackWithdrawReq>(bodyContent);
 
             var p = $"{data.MerchantCode}{data.TransactionID}{data.Membercode}{data.Amount}{data.CurrencyCode}{data.Status}{payResource["key"]}";
@@ -85,7 +84,6 @@ namespace Payment.ComitPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var oNotify = new NotifyDepositResult();
-            //var data = FromJson<CallBackDebitReq>(ToJson(formData));
             var data = FromJson<CallBackDebitReq>(bodyContent);
 
             var p = $"{data.Merchant}{data.Reference}{data.Customer}{data.Amount}{data.Currency}{data.Status}{payResource["key"]}";
