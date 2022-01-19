@@ -169,12 +169,15 @@ namespace PaymentService.Controllers
         }
 
         [HttpPost]
+        [Route("Payment/BankAutoChannel")]
         [Route("Payment/ReqDepositBank")]
         public ApiResult<PayResult> DepositBank(ReqDepositBank reqDeposit)
         {
             var apiResult = new ApiResult<PayResult>();
             try
             {
+                var depositType = Request.Path.Value.IndexOf("BankAutoChannel", StringComparison.OrdinalIgnoreCase) > 1
+                   ? DepositType.BankAutoChannel : DepositType.OnlineBanking;
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
@@ -262,7 +265,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = (int)DepositType.OnlineBanking;
+                    depositRequest.DepositType = (int)depositType;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;
