@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -833,10 +832,7 @@ namespace PaymentService.Controllers
                 _logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
 
-                var depositId = 0;
-
-                var m = Regex.Match(transId, @"\d+");
-                int.TryParse(m.Value, out depositId);
+                var depositId = _paymentBll.GetId(transId);
                 var cTransId = $"D{_common.GetEnv()}{depositId}";
                 if (cTransId != transId)
                 {

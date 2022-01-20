@@ -15,27 +15,27 @@ namespace PaymentService.Service.BLL
 
         public PaymentBLL(DepositService depositService, WithdrawalService withdrawalService)
         {
-            this._depositService = depositService;
+            _depositService = depositService;
             this.withdrawalService = withdrawalService;
         }
 
         public DepositRequest GetDepositRequest(string transId)
         {
-            var depositId = GetDepositId(transId);
+            var depositId = GetId(transId);
             return _depositService.GetDepositRequest(depositId);
         }
         
         public DepositInfoData GetDepositInfo(string transId)
         {
-            var depositId = GetDepositId(transId);
+            var depositId = GetId(transId);
             return _depositService.GetDepositInfo(depositId);
         }
 
-        private int GetDepositId(string transId)
+        public int GetId(string transId)
         {
             var m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out var depositId);
-            return depositId;
+            int.TryParse(m.Value, out var id);
+            return id;
         }
 
         public void DepositSuccess(DepositRequest depositRequest, IDepositResult iDepositResult)
@@ -107,10 +107,7 @@ namespace PaymentService.Service.BLL
 
         public WithdrawalRequest GetWithdrawalRequest(string transId)
         {
-            var withdrawalId = 0;
-            var m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out withdrawalId);
-
+            var withdrawalId = GetId(transId);
             return withdrawalService.GetWithdrawalRequest(withdrawalId);
         }
 

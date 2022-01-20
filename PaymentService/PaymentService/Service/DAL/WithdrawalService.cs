@@ -6,10 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using PaymentService.Extensions;
 using PaymentService.Model;
+using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 
 namespace PaymentService.Service.DAL
@@ -20,6 +20,7 @@ namespace PaymentService.Service.DAL
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
         private readonly WalletService _walletService;
+        private readonly PaymentBLL _paymentBll;
         
         public WithdrawalService(IServiceProvider provider)
         {
@@ -27,6 +28,7 @@ namespace PaymentService.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _walletService = provider.GetRequiredService<WalletService>();
+            _paymentBll = provider.GetRequiredService<PaymentBLL>();
         }
         public WithdrawalRequest GetWithdrawalRequest(int withdrawalId)
         {
@@ -39,8 +41,7 @@ namespace PaymentService.Service.DAL
 
         public int SetWithdrawalInfo(string transId, int siteId, IPay pay, string comment, string refId, string Operator, IEnumerable<int> forStatus, WithdrawalStatus status)
         {
-            var m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out var withdrawalId);
+            var withdrawalId = _paymentBll.GetId(transId);
             var result = 0;
             try
             {
