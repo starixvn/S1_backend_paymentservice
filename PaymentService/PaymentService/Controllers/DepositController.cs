@@ -169,19 +169,26 @@ namespace PaymentService.Controllers
         }
 
         [HttpPost]
+        [Route("Payment/BankAutoChannel")]
         [Route("Payment/ReqDepositBank")]
         public ApiResult<PayResult> DepositBank(ReqDepositBank reqDeposit)
         {
             var apiResult = new ApiResult<PayResult>();
             try
             {
+                var depositType = Request.Path.Value.IndexOf("BankAutoChannel", StringComparison.OrdinalIgnoreCase) > 1
+                   ? DepositType.BankAutoChannel : DepositType.OnlineBanking;
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
-                var onlineBank = _payBll.GetOnlineBankList(custInfo.SiteId)?.FirstOrDefault(x =>
+
+                var onlineBankList = depositType == DepositType.OnlineBanking ?
+                    _payBll.GetOnlineBankList(custInfo.SiteId) :
+                    _payBll.GetAutoChannelBankInfoList(custInfo.SiteId, depositType);
+
+                var onlineBank = onlineBankList?.FirstOrDefault(x =>
                     x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) &&
                     x.PointLevel <= vipLevel);
-                //var PayCurrency = payBLL.GetPayCurrency().;
 
                 if (onlineBank == null)
                 {
@@ -264,7 +271,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = (int)DepositType.OnlineBanking;
+                    depositRequest.DepositType = (int)depositType;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;
