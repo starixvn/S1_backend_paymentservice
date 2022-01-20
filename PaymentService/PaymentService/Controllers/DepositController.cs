@@ -254,6 +254,7 @@ namespace PaymentService.Controllers
                     payResult.FormData = result.FormData;
                     payResult.ThirdId = result.ThirdId;
                     payResult.Mode = onlineBank.Mode;
+                    payResult.Message = result.Message;
 
                     if (result.ThirdId != null)
                     {
