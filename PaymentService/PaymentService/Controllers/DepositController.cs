@@ -249,19 +249,11 @@ namespace PaymentService.Controllers
                     apiResult.ErrorCode = 0;
                     var payResult = new PayResult();
 
-
-                    if (string.IsNullOrEmpty(payResult.Url))
-                    {
-                        apiResult.Message = result.Message;
-                    }
-                    else
-                    { 
-                        apiResult.Data = payResult;
-                        payResult.Url = result.Url;
-                        payResult.FormData = result.FormData;
-                        payResult.ThirdId = result.ThirdId;
-                        payResult.Mode = onlineBank.Mode;
-                    }
+                    apiResult.Data = payResult;
+                    payResult.Url = result.Url;
+                    payResult.FormData = result.FormData;
+                    payResult.ThirdId = result.ThirdId;
+                    payResult.Mode = onlineBank.Mode;
 
                     if (result.ThirdId != null)
                     {
@@ -695,7 +687,7 @@ namespace PaymentService.Controllers
 
             return true;
         }
-        
+
         [Route("Payment/GetClientIp")]
         [HttpGet, HttpPost]
         public string GetClientIp()
@@ -703,7 +695,7 @@ namespace PaymentService.Controllers
             var clientIp = _common.GetClientIP(HttpContext);
             return clientIp;
         }
-        
+
         [Route("Payment/getheaders")]
         [HttpGet]
         public ActionResult<Dictionary<string, StringValues>> GetHeaders()
@@ -848,7 +840,7 @@ namespace PaymentService.Controllers
                 {
                     _logger.LogInformation($"Method={GetCurrentAsyncMethod()},Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}");
                     rNotifyDepositResult.Comment = $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
-                    
+
                     // When callback amount not equal, record and not reject
                     //paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
                     //return $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
