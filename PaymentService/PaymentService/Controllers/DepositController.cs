@@ -181,10 +181,14 @@ namespace PaymentService.Controllers
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
-                var onlineBank = _payBll.GetOnlineBankList(custInfo.SiteId)?.FirstOrDefault(x =>
+
+                var onlineBankList = depositType == DepositType.OnlineBanking ?
+                    _payBll.GetOnlineBankList(custInfo.SiteId) :
+                    _payBll.GetAutoChannelBankInfoList(custInfo.SiteId, depositType);
+
+                var onlineBank = onlineBankList?.FirstOrDefault(x =>
                     x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) &&
                     x.PointLevel <= vipLevel);
-                //var PayCurrency = payBLL.GetPayCurrency().;
 
                 if (onlineBank == null)
                 {

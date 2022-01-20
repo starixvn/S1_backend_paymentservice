@@ -40,6 +40,13 @@ namespace PaymentService.Service.BLL
                 i => payService.GetOnlineBankList(siteId));
         }
 
+        public IEnumerable<BankInfoPay> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
+        {
+            return _cacheHelper.TryGetOrCreate($"BankInfoPayList_{siteId}_{depositType}",
+                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(3)),
+                i => payService.GetAutoChannelBankInfoList(siteId, depositType));
+        }
+
         public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
         {
             return _cacheHelper.TryGetOrCreate($"PayInfoList_{siteId}_{depositType}",
