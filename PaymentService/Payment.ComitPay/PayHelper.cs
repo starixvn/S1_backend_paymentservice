@@ -153,11 +153,11 @@ namespace Payment.ComitPay
             formData.Add("ClientIP", inputs["ClientIP"]);
             formData.Add("ReturnURI", inputs["CallBackUrl"]);
             formData.Add("BankCode", inputs["BankCode"]);
-            formData.Add("ToBankAccountName", inputs["AccountName"]);
-            formData.Add("ToBankAccountNumber", inputs["AccountNo"]);
+            formData.Add("toBankAccountName", inputs["AccountName"]);
+            formData.Add("toBankAccountNumber", inputs["AccountNo"]);
 
             var p = $"{formData["MerchantCode"]}{formData["TransactionID"]}{formData["Membercode"]}{formData["Amount"]}{formData["CurrencyCode"]}{formData["TransactionDateTime"]}" +
-                        $"{formData["ToBankAccountNumber"]}{inputs["key"]}";
+                        $"{formData["toBankAccountNumber"]}{inputs["key"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
