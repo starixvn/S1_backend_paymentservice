@@ -270,7 +270,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = (int)depositType;
+                    depositRequest.DepositType = DepositType.OnlineBanking;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;
@@ -386,7 +386,7 @@ namespace PaymentService.Controllers
                 {
                     var depositRequest = new DepositRequest
                     {
-                        DepositType = (int)depositType,
+                        DepositType = depositType,
                         TransId = reqDeposit.TransId,
                         ActualDeposit = reqDeposit.Amount,
                         Amount = reqDeposit.Amount,
@@ -508,7 +508,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = (int)DepositType.CryptoPayPayment;
+                    depositRequest.DepositType = DepositType.CryptoPayPayment;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;
@@ -629,7 +629,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = (int)DepositType.LoadCardPayment;
+                    depositRequest.DepositType = DepositType.LoadCardPayment;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;
