@@ -9,7 +9,6 @@ using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using PaymentService.Extensions;
 using PaymentService.Model;
-using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 
 namespace PaymentService.Service.DAL
@@ -20,7 +19,7 @@ namespace PaymentService.Service.DAL
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
         private readonly WalletService _walletService;
-        private readonly PaymentBLL _paymentBll;
+        private readonly Common _common;
         
         public WithdrawalService(IServiceProvider provider)
         {
@@ -28,7 +27,7 @@ namespace PaymentService.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _walletService = provider.GetRequiredService<WalletService>();
-            _paymentBll = provider.GetRequiredService<PaymentBLL>();
+            _common = provider.GetRequiredService<Common>();
         }
         public WithdrawalRequest GetWithdrawalRequest(int withdrawalId)
         {
@@ -41,7 +40,7 @@ namespace PaymentService.Service.DAL
 
         public int SetWithdrawalInfo(string transId, int siteId, IPay pay, string comment, string refId, string Operator, IEnumerable<int> forStatus, WithdrawalStatus status)
         {
-            var withdrawalId = _paymentBll.GetId(transId);
+            var withdrawalId = _common.GetId(transId);
             var result = 0;
             try
             {

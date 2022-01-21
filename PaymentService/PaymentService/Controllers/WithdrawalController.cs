@@ -264,7 +264,7 @@ namespace PaymentService.Controllers
                 _logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
 
-                var withdrawalId = _paymentBll.GetId(transId);
+                var withdrawalId = _common.GetId(transId);
                 var cTransId = $"W{_common.GetEnv()}{withdrawalId}";
                 if (cTransId != transId)
                 {

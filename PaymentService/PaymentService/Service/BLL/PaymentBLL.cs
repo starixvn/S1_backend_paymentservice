@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
 using PaymentCore;
 using PaymentService.Service.DAL;
+using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
 
@@ -11,31 +12,26 @@ namespace PaymentService.Service.BLL
     public class PaymentBLL
     {
         private readonly DepositService _depositService;
-        private readonly WithdrawalService withdrawalService;
+        private readonly WithdrawalService _withdrawalService;
+        private readonly Common _common;
 
-        public PaymentBLL(DepositService depositService, WithdrawalService withdrawalService)
+        public PaymentBLL(IServiceProvider provider)
         {
-            _depositService = depositService;
-            this.withdrawalService = withdrawalService;
+            _depositService = provider.GetRequiredService<DepositService>();
+            _withdrawalService = provider.GetRequiredService<WithdrawalService>();
+            _common = provider.GetRequiredService<Common>();
         }
 
         public DepositRequest GetDepositRequest(string transId)
         {
-            var depositId = GetId(transId);
+            var depositId = _common.GetId(transId);
             return _depositService.GetDepositRequest(depositId);
         }
         
         public DepositInfoData GetDepositInfo(string transId)
         {
-            var depositId = GetId(transId);
+            var depositId = _common.GetId(transId);
             return _depositService.GetDepositInfo(depositId);
-        }
-
-        public int GetId(string transId)
-        {
-            var m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out var id);
-            return id;
         }
 
         public void DepositSuccess(DepositRequest depositRequest, IDepositResult iDepositResult)
@@ -107,8 +103,8 @@ namespace PaymentService.Service.BLL
 
         public WithdrawalRequest GetWithdrawalRequest(string transId)
         {
-            var withdrawalId = GetId(transId);
-            return withdrawalService.GetWithdrawalRequest(withdrawalId);
+            var withdrawalId = _common.GetId(transId);
+            return _withdrawalService.GetWithdrawalRequest(withdrawalId);
         }
 
         public void WithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
@@ -116,7 +112,7 @@ namespace PaymentService.Service.BLL
             var forStatus = new List<int>();
             forStatus.Add((int)WithdrawalStatus.Process);
 
-            withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
+            _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
         }
 
         public void WithdrawalFail(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
@@ -125,7 +121,7 @@ namespace PaymentService.Service.BLL
             forStatus.Add((int)WithdrawalStatus.Process);
             //withdrawalRequest.PayName
             
-            withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Verify);
+            _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Verify);
         }
 
         public void WithdrawalPending(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
@@ -134,12 +130,12 @@ namespace PaymentService.Service.BLL
             forStatus.Add((int)WithdrawalStatus.Process);
             //withdrawalRequest.PayName
             
-            withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Process);
+            _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Process);
         }
 
         public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry()
         {
-            return withdrawalService.GetWithdrawalRequesPayEnquiry();
+            return _withdrawalService.GetWithdrawalRequesPayEnquiry();
         }
 
         public void SetThirdId(string transId, string thirdID)

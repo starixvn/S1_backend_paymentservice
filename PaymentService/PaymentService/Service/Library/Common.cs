@@ -77,6 +77,13 @@ namespace PaymentService.Service.Library
 
             return httpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
         }
+        
+        public int GetId(string transId)
+        {
+            var m = Regex.Match(transId, @"\d+");
+            int.TryParse(m.Value, out var id);
+            return id;
+        }
 
         private string GetIPAddress(string[] IPArry)
         {

@@ -832,7 +832,7 @@ namespace PaymentService.Controllers
                 _logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
 
-                var depositId = _paymentBll.GetId(transId);
+                var depositId = _common.GetId(transId);
                 var cTransId = $"D{_common.GetEnv()}{depositId}";
                 if (cTransId != transId)
                 {
