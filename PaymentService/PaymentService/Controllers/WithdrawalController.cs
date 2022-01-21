@@ -328,7 +328,12 @@ namespace PaymentService.Controllers
                     return $"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}";
                 }
 
-                var notifyWithdrawResult = rNotifyWithdrawalResult;
+                if (withdrawalRequest.Status == WithdrawalStatus.Approved ||
+                    withdrawalRequest.Status == WithdrawalStatus.Rejected)
+                {
+                    return rNotifyWithdrawalResult.Response;
+                }
+
                 if (rNotifyWithdrawalResult.TransStatus == TransStatus.Success)
                 {
                     #region Transaction is Success

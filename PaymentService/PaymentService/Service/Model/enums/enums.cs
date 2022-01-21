@@ -104,6 +104,7 @@
         Cancelled = 5,
         Approved = 6,
         Rejected = 7,
+        ToKYC = 8,
         Error = 99
     }
 

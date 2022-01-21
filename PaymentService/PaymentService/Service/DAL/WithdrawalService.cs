@@ -31,7 +31,7 @@ namespace PaymentService.Service.DAL
         }
         public WithdrawalRequest GetWithdrawalRequest(int withdrawalId)
         {
-            return _reportDbClient.QueryFirst<WithdrawalRequest>("WithdrawalRequesPay_Get", new { WithdrawalId = withdrawalId });
+            return _reportDbClient.QueryFirst<WithdrawalRequest>("Service_WithdrawalRequestPay_Get", new { WithdrawalId = withdrawalId });
         }
         public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry()
         {

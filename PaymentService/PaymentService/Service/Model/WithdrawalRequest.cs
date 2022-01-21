@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.Model
 {
@@ -14,6 +15,7 @@ namespace PaymentService.Service.Model
         public int CurrencyId { set; get; }
         public decimal Amount { set; get; }
         public string BankCode { get; set; }
+        public WithdrawalStatus Status { get; set; }
 
         //public virtual IEnumerable<Comments> Comments { get; set; }
     }
