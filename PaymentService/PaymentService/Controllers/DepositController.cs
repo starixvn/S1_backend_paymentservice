@@ -852,7 +852,6 @@ namespace PaymentService.Controllers
 
         private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
         {
-            var sbody = string.Join("&", dicParam.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             DepositRequest depositRequest = null;
             //查詢訂單在不在db
             depositRequest = _paymentBll.GetDepositRequest(transId);
@@ -883,21 +882,9 @@ namespace PaymentService.Controllers
 
                 var payHelper = _payBll.GetPayHelper(paySetting.PayName);
                 depositRequest.PayName = paySetting.PayName;
-                //((PayHelperBase)payHelper).AddPaymentLog(InsertPaymentLog);
 
                 //取得每家金流的成果 
                 var rNotifyDepositResult = payHelper.CallBackDebit(dicParam, bodyText, DepReq);
-                var sInput = "";
-                if (isFormData)
-                {
-                    sInput = JsonConvert.SerializeObject(dicParam);
-                }
-                else
-                {
-                    sInput = bodyText;
-                }
-
-                //oDBLog.InsertPaymentLog("", sInput, JsonConvert.SerializeObject(rNotifyDepositResult));
 
                 if (!string.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
                 {
@@ -912,13 +899,8 @@ namespace PaymentService.Controllers
                 {
                     _logger.LogInformation($"Method={GetCurrentAsyncMethod()},Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}");
                     rNotifyDepositResult.Comment = $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
-
-                    // When callback amount not equal, record and not reject
-                    //paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
-                    //return $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
                 }
 
-                IDepositResult iDepositResult = rNotifyDepositResult;
                 if (rNotifyDepositResult.TransStatus == TransStatus.Success && depositRequest.Amount > 0)
                 {
                     #region Transaction is Success
