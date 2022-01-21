@@ -157,7 +157,7 @@ namespace Payment.ComitPay
             formData.Add("toBankAccountNumber", inputs["AccountNo"]);
 
             var p = $"{formData["MerchantCode"]}{formData["TransactionID"]}{formData["Membercode"]}{formData["Amount"]}{formData["CurrencyCode"]}{formData["TransactionDateTime"]}" +
-                        $"{formData["ToBankAccountNumber"]}{inputs["key"]}";
+                        $"{formData["toBankAccountNumber"]}{inputs["key"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
