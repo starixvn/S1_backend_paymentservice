@@ -28,7 +28,7 @@ namespace Payment.ComitPay
             var data = FromJson<CallBackWithdrawReq>(bodyContent);
 
             var p = $"{data.MerchantCode}{data.TransactionID}{data.Membercode}{data.Amount}{data.CurrencyCode}{data.Status}{payResource["key"]}";
-            var sign = ToMD5(p).ToLower();
+            var sign = ToMD5(p).ToUpper();
 
             var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.TransactionID;
