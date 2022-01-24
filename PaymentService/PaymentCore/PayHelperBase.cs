@@ -364,7 +364,12 @@ namespace PaymentCore
             request.ContentType = contentType;
             request.ContentLength = byteArray.Length;
 
-            var svcCredentials = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(username + ":" + password));
+            var svcCredentials = username;
+            if (!string.IsNullOrEmpty(password))
+            {
+                svcCredentials = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(username + ":" + password));
+            }
+            
             request.Headers.Add("Authorization", "Basic " + svcCredentials);
             var dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);

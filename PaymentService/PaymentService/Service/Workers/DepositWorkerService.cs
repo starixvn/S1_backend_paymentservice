@@ -81,11 +81,11 @@ namespace PaymentService.Service.Workers
                                 errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
                                 errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
                                 errorMessages.AppendLine($"Source: {SqlEx.Source}");
-                                logger.LogError(errorMessages.ToString());
+                                logger.LogError(SqlEx, errorMessages.ToString());
                             }
                             catch (Exception exForEachTransaction)
                             {
-                                logger.LogError($"PayName: {depositRequest.PayName}\r\n{exForEachTransaction.Message}");
+                                logger.LogError(exForEachTransaction, $"PayName: {depositRequest.PayName}\r\n{exForEachTransaction.Message}");
                                 continue;
                             }
                             #endregion
@@ -98,7 +98,7 @@ namespace PaymentService.Service.Workers
                             }
                             catch (Exception ex)
                             {
-                                logger.LogError($"PayName: {depositRequest.PayName}\r\n{ex.Message}");
+                                logger.LogError(ex, $"PayName: {depositRequest.PayName}\r\n{ex.Message}");
                                 continue;
                             }
                         }
@@ -116,7 +116,7 @@ namespace PaymentService.Service.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
