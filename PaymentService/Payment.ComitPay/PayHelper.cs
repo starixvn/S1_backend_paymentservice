@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Payment.ComitPay
 {
-    class PayHelper : PayHelperBase
+    class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
         private class CallBackWithdrawReq
         {
@@ -28,7 +28,7 @@ namespace Payment.ComitPay
             var data = FromJson<CallBackWithdrawReq>(bodyContent);
 
             var p = $"{data.MerchantCode}{data.TransactionID}{data.Membercode}{data.Amount}{data.CurrencyCode}{data.Status}{payResource["key"]}";
-            var sign = ToMD5(p).ToLower();
+            var sign = ToMD5(p).ToUpper();
 
             var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.TransactionID;
@@ -222,6 +222,12 @@ namespace Payment.ComitPay
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        {
+            var data = FromJson<CallBackDebitReq>(bodyContent);
+            return data.Reference;
         }
     }
 }
