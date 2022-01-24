@@ -323,8 +323,8 @@ namespace PaymentService.Controllers
                     var status = rNotifyWithdrawalResult.TransStatus switch 
                     {
                         TransStatus.Success => WithdrawalStatus.Approved,
-                        TransStatus.Fail => WithdrawalStatus.Rejected,
-                        _ => WithdrawalStatus.Pending
+                        TransStatus.Fail => WithdrawalStatus.Verify,
+                        _ => WithdrawalStatus.Process
                     };
                     _paymentBll.SetWithdrawalLog(transId, withdrawalRequest.SiteId,
                         $"{transId} status is currently {withdrawalRequest.Status.ToString()}, cannot change status to {status.ToString()}",
