@@ -91,11 +91,13 @@ namespace Payment.MangoPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["PayOut"];
-            var formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>
+            {
+                { "merchantId", inputs["merchant_no"] },
+                { "orderSn", inputs["TransID"] },
+                { "currency", inputs["PayCurrencyId"] }
+            };
 
-            formData.Add("merchantId", inputs["merchant_no"]);
-            formData.Add("orderSn", inputs["TransID"]);
-            formData.Add("currency", inputs["PayCurrencyId"]);
             var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             formData.Add("type", "bank");
@@ -229,10 +231,12 @@ namespace Payment.MangoPay
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["PayOutQuery"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("merchantId", inputs["merchant_no"]);
-            formData.Add("orderSn", inputs["TransID"]);
-            formData.Add("currency", payCurrencyIdMapping[inputs["CurrencyId"]]);
+            var formData = new Dictionary<string, string>
+            {
+                { "merchantId", inputs["merchant_no"] },
+                { "orderSn", inputs["TransID"] },
+                { "currency", payCurrencyIdMapping[inputs["CurrencyId"]] }
+            };
             var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             formData.Add("type", "bank");

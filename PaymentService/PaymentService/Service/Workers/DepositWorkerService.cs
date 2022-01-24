@@ -58,7 +58,7 @@ namespace PaymentService.Service.Workers
 
                         if (!DepReq.ContainsKey("ThirdId"))
                         {
-                            DepReq.Add("ThirdID", depositRequest.ThirdId.ToString());
+                            DepReq.Add("ThirdID", depositRequest.ThirdId);
                         }
 
                         var enquiryDepositResult = payHelper.EnquiryForDebit(DepReq);

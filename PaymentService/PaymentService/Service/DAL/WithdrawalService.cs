@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using PaymentService.Extensions;
 using PaymentService.Model;
@@ -20,6 +19,7 @@ namespace PaymentService.Service.DAL
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
         private readonly WalletService _walletService;
+        private readonly Common _common;
         
         public WithdrawalService(IServiceProvider provider)
         {
@@ -27,10 +27,11 @@ namespace PaymentService.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _walletService = provider.GetRequiredService<WalletService>();
+            _common = provider.GetRequiredService<Common>();
         }
         public WithdrawalRequest GetWithdrawalRequest(int withdrawalId)
         {
-            return _reportDbClient.QueryFirst<WithdrawalRequest>("WithdrawalRequesPay_Get", new { WithdrawalId = withdrawalId });
+            return _reportDbClient.QueryFirst<WithdrawalRequest>("Service_WithdrawalRequestPay_Get", new { WithdrawalId = withdrawalId });
         }
         public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry()
         {
@@ -39,8 +40,7 @@ namespace PaymentService.Service.DAL
 
         public int SetWithdrawalInfo(string transId, int siteId, IPay pay, string comment, string refId, string Operator, IEnumerable<int> forStatus, WithdrawalStatus status)
         {
-            var m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out var withdrawalId);
+            var withdrawalId = _common.GetId(transId);
             var result = 0;
             try
             {
@@ -83,9 +83,14 @@ namespace PaymentService.Service.DAL
         }
 
 
-        private int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status, string Operator)
+        public int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status, string @operator)
         {
-            return _mainDbClient.Execute("WithdrawalLog_Ins", new { WithdrawalId = withdrawalId, SiteId = siteId, Comment = comment, Action = status, Operator });
+            return _mainDbClient.Execute("WithdrawalLog_Ins", new { 
+                WithdrawalId = withdrawalId, 
+                SiteId = siteId, 
+                Comment = comment, 
+                Action = status,
+                Operator = @operator });
         }
     }
 }

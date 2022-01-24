@@ -131,18 +131,20 @@ namespace Payment.WealthPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["PayOut"];
-            var formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>
+            {
+                { "MerchantCode", inputs["merchant_no"] },
+                { "TransactionID", inputs["TransID"] },
+                { "MemberID", inputs["CustId"] },
+                { "CurrencyCode", inputs["PayCurrencyId"] },
+                { "BankCode", inputs["BankCode"] },
+                { "ToAccountNumber", inputs["AccountNo"] },
+                { "ToAccountName", inputs["AccountName"] },
+                { "ToProvince", "" },
+                { "ToCity", "" },
+                { "ToBranch", "" }
+            };
 
-            formData.Add("MerchantCode", inputs["merchant_no"]);
-            formData.Add("TransactionID", inputs["TransID"]);
-            formData.Add("MemberID", inputs["CustId"]);
-            formData.Add("CurrencyCode", inputs["PayCurrencyId"]);
-            formData.Add("BankCode", inputs["BankCode"]);
-            formData.Add("ToAccountNumber", inputs["AccountNo"]);
-            formData.Add("ToAccountName", inputs["AccountName"]);
-            formData.Add("ToProvince", "");
-            formData.Add("ToCity", "");
-            formData.Add("ToBranch", "");
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("Note", "");
@@ -189,26 +191,20 @@ namespace Payment.WealthPay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>();
-            //if (inputs["PayCode"] != null)
-            //{
-            //    formData.Add("DepositChannel", inputs["PayCode"]);
-            //}
-            //else
-            //{
-            //    formData.Add("DepositChannel", "1");
-            //}
+            var formData = new Dictionary<string, string>
+            {
+                { "MerchantCode", inputs["merchant_no"] },
+                { "DepositType", "0" },
+                { "DepositChannel", inputs["PayCode"] },
+                { "SenderBankCode", "" },
+                { "SendeAccountNumber", "" },
+                { "SendeAccountName", "" },
+                { "TransactionID", inputs["TransID"] },
+                { "MemberID", inputs["CustId"] },
+                { "CurrencyCode", inputs["PayCurrencyId"] },
+                { "BankCode", inputs["BankCode"] }
+            };
 
-            formData.Add("MerchantCode", inputs["merchant_no"]);
-            formData.Add("DepositType", "0");
-            formData.Add("DepositChannel", inputs["PayCode"]);
-            formData.Add("SenderBankCode", "");
-            formData.Add("SendeAccountNumber", "");
-            formData.Add("SendeAccountName", "");
-            formData.Add("TransactionID", inputs["TransID"]);
-            formData.Add("MemberID", inputs["CustId"]);
-            formData.Add("CurrencyCode", inputs["PayCurrencyId"]);
-            formData.Add("BankCode", inputs["BankCode"]);
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("Note", "");
@@ -269,10 +265,12 @@ namespace Payment.WealthPay
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["PayOutQuery"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("merchantId", inputs["merchant_no"]);
-            formData.Add("orderSn", inputs["TransID"]);
-            formData.Add("currency", payCurrencyIdMapping[inputs["CurrencyId"]]);
+            var formData = new Dictionary<string, string>
+            {
+                { "merchantId", inputs["merchant_no"] },
+                { "orderSn", inputs["TransID"] },
+                { "currency", payCurrencyIdMapping[inputs["CurrencyId"]] }
+            };
             var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             formData.Add("type", "bank");

@@ -209,11 +209,13 @@ namespace Payment.Help2Pay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("Merchant", inputs["merchant_no"]);
-            formData.Add("Currency", inputs["PayCurrencyId"]);
-            formData.Add("Reference", inputs["TransID"]);
-            formData.Add("Amount", decimal.Parse(inputs["Amount"]).ToString("#.00"));
+            var formData = new Dictionary<string, string>
+            {
+                { "Merchant", inputs["merchant_no"] },
+                { "Currency", inputs["PayCurrencyId"] },
+                { "Reference", inputs["TransID"] },
+                { "Amount", decimal.Parse(inputs["Amount"]).ToString("#.00") }
+            };
             var time = new DateTimeOffset(DateTime.Now);
 
             formData.Add("Datetime", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd hh:mm:sstt", CultureInfo.InvariantCulture));

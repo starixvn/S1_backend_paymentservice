@@ -167,10 +167,12 @@ namespace Payment.Fuli
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["PayOut"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("requestId", inputs["TransID"]);
-            formData.Add("merchantCode", inputs["merchant_no"]);
-            formData.Add("transferType", "1");
+            var formData = new Dictionary<string, string>
+            {
+                { "requestId", inputs["TransID"] },
+                { "merchantCode", inputs["merchant_no"] },
+                { "transferType", "1" }
+            };
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("sum", amount.ToString("#"));
             formData.Add("accountType", "1");
@@ -226,11 +228,13 @@ namespace Payment.Fuli
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("tradeCode", "IAZ1002");
-            formData.Add("requestId", inputs["TransID"]);
-            formData.Add("merchantCode", inputs["merchant_no"]);
-            formData.Add("totalBizType", "BIZ01100");
+            var formData = new Dictionary<string, string>
+            {
+                { "tradeCode", "IAZ1002" },
+                { "requestId", inputs["TransID"] },
+                { "merchantCode", inputs["merchant_no"] },
+                { "totalBizType", "BIZ01100" }
+            };
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("totalPrice", amount.ToString("#"));
             formData.Add("goodsDesc", "无");

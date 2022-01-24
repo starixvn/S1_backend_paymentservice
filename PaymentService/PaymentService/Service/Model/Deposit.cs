@@ -1,6 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using Org.BouncyCastle.Asn1.Crmf;
+﻿using System.ComponentModel.DataAnnotations;
 using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.Model

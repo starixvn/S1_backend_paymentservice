@@ -102,12 +102,14 @@ namespace Payment.Porttopup
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>
+            {
+                { "request_id", inputs["TransID"] },
+                { "partner_code", inputs["merchant_no"] },
+                { "card_code", inputs["Code"] },
+                { "card_serial", inputs["Serial"] }
+            };
 
-            formData.Add("request_id", inputs["TransID"]);
-            formData.Add("partner_code", inputs["merchant_no"]);
-            formData.Add("card_code", inputs["Code"]);
-            formData.Add("card_serial", inputs["Serial"]);
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("card_value", amount.ToString("#")); 
             formData.Add("acc_game", inputs["CustId"]);
@@ -126,8 +128,7 @@ namespace Payment.Porttopup
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
             var oDepositResult = new DepositResult();
 
-            var ResData = new Dictionary<string, string>();
-            ResData.Add("Message", depositRes.rd);
+            var ResData = new Dictionary<string, string> { { "Message", depositRes.rd } };
             oDepositResult.FormData = ResData;
             oDepositResult.Message = depositRes.rd;
 
