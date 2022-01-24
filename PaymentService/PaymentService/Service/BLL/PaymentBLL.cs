@@ -124,6 +124,12 @@ namespace PaymentService.Service.BLL
             var forStatus = new List<int> { (int)WithdrawalStatus.Process };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Process);
         }
+        
+        public void SetWithdrawalLog(string transId, int siteId, string comment, int status, string @operator)
+        {
+            var withdrawalId = _common.GetId(transId);
+            _withdrawalService.SetWithdrawalLog(withdrawalId, siteId, comment, status, @operator);
+        }
 
         public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry()
         {

@@ -305,17 +305,6 @@ namespace PaymentService.Controllers
 
                 //取得每家金流的成果 
                 var rNotifyWithdrawalResult = payHelper.CallBackCredit(dicParam, bodyText, WithReq);
-                var sInput = "";
-                if (isFormData)
-                {
-                    sInput = JsonConvert.SerializeObject(dicParam);
-                }
-                else
-                {
-                    sInput = bodyText;
-                }
-
-                //oDBLog.InsertPaymentLog("", sInput, JsonConvert.SerializeObject(rNotifyDepositResult));
 
                 var temp = rNotifyWithdrawalResult.WithdrawId;
                 while(temp.Substring(0,1) == "0")
@@ -331,6 +320,16 @@ namespace PaymentService.Controllers
                 if (withdrawalRequest.Status == WithdrawalStatus.Approved ||
                     withdrawalRequest.Status == WithdrawalStatus.Rejected)
                 {
+                    var status = rNotifyWithdrawalResult.TransStatus switch 
+                    {
+                        TransStatus.Success => WithdrawalStatus.Approved,
+                        TransStatus.Fail => WithdrawalStatus.Rejected,
+                        _ => WithdrawalStatus.Pending
+                    };
+                    _paymentBll.SetWithdrawalLog(transId, withdrawalRequest.SiteId,
+                        $"{transId} status is currently {withdrawalRequest.Status.ToString()}, cannot change status to {status.ToString()}",
+                        (int)withdrawalRequest.Status,
+                        withdrawalRequest.PayName);
                     return rNotifyWithdrawalResult.Response;
                 }
 

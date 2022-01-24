@@ -83,9 +83,14 @@ namespace PaymentService.Service.DAL
         }
 
 
-        private int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status, string Operator)
+        public int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status, string @operator)
         {
-            return _mainDbClient.Execute("WithdrawalLog_Ins", new { WithdrawalId = withdrawalId, SiteId = siteId, Comment = comment, Action = status, Operator });
+            return _mainDbClient.Execute("WithdrawalLog_Ins", new { 
+                WithdrawalId = withdrawalId, 
+                SiteId = siteId, 
+                Comment = comment, 
+                Action = status,
+                Operator = @operator });
         }
     }
 }
