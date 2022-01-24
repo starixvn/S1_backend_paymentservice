@@ -201,9 +201,8 @@ namespace Payment.CirclePay
             var sUrl = inputs["host"];
             var user_code = inputs["user_code"];
 
-            var formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string> { { "partner_tran_id", inputs["TransID"].ToLower() } };
 
-            formData.Add("partner_tran_id", inputs["TransID"].ToLower());
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
 

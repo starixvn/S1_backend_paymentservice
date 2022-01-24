@@ -72,9 +72,11 @@ namespace Payment.VNPay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("merchant_no", inputs["merchant_no"]);
-            formData.Add("order_no", inputs["TransID"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "merchant_no", inputs["merchant_no"] },
+                { "order_no", inputs["TransID"] }
+            };
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("channel", inputs["PayCode"]);

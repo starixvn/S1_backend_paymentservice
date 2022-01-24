@@ -140,10 +140,12 @@ namespace Payment.PatekPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["PayOut"];
-            var formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>
+            {
+                { "merchant", inputs["merchant_no"] },
+                { "outtransferno", inputs["TransID"].ToLower() }
+            };
 
-            formData.Add("merchant", inputs["merchant_no"]);
-            formData.Add("outtransferno", inputs["TransID"].ToLower());
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("bankname", UrlEncode(inputs["BankName"]).ToLower());
@@ -197,9 +199,11 @@ namespace Payment.PatekPay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("merchant", inputs["merchant_no"]);
-            formData.Add("paytype", inputs["PayCode"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "merchant", inputs["merchant_no"] },
+                { "paytype", inputs["PayCode"] }
+            };
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("notifyurl", UrlEncode(inputs["CallBackUrl"]).ToLower());

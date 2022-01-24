@@ -83,13 +83,15 @@ namespace Payment.AllpassPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["PayOut"] + "/withdraw";
-            var formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>
+            {
+                { "merchantNum", inputs["merchant_no"] },
+                { "orderNo", inputs["TransID"] },
+                { "bankCardAccount", inputs["AccountNo"] },
+                { "accountHolder", inputs["AccountName"] },
+                { "openAccountBank", inputs["BankCode"] }
+            };
 
-            formData.Add("merchantNum", inputs["merchant_no"]);
-            formData.Add("orderNo", inputs["TransID"]);
-            formData.Add("bankCardAccount", inputs["AccountNo"]);
-            formData.Add("accountHolder", inputs["AccountName"]);
-            formData.Add("openAccountBank", inputs["BankCode"]);
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("withdrawAmount", amount.ToString("#"));
 
@@ -139,9 +141,11 @@ namespace Payment.AllpassPay
         {
             var sUrl = inputs["host"] + "/startOrder";
 
-            var formData = new Dictionary<string, string>();
-            formData.Add("merchantNum", inputs["merchant_no"]);
-            formData.Add("orderNo", inputs["TransID"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "merchantNum", inputs["merchant_no"] },
+                { "orderNo", inputs["TransID"] }
+            };
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("payType", inputs["PayCode"]);
@@ -200,9 +204,11 @@ namespace Payment.AllpassPay
         {
             var sUrl = inputs["host"] + "/withdrawState";
 
-            var formData = new Dictionary<string, string>();
-            formData.Add("merchantNum", inputs["merchant_no"]);
-            formData.Add("orderNo", inputs["TransID"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "merchantNum", inputs["merchant_no"] },
+                { "orderNo", inputs["TransID"] }
+            };
 
             var p = $"{formData["merchantNum"]}{formData["orderNo"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());

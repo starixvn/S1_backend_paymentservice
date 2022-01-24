@@ -185,13 +185,15 @@ namespace Payment.YRPay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("merid", inputs["CID"]);
-            formData.Add("userid", inputs["CustId"]);
-            formData.Add("amount", Convert.ToInt32(decimal.Parse(inputs["Amount"])).ToString());
-            formData.Add("orderid", inputs["TransID"]);
-            formData.Add("userip", inputs["ClientIP"]);
-            formData.Add("notifyurl", inputs["CallBackUrl"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "merid", inputs["CID"] },
+                { "userid", inputs["CustId"] },
+                { "amount", Convert.ToInt32(decimal.Parse(inputs["Amount"])).ToString() },
+                { "orderid", inputs["TransID"] },
+                { "userip", inputs["ClientIP"] },
+                { "notifyurl", inputs["CallBackUrl"] }
+            };
             if (inputs["PayCode"] != null)
             {
                 if (inputs["PayCode"] == "ALIPAY" || inputs["PayCode"] == "WXPAY" || inputs["PayCode"] == "UNIPAY")

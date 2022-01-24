@@ -217,11 +217,13 @@ namespace Payment.Eeziepay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("service_version", "2.1");
-            formData.Add("partner_code", inputs["merchant_no"]);
-            formData.Add("currency", inputs["PayCurrencyId"]);
-            formData.Add("partner_orderid", inputs["TransID"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "service_version", "2.1" },
+                { "partner_code", inputs["merchant_no"] },
+                { "currency", inputs["PayCurrencyId"] },
+                { "partner_orderid", inputs["TransID"] }
+            };
             var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             var time = new DateTimeOffset(DateTime.Now);

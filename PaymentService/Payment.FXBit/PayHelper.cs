@@ -221,9 +221,11 @@ namespace Payment.FXBit
 
                     if (depositGetWalletResp.error == 0)
                     {
-                        var depositGetH5Req = new Dictionary<string, string>();
-                        depositGetH5Req.Add("receipt_token", depositGetWalletReq.receipt_token);
-                        depositGetH5Req.Add("wallet_addr", depositGetWalletResp.public_address);
+                        var depositGetH5Req = new Dictionary<string, string>
+                        {
+                            { "receipt_token", depositGetWalletReq.receipt_token },
+                            { "wallet_addr", depositGetWalletResp.public_address }
+                        };
                         var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
                         oDepositResult.Success = true;

@@ -161,9 +161,11 @@ namespace Payment.DirePay
             var getReceptionToken = sUrl + "/api/login";
             var getWalletAddress = sUrl + "/api/callBack";
 
-            var depositGetH5Req = new Dictionary<string, string>();
-            depositGetH5Req.Add("email", inputs["Email"]);
-            depositGetH5Req.Add("password", inputs["Password"]);
+            var depositGetH5Req = new Dictionary<string, string>
+            {
+                { "email", inputs["Email"] },
+                { "password", inputs["Password"] }
+            };
             var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             string sResponse = null;
 
@@ -295,9 +297,11 @@ namespace Payment.DirePay
             var getReceptionToken = sUrl + "/api/login";
             var getWalletAddress = sUrl + "/api/callBack";
 
-            var depositGetH5Req = new Dictionary<string, string>();
-            depositGetH5Req.Add("email", inputs["Email"]);
-            depositGetH5Req.Add("password", inputs["Password"]);
+            var depositGetH5Req = new Dictionary<string, string>
+            {
+                { "email", inputs["Email"] },
+                { "password", inputs["Password"] }
+            };
             var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var oDepositResult = new DepositResult();
@@ -336,9 +340,11 @@ namespace Payment.DirePay
 
                     if (depositGetWalletResp != null && depositGetWalletResp.txid != null)
                     {
-                        var ResData = new Dictionary<string, string>();
-                        ResData.Add("DepositAmount", depositGetWalletResp.invoice_amount);
-                        ResData.Add("Rate", depositGetWalletResp.rates);
+                        var ResData = new Dictionary<string, string>
+                        {
+                            { "DepositAmount", depositGetWalletResp.invoice_amount },
+                            { "Rate", depositGetWalletResp.rates }
+                        };
                         var requestAmount = decimal.Parse(depositGetWalletResp.invoice_amount) * decimal.Parse(depositGetWalletResp.rates);
                         ResData.Add("RequestAmount", requestAmount.ToString());
                         ResData.Add("Token", depositGetWalletResp.payment_token);
@@ -416,10 +422,12 @@ namespace Payment.DirePay
             {
                 var exchangeRate = new ExchangeRate();
 
-                var ResData = new Dictionary<string, string>();
-                ResData.Add("To_Amount", toAmount.ToString());
-                ResData.Add("Rate", (toAmount / decimal.Parse(amount)).ToString());
-                ResData.Add("Updated_timestamp", new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString());
+                var ResData = new Dictionary<string, string>
+                {
+                    { "To_Amount", toAmount.ToString() },
+                    { "Rate", (toAmount / decimal.Parse(amount)).ToString() },
+                    { "Updated_timestamp", new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString() }
+                };
 
                 oExchangeResult.FormData = ResData;
                 oExchangeResult.ErrorCode = "0";
@@ -453,9 +461,11 @@ namespace Payment.DirePay
             var getReceptionToken = sUrl + "/api/login";
             var getWalletAddress = sUrl + "/api/callBack";
 
-            var depositGetH5Req = new Dictionary<string, string>();
-            depositGetH5Req.Add("email", inputs["Email"]);
-            depositGetH5Req.Add("password", inputs["Password"]);
+            var depositGetH5Req = new Dictionary<string, string>
+            {
+                { "email", inputs["Email"] },
+                { "password", inputs["Password"] }
+            };
             var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var oDepositResult = new DepositResult();

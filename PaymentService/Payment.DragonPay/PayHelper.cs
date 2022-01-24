@@ -132,13 +132,15 @@ namespace Payment.DragonPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["PayOut"] + "/pms/api/payout/request";
-            var formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>
+            {
+                { "orderNo", inputs["TransID"] },
+                { "merchantCode", inputs["merchant_no"] },
+                { "beneficiaryAccount", inputs["AccountNo"] },
+                { "beneficiaryName", inputs["AccountName"] },
+                { "bankCode", inputs["BankCode"] }
+            };
 
-            formData.Add("orderNo", inputs["TransID"]);
-            formData.Add("merchantCode", inputs["merchant_no"]);
-            formData.Add("beneficiaryAccount", inputs["AccountNo"]);
-            formData.Add("beneficiaryName", inputs["AccountName"]);
-            formData.Add("bankCode", inputs["BankCode"]);
             var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
             formData.Add("currencyCode", inputs["PayCurrencyId"]);
@@ -199,10 +201,12 @@ namespace Payment.DragonPay
         {
             var sUrl = "";
             var p = "";
-            var formData = new Dictionary<string, string>();
-            formData.Add("merchantCode", inputs["merchant_no"]);
-            formData.Add("orderNo", inputs["TransID"]);
-            formData.Add("currencyCode", inputs["PayCurrencyId"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "merchantCode", inputs["merchant_no"] },
+                { "orderNo", inputs["TransID"] },
+                { "currencyCode", inputs["PayCurrencyId"] }
+            };
             var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
 

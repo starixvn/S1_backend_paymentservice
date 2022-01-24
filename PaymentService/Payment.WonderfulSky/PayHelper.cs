@@ -149,10 +149,12 @@ namespace Payment.WonderfulSky
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["PayOut"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("service", "Withdraw");
-            formData.Add("mid", inputs["merchant_no"]);
-            formData.Add("merchantid", inputs["TransID"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "service", "Withdraw" },
+                { "mid", inputs["merchant_no"] },
+                { "merchantid", inputs["TransID"] }
+            };
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("currency", "CNY");
@@ -213,10 +215,12 @@ namespace Payment.WonderfulSky
             var rsa = new RSAHelper(RSAType.RSA, Encoding.UTF8, inputs["private_key"], inputs["public_key"]);
 
             var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("service", "Payment");
-            formData.Add("mid", inputs["merchant_no"]);
-            formData.Add("merchantid", inputs["TransID"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "service", "Payment" },
+                { "mid", inputs["merchant_no"] },
+                { "merchantid", inputs["TransID"] }
+            };
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("currency", "CNY");

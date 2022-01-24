@@ -136,8 +136,7 @@ namespace Payment.AllInOnePay
             var sUrl = inputs["host"];
             sUrl += "withdrawal/create";
 
-            var formData = new Dictionary<string, string>();
-            formData.Add("app_id", inputs["merchant_site_code"]);
+            var formData = new Dictionary<string, string> { { "app_id", inputs["merchant_site_code"] } };
             var length = inputs["TransID"].Length;
             var transid = "";
             if (length < 18)
@@ -202,10 +201,12 @@ namespace Payment.AllInOnePay
             var sUrl = inputs["host"];
             sUrl += "deposit/create";
 
-            var formData = new Dictionary<string, string>();
-            formData.Add("app_id", inputs["merchant_site_code"]);
-            formData.Add("app_order_no", inputs["TransID"].ToLower());
-            formData.Add("type_id", inputs["PayCode"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "app_id", inputs["merchant_site_code"] },
+                { "app_order_no", inputs["TransID"].ToLower() },
+                { "type_id", inputs["PayCode"] }
+            };
             if (inputs["PayCode"] == "12" || inputs["PayCode"] == "13")
             {
                 formData.Add("bank_id", inputs["BankCode"]);

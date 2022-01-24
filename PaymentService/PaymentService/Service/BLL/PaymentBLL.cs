@@ -36,9 +36,11 @@ namespace PaymentService.Service.BLL
 
         public void DepositSuccess(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
-            var forStatus = new List<int>();
-            forStatus.Add((int)DepositStatus.Pending);
-            forStatus.Add((int)DepositStatus.Rejected);
+            var forStatus = new List<int>
+            {
+                (int)DepositStatus.Pending,
+                (int)DepositStatus.Rejected
+            };
             try
             {
                 _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, iDepositResult.ActualAmount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
@@ -84,15 +86,13 @@ namespace PaymentService.Service.BLL
 
         public void DepositFail(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
-            var forStatus = new List<int>();
-            forStatus.Add((int)DepositStatus.Pending);
+            var forStatus = new List<int> { (int)DepositStatus.Pending };
             _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Rejected);
         }
 
         public void DepositPending(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
-            var forStatus = new List<int>();
-            forStatus.Add((int)DepositStatus.Pending);
+            var forStatus = new List<int> { (int)DepositStatus.Pending };
             _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Pending);
         }
 
@@ -109,27 +109,19 @@ namespace PaymentService.Service.BLL
 
         public void WithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
-            var forStatus = new List<int>();
-            forStatus.Add((int)WithdrawalStatus.Process);
-
+            var forStatus = new List<int> { (int)WithdrawalStatus.Process };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
         }
 
         public void WithdrawalFail(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
-            var forStatus = new List<int>();
-            forStatus.Add((int)WithdrawalStatus.Process);
-            //withdrawalRequest.PayName
-            
+            var forStatus = new List<int> { (int)WithdrawalStatus.Process };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Verify);
         }
 
         public void WithdrawalPending(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
-            var forStatus = new List<int>();
-            forStatus.Add((int)WithdrawalStatus.Process);
-            //withdrawalRequest.PayName
-            
+            var forStatus = new List<int> { (int)WithdrawalStatus.Process };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Process);
         }
 
