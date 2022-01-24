@@ -901,6 +901,24 @@ namespace PaymentService.Controllers
                     rNotifyDepositResult.Comment = $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
                 }
 
+                if ((rNotifyDepositResult.TransStatus == TransStatus.Success &&
+                     (depositRequest.Status != DepositStatus.Pending ||
+                      depositRequest.Status != DepositStatus.Rejected)) ||
+                    (rNotifyDepositResult.TransStatus != TransStatus.Success &&
+                     depositRequest.Status != DepositStatus.Pending))
+                {
+                    var status = rNotifyDepositResult.TransStatus switch 
+                    {
+                        TransStatus.Success => DepositStatus.Approved,
+                        TransStatus.Fail => DepositStatus.Rejected,
+                        _ => DepositStatus.Pending
+                    };
+                    _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
+                        $"{transId} status is currently {depositRequest.Status.ToString()}, cannot change status to {status.ToString()}",
+                        (int)depositRequest.Status, rNotifyDepositResult.ActualAmount, depositRequest.PayName);
+                    return rNotifyDepositResult.Response;
+                }
+
                 if (rNotifyDepositResult.TransStatus == TransStatus.Success && depositRequest.Amount > 0)
                 {
                     #region Transaction is Success

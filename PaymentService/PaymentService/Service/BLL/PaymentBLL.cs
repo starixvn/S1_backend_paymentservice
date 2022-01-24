@@ -95,6 +95,13 @@ namespace PaymentService.Service.BLL
             var forStatus = new List<int> { (int)DepositStatus.Pending };
             _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Pending);
         }
+        
+        public void SetDepositLog(string transId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
+        {
+            var depositId = _common.GetId(transId);
+            _depositService.SetDepositLog(depositId, siteId, comment,status, actualDeposit, @operator);
+        }
+
 
         public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
         {

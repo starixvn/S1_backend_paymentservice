@@ -33,7 +33,7 @@ namespace PaymentService.Service.Model
                 };
             }
         }
-        public int Status { set; get; }
+        public DepositStatus Status { set; get; }
     }
     public interface IDepositInfo
     {

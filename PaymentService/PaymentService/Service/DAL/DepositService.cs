@@ -123,7 +123,7 @@ namespace PaymentService.Service.DAL
             return _mainDbClient.Execute("DepositInfoFirstDeposit_Set", new { DepositId = depositId, SiteId = siteId },
                 conn, trans);
         }
-        private int SetDepositLog(int depositId, int siteId, string comment, int status, decimal actualDeposit, string Operator)
+        public int SetDepositLog(int depositId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
         {
             return _mainDbClient.Execute("DepositLog_Ins",
                 new
@@ -133,7 +133,7 @@ namespace PaymentService.Service.DAL
                     Comment = comment,
                     Action = status,
                     ActualDeposit = actualDeposit,
-                    Operator
+                    Operator = @operator
                 });
         }
 
