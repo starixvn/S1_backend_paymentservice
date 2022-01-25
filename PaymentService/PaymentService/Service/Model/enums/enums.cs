@@ -67,7 +67,9 @@
         MobilePayment = 2,
         LocalBank = 3,
         CryptoPayPayment = 4,
-        LoadCardPayment = 5
+        LoadCardPayment = 5,
+        QRPayPayment = 6,
+        BankAutoChannel = 7,
     }
 
     /// <summary>
@@ -82,6 +84,7 @@
         Rejected = 4,
         Canceled = 5,
         Expired = 6,
+        OnHold = 7,
         Error = 99
     }
 

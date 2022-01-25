@@ -33,6 +33,11 @@ namespace PaymentService.Service.DAL
         {
             return _mainDbClient.QueryFirst<DepositRequest>("DepositCallBack_Get", new { DepositId = depositId });
         }
+        
+        public DepositInfoData GetDepositInfo(int depositId)
+        {
+            return _mainDbClient.QueryFirst<DepositInfoData>("Service_DepositInfo_Get", new { DepositId = depositId });
+        }
 
         public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
         {

@@ -313,6 +313,9 @@ namespace PaymentCore
             request.Headers.Add("accept", contentType);
             request.Headers.Add("x-api-key", accesstoken);
 
+            InsertPaymentLog?.Invoke(url, $"request: {parameters}, " +
+                                          $"Headers: {ToJson(request.Headers)}", string.Empty, transID);
+
             var dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);
             dataStream.Close();
@@ -376,7 +379,12 @@ namespace PaymentCore
             request.ContentType = contentType;
             request.ContentLength = byteArray.Length;
 
-            var svcCredentials = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(username + ":" + password));
+            var svcCredentials = username;
+            if (!string.IsNullOrEmpty(password))
+            {
+                svcCredentials = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(username + ":" + password));
+            }
+            
             request.Headers.Add("Authorization", "Basic " + svcCredentials);
             var dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);

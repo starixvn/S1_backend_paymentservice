@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Payment.YPay
 {
-    class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
+    class PayHelper : PayHelperBase
     {
         private const string CliNa = "PC";
 
@@ -212,11 +212,6 @@ namespace Payment.YPay
         }
 
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
         {
             throw new NotImplementedException();
         }
