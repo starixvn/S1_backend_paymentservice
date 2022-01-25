@@ -225,28 +225,7 @@ namespace PaymentCore
 
             return responseFromServer;
         }
-
-        protected string HttpGet(string url, string parameters, string contentType, string accesstoken, string transID)
-        {
-            var request = WebRequest.Create($"{url}?{parameters}");
-            request.Method = "GET";
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-            request.Headers.Add("accept", contentType);
-            request.Headers.Add("x-api-key", accesstoken);
-
-            using var response = request.GetResponse();
-            using var dataStream = response.GetResponseStream();
-            using var reader = new StreamReader(dataStream);
-            var responseFromServer = reader.ReadToEnd();
-
-            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
-
-            return responseFromServer;
-        }
-
+        
         protected string HttpPost(string url, string parameters, string contentType, string transId, bool ignoreCertificate = false)
         {
             var request = WebRequest.CreateHttp(url);

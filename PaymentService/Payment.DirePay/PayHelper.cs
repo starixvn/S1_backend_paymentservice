@@ -476,10 +476,10 @@ namespace Payment.DirePay
             var result = await _httpHelper
                 .PostUrlEncodedAsync<Dictionary<string, string>, DepositResp>(loginUrl, request);
 
-            if (!result.HttpStatusCode.IsSuccessStatus())
+            if (!result.StatusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"DirePay login failed, HttpStatus: {(int)result.HttpStatusCode} {result.HttpStatusCode}" +
+                    $"DirePay login failed, HttpStatus: {(int)result.StatusCode} {result.StatusCode}" +
                         $", Message: {result.Result.message}",
                     ErrorCode.GetExchangeRateFailed);
             }
@@ -513,10 +513,10 @@ namespace Payment.DirePay
                 .WithOAuthBearerToken(accessToken)
                 .PostUrlEncodedAsync<Dictionary<string, string>, ExchangeResp>(getExchangeUrl, request);
 
-            if (!result.HttpStatusCode.IsSuccessStatus())
+            if (!result.StatusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"DirePay GetExchangeRate failed, HttpStatus: {(int)result.HttpStatusCode} {result.HttpStatusCode}" +
+                    $"DirePay GetExchangeRate failed, HttpStatus: {(int)result.StatusCode} {result.StatusCode}" +
                         $", Message: {result.Result.message}",
                     ErrorCode.GetExchangeRateFailed);
             }
