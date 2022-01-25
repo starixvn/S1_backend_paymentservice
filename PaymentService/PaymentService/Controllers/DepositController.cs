@@ -902,7 +902,7 @@ namespace PaymentService.Controllers
                 }
 
                 if ((rNotifyDepositResult.TransStatus == TransStatus.Success &&
-                     (depositRequest.Status != DepositStatus.Pending ||
+                     (depositRequest.Status != DepositStatus.Pending &&
                       depositRequest.Status != DepositStatus.Rejected)) ||
                     (rNotifyDepositResult.TransStatus != TransStatus.Success &&
                      depositRequest.Status != DepositStatus.Pending))
