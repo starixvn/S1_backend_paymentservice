@@ -923,7 +923,7 @@ namespace PaymentService.Controllers
                         _ => DepositStatus.Pending
                     };
                     var message = $"{transId} status is currently {depositRequest.Status.ToString()}, cannot change status to {status.ToString()}";
-                    _logger.LogInformation($"Method={GetCurrentMethod()}, {message}");
+                    _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {message}");
                     
                     _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
                         message,
