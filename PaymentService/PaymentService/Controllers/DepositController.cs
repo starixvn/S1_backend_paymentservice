@@ -913,8 +913,11 @@ namespace PaymentService.Controllers
                         TransStatus.Fail => DepositStatus.Rejected,
                         _ => DepositStatus.Pending
                     };
+                    var message = $"{transId} status is currently {depositRequest.Status.ToString()}, cannot change status to {status.ToString()}";
+                    _logger.LogInformation($"Method={GetCurrentMethod()}, {message}");
+                    
                     _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
-                        $"{transId} status is currently {depositRequest.Status.ToString()}, cannot change status to {status.ToString()}",
+                        message,
                         (int)depositRequest.Status, rNotifyDepositResult.ActualAmount, depositRequest.PayName);
                     return rNotifyDepositResult.Response;
                 }
