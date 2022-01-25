@@ -22,7 +22,7 @@ namespace PaymentCore
         Task<(TResult Result, HttpStatusCode StatusCode)> PostAsync<TBody, TResult>(string url, TBody body)
             where TResult : class;
 
-        Task<(TResult Result, HttpStatusCode HttpStatusCode)> PostUrlEncodedAsync<TBody, TResult>(string url, TBody body);
+        Task<(TResult Result, HttpStatusCode StatusCode)> PostUrlEncodedAsync<TBody, TResult>(string url, TBody body);
 
         (TResult Result, HttpStatusCode StatusCode) Post<TBody, TResult>(string url, TBody body, Func<XDocument, TResult> selecor)
             where TResult : class;

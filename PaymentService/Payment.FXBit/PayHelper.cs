@@ -2,14 +2,27 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PaymentCore;
+using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
 
 namespace Payment.FXBit
 {
     class PayHelper : PayHelperBase, IExchangeHelper
     {
+        private readonly IFlurlHttpHelper _httpHelper;
+        private readonly ILogger<PayHelper> _logger;
+
+        public PayHelper(IServiceProvider provider)
+        {
+            _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+            _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
+        }
+
         #region ExchangeRate
 
         public ExchangeResult GetExchange(Dictionary<string, string> input)
@@ -34,8 +47,10 @@ namespace Payment.FXBit
 
                 return new ExchangeResult(ErrorCode.Success, "Success", exchangeRate);
             }
-            catch (FXBitException ex)
+            catch (CustomException ex)
             {
+                _logger.LogInformation($"GetExchange failed, Code:{ex.Code}, Message:{ex.Message}");
+
                 return new ExchangeResult(ex.Code, ex.Message);
             }
         }
@@ -60,11 +75,11 @@ namespace Payment.FXBit
                 // Step 1: 取得當下匯率並換算為加密貨幣金額
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
                 var exchangeAmount = decimal.Parse(reqAmount) / decimal.Parse(rateInfo.BuyRate);
-                
+
                 // 將匯率資訊加入 DepositInfo
                 var jObj = JObject.Parse(depositInfo);
                 jObj.Add("ExchangeRate", rateInfo.BuyRate);
-                
+
                 // Step 2: 建立交易
                 var getTokenReq = new GetReceptionTokenReq
                 {
@@ -73,7 +88,7 @@ namespace Payment.FXBit
                     Remark = transId,
                     CallbackUrl = input["CallBackUrl"]
                 };
-                var getTokenResp = GetReceptionToken(baseApiUrl, apiKey, getTokenReq, transId);
+                var getTokenResp = GetReceptionToken(baseApiUrl, apiKey, getTokenReq);
 
                 // Step 3: 取得錢包位址
                 var getWalletReq = new GetWalletAddressReq
@@ -81,7 +96,7 @@ namespace Payment.FXBit
                     BilledCurrency = toCurrency,
                     ReceiptToken = getTokenResp.ReceiptToken
                 };
-                var getWalletResp = GetWalletAddress(baseApiUrl, apiKey, getWalletReq, transId);
+                var getWalletResp = GetWalletAddress(baseApiUrl, apiKey, getWalletReq);
 
                 // 將回傳支付金額加入 DepositInfo
                 jObj.Add("ExchangeAmount", getWalletResp.BilledPrice);
@@ -100,8 +115,10 @@ namespace Payment.FXBit
 
                 return response;
             }
-            catch (FXBitException ex)
+            catch (CustomException ex)
             {
+                _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+
                 return new DepositResult(false, ex.Code, ex.Message);
             }
         }
@@ -111,7 +128,7 @@ namespace Payment.FXBit
             var apiKey = input["key"];
             var req = FromJson<DepositCallBackReq>(bodyContent);
             var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
-            
+
             if (!VerifySign(dicReq, apiKey, req.Signature))
             {
                 return new NotifyDepositResult
@@ -141,7 +158,7 @@ namespace Payment.FXBit
                  */
                 var depositInfo = input["DepositInfo"];
                 var jObj = JObject.Parse(depositInfo);
-                
+
                 if (!jObj.TryGetValue("ExchangeRate", StringComparison.OrdinalIgnoreCase, out var jExchangeRate)
                     || !jObj.TryGetValue("ExchangeAmount", StringComparison.OrdinalIgnoreCase, out var jExchangeAmount))
                 {
@@ -206,111 +223,98 @@ namespace Payment.FXBit
             var fxBitRateList = GetExchangeRate(apiKey, baseApiUrl);
 
             if (!fxBitRateList.Any())
-                throw new FXBitException("Response is empty.",
+                throw new CustomException("Response is empty.",
                     ErrorCode.GetExchangeRateFailed);
 
             var rateInfoList =
                 fxBitRateList.FirstOrDefault(x => x.Key == toCurrency).Value;
 
             if (rateInfoList == null)
-                throw new FXBitException($"{toCurrency} has no rate data.",
+                throw new CustomException($"{toCurrency} has no rate data.",
                     ErrorCode.GetExchangeRateFailed);
 
             var rateInfo =
                 rateInfoList.FirstOrDefault(x => x.Key == fromCurrency).Value;
 
             if (rateInfo == null)
-                throw new FXBitException($"{fromCurrency} has no rate data.",
+                throw new CustomException($"{fromCurrency} has no rate data.",
                     ErrorCode.GetExchangeRateFailed);
 
             return rateInfo;
         }
 
         private IDictionary<string, Dictionary<string, FxBitExchangeRate>> GetExchangeRate(string apiKey,
-            string baseApiUrl,
-            string transId = "")
+            string baseApiUrl)
         {
             var apiUrl = baseApiUrl + Path.GetExchangeRate;
-            try
+
+            var response = _httpHelper
+                .WithHeader("accept", MediaType.Json)
+                .WithHeader("x-api-key", apiKey)
+                .GetAsync<Dictionary<string, Dictionary<string, FxBitExchangeRate>>>(apiUrl, string.Empty)
+                .Result;
+
+            if (!response.StatusCode.IsSuccessStatus())
             {
-                var responseStr = HttpGet(apiUrl, string.Empty, MediaType.Json, apiKey, transId);
-
-                if (string.IsNullOrEmpty(responseStr))
-                    throw new FXBitException("GetExchangeRate response is empty.",
-                        ErrorCode.GetExchangeRateFailed);
-
-                var fxBitRateList = JsonConvert
-                    .DeserializeObject<Dictionary<string, Dictionary<string, FxBitExchangeRate>>>(responseStr);
-
-                return fxBitRateList;
+                throw new CustomException(
+                    $"FxBit GetExchangeRate failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}",
+                    ErrorCode.GetExchangeRateFailed);
             }
-            catch (WebException ex)
-            {
-                throw new FXBitException(ex.Message, ErrorCode.GetExchangeRateFailed);
-            }
+
+            return response.Result;
         }
 
         private GetReceptionTokenResp GetReceptionToken(string baseApiUrl,
             string apiKey,
-            GetReceptionTokenReq req,
-            string transId)
+            GetReceptionTokenReq req)
         {
             var apiUrl = baseApiUrl + Path.CreateTransaction;
-            var response = GeneralFxBitPost<GetReceptionTokenReq, GetReceptionTokenResp>(apiUrl,
-                apiKey,
-                req,
-                ErrorCode.GetReceptionTokenFailed,
-                transId);
 
-            if (response.Error != 0)
-                throw new FXBitException($"GetReceptionToken response error code: {response.Error}",
+            var response = _httpHelper
+                .WithHeader("accept", MediaType.Json)
+                .WithHeader("x-api-key", apiKey)
+                .PostJsonAsync<GetReceptionTokenReq, GetReceptionTokenResp>(apiUrl, req)
+                .Result;
+
+            if (!response.StatusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"FxBit GetReceptionToken failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}",
+                    ErrorCode.GetReceptionTokenFailed);
+            }
+            
+            if (response.Result.Error != 0)
+                throw new CustomException($"GetReceptionToken response error code: {response.Result.Error}",
                     ErrorCode.GetReceptionTokenFailed);
 
-            return response;
+            return response.Result;
         }
 
         private GetWalletAddressResp GetWalletAddress(string baseApiUrl,
             string apiKey,
-            GetWalletAddressReq req,
-            string transId)
+            GetWalletAddressReq req)
         {
             var apiUrl = baseApiUrl + Path.GetWalletAddress;
-            var response = GeneralFxBitPost<GetWalletAddressReq, GetWalletAddressResp>(apiUrl,
-                apiKey,
-                req,
-                ErrorCode.GetWalletAddressFailed,
-                transId);
 
-            if (response.Error != 0)
-                throw new FXBitException(
-                    $"GetReceptionToken response error: {response.Error}, message: {response.ErrorMessage}",
+            var response = _httpHelper
+                .WithHeader("accept", MediaType.Json)
+                .WithHeader("x-api-key", apiKey)
+                .PostJsonAsync<GetWalletAddressReq, GetWalletAddressResp>(apiUrl, req)
+                .Result;
+
+            if (!response.StatusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"FxBit GetWalletAddress failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}",
+                    ErrorCode.GetWalletAddressFailed);
+            }
+
+            if (response.Result.Error != 0)
+                throw new CustomException(
+                    $"GetReceptionToken response error: {response.Result.Error}, message: {response.Result.ErrorMessage}",
                     ErrorCode.GetWalletAddressFailed);
 
-            return response;
-        }
-
-        private TResponse GeneralFxBitPost<TRequest, TResponse>(string apiUrl,
-            string apiKey,
-            TRequest request,
-            string errorCode,
-            string transId = "")
-        {
-            try
-            {
-                var responseStr = HttpPost(apiUrl, ToJson(request), MediaType.Json, apiKey, transId);
-
-                if (string.IsNullOrEmpty(responseStr))
-                    throw new FXBitException("Response is empty.", errorCode);
-
-                var response = JsonConvert
-                    .DeserializeObject<TResponse>(responseStr);
-
-                return response;
-            }
-            catch (WebException ex)
-            {
-                throw new FXBitException("WebException: " + ex.Message, errorCode);
-            }
+            return response.Result;
         }
         
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiKey)

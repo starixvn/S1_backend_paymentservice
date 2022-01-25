@@ -80,7 +80,7 @@ namespace PaymentCore.Helpers
             }
         }
 
-        public async Task<(TResult Result, HttpStatusCode HttpStatusCode)> PostUrlEncodedAsync<TBody, TResult>(string url, TBody body)
+        public async Task<(TResult Result, HttpStatusCode StatusCode)> PostUrlEncodedAsync<TBody, TResult>(string url, TBody body)
         {
             var (stream, statusCode) = await PostDataAsync(url, body, ContentType.UrlEncoded);
             var result = _serializer.DeserializeFormStream<TResult>(stream);
