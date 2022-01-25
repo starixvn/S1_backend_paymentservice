@@ -327,8 +327,11 @@ namespace PaymentService.Controllers
                         TransStatus.Fail => WithdrawalStatus.Verify,
                         _ => WithdrawalStatus.Process
                     };
+                    var message = $"{transId} status is currently {withdrawalRequest.Status.ToString()}, cannot change status to {status.ToString()}";
+                    _logger.LogInformation($"Method={GetCurrentMethod()}, {message}");
+                    
                     _paymentBll.SetWithdrawalLog(transId, withdrawalRequest.SiteId,
-                        $"{transId} status is currently {withdrawalRequest.Status.ToString()}, cannot change status to {status.ToString()}",
+                        message,
                         (int)withdrawalRequest.Status,
                         withdrawalRequest.PayName);
                     return rNotifyWithdrawalResult.Response;
