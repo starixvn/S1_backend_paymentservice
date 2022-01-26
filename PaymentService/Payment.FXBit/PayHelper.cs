@@ -195,7 +195,7 @@ namespace Payment.FXBit
             
             var baseApiUrl = inputs["host"];
             var apiKey = inputs["key"];
-            var payoutApiKey = inputs["payoutKey"];
+            var payoutKey = inputs["payoutKey"];
             var payoutApiUrl = inputs["payoutUrl"];
             var fromCurrency = inputs["PayCurrencyId"];
             var toCurrency = inputs["PayCode"];
@@ -220,9 +220,9 @@ namespace Payment.FXBit
                     { "type", "2" } // payout 固定為 2
                 };
 
-                payoutReq.Add("signature", GetSign(payoutReq, payoutApiKey));
+                payoutReq.Add("signature", GetSign(payoutReq, payoutKey));
                
-                var payoutResp = Payout(payoutApiUrl, payoutApiKey, payoutReq);
+                var payoutResp = Payout(payoutApiUrl, apiKey, payoutReq);
                 var response = new WithdrawResult
                 {
                     Success = true,
@@ -251,7 +251,8 @@ namespace Payment.FXBit
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
-            var apiKey = inputs["payoutKey"];
+            var apiKey = inputs["Key"];
+            var payoutKey = inputs["payoutKey"];
             var apiUrl = inputs["payoutUrl"];
             var transId = inputs["TransID"];
 
@@ -262,7 +263,7 @@ namespace Payment.FXBit
                 { "type", "3" } // payout 查詢固定為 3
             };
 
-            req.Add("signature", GetSign(req, apiKey));
+            req.Add("signature", GetSign(req, payoutKey));
 
             var resp = PayoutQuery(apiUrl, apiKey, req);
             var transStatus = FXBitDefinition.GetPayoutTransStatus(resp.Status);
