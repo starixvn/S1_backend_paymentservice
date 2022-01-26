@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using PaymentCore;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
@@ -138,9 +139,11 @@ namespace PaymentService.Service.BLL
             _withdrawalService.SetWithdrawalLog(withdrawalId, siteId, comment, status, @operator);
         }
 
-        public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry()
+        public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry(IEnumerable<int> payIds)
         {
-            return _withdrawalService.GetWithdrawalRequesPayEnquiry();
+            var json = JsonConvert.SerializeObject(payIds);
+
+            return _withdrawalService.GetWithdrawalRequesPayEnquiry(json);
         }
 
         public void SetThirdId(string transId, string thirdID)

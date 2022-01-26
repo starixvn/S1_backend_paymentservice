@@ -113,27 +113,40 @@ namespace Payment.FXBit
         public int ErrorMessage { get; set; }
     }
     
-
-    internal class CreditReq
+    internal class PayoutResp
     {
-        public string receipt_token { get; set; }
+        [JsonProperty("error")]
+        public int Error { get; set; }
+
+        /// <summary>
+        /// 交易編號（商戶自訂 11 位數字）
+        /// </summary>
+        [JsonProperty("req_payout_id")]
+        public int ReqPayoutId { get; set; }
+
+        /// <summary>
+        /// 第三方單號
+        /// </summary>
+        [JsonProperty("res_payout_id")]
+        public string ResPayoutId { get; set; }
     }
 
-    internal class CreditResp
+    internal class PayoutQueryResp
     {
-        public string error { get; set; }
-        public string receipt_token { get; set; }
-        public string shop_name { get; set; }
-        public string marked_currency { get; set; }
-        public string marked_price { get; set; }
-        public string billed_currency { get; set; }
-        public string billed_price { get; set; }
-        public string received_amount { get; set; }
-        public string payment_status { get; set; }
-        public string net { get; set; }
-        public string fee { get; set; }
-        public string transaction_hash { get; set; }
-        public string from { get; set; }
+        [JsonProperty("error")]
+        public int Error { get; set; }
+
+        /// <summary>
+        /// 0: 處理中, 1: 交易取消, 2: 出幣成功
+        /// </summary>
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        /// <summary>
+        /// 區塊鏈交易 Id
+        /// </summary>
+        [JsonProperty("txid")]
+        public string TxId { get; set; }
     }
 
     internal class DepositCallBackReq

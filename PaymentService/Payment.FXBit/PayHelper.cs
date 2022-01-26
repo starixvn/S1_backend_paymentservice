@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -192,7 +192,56 @@ namespace Payment.FXBit
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            
+            var baseApiUrl = inputs["host"];
+            var apiKey = inputs["key"];
+            var payoutApiKey = inputs["payoutKey"];
+            var payoutApiUrl = inputs["payoutUrl"];
+            var fromCurrency = inputs["PayCurrencyId"];
+            var toCurrency = inputs["PayCode"];
+            var reqAmount = inputs["Amount"];
+            var transId = inputs["TransID"];
+
+            try
+            {
+                // Step 1: 取得當下匯率並換算為加密貨幣金額
+                var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
+                var exchangeAmount = decimal.Parse(reqAmount) / decimal.Parse(rateInfo.BuyRate);
+                
+                // Step 2: 建立交易
+                var payoutReq = new Dictionary<string, string>
+                {
+                    { "currency", toCurrency },
+                    { "amount", exchangeAmount.ToString() },
+                    { "address", inputs["AccountNo"] },
+                    { "time_stamp", new DateTimeOffset().ToUnixTimeSeconds().ToString() },
+                    { "req_payout_id", GetPayoutId(transId) },
+                    { "remark", transId },
+                    { "type", "2" } // payout 固定為 2
+                };
+
+                payoutReq.Add("signature", GetSign(payoutReq, payoutApiKey));
+               
+                var payoutResp = Payout(payoutApiUrl, payoutApiKey, payoutReq);
+                var response = new WithdrawResult
+                {
+                    Success = true,
+                    WithdrawId = payoutResp.ResPayoutId,
+                    RawContent = JsonConvert.SerializeObject(payoutResp)
+                };
+
+                return response;
+            }
+            catch (CustomException ex)
+            {
+                _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+
+                return new WithdrawResult
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
@@ -202,7 +251,28 @@ namespace Payment.FXBit
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var apiKey = inputs["payoutKey"];
+            var apiUrl = inputs["payoutUrl"];
+            var transId = inputs["TransID"];
+
+            var req = new Dictionary<string, string>
+            {
+                { "payout_id", GetPayoutId(transId) },
+                { "time_stamp", new DateTimeOffset().ToUnixTimeSeconds().ToString() },
+                { "type", "3" } // payout 查詢固定為 3
+            };
+
+            req.Add("signature", GetSign(req, apiKey));
+
+            var resp = PayoutQuery(apiUrl, apiKey, req);
+            var transStatus = FXBitDefinition.GetPayoutTransStatus(resp.Status);
+
+            return new EnquiryWithdrawResult
+            {
+                TransStatus = transStatus,
+                Message = transStatus.ToString(),
+                RawContent = JsonConvert.SerializeObject(resp)
+            };
         }
 
         #endregion
@@ -279,12 +349,13 @@ namespace Payment.FXBit
             if (!response.StatusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"FxBit GetReceptionToken failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}",
+                    $"FxBit GetReceptionToken failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}" +
+                    $",errorCode: {response.Result.Error}",
                     ErrorCode.GetReceptionTokenFailed);
             }
             
             if (response.Result.Error != 0)
-                throw new CustomException($"GetReceptionToken response error code: {response.Result.Error}",
+                throw new CustomException($"FxBit GetReceptionToken response error code: {response.Result.Error}",
                     ErrorCode.GetReceptionTokenFailed);
 
             return response.Result;
@@ -305,18 +376,71 @@ namespace Payment.FXBit
             if (!response.StatusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"FxBit GetWalletAddress failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}",
+                    $"FxBit GetWalletAddress failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}" +
+                    $", error code: {response.Result.Error}, message: {response.Result.ErrorMessage}",
                     ErrorCode.GetWalletAddressFailed);
             }
 
             if (response.Result.Error != 0)
                 throw new CustomException(
-                    $"GetReceptionToken response error: {response.Result.Error}, message: {response.Result.ErrorMessage}",
+                    $"FxBit GetReceptionToken response error: {response.Result.Error}, message: {response.Result.ErrorMessage}",
                     ErrorCode.GetWalletAddressFailed);
 
             return response.Result;
         }
-        
+
+        private PayoutQueryResp PayoutQuery(string apiUrl,
+            string apiKey,
+            Dictionary<string, string> req)
+        {
+            var response = _httpHelper
+                .WithHeader("accept", MediaType.Json)
+                .WithHeader("x-api-key", apiKey)
+                .PostJsonAsync<Dictionary<string, string>, PayoutQueryResp>(apiUrl, req)
+                .Result;
+
+            if (!response.StatusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"FxBit PayoutQuery failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}" +
+                    $", error code: {response.Result.Error}",
+                    ErrorCode.PayoutFailed);
+            }
+
+            if (response.Result.Error != 0)
+                throw new CustomException(
+                    $"FxBit PayoutQuery response error: {response.Result.Error}",
+                    ErrorCode.GetWalletAddressFailed);
+
+            return response.Result;
+        }
+
+        private PayoutResp Payout(string apiUrl,
+            string apiKey,
+            Dictionary<string, string> req)
+        {
+            var response = _httpHelper
+                .WithHeader("accept", MediaType.Json)
+                .WithHeader("x-api-key", apiKey)
+                .PostJsonAsync<Dictionary<string, string>, PayoutResp>(apiUrl, req)
+                .Result;
+
+            if (!response.StatusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"FxBit Payout failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}" +
+                    $", error code: {response.Result.Error}",
+                    ErrorCode.PayoutFailed);
+            }
+
+            if (response.Result.Error != 0)
+                throw new CustomException(
+                    $"FxBit Payout response error: {response.Result.Error}",
+                    ErrorCode.GetWalletAddressFailed);
+
+            return response.Result;
+        }
+
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiKey)
         {
             var str = string.Join('&', param
@@ -347,6 +471,10 @@ namespace Payment.FXBit
             var actualAmount = decimal.Round(receivedCryptoAmount * exchangeRate, 2);
             return actualAmount;
         }
+
+        private string GetPayoutId(string transId)
+            => Regex.Replace(transId, "[^0-9]", "")
+                .PadLeft(11, '0');
 
         #endregion
     }

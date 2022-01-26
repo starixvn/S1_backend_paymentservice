@@ -9,13 +9,21 @@ namespace Payment.FXBit
         public static Dictionary<string, TransStatus> DepositTransStatusMap =>
             new Dictionary<string, TransStatus>()
             {
-                { FxBitStatus.New, TransStatus.Pending },
-                { FxBitStatus.Confirming, TransStatus.Pending },
-                { FxBitStatus.Confirmed, TransStatus.Success },
-                { FxBitStatus.Failed, TransStatus.Fail },
-                { FxBitStatus.Insufficient, TransStatus.Success },
-                { FxBitStatus.Expired, TransStatus.Fail },
-                { FxBitStatus.IncorrectAmount, TransStatus.Success }
+                { FxBitDepositStatus.New, TransStatus.Pending },
+                { FxBitDepositStatus.Confirming, TransStatus.Pending },
+                { FxBitDepositStatus.Confirmed, TransStatus.Success },
+                { FxBitDepositStatus.Failed, TransStatus.Fail },
+                { FxBitDepositStatus.Insufficient, TransStatus.Success },
+                { FxBitDepositStatus.Expired, TransStatus.Fail },
+                { FxBitDepositStatus.IncorrectAmount, TransStatus.Success }
+            };
+
+        public static Dictionary<string, TransStatus> PayoutTransStatusMap =>
+            new Dictionary<string, TransStatus>()
+            {
+                { FxBitPayoutStatus.Pending, TransStatus.Pending },
+                { FxBitPayoutStatus.Cancel, TransStatus.Fail },
+                { FxBitPayoutStatus.Success, TransStatus.Success }
             };
 
         public static TransStatus GetDepositTransStatus(string status)
@@ -28,9 +36,18 @@ namespace Payment.FXBit
             return TransStatus.Pending;
         }
 
+        public static TransStatus GetPayoutTransStatus(string status)
+        {
+            if (PayoutTransStatusMap.TryGetValue(status, out var result))
+            {
+                return result;
+            }
+
+            return TransStatus.Pending;
+        }
     }
 
-    internal class FxBitStatus
+    internal class FxBitDepositStatus
     {
         /// <summary>
         /// 尚未入帳
@@ -73,6 +90,24 @@ namespace Payment.FXBit
         public const string PayInAfterExpired = "7";
     }
 
+    internal class FxBitPayoutStatus
+    {
+        /// <summary>
+        /// 處理中
+        /// </summary>
+        public const string Pending = "0";
+
+        /// <summary>
+        /// 交易取消
+        /// </summary>
+        public const string Cancel = "1";
+
+        /// <summary>
+        /// 出幣完成
+        /// </summary>
+        public const string Success = "2";
+    }
+
     internal class ErrorCode
     {
         public const string Success = "0";
@@ -82,6 +117,8 @@ namespace Payment.FXBit
         public const string GetReceptionTokenFailed = "9901";
 
         public const string GetWalletAddressFailed = "9902";
+
+        public const string PayoutFailed = "9903";
     }
 
     internal class MediaType
