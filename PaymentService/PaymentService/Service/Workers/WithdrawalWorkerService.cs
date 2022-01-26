@@ -1,45 +1,49 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using PaymentCore;
 using PaymentService.Service.BLL;
-using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace PaymentService.Service.Workers
 {
     public class WithdrawalWorkerService : BackgroundService
     {
-        private readonly IHostEnvironment environment;
-        private readonly ILogger<WithdrawalWorkerService> logger;
-        private readonly PaymentBLL paymentBLL;
-        private readonly PayBLL payBLL;
-        private Timer timer;
-        public WithdrawalWorkerService(ILogger<WithdrawalWorkerService> logger, IHostEnvironment environment, PaymentBLL paymentBLL, PayBLL payBLL)
+        private readonly IHostEnvironment _environment;
+        private readonly ILogger<WithdrawalWorkerService> _logger;
+        private readonly PaymentBLL _paymentBll;
+        private readonly PayBLL _payBll;
+        private readonly IEnumerable<int> _payIds;
+        private Timer _timer;
+        public WithdrawalWorkerService(IServiceProvider provider)
         {
-            this.environment = environment;
-            this.logger = logger;
-            this.paymentBLL = paymentBLL;
-            this.payBLL = payBLL;
+            this._environment = provider.GetRequiredService<IHostEnvironment>();
+            this._logger = provider.GetRequiredService<ILogger<WithdrawalWorkerService>>();
+            this._paymentBll = provider.GetRequiredService<PaymentBLL>();
+            this._payBll = provider.GetRequiredService<PayBLL>();
+            this._payIds = new List<int> { 3, 5, 15, 25, 26 };
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
         private void DoWork(object state)
         {
             try
             {
-                var withdrawalRequesList = paymentBLL.GetWithdrawalRequesPayEnquiry();
+                var withdrawalRequesList = _paymentBll.GetWithdrawalRequesPayEnquiry(_payIds);
                 foreach (var withdrawalRequest in withdrawalRequesList)
                 {
                     try
                     {
-                        var payHelper = payBLL.GetPayHelper(withdrawalRequest.PayName);
+                        var payHelper = _payBll.GetPayHelper(withdrawalRequest.PayName);
                         var WithReq = withdrawalRequest.ISetting;
                         if (!WithReq.ContainsKey("TransID"))
                         {
@@ -63,7 +67,7 @@ namespace PaymentService.Service.Workers
                             #region Transaction is Success
                             try
                             {
-                                paymentBLL.WithdrawalSuccess(withdrawalRequest, enquiryWithdrawResult);
+                                _paymentBll.WithdrawalSuccess(withdrawalRequest, enquiryWithdrawResult);
                             }
                             catch (MySqlException SqlEx)
                             {
@@ -76,11 +80,11 @@ namespace PaymentService.Service.Workers
                                 errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
                                 errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
                                 errorMessages.AppendLine($"Source: {SqlEx.Source}");
-                                logger.LogError(errorMessages.ToString());
+                                _logger.LogError(errorMessages.ToString());
                             }
                             catch (Exception exForEachTransaction)
                             {
-                                logger.LogError($"PayName: {withdrawalRequest.PayName}\r\n{exForEachTransaction.Message}");
+                                _logger.LogError($"PayName: {withdrawalRequest.PayName}\r\n{exForEachTransaction.Message}");
                                 continue;
                             }
                             #endregion
@@ -89,11 +93,11 @@ namespace PaymentService.Service.Workers
                         {
                             try
                             {
-                                paymentBLL.WithdrawalFail(withdrawalRequest, enquiryWithdrawResult);
+                                _paymentBll.WithdrawalFail(withdrawalRequest, enquiryWithdrawResult);
                             }
                             catch (Exception ex)
                             {
-                                logger.LogError($"PayName: {withdrawalRequest.PayName}\r\n{ex.Message}");
+                                _logger.LogError($"PayName: {withdrawalRequest.PayName}\r\n{ex.Message}");
                                 continue;
                             }
                         }
@@ -107,26 +111,26 @@ namespace PaymentService.Service.Workers
             }
             catch(Exception ex)
             {
-                logger.LogError(ex.Message);
+                _logger.LogError(ex.Message);
             }
             finally
             {
                 var dueTimeSpan = TimeSpan.FromSeconds(30);
-                if (environment.IsDevelopment() || environment.IsEnvironment("QA"))
+                if (_environment.IsDevelopment() || _environment.IsEnvironment("QA"))
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
-                timer.Change(dueTimeSpan, TimeSpan.Zero);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
         ~WithdrawalWorkerService()
         {
-            timer?.Dispose();
+            _timer?.Dispose();
         }
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("WithdrawalWorkerService: Process Stopped");
-            timer?.Change(Timeout.Infinite, 0);
+            _logger.LogInformation("WithdrawalWorkerService: Process Stopped");
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

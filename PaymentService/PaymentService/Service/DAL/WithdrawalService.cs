@@ -32,9 +32,10 @@ namespace PaymentService.Service.DAL
         {
             return _reportDbClient.QueryFirst<WithdrawalRequest>("WithdrawalRequesPay_Get", new { WithdrawalId = withdrawalId });
         }
-        public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry()
+        public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry(string payIds)
         {
-            return _reportDbClient.Query<WithdrawalRequest>("Service_WithdrawalRequesPayEnquiry_Get");
+            return _reportDbClient.Query<WithdrawalRequest>("Service_WithdrawalRequestPayEnquiry_Get",
+                new { _PayIds = payIds });
         }
 
         public int SetWithdrawalInfo(string transId, int siteId, IPay pay, string comment, string refId, string Operator, IEnumerable<int> forStatus, WithdrawalStatus status)
