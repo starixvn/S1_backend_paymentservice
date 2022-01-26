@@ -234,7 +234,7 @@ namespace Payment.FXBit
             }
             catch (CustomException ex)
             {
-                _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+                _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
 
                 return new WithdrawResult
                 {
