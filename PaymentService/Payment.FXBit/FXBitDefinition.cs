@@ -26,6 +26,29 @@ namespace Payment.FXBit
                 { FxBitPayoutStatus.Success, TransStatus.Success }
             };
 
+        public static Dictionary<int, string> PayoutErrorMessageMap =>
+            new Dictionary<int, string>()
+            {
+                { 0, "成功" },
+                { 10001, "Header api_key 為空" },
+                { 10002, "Header api_key 錯誤" },
+                { 10003, "請求路徑錯誤" },
+                { 10004, "請求類型錯誤" },
+                { 20001, "幣種錯誤" },
+                { 20002, "time_stamp 參數錯誤" },
+                { 20003, "簽名錯誤" },
+                { 20004, "payout id 錯誤（查單）" },
+                { 20005, "地址錯誤" },
+                { 20006, "金額錯誤" },
+                { 20007, "備註太長（600 字元以內）" },
+                { 20008, "req_payout_id 錯誤" },
+                { 20009, "Payout IP 不在白名單範圍,請聯系管理員添加 IP 白名單" },
+                { 20010, "禁止重復提交" },
+                { 20011, "餘額不足" },
+                { 20012, "申請支付的金額低於最少出金額" },
+                { 30000, "請聯系管理員開啟 Payout Api 使用權限" }
+            };
+
         public static TransStatus GetDepositTransStatus(string status)
         {
             if (DepositTransStatusMap.TryGetValue(status, out var result))
@@ -44,6 +67,16 @@ namespace Payment.FXBit
             }
 
             return TransStatus.Pending;
+        }
+
+        public static string GetPayoutErrorMessage(int errorCode)
+        {
+            if (PayoutErrorMessageMap.TryGetValue(errorCode, out var result))
+            {
+                return result;
+            }
+
+            return string.Empty;
         }
     }
 
@@ -107,7 +140,7 @@ namespace Payment.FXBit
         /// </summary>
         public const string Success = "2";
     }
-
+    
     internal class ErrorCode
     {
         public const string Success = "0";
