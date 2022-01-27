@@ -404,13 +404,13 @@ namespace Payment.FXBit
             {
                 throw new CustomException(
                     $"FxBit PayoutQuery failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}" +
-                    $", error code: {response.Result.Error}",
+                    $", error code: {response.Result.Error} {FXBitDefinition.GetPayoutErrorMessage(response.Result.Error)}",
                     ErrorCode.PayoutFailed);
             }
 
             if (response.Result.Error != 0)
                 throw new CustomException(
-                    $"FxBit PayoutQuery response error: {response.Result.Error}",
+                    $"FxBit PayoutQuery response error: {response.Result.Error} {FXBitDefinition.GetPayoutErrorMessage(response.Result.Error)}",
                     ErrorCode.GetWalletAddressFailed);
 
             return response.Result;
@@ -430,13 +430,13 @@ namespace Payment.FXBit
             {
                 throw new CustomException(
                     $"FxBit Payout failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}" +
-                    $", error code: {response.Result.Error}",
+                    $", error code: {response.Result.Error} {FXBitDefinition.GetPayoutErrorMessage(response.Result.Error)}",
                     ErrorCode.PayoutFailed);
             }
 
             if (response.Result.Error != 0)
                 throw new CustomException(
-                    $"FxBit Payout response error: {response.Result.Error}",
+                    $"FxBit Payout response error: {response.Result.Error} {FXBitDefinition.GetPayoutErrorMessage(response.Result.Error)}",
                     ErrorCode.GetWalletAddressFailed);
 
             return response.Result;
