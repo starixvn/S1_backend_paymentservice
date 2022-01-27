@@ -37,10 +37,10 @@ namespace Payment.FXBit
                 var reqAmount = input["Amount"];
 
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
-                var exchangeAmount = decimal.Parse(reqAmount) / decimal.Parse(rateInfo.BuyRate);
+                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.BuyRate, toCurrency);
                 var exchangeRate = new Dictionary<string, string>
                 {
-                    { "To_Amount", exchangeAmount.ToString() },
+                    { "To_Amount", exchangeAmount },
                     { "Rate", rateInfo.BuyRate },
                     { "Updated_timestamp", rateInfo.UpdatedTimestamp.ToUnixTimeSeconds().ToString() }
                 };
@@ -74,11 +74,11 @@ namespace Payment.FXBit
             {
                 // Step 1: 取得當下匯率並換算為加密貨幣金額
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
-                var exchangeAmount = decimal.Parse(reqAmount) / decimal.Parse(rateInfo.BuyRate);
+                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.SellRate, toCurrency);
 
                 // 將匯率資訊加入 DepositInfo
                 var jObj = JObject.Parse(depositInfo);
-                jObj.Add("ExchangeRate", rateInfo.BuyRate);
+                jObj.Add("ExchangeRate", rateInfo.SellRate);
 
                 // Step 2: 建立交易
                 var getTokenReq = new GetReceptionTokenReq
@@ -206,13 +206,13 @@ namespace Payment.FXBit
             {
                 // Step 1: 取得當下匯率並換算為加密貨幣金額
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
-                var exchangeAmount = decimal.Parse(reqAmount) / decimal.Parse(rateInfo.BuyRate);
-                
+                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.BuyRate, toCurrency);
+
                 // Step 2: 建立交易
                 var payoutReq = new Dictionary<string, string>
                 {
                     { "currency", toCurrency },
-                    { "amount", exchangeAmount.ToString() },
+                    { "amount", exchangeAmount },
                     { "address", inputs["AccountNo"] },
                     { "time_stamp", new DateTimeOffset().ToUnixTimeSeconds().ToString() },
                     { "req_payout_id", GetPayoutId(transId) },
@@ -476,6 +476,18 @@ namespace Payment.FXBit
         private string GetPayoutId(string transId)
             => Regex.Replace(transId, "[^0-9]", "")
                 .PadLeft(11, '0');
+
+        private string GetExchangeAmountString(string reqAmount, string rate, string toCurrency)
+        {
+            // 小數位數 ETH BTC 8 位，其餘 2 位
+            var unit = toCurrency.Equals("ETH", StringComparison.OrdinalIgnoreCase)
+                       || toCurrency.Equals("BTC", StringComparison.OrdinalIgnoreCase)
+                ? 8 : 2;
+
+            var amount = decimal.Parse(reqAmount) / decimal.Parse(rate);
+            
+            return amount.ToString($"f{unit}");
+        }
 
         #endregion
     }
