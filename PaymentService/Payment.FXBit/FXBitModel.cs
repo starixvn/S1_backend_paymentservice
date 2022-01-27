@@ -77,7 +77,7 @@ namespace Payment.FXBit
         /// 與商戶結算金額
         /// </summary>
         [JsonProperty("marked_price")]
-        public decimal MarkedPrice { get; set; }
+        public string MarkedPrice { get; set; }
 
         /// <summary>
         /// 備註
