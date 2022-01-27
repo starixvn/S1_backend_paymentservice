@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
 using PaymentCore;
 using PaymentService.Service.BLL;
 
@@ -38,29 +40,36 @@ namespace PaymentService.Service.Workers
         {
             try
             {
-                var withdrawalRequesList = _paymentBll.GetWithdrawalRequesPayEnquiry(_payIds);
-                foreach (var withdrawalRequest in withdrawalRequesList)
+                var withdrawalList = _paymentBll.GetWithdrawalRequesPayEnquiry(_payIds);
+
+                if (withdrawalList.Any())
+                {
+                    _logger.LogInformation("Start Withdrawal Worker" +
+                                           $", TransId List: {string.Join(',', withdrawalList.Select(x => x.TransId))}");
+                }
+                
+                foreach (var withdrawalRequest in withdrawalList)
                 {
                     try
                     {
                         var payHelper = _payBll.GetPayHelper(withdrawalRequest.PayName);
-                        var WithReq = withdrawalRequest.ISetting;
-                        if (!WithReq.ContainsKey("TransID"))
+                        var withReq = withdrawalRequest.ISetting;
+                        if (!withReq.ContainsKey("TransID"))
                         {
-                            WithReq.Add("TransID", withdrawalRequest.TransId);
+                            withReq.Add("TransID", withdrawalRequest.TransId);
                         }
 
-                        if (!WithReq.ContainsKey("Amount"))
+                        if (!withReq.ContainsKey("Amount"))
                         {
-                            WithReq.Add("Amount", withdrawalRequest.Amount.ToString());
+                            withReq.Add("Amount", withdrawalRequest.Amount.ToString());
                         }
 
-                        if (!WithReq.ContainsKey("CurrencyId"))
+                        if (!withReq.ContainsKey("CurrencyId"))
                         {
-                            WithReq.Add("CurrencyId", withdrawalRequest.CurrencyId.ToString());
+                            withReq.Add("CurrencyId", withdrawalRequest.CurrencyId.ToString());
                         }
 
-                        var enquiryWithdrawResult = payHelper.EnquiryForCredit(WithReq);
+                        var enquiryWithdrawResult = payHelper.EnquiryForCredit(withReq);
 
                         if (enquiryWithdrawResult.TransStatus == TransStatus.Success)
                         {
@@ -68,24 +77,26 @@ namespace PaymentService.Service.Workers
                             try
                             {
                                 _paymentBll.WithdrawalSuccess(withdrawalRequest, enquiryWithdrawResult);
+                                _logger.LogInformation($"Update {withdrawalRequest.TransId} to Success" +
+                                                       $", Query Result: {JsonConvert.SerializeObject(enquiryWithdrawResult)}");
                             }
-                            catch (MySqlException SqlEx)
+                            catch (MySqlException sqlEx)
                             {
                                 /*Need Check Transaction Status*/
                                 var errorMessages = new StringBuilder();
-                                //errorMessages.AppendLine(Newtonsoft.Json.JsonConvert.SerializeObject(dataParam));
                                 errorMessages.AppendLine($"PayName: {withdrawalRequest.PayName}");
-                                errorMessages.AppendLine($"Message: {SqlEx.Message}");
-                                errorMessages.AppendLine($"Error Number: {SqlEx.Number}");
-                                errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
-                                errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
-                                errorMessages.AppendLine($"Source: {SqlEx.Source}");
+                                errorMessages.AppendLine($"Message: {sqlEx.Message}");
+                                errorMessages.AppendLine($"Error Number: {sqlEx.Number}");
+                                errorMessages.AppendLine($"ErrorCode: {sqlEx.ErrorCode}");
+                                errorMessages.AppendLine($"SqlState: {sqlEx.SqlState}");
+                                errorMessages.AppendLine($"Source: {sqlEx.Source}");
+
                                 _logger.LogError(errorMessages.ToString());
                             }
-                            catch (Exception exForEachTransaction)
+                            catch (Exception ex)
                             {
-                                _logger.LogError($"PayName: {withdrawalRequest.PayName}\r\n{exForEachTransaction.Message}");
-                                continue;
+                                _logger.LogError($"Update {withdrawalRequest.TransId} to Success Failed. " +
+                                                 $"Exception: {ex.Message}\r\n{ex.StackTrace}");
                             }
                             #endregion
                         }
@@ -94,32 +105,38 @@ namespace PaymentService.Service.Workers
                             try
                             {
                                 _paymentBll.WithdrawalFail(withdrawalRequest, enquiryWithdrawResult);
+                                _logger.LogInformation($"Update {withdrawalRequest.TransId} to Fail" +
+                                    $", Query Result: {JsonConvert.SerializeObject(enquiryWithdrawResult)}");
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogError($"PayName: {withdrawalRequest.PayName}\r\n{ex.Message}");
-                                continue;
+                                _logger.LogError($"Update {withdrawalRequest.TransId} to Fail Failed. " +
+                                                 $"Exception: {ex.Message}\r\n{ex.StackTrace}");
                             }
                         }
                     }
-                    catch(Exception ex1)
+                    catch(Exception ex)
                     {
-                        //logger.LogError($"PayName: {withdrawalRequest.PayName}\r\n{ex1.ToString()}");
-                        continue;
+                        _logger.LogError($"Query {withdrawalRequest.TransId} Failed. " +
+                                         $"Exception: {ex.Message}\r\n{ex.StackTrace}");
                     }
                 }
             }
             catch(Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError($"Withdrawal Worker Exception: {ex.Message}\r\n{ex.StackTrace}");
             }
             finally
             {
                 var dueTimeSpan = TimeSpan.FromSeconds(30);
-                if (_environment.IsDevelopment() || _environment.IsEnvironment("QA"))
+
+                if (_environment.IsDevelopment()
+                    || _environment.IsEnvironment("QA")
+                    || _environment.IsEnvironment("Local"))
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
+
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

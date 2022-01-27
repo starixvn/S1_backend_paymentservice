@@ -251,7 +251,7 @@ namespace Payment.FXBit
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
-            var apiKey = inputs["Key"];
+            var apiKey = inputs["key"];
             var payoutKey = inputs["payoutKey"];
             var apiUrl = inputs["payoutUrl"];
             var transId = inputs["TransID"];
