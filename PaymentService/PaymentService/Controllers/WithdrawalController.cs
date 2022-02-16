@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentService.Model;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -467,6 +468,12 @@ namespace PaymentService.Controllers
                     _logger.LogError($"Method={GetCurrentMethod()}, payHelper Setting Not Found");
                     apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
                     return apiResult;
+                }
+
+                // 前端傳入 KVND，因金額未經過處理需在此處轉換
+                if (custInfo.CurrencyId == (int)CurrencyId.VND)
+                {
+                    reqExchange.Amount *= 1000;
                 }
 
                 var exchangeReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
