@@ -265,11 +265,9 @@ namespace Payment.DirePay
             var getReceptionToken = sUrl + "/api/login";
             var getWalletAddress = sUrl + "/api/callBack";
 
-            var depositGetH5Req = new Dictionary<string, string>
-            {
-                { "email", inputs["Email"] },
-                { "password", inputs["Password"] }
-            };
+            var depositGetH5Req = new Dictionary<string, string>();
+            depositGetH5Req.Add("email", inputs["Email"]);
+            depositGetH5Req.Add("password", inputs["Password"]);
             var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             string sResponse = null;
 
