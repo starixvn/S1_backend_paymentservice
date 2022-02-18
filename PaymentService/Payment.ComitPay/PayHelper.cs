@@ -141,10 +141,12 @@ namespace Payment.ComitPay
         {
             var sUrl = inputs["PayOut"] + "/" + inputs["merchant_no"];
 
-            var formData = new Dictionary<string, string>();
-            formData.Add("MerchantCode", inputs["merchant_no"]);
-            formData.Add("CurrencyCode", inputs["PayCurrencyId"]);
-            formData.Add("TransactionID", inputs["TransID"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "MerchantCode", inputs["merchant_no"] },
+                { "CurrencyCode", inputs["PayCurrencyId"] },
+                { "TransactionID", inputs["TransID"] }
+            };
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("Membercode", inputs["CustId"]);
@@ -185,11 +187,13 @@ namespace Payment.ComitPay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>
+            {
+                { "Merchant", inputs["merchant_no"] },
+                { "Currency", inputs["PayCurrencyId"] },
+                { "Reference", inputs["TransID"] }
+            };
 
-            formData.Add("Merchant", inputs["merchant_no"]);
-            formData.Add("Currency", inputs["PayCurrencyId"]);
-            formData.Add("Reference", inputs["TransID"]);
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#"));
             var time = new DateTimeOffset(DateTime.Now);

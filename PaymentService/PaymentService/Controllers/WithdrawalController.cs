@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -266,9 +265,7 @@ namespace PaymentService.Controllers
                 _logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
 
-                var withdrawalId = 0;
-                var m = Regex.Match(transId, @"\d+");
-                int.TryParse(m.Value, out withdrawalId);
+                var withdrawalId = _common.GetId(transId);
                 var cTransId = $"W{_common.GetEnv()}{withdrawalId}";
                 if (cTransId != transId)
                 {
@@ -309,17 +306,6 @@ namespace PaymentService.Controllers
 
                 //取得每家金流的成果 
                 var rNotifyWithdrawalResult = payHelper.CallBackCredit(dicParam, bodyText, WithReq);
-                var sInput = "";
-                if (isFormData)
-                {
-                    sInput = JsonConvert.SerializeObject(dicParam);
-                }
-                else
-                {
-                    sInput = bodyText;
-                }
-
-                //oDBLog.InsertPaymentLog("", sInput, JsonConvert.SerializeObject(rNotifyDepositResult));
 
                 var temp = rNotifyWithdrawalResult.WithdrawId;
                 while(temp.Substring(0,1) == "0")
@@ -332,7 +318,25 @@ namespace PaymentService.Controllers
                     return $"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}";
                 }
 
-                var notifyWithdrawResult = rNotifyWithdrawalResult;
+                if (withdrawalRequest.Status == WithdrawalStatus.Approved ||
+                    withdrawalRequest.Status == WithdrawalStatus.Rejected)
+                {
+                    var status = rNotifyWithdrawalResult.TransStatus switch 
+                    {
+                        TransStatus.Success => WithdrawalStatus.Approved,
+                        TransStatus.Fail => WithdrawalStatus.Verify,
+                        _ => WithdrawalStatus.Process
+                    };
+                    var message = $"{transId} status is currently {withdrawalRequest.Status.ToString()}, cannot change status to {status.ToString()}";
+                    _logger.LogInformation($"Method={GetCurrentMethod()}, {message}");
+                    
+                    _paymentBll.SetWithdrawalLog(transId, withdrawalRequest.SiteId,
+                        message,
+                        (int)withdrawalRequest.Status,
+                        withdrawalRequest.PayName);
+                    return rNotifyWithdrawalResult.Response;
+                }
+
                 if (rNotifyWithdrawalResult.TransStatus == TransStatus.Success)
                 {
                     #region Transaction is Success

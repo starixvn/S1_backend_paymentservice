@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using PaymentService.Extensions;
 using PaymentService.Model;
@@ -20,6 +19,7 @@ namespace PaymentService.Service.DAL
         private readonly MySqlClient _mainDbClient;
         private readonly WalletService _walletService;
         private readonly WithdrawalLimitService _withdrawalLimitService;
+        private readonly Common _common;
         private const int PayTypePosition = 100;
 
         public DepositService(IServiceProvider provider)
@@ -28,6 +28,7 @@ namespace PaymentService.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _walletService = provider.GetRequiredService<WalletService>();
             _withdrawalLimitService = provider.GetRequiredService<WithdrawalLimitService>();
+            _common = provider.GetRequiredService<Common>();
         }
         public DepositRequest GetDepositRequest(int depositId)
         {
@@ -47,8 +48,7 @@ namespace PaymentService.Service.DAL
         public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string refThirdId, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status)
         {
             var type = PayTypePosition + pay.PayId;
-            var m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out var depositId);
+            var depositId = _common.GetId(transId);
 
             int result;
             try
@@ -123,7 +123,7 @@ namespace PaymentService.Service.DAL
             return _mainDbClient.Execute("DepositInfoFirstDeposit_Set", new { DepositId = depositId, SiteId = siteId },
                 conn, trans);
         }
-        private int SetDepositLog(int depositId, int siteId, string comment, int status, decimal actualDeposit, string Operator)
+        public int SetDepositLog(int depositId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
         {
             return _mainDbClient.Execute("DepositLog_Ins",
                 new
@@ -133,7 +133,7 @@ namespace PaymentService.Service.DAL
                     Comment = comment,
                     Action = status,
                     ActualDeposit = actualDeposit,
-                    Operator
+                    Operator = @operator
                 });
         }
 

@@ -21,10 +21,12 @@ namespace Payment.FattyPay
 
             if (sign == data.Signature)
             {
-                var formData1 = new Dictionary<string, string>();
-                formData1.Add("MerchantTransactionId", data.MerchantTransactionId);
-                formData1.Add("MerchantCode", payResource["merchant_no"]);
-                formData1.Add("Timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
+                var formData1 = new Dictionary<string, string>
+                {
+                    { "MerchantTransactionId", data.MerchantTransactionId },
+                    { "MerchantCode", payResource["merchant_no"] },
+                    { "Timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
+                };
 
                 p = $"{formData1["MerchantCode"]}&{formData1["MerchantTransactionId"]}&{formData1["Timestamp"]}&{payResource["key"]}";
                 formData1.Add("Signature", ToSHA512(p).ToUpper());
@@ -106,10 +108,12 @@ namespace Payment.FattyPay
 
             if (sign == data.Signature)
             {
-                var formData1 = new Dictionary<string, string>();
-                formData1.Add("MerchantTransactionId", data.MerchantTransactionId);
-                formData1.Add("MerchantCode", payResource["merchant_no"]);
-                formData1.Add("Timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
+                var formData1 = new Dictionary<string, string>
+                {
+                    { "MerchantTransactionId", data.MerchantTransactionId },
+                    { "MerchantCode", payResource["merchant_no"] },
+                    { "Timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
+                };
 
                 p = $"{formData1["MerchantCode"]}&{formData1["MerchantTransactionId"]}&{formData1["Timestamp"]}&{payResource["key"]}";
                 formData1.Add("Signature", ToSHA512(p).ToUpper());

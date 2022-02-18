@@ -93,7 +93,33 @@ namespace Payment.NAP3SPay
 
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var formData = new Dictionary<string, string>
+            {
+                { "api_key", inputs["key"] },
+                { "request_id", inputs["TransID"] },
+                { "signature", ToMD5($"{inputs["key"]}{inputs["TransID"]}").ToLower() }
+            };
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
+            var sResponse = HttpPost(inputs["DebitQuery"], sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
+            var result = JsonConvert.DeserializeObject<DepositResponse>(sResponse);
+
+            return new EnquiryDepositResult
+            {
+                TransStatus = result.status switch
+                {
+                    0 => TransStatus.Success,
+                    -4 => TransStatus.Fail,
+                    _ => TransStatus.Pending
+                },
+                Message = result.message,
+                Comment = result.message,
+                RawContent = result.message,
+                RequestAmount = Convert.ToDecimal(result.amount),
+                ActualAmount = Convert.ToDecimal(result.real_amount) * decimal.Parse(inputs["Rate"]),
+                DepositId = inputs["TransID"],
+                ThirdId = result.tran_id.ToString(),
+                RefThirdId = result.tran_id.ToString()
+            };
         }
 
         public string FetchTransId(Dictionary<string, string> formData, string bodyContent)

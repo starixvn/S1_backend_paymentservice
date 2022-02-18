@@ -128,10 +128,12 @@ namespace Payment.HonorPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["PayOut"];
-            var formData = new Dictionary<string, string>();
-   
-            formData.Add("account", inputs["merchant_no"]);
-            formData.Add("orderNo", inputs["TransID"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "account", inputs["merchant_no"] },
+                { "orderNo", inputs["TransID"] }
+            };
+
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amount", amount.ToString("#"));
             formData.Add("bankName", UrlEncode(inputs["BankName"]));
@@ -189,9 +191,11 @@ namespace Payment.HonorPay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>();
-            formData.Add("account", inputs["merchant_no"]);
-            formData.Add("payType", inputs["PayCode"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "account", inputs["merchant_no"] },
+                { "payType", inputs["PayCode"] }
+            };
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("payMoney", amount.ToString("#"));
             formData.Add("ip", inputs["ClientIP"]);

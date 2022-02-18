@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.Model
 {
@@ -7,7 +8,7 @@ namespace PaymentService.Service.Model
     {
         public string TransId { set; get; }
         public string ThirdId { set; get; }
-        public int DepositType { set; get; }
+        public DepositType DepositType { set; get; }
         public int CustId { set; get; }
         public string UserName { set; get; }
         public int SiteId { set; get; }
@@ -23,25 +24,16 @@ namespace PaymentService.Service.Model
         {
             get
             {
-                if (DepositType == 1)
+                return DepositType switch
                 {
-                    return Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo1_1>(DepositInfo);
-                }
-                else if (DepositType == 2)
-                {
-                    return Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo2_1>(DepositInfo);
-                }
-                else if (DepositType == 3)
-                {
-                    return Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo3_1>(DepositInfo);
-                }
-                else
-                {
-                    return Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfoGeneral_1>(DepositInfo);
-                }
+                    DepositType.OnlineBanking => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo1_1>(DepositInfo),
+                    DepositType.MobilePayment => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo2_1>(DepositInfo),
+                    DepositType.LocalBank => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo3_1>(DepositInfo),
+                    _ => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfoGeneral_1>(DepositInfo)
+                };
             }
         }
-        public int Status { set; get; }
+        public DepositStatus Status { set; get; }
     }
     public interface IDepositInfo
     {

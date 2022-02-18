@@ -146,13 +146,15 @@ namespace Payment.TruePay
         {
             var sUrl = inputs["host"] + "/a/sPayout";
 
-            var formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>
+            {
+                { "mCode", inputs["Merchant"] },
+                { "ts", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
+                { "bCode", inputs["BankCode"] },
+                { "trxid", inputs["TransID"] },
+                { "user", inputs["CustId"] }
+            };
 
-            formData.Add("mCode", inputs["Merchant"]);
-            formData.Add("ts", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
-            formData.Add("bCode", inputs["BankCode"]);
-            formData.Add("trxid", inputs["TransID"]);
-            formData.Add("user", inputs["CustId"]);
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("amt", amount.ToString("#"));
             formData.Add("bAccName", inputs["AccountName"]);
@@ -204,10 +206,12 @@ namespace Payment.TruePay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"] + "/a/getDPLink";
-            var formData = new Dictionary<string, string>();
+            var formData = new Dictionary<string, string>
+            {
+                { "mCode", inputs["Merchant"] },
+                { "ts", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
+            };
 
-            formData.Add("mCode", inputs["Merchant"]);
-            formData.Add("ts", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
             if (inputs["PayCode"] != null)
                 formData.Add("bCode", inputs["PayCode"]);
             else

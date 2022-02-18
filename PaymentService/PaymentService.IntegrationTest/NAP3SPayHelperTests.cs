@@ -1,9 +1,5 @@
 ﻿using NUnit.Framework;
 using System.Collections.Generic;
-using FluentAssertions;
-using Newtonsoft.Json;
-using System.Web;
-using System.Diagnostics;
 using System;
 using Payment.NAP3SPay;
 using NSubstitute;

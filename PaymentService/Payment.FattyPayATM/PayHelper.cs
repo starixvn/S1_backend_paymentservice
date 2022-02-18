@@ -57,10 +57,12 @@ namespace Payment.FattyPayATM
 
             if (sign == data.Signature)
             {
-                var formData1 = new Dictionary<string, string>();
-                formData1.Add("MerchantTransactionId", data.MerchantTransactionId);
-                formData1.Add("MerchantCode", payResource["merchant_no"]);
-                formData1.Add("Timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
+                var formData1 = new Dictionary<string, string>
+                {
+                    { "MerchantTransactionId", data.MerchantTransactionId },
+                    { "MerchantCode", payResource["merchant_no"] },
+                    { "Timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
+                };
 
                 p = $"{formData1["MerchantCode"]}&{formData1["MerchantTransactionId"]}&{formData1["Timestamp"]}&{payResource["key"]}";
                 formData1.Add("Signature", ToSHA512(p).ToUpper());
@@ -115,13 +117,15 @@ namespace Payment.FattyPayATM
         {
             var sUrl = inputs["host"] + "/api/v1/withdraw";
 
-            var formData = new Dictionary<string, string>();
-            formData.Add("ServiceProvider", "JSTPay");
-            formData.Add("PaymentMethod", inputs["PayCode"]);
-            formData.Add("MerchantCode", inputs["merchant_no"]);
-            formData.Add("MerchantTransactionId", inputs["TransID"]);
-            formData.Add("BankCode", inputs["BankCode"]);
-            formData.Add("CustomerIsoCurrency", inputs["PayCurrencyId"]);
+            var formData = new Dictionary<string, string>
+            {
+                { "ServiceProvider", "JSTPay" },
+                { "PaymentMethod", inputs["PayCode"] },
+                { "MerchantCode", inputs["merchant_no"] },
+                { "MerchantTransactionId", inputs["TransID"] },
+                { "BankCode", inputs["BankCode"] },
+                { "CustomerIsoCurrency", inputs["PayCurrencyId"] }
+            };
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#0.0000"));
             formData.Add("FirstName", inputs["AccountName"]);

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -271,7 +270,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = (int)depositType;
+                    depositRequest.DepositType = DepositType.OnlineBanking;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;
@@ -387,7 +386,7 @@ namespace PaymentService.Controllers
                 {
                     var depositRequest = new DepositRequest
                     {
-                        DepositType = (int)depositType,
+                        DepositType = depositType,
                         TransId = reqDeposit.TransId,
                         ActualDeposit = reqDeposit.Amount,
                         Amount = reqDeposit.Amount,
@@ -516,7 +515,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = (int)DepositType.CryptoPayPayment;
+                    depositRequest.DepositType = DepositType.CryptoPayPayment;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;
@@ -637,7 +636,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = (int)DepositType.LoadCardPayment;
+                    depositRequest.DepositType = DepositType.LoadCardPayment;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;
@@ -840,10 +839,7 @@ namespace PaymentService.Controllers
                 _logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
 
-                var depositId = 0;
-
-                var m = Regex.Match(transId, @"\d+");
-                int.TryParse(m.Value, out depositId);
+                var depositId = _common.GetId(transId);
                 var cTransId = $"D{_common.GetEnv()}{depositId}";
                 if (cTransId != transId)
                 {
@@ -863,7 +859,6 @@ namespace PaymentService.Controllers
 
         private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
         {
-            var sbody = string.Join("&", dicParam.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             DepositRequest depositRequest = null;
             //查詢訂單在不在db
             depositRequest = _paymentBll.GetDepositRequest(transId);
@@ -896,21 +891,9 @@ namespace PaymentService.Controllers
 
                 var payHelper = _payBll.GetPayHelper(paySetting.PayName);
                 depositRequest.PayName = paySetting.PayName;
-                //((PayHelperBase)payHelper).AddPaymentLog(InsertPaymentLog);
 
                 //取得每家金流的成果 
                 var rNotifyDepositResult = payHelper.CallBackDebit(dicParam, bodyText, DepReq);
-                var sInput = "";
-                if (isFormData)
-                {
-                    sInput = JsonConvert.SerializeObject(dicParam);
-                }
-                else
-                {
-                    sInput = bodyText;
-                }
-
-                //oDBLog.InsertPaymentLog("", sInput, JsonConvert.SerializeObject(rNotifyDepositResult));
 
                 if (!string.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
                 {
@@ -925,13 +908,29 @@ namespace PaymentService.Controllers
                 {
                     _logger.LogInformation($"Method={GetCurrentAsyncMethod()},Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}");
                     rNotifyDepositResult.Comment = $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
-
-                    // When callback amount not equal, record and not reject
-                    //paymentBLL.DepositFail(depositRequest, rNotifyDepositResult);
-                    //return $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
                 }
 
-                IDepositResult iDepositResult = rNotifyDepositResult;
+                if ((rNotifyDepositResult.TransStatus == TransStatus.Success &&
+                     (depositRequest.Status != DepositStatus.Pending &&
+                      depositRequest.Status != DepositStatus.Rejected)) ||
+                    (rNotifyDepositResult.TransStatus != TransStatus.Success &&
+                     depositRequest.Status != DepositStatus.Pending))
+                {
+                    var status = rNotifyDepositResult.TransStatus switch 
+                    {
+                        TransStatus.Success => DepositStatus.Approved,
+                        TransStatus.Fail => DepositStatus.Rejected,
+                        _ => DepositStatus.Pending
+                    };
+                    var message = $"{transId} status is currently {depositRequest.Status.ToString()}, cannot change status to {status.ToString()}";
+                    _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {message}");
+                    
+                    _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
+                        message,
+                        (int)depositRequest.Status, rNotifyDepositResult.ActualAmount, depositRequest.PayName);
+                    return rNotifyDepositResult.Response;
+                }
+
                 if (rNotifyDepositResult.TransStatus == TransStatus.Success && depositRequest.Amount > 0)
                 {
                     #region Transaction is Success
