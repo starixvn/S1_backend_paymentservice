@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
-using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using PaymentCore;
 using PaymentService.Service.DAL;
