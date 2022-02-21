@@ -22,6 +22,7 @@ namespace PaymentService.Service.Model
         public string BankCode { get; set; }
         public string BankName { get; set; }
         public int ChannelId { get; set; }
+        public string ChannelName { get; set; }
         public int Mode { get; set; }
         public int PointLevel { get; set; }
         public string PayCode { get; set; }

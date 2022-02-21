@@ -57,6 +57,7 @@ namespace PaymentService.Controllers
         public class ReqExchange
         {
             public int PayId { get; set; }
+            public string ChannelName { get; set; }
             public int CustId { get; set; }
             public decimal Amount { get; set; }
         }
@@ -435,8 +436,14 @@ namespace PaymentService.Controllers
             {
                 var custId = reqExchange.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var crypto = _payBll.GetCryptoListForPayout()?.FirstOrDefault(x =>
-                    x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId);
+                var cryptoList = _payBll.GetCryptoListForPayout().ToList();
+                var crypto = string.IsNullOrEmpty(reqExchange.ChannelName) // 新舊相容過度，以後沒問題再拿掉
+                    ? cryptoList?.FirstOrDefault(x =>
+                        x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId)
+                    : cryptoList?.FirstOrDefault(x =>
+                        x.ChannelName.Equals(reqExchange.ChannelName, StringComparison.OrdinalIgnoreCase)
+                        && custInfo.CurrencyId == x.CurrencyId);
+
                 if (crypto == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, Invalid Currency");
@@ -444,7 +451,7 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
-                var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == reqExchange.PayId);
+                var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == crypto.PayId);
                 var payCurrency = _payBll.GetPayCurrency()?.FirstOrDefault(x =>
                     x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId);
                 if (pay == null)

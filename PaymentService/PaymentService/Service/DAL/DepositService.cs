@@ -141,5 +141,15 @@ namespace PaymentService.Service.DAL
         {
             return _mainDbClient.Execute("Service_DepositInfoThirdID_Set", new { TransId = transId, ThirdId = thirdId });
         }
+
+        public int UpdateDepositInfo(string transId, string depositInfo)
+        {
+            return _mainDbClient.Execute("Service_DepositInfoDepositInfo_Upd", 
+                new
+                {
+                    _TransId = transId,
+                    _DepositInfo = depositInfo
+                });
+        }
     }
 }

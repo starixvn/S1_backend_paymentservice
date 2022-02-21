@@ -31,7 +31,27 @@ namespace PaymentCore
 
     public class ExchangeResult
     {
-        public Dictionary<string, Dictionary<int, ExchangeRate>> ExchangeRateList { get; set; }
+        public ExchangeResult()
+        {
+        }
+
+        public ExchangeResult(string errorCode)
+            : this(errorCode, null, null)
+        {
+        }
+
+        public ExchangeResult(string errorCode, string message)
+            : this(errorCode, message, null)
+        {
+        }
+
+        public ExchangeResult(string errorCode, string message, Dictionary<string, string> formData)
+        {
+            this.ErrorCode = errorCode;
+            this.Message = message;
+            this.FormData = formData;
+        }
+
         public string Message { get; set; }
         public Dictionary<string, string> FormData { get; set; }
         public string ErrorCode { get; set; }
@@ -39,6 +59,17 @@ namespace PaymentCore
 
     public class DepositResult
     {
+        public DepositResult()
+        {
+        }
+
+        public DepositResult(bool success, string errorCode, string message = "")
+        {
+            this.Success = success;
+            this.ErrorCode = errorCode;
+            this.Message = message;
+        }
+        
         public bool Success { get; set; }
         public string Message { get; set; }
         public string ErrorCode { get; set; }
@@ -49,6 +80,10 @@ namespace PaymentCore
         public string ThirdId { get; set; }
         public string Memo { get; set; }
         public string RawContent { get; set; }
+        /// <summary>
+        /// 需要更新 DepositInfo.DepositInfo 時使用此欄位
+        /// </summary>
+        public string DepositInfo { get; set; }
     }
     public class WithdrawResult
     {
@@ -190,28 +225,7 @@ namespace PaymentCore
 
             return responseFromServer;
         }
-
-        protected string HttpGet(string url, string parameters, string contentType, string accesstoken, string transID)
-        {
-            var request = WebRequest.Create($"{url}?{parameters}");
-            request.Method = "GET";
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-            request.Headers.Add("accept", contentType);
-            request.Headers.Add("x-api-key", accesstoken);
-
-            using var response = request.GetResponse();
-            using var dataStream = response.GetResponseStream();
-            using var reader = new StreamReader(dataStream);
-            var responseFromServer = reader.ReadToEnd();
-
-            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
-
-            return responseFromServer;
-        }
-
+        
         protected string HttpPost(string url, string parameters, string contentType, string transId, bool ignoreCertificate = false)
         {
             var request = WebRequest.CreateHttp(url);
@@ -277,6 +291,9 @@ namespace PaymentCore
             request.Headers.Add("Authorization", "Bearer " + accesstoken);
             request.Headers.Add("accept", contentType);
             request.Headers.Add("x-api-key", accesstoken);
+
+            InsertPaymentLog?.Invoke(url, $"request: {parameters}, " +
+                                          $"Headers: {ToJson(request.Headers)}", string.Empty, transID);
 
             var dataStream = request.GetRequestStream();
             dataStream.Write(byteArray, 0, byteArray.Length);
