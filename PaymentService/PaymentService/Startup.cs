@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using Flurl.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -32,16 +33,23 @@ namespace PaymentService
             services.AddMemoryCache();
             services.AddDatabaseConnection(Configuration);
 
-            if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))
+            var proxyHost = Configuration.GetValue<string>("ProxyHost");
+            var proxyPort = Configuration.GetValue<int>("ProxyPort");
+
+            if (!string.IsNullOrEmpty(proxyHost))
             {
                 var proxy = new HttpClientHandler
                 {
-                    Proxy = new WebProxy(Configuration.GetValue<string>("ProxyHost"), Configuration.GetValue<int>("ProxyPort")),
+                    Proxy = new WebProxy(proxyHost, proxyPort),
                     UseProxy = true
                 };
 
                 services.AddHttpClient("with_proxy")
                 .ConfigurePrimaryHttpMessageHandler(() => proxy);
+
+                FlurlHttp.Configure(settings => {
+                    settings.HttpClientFactory = new ProxyHttpClientFactory(proxyHost, proxyPort);
+                });
             }
             else
             {
@@ -71,9 +79,9 @@ namespace PaymentService
             services.AddSingleton<PayBLL>();
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();
-
-            PaymentCore.PayHelperBase.proxyHost = Configuration.GetValue<string>("ProxyHost");
-            PaymentCore.PayHelperBase.proxyPort = Configuration.GetValue<int>("ProxyPort");
+            
+            PaymentCore.PayHelperBase.proxyHost = proxyHost;
+            PaymentCore.PayHelperBase.proxyPort = proxyPort;
 
             services.AddControllers();
         }
