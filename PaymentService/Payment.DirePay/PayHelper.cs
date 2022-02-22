@@ -490,12 +490,43 @@ namespace Payment.DirePay
             return result.Result.access_token;
         }
 
+        private string GetAccessToken(Dictionary<string, string> inputs)
+        {
+            var baseApiUrl = inputs["host"];
+            var loginUrl = baseApiUrl + Path.Login;
+
+            var request = new Dictionary<string, string>
+            {
+                { "email", inputs["Email"] },
+                { "password", inputs["Password"] }
+            };
+
+            var sParam = string.Join("&", request.Select(kp => $"{kp.Key}={kp.Value}"));
+            try
+            {
+                var strResp = HttpPost(loginUrl, sParam, "application/x-www-form-urlencoded", "", true);
+
+                var resp = JsonConvert.DeserializeObject<DepositResp>(strResp);
+
+                if (resp != null && resp.access_token != null)
+                {
+                    return resp.access_token;
+                }
+            }
+            catch (WebException wex)
+            {
+                _logger.LogError("GetAccessToken WebException: " + wex.ToString());
+            }
+
+            return string.Empty;
+        }
+
         private async Task<decimal> GetExchangeAmountAsync(string amount, string fromCurrency, string toCurrency, Dictionary<string, string> inputs)
         {
             var baseApiUrl = inputs["host"];
             var getExchangeUrl = baseApiUrl + Path.ExchangeRate;
 
-            var accessToken = await GetAccessTokenAsync(inputs);
+            var accessToken = GetAccessToken(inputs);// await GetAccessTokenAsync(inputs);
             var request = new Dictionary<string, string>
                 {
                     { "command", "rates" },
