@@ -77,6 +77,9 @@ namespace Payment.FXBit
                 var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.SellRate, toCurrency);
 
                 // 將匯率資訊加入 DepositInfo
+                if (depositInfo == null)
+                   throw new CustomException("DepositInfo is empty.");
+
                 var jObj = JObject.Parse(depositInfo);
                 jObj.Add("ExchangeRate", rateInfo.SellRate);
 
