@@ -144,7 +144,7 @@ namespace PaymentService.Service.DAL
 
         public int UpdateDepositInfo(string transId, string depositInfo)
         {
-            return _mainDbClient.Execute("Service_DepositInfoDepositInfo_Upd", 
+            return _mainDbClient.Execute("Service_DepositInfoDepositInfo_Set", 
                 new
                 {
                     _TransId = transId,
