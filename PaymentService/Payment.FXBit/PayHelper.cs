@@ -120,7 +120,7 @@ namespace Payment.FXBit
                 var formData = new Dictionary<string, string>
                 {
                     { "DepositAmount", reqAmount },
-                    { "Rate", rateInfo.SellRate },
+                    { "Rate", $"1:{rateInfo.SellRate}" },
                     { "RequestAmount", exchangeAmount },
                     { "Token", toCurrency }
                 };
