@@ -513,7 +513,7 @@ namespace Payment.FXBit
         }
 
         private string GetExchangeRateString(string rate)
-            => (1M / decimal.Parse(rate)).ToString("f8");
+            => (1M / decimal.Parse(rate)).ToString("f15");
         
         #endregion
     }
