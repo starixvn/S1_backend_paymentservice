@@ -117,10 +117,11 @@ namespace Payment.FXBit
                 };*/
 
                 // 因為 H5 網頁預設為中文，改為使用 url 以 QRCode 呈現
+                var rate = GetExchangeRateString(rateInfo.SellRate);
                 var formData = new Dictionary<string, string>
                 {
                     { "DepositAmount", reqAmount },
-                    { "Rate", $"1:{rateInfo.SellRate}" },
+                    { "Rate", rate },
                     { "RequestAmount", exchangeAmount },
                     { "Token", toCurrency }
                 };
@@ -511,6 +512,9 @@ namespace Payment.FXBit
             return amount.ToString($"f{unit}");
         }
 
+        private string GetExchangeRateString(string rate)
+            => (1M / decimal.Parse(rate)).ToString("f8");
+        
         #endregion
     }
 }
