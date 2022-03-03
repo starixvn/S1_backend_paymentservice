@@ -63,7 +63,7 @@ namespace Payment.FXBit
         {
             var baseApiUrl = input["host"];
             var apiKey = input["key"];
-            var apiUrl = baseApiUrl + Path.H5;
+            //var apiUrl = baseApiUrl + Path.H5;
             var fromCurrency = input["PayCurrencyId"];
             var toCurrency = input["PayCode"];
             var reqAmount = input["Amount"];
@@ -106,7 +106,7 @@ namespace Payment.FXBit
                 depositInfo = jObj.ToString();
 
                 // Step 4: 組成 H5 支付頁網址並回傳
-                var h5Url = $"{apiUrl}?receipt_token={getTokenResp.ReceiptToken}&wallet_addr={getWalletResp.PublicAddress}";
+                /*var h5Url = $"{apiUrl}?receipt_token={getTokenResp.ReceiptToken}&wallet_addr={getWalletResp.PublicAddress}";
                 var response = new DepositResult
                 {
                     Success = true,
@@ -114,6 +114,26 @@ namespace Payment.FXBit
                     ThirdId = getTokenResp.ReceiptToken,
                     DepositInfo = depositInfo,
                     Url = h5Url
+                };*/
+
+                // 因為 H5 網頁預設為中文，改為使用 url 以 QRCode 呈現
+                var rate = GetExchangeRateString(rateInfo.SellRate);
+                var formData = new Dictionary<string, string>
+                {
+                    { "DepositAmount", reqAmount },
+                    { "Rate", rate },
+                    { "RequestAmount", exchangeAmount },
+                    { "Token", toCurrency }
+                };
+
+                var response = new DepositResult
+                {
+                    Success = true,
+                    ErrorCode = ErrorCode.Success,
+                    Url = getWalletResp.PublicAddress,
+                    ThirdId = getTokenResp.ReceiptToken,
+                    FormData = formData,
+                    DepositInfo = depositInfo
                 };
 
                 return response;
@@ -492,6 +512,9 @@ namespace Payment.FXBit
             return amount.ToString($"f{unit}");
         }
 
+        private string GetExchangeRateString(string rate)
+            => (1M / decimal.Parse(rate)).ToString("f15");
+        
         #endregion
     }
 }
