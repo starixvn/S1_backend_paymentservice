@@ -224,12 +224,22 @@ namespace Payment.FXBit
             var toCurrency = inputs["PayCode"];
             var reqAmount = inputs["Amount"];
             var transId = inputs["TransID"];
+            var withdrawalInfo = inputs["WithdrawalInfo"];
 
             try
             {
                 // Step 1: 取得當下匯率並換算為加密貨幣金額
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
                 var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.BuyRate, toCurrency);
+
+                // 將匯率資訊加入 WithdrawalInfo
+                if (withdrawalInfo == null)
+                    throw new CustomException("WithdrawalInfo is empty.");
+
+                var jObj = JObject.Parse(withdrawalInfo);
+                jObj.Add("ExchangeRate", rateInfo.BuyRate);
+                jObj.Add("ExchangeAmount", exchangeAmount);
+                withdrawalInfo = jObj.ToString();
 
                 // Step 2: 建立交易
                 var payoutReq = new Dictionary<string, string>
@@ -250,7 +260,8 @@ namespace Payment.FXBit
                 {
                     Success = true,
                     WithdrawId = payoutResp.ResPayoutId,
-                    RawContent = JsonConvert.SerializeObject(payoutResp)
+                    RawContent = JsonConvert.SerializeObject(payoutResp),
+                    WithdrawalInfo = withdrawalInfo
                 };
 
                 return response;

@@ -181,6 +181,7 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
+                var withdrawalInfo = _paymentBll.GetWithdrawalInfo(reqWithdrawal.TransId);
                 var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
                 WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
                 //WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
@@ -195,6 +196,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("IsTest", _common.IsTest());
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
+                WithReq.Add("WithdrawalInfo", withdrawalInfo);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
@@ -204,13 +206,18 @@ namespace PaymentService.Controllers
                 {
                     apiResult.ErrorCode = 0;
                     apiResult.Message = result.Message;
+
+                    if (!string.IsNullOrEmpty(result.WithdrawalInfo))
+                    {
+                        _paymentBll.UpdateWithdrawalInfo(reqWithdrawal.TransId, result.WithdrawalInfo);
+                    }
                 }
                 else
                 {
                     apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
                     apiResult.Message = result.Message;
                 }
-
+                
                 return apiResult;
             }
             catch (Exception e)
