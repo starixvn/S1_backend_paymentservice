@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 
@@ -100,6 +101,7 @@ namespace Payment.DirePay
             var sUrl = inputs["host"];
             var getReceptionToken = sUrl + "/api/login";
             var getWalletAddress = sUrl + "/api/callBack";
+            var depositInfo = inputs["DepositInfo"];
 
             var depositGetH5Req = new Dictionary<string, string>
             {
@@ -107,9 +109,15 @@ namespace Payment.DirePay
                 { "password", inputs["Password"] }
             };
             var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
+            
             var oDepositResult = new DepositResult();
             oDepositResult.Success = false;
+            // 將匯率資訊加入 DepositInfo
+            if (depositInfo == null)
+            {
+                oDepositResult.Message = "DepositInfo is empty.";
+                return oDepositResult;
+            }
             try
             {
                 var sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded",
@@ -155,6 +163,12 @@ namespace Payment.DirePay
                         ResData.Add("RequestAmount", requestAmount.ToString());
                         ResData.Add("Token", depositGetWalletResp.payment_token);
 
+                        // 塞入匯率相關資訊
+                        var jObj = JObject.Parse(depositInfo);
+                        jObj.Add("ExchangeRate", depositGetWalletResp.rates);
+                        jObj.Add("ExchangeAmount", requestAmount);
+                        depositInfo = jObj.ToString();
+
                         if (depositGetWalletResp.enable_promotion)
                         {
                             ResData.Add("Promotion", "1");
@@ -170,6 +184,7 @@ namespace Payment.DirePay
                         oDepositResult.Url = depositGetWalletResp.payment_address;
                         oDepositResult.ThirdId = depositGetWalletResp.txid;
                         oDepositResult.FormData = ResData;
+                        oDepositResult.DepositInfo = depositInfo;
                     }
                     else
                     {
@@ -264,6 +279,7 @@ namespace Payment.DirePay
             var sUrl = inputs["host"];
             var getReceptionToken = sUrl + "/api/login";
             var getWalletAddress = sUrl + "/api/callBack";
+            var withdrawalInfo = inputs["WithdrawalInfo"];
 
             var depositGetH5Req = new Dictionary<string, string>();
             depositGetH5Req.Add("email", inputs["Email"]);
@@ -271,10 +287,17 @@ namespace Payment.DirePay
             var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             string sResponse = null;
 
+            
             var oDepositResult = new DepositResult();
             oDepositResult.Success = false;
 
             var withdrawResult = new WithdrawResult();
+            if (withdrawalInfo == null)
+            {
+                withdrawResult.Success = false;
+                withdrawResult.Message = "WithdrawalInfo is empty.";
+                return withdrawResult;
+            }
             try
             {
                 sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower(), true);
@@ -311,6 +334,10 @@ namespace Payment.DirePay
                         if (withdrawGetWalletResp.status == "pending")
                         {
                             withdrawResult.Success = true;
+                            var jObj = JObject.Parse(withdrawalInfo);
+                            jObj.Add("ExchangeRate", (toAmount / amount).ToString());
+                            jObj.Add("ExchangeAmount", toAmount);
+                            withdrawResult.WithdrawalInfo = jObj.ToString();
                         }
                         else
                         {

@@ -154,5 +154,15 @@ namespace PaymentService.Service.BLL
         {
             _depositService.UpdateDepositInfo(transId, depositInfo);
         }
+
+        public void UpdateWithdrawalInfo(string transId, string withdrawalInfo)
+        {
+            _withdrawalService.UpdateWithdrawalInfo(transId, withdrawalInfo);
+        }
+
+        public string GetWithdrawalInfo(string transId)
+        {
+            return _withdrawalService.GetWithdrawalInfo(transId);
+        }
     }
 }

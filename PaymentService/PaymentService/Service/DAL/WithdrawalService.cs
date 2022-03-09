@@ -93,5 +93,24 @@ namespace PaymentService.Service.DAL
                 Action = status,
                 Operator = @operator });
         }
+
+        public int UpdateWithdrawalInfo(string transId, string withdrawalInfo)
+        {
+            return _mainDbClient.Execute("Service_WithdrawalInfoWithdrawalInfo_Set",
+                new
+                {
+                    _TransId = transId,
+                    _WithdrawalInfo = withdrawalInfo
+                });
+        }
+
+        public string GetWithdrawalInfo(string transId)
+        {
+            return _mainDbClient.QueryFirst<string>("Service_WithdrawalInfoWithdrawalInfo_Get",
+                new
+                {
+                    _TransId = transId
+                });
+        }
     }
 }
