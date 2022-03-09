@@ -112,7 +112,7 @@ namespace Payment.DirePay
             
             var oDepositResult = new DepositResult();
             oDepositResult.Success = false;
-            // 將匯率資訊加入 DepositInfo
+            // 檢查 DepositInfo
             if (depositInfo == null)
             {
                 oDepositResult.Message = "DepositInfo is empty.";
@@ -160,13 +160,7 @@ namespace Payment.DirePay
                         var requestAmount = decimal.Parse(depositGetWalletResp.invoice_amount) * decimal.Parse(depositGetWalletResp.rates);
                         ResData.Add("RequestAmount", requestAmount.ToString());
                         ResData.Add("Token", depositGetWalletResp.payment_token);
-
-                        // 塞入匯率相關資訊
-                        var jObj = JObject.Parse(depositInfo);
-                        jObj.Add("ExchangeRate", depositGetWalletResp.rates);
-                        jObj.Add("ExchangeAmount", requestAmount);
-                        depositInfo = jObj.ToString();
-
+                        
                         if (depositGetWalletResp.enable_promotion)
                         {
                             ResData.Add("Promotion", "1");
@@ -182,7 +176,9 @@ namespace Payment.DirePay
                         oDepositResult.Url = depositGetWalletResp.payment_address;
                         oDepositResult.ThirdId = depositGetWalletResp.txid;
                         oDepositResult.FormData = ResData;
-                        oDepositResult.DepositInfo = depositInfo;
+                        // 塞入匯率相關資訊
+                        oDepositResult.DepositInfo =
+                            depositInfo.AddOrSetExchangeInfo(depositGetWalletResp.rates, requestAmount.ToString());
                     }
                     else
                     {
@@ -290,6 +286,7 @@ namespace Payment.DirePay
             oDepositResult.Success = false;
 
             var withdrawResult = new WithdrawResult();
+            // 檢查 WithdrawalInfo
             if (withdrawalInfo == null)
             {
                 withdrawResult.Success = false;
@@ -332,10 +329,8 @@ namespace Payment.DirePay
                         if (withdrawGetWalletResp.status == "pending")
                         {
                             withdrawResult.Success = true;
-                            var jObj = JObject.Parse(withdrawalInfo);
-                            jObj.Add("ExchangeRate", (toAmount / amount).ToString());
-                            jObj.Add("ExchangeAmount", toAmount);
-                            withdrawResult.WithdrawalInfo = jObj.ToString();
+                            withdrawResult.WithdrawalInfo =
+                                withdrawalInfo.AddOrSetExchangeInfo((toAmount / amount).ToString(), toAmount.ToString()); ;
                         }
                         else
                         {

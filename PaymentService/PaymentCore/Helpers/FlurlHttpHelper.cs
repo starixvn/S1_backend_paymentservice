@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using Serilog.Context;
+using JsonExtension = PaymentCore.Extensions.JsonExtension;
 
 namespace PaymentCore.Helpers
 {
@@ -53,7 +54,7 @@ namespace PaymentCore.Helpers
         {
             var returnObj = PostData(url, body, ContentType.Text);
 
-            if (!CompareExtension.IsJson(returnObj.Result))
+            if (!JsonExtension.IsJson(returnObj.Result))
             {
                 throw new CustomException("Invalid JSON string, Cannot DeserializeObject.");
             }
@@ -103,7 +104,7 @@ namespace PaymentCore.Helpers
         {
             var returnObj = PostData(url, data, ContentType.Json);
 
-            if (!CompareExtension.IsJson(returnObj.Result))
+            if (!JsonExtension.IsJson(returnObj.Result))
             {
                 throw new CustomException("Invalid JSON string, Cannot DeserializeObject.");
             }
