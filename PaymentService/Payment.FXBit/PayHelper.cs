@@ -76,12 +76,9 @@ namespace Payment.FXBit
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
                 var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.SellRate, toCurrency);
 
-                // 將匯率資訊加入 DepositInfo
+                // 檢查 DepositInfo
                 if (depositInfo == null)
-                   throw new CustomException("DepositInfo is empty.");
-
-                var jObj = JObject.Parse(depositInfo);
-                jObj.Add("ExchangeRate", rateInfo.SellRate);
+                    throw new CustomException("DepositInfo is empty.");
 
                 // Step 2: 建立交易
                 var getTokenReq = new GetReceptionTokenReq
@@ -101,9 +98,9 @@ namespace Payment.FXBit
                 };
                 var getWalletResp = GetWalletAddress(baseApiUrl, apiKey, getWalletReq);
 
-                // 將回傳支付金額加入 DepositInfo
-                jObj.Add("ExchangeAmount", getWalletResp.BilledPrice);
-                depositInfo = jObj.ToString();
+                // 將匯率與回傳支付金額加入 DepositInfo
+                depositInfo = depositInfo
+                    .AddOrSetExchangeInfo(rateInfo.SellRate, getWalletResp.BilledPrice.ToString());
 
                 // Step 4: 組成 H5 支付頁網址並回傳
                 /*var h5Url = $"{apiUrl}?receipt_token={getTokenResp.ReceiptToken}&wallet_addr={getWalletResp.PublicAddress}";
@@ -236,10 +233,7 @@ namespace Payment.FXBit
                 if (withdrawalInfo == null)
                     throw new CustomException("WithdrawalInfo is empty.");
 
-                var jObj = JObject.Parse(withdrawalInfo);
-                jObj.Add("ExchangeRate", rateInfo.BuyRate);
-                jObj.Add("ExchangeAmount", exchangeAmount);
-                withdrawalInfo = jObj.ToString();
+                withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rateInfo.BuyRate, exchangeAmount);
 
                 // Step 2: 建立交易
                 var payoutReq = new Dictionary<string, string>
