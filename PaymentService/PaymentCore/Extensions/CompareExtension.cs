@@ -6,16 +6,5 @@ namespace PaymentCore.Extensions
     {
         public static bool IsSuccessStatus(this HttpStatusCode httpStatus)
             => (int)httpStatus >= 200 && (int)httpStatus < 300;
-
-        public static bool IsJson(this string str)
-        {
-            if (string.IsNullOrEmpty(str))
-                return true;
-
-            var value = str.Trim();
-
-            return (value.StartsWith("{") && value.EndsWith("}"))
-                   || (value.StartsWith("[") && value.EndsWith("]"));
-        }
     }
 }
