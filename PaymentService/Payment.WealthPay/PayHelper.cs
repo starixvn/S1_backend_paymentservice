@@ -264,7 +264,7 @@ namespace Payment.WealthPay
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
-            var sUrl = inputs["PayOutQuery"];
+            var sUrl = inputs["PayOut"];
             var formData = new Dictionary<string, string>
             {
                 { "merchantId", inputs["merchant_no"] },
