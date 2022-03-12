@@ -28,7 +28,7 @@ namespace PaymentService.Service.Workers
             this._logger = provider.GetRequiredService<ILogger<WithdrawalWorkerService>>();
             this._paymentBll = provider.GetRequiredService<PaymentBLL>();
             this._payBll = provider.GetRequiredService<PayBLL>();
-            this._payIds = new List<int> { 3, 5, 15, 25, 26 };
+            this._payIds = new List<int> { 3, 5, 15, 25 };
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
