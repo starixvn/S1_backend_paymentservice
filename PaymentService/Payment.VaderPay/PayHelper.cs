@@ -224,8 +224,8 @@ namespace Payment.VaderPay
                     Currency = inputs["PayCurrencyId"],
                     HTTPPostURL = UrlEncode(inputs["CallBackUrl"]),
                     ClientName = inputs["CustId"],
-                    ReturnURL = "",
-                    FailedReturnURL = ""
+                    ReturnURL = inputs["ReturnUrl"],
+                    FailedReturnURL = inputs["ReturnUrl"]
                 };
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(depositReq));
                 var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
