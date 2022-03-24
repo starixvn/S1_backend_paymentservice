@@ -20,7 +20,7 @@ namespace Payment.FattyPay
             {
                 {"VND", "JSTPay"},
                 {"MYR", "Vaderpay"},
-                {"THB", "OneWallet"}
+                {"THB", "TrueMoney"} //OneWallet
             };
         }
 
@@ -267,7 +267,11 @@ namespace Payment.FattyPay
 
             var p = $"{inputs["key"]}&{formData["MerchantTransactionId"]}&{formData["ServiceProvider"]}&{formData["PaymentMethod"]}&{formData["IsoCurrency"]}&" +
                     $"{formData["Amount"]}&{formData["Email"]}";
-            formData.Add("Signature", ToSHA512(p).ToUpper());
+            
+            _logger.LogInformation($"Plain Text: {p}");
+            var sign = ToSHA512(p).ToUpper();
+            _logger.LogInformation($"Signature: {sign}");
+            formData.Add("Signature", sign);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData));
             var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
