@@ -1,13 +1,29 @@
-﻿using Newtonsoft.Json;
-using PaymentCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using PaymentCore;
 
 namespace Payment.FattyPay
 {
     class PayHelper : PayHelperBase
     {
+        private readonly ILogger<PayHelper> _logger;
+        private readonly Dictionary<string, string> _providerMapping;
+
+        public PayHelper(IServiceProvider provider)
+        {
+            _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+            _providerMapping = new Dictionary<string, string>
+            {
+                {"VND", "JSTPay"},
+                {"MYR", "Vaderpay"},
+                {"THB", "OneWallet"}
+            };
+        }
+
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var sUrl = payResource["host"] + "/api/v1/transaction";
@@ -167,15 +183,17 @@ namespace Payment.FattyPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"] + "/api/v1/withdraw";
+            var currency = inputs["PayCurrencyId"];
+            var provider = GetProviderByCurrency(currency);
 
             var formData = new Dictionary<string, string>();
             var findPayCode = FindPayCode(inputs["PayCode"]);
             formData.Add("PaymentMethod", findPayCode[1]);
             formData.Add("BankCode", inputs["BankCode"]);
-            formData.Add("ServiceProvider", "JSTPay");
+            formData.Add("ServiceProvider", provider);
             formData.Add("MerchantCode", inputs["merchant_no"]);
             formData.Add("MerchantTransactionId", inputs["TransID"]);
-            formData.Add("CustomerIsoCurrency", inputs["PayCurrencyId"]);
+            formData.Add("CustomerIsoCurrency", currency);
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#0.0000"));
             formData.Add("FirstName", inputs["AccountName"]);
@@ -213,6 +231,8 @@ namespace Payment.FattyPay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"] + "/api/v2/deposit/request";
+            var currency = inputs["PayCurrencyId"];
+            var provider = GetProviderByCurrency(currency);
 
             var formData = new Dictionary<string, string>();
             var findPayCode = FindPayCode(inputs["PayCode"]);
@@ -227,10 +247,10 @@ namespace Payment.FattyPay
                 formData.Add("BankCode", inputs["BankCode"]);
             }
 
-            formData.Add("ServiceProvider", "JSTPay");
+            formData.Add("ServiceProvider", provider);
             formData.Add("MerchantCode", inputs["merchant_no"]);
             formData.Add("MerchantTransactionId", inputs["TransID"]);
-            formData.Add("IsoCurrency", inputs["PayCurrencyId"]);
+            formData.Add("IsoCurrency", currency);
             var amount = decimal.Parse(inputs["Amount"]);
             formData.Add("Amount", amount.ToString("#0.0000"));
             formData.Add("FirstName", "FirstName");
@@ -284,6 +304,15 @@ namespace Payment.FattyPay
             var sArray = payCode.Split('-');
 
             return sArray;
+        }
+        private string GetProviderByCurrency(string currency)
+        {
+            if (!_providerMapping.ContainsKey(currency))
+            {
+                throw new ArgumentException($"Currency: {currency} has not defined service provider.");
+            }
+
+            return _providerMapping[currency];
         }
     }
 }
