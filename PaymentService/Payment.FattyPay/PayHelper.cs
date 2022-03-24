@@ -19,8 +19,8 @@ namespace Payment.FattyPay
             _providerMapping = new Dictionary<string, string>
             {
                 {"VND", "JSTPay"},
-                {"MYR", "Vaderpay"},
-                {"THB", "TrueMoney"} //OneWallet
+                {"MYR", "VaderPay"},
+                {"THB", "OneWallet"}
             };
         }
 
