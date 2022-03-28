@@ -251,7 +251,7 @@ namespace Payment.FattyPay
             }
             else
             {
-                var bankCode = formData["BankCode"];
+                var bankCode = inputs["BankCode"];
                 if (string.IsNullOrEmpty(bankCode))
                 {
                     bankCode = GetNoBankCode(currency, payMethod);
