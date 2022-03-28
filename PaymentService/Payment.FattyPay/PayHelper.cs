@@ -12,6 +12,7 @@ namespace Payment.FattyPay
     {
         private readonly ILogger<PayHelper> _logger;
         private readonly Dictionary<string, string> _providerMapping;
+        private readonly Dictionary<string, List<string>> _noBankCodeMethodList;
 
         public PayHelper(IServiceProvider provider)
         {
@@ -21,6 +22,11 @@ namespace Payment.FattyPay
                 {"VND", "JSTPay"},
                 {"MYR", "VaderPay"},
                 {"THB", "OneWallet"}
+            };
+            _noBankCodeMethodList = new Dictionary<string, List<string>>
+            {
+                // {"MYR", new List<string> { "ShopeePay", "MaybankEWallet" ,"Boost" ,"GrabPay", "TouchnGo", "DuitNow" }},
+                {"THB", new List<string> { "TrueMoney", "ThaiQr" ,"PromptPay" }}
             };
         }
 
@@ -236,15 +242,23 @@ namespace Payment.FattyPay
 
             var formData = new Dictionary<string, string>();
             var findPayCode = FindPayCode(inputs["PayCode"]);
-            if (findPayCode[0] == "BankQr")
+            var payMethod = findPayCode[0];
+            
+            if (payMethod == "BankQr")
             {
-                formData.Add("PaymentMethod", findPayCode[0]); 
+                formData.Add("PaymentMethod", payMethod); 
                 formData.Add("BankCode", findPayCode[1]);
             }
-            else 
+            else
             {
-                formData.Add("PaymentMethod", findPayCode[0]);
-                formData.Add("BankCode", inputs["BankCode"]);
+                var bankCode = formData["BankCode"];
+                if (string.IsNullOrEmpty(bankCode))
+                {
+                    bankCode = GetNoBankCode(currency, payMethod);
+                }
+                
+                formData.Add("PaymentMethod", payMethod);
+                formData.Add("BankCode", bankCode);
             }
 
             formData.Add("ServiceProvider", provider);
@@ -317,6 +331,16 @@ namespace Payment.FattyPay
             }
 
             return _providerMapping[currency];
+        }
+
+        private string GetNoBankCode(string currency, string method)
+        {
+            if (!_noBankCodeMethodList.ContainsKey(currency))
+                return string.Empty;
+
+            return _noBankCodeMethodList[currency].Contains(method)
+                ? "NoBankCode"
+                : string.Empty;
         }
     }
 }
