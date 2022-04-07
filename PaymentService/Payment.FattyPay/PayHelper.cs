@@ -25,7 +25,7 @@ namespace Payment.FattyPay
             };
             _noBankCodeMethodList = new Dictionary<string, List<string>>
             {
-                // {"MYR", new List<string> { "ShopeePay", "MaybankEWallet" ,"Boost" ,"GrabPay", "TouchnGo", "DuitNow" }},
+                {"MYR", new List<string> { "ShopeePay", "MaybankEWallet" ,"Boost" ,"GrabPay", "TouchnGo", "DuitNow" }},
                 {"THB", new List<string> { "TrueMoney", "ThaiQr" ,"PromptPay" }}
             };
         }
