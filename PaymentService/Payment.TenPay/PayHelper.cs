@@ -207,6 +207,7 @@ namespace Payment.TenPay
             var sUrl = inputs["host"];
             var formData = new Dictionary<string, string>();
             var amount = decimal.Parse(inputs["Amount"]);
+            var payAccount = inputs["PayAccount"];
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("CurrencyId", inputs["PayCurrencyId"]);
             formData.Add("IsTest", inputs["IsTest"]);
@@ -217,6 +218,11 @@ namespace Payment.TenPay
             formData.Add("ShopOrderId", inputs["TransID"]);
             formData.Add("ShopInformUrl", inputs["CallBackUrl"]);
             formData.Add("ShopUserLongId", inputs["merchant_no"]);
+
+            if (!string.IsNullOrEmpty(payAccount))
+            {
+                formData.Add("PayerAccountNumber", payAccount);
+            }
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={inputs["key"]}";
