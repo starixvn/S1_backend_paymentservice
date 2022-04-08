@@ -25,7 +25,7 @@ namespace Payment.FattyPay
             };
             _noBankCodeMethodList = new Dictionary<string, List<string>>
             {
-                // {"MYR", new List<string> { "ShopeePay", "MaybankEWallet" ,"Boost" ,"GrabPay", "TouchnGo", "DuitNow" }},
+                {"MYR", new List<string> { "ShopeePay", "MaybankEWallet" ,"Boost" ,"GrabPay", "TouchnGo", "DuitNow" }},
                 {"THB", new List<string> { "TrueMoney", "ThaiQr" ,"PromptPay" }}
             };
         }
@@ -282,9 +282,9 @@ namespace Payment.FattyPay
             var p = $"{inputs["key"]}&{formData["MerchantTransactionId"]}&{formData["ServiceProvider"]}&{formData["PaymentMethod"]}&{formData["IsoCurrency"]}&" +
                     $"{formData["Amount"]}&{formData["Email"]}";
             
-            _logger.LogInformation($"Plain Text: {p}");
+            //_logger.LogInformation($"Plain Text: {p}");
             var sign = ToSHA512(p).ToUpper();
-            _logger.LogInformation($"Signature: {sign}");
+            //_logger.LogInformation($"Signature: {sign}");
             formData.Add("Signature", sign);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData));
