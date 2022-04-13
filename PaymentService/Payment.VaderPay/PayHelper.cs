@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentCore;
 
@@ -8,6 +10,12 @@ namespace Payment.VaderPay
 {
     class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
+        private readonly ILogger<PayHelper> _logger;
+        public PayHelper(IServiceProvider provider)
+        {
+            _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+        }
+        
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
@@ -246,6 +254,8 @@ namespace Payment.VaderPay
                 };
                 var parameter = $"{mobileDepositReq.merchant_code}{mobileDepositReq.ref_id}{mobileDepositReq.player_username}{mobileDepositReq.player_ip}{mobileDepositReq.currency_code}{mobileDepositReq.amount}{mobileDepositReq.client_url}";
                 mobileDepositReq.hash = ToHMACSHA256(parameter, inputs["key"]);
+                
+                _logger.LogInformation($"parameter={parameter}, key={inputs["key"]}, hash={mobileDepositReq.hash}");
                 sResponse = HttpPost(sUrl, ToJson(mobileDepositReq), "application/json", mobileDepositReq.ref_id, false);
             }
 
