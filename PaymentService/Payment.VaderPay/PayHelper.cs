@@ -255,7 +255,7 @@ namespace Payment.VaderPay
                 var parameter = $"{mobileDepositReq.merchant_code}{mobileDepositReq.ref_id}{mobileDepositReq.player_username}{mobileDepositReq.player_ip}{mobileDepositReq.currency_code}{mobileDepositReq.amount}{mobileDepositReq.client_url}";
                 mobileDepositReq.hash = ToHMACSHA256(parameter, inputs["key"]);
                 
-                _logger.LogInformation($"parameter={parameter}, key={inputs["key"]}, hash={mobileDepositReq.hash}");
+                _logger.LogInformation($"TransId={mobileDepositReq.ref_id}, parameter={parameter}, key={inputs["key"]}, hash={mobileDepositReq.hash}");
                 sResponse = HttpPost(sUrl, ToJson(mobileDepositReq), "application/json", mobileDepositReq.ref_id, false);
             }
 
