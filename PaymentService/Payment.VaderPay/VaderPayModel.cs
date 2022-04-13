@@ -66,7 +66,7 @@ namespace Payment.VaderPay
 
         [Required]
         [Description("Amount credit to beneficiary bank account. Decimal point must be zero.")]
-        public decimal amount { get; set; }
+        public string amount { get; set; }
 
         [Required]
         [Description("The client’s page url")]

@@ -249,7 +249,7 @@ namespace Payment.VaderPay
                     player_username = inputs["CustId"],
                     player_ip = inputs["ClientIP"],
                     currency_code = inputs["PayCurrencyId"],
-                    amount = Convert.ToDecimal(inputs["Amount"]),
+                    amount = Convert.ToDecimal(inputs["Amount"]).ToString(),
                     client_url = inputs["ReturnUrl"]
                 };
                 var parameter = $"{mobileDepositReq.merchant_code}{mobileDepositReq.ref_id}{mobileDepositReq.player_username}{mobileDepositReq.player_ip}{mobileDepositReq.currency_code}{mobileDepositReq.amount}{mobileDepositReq.client_url}";
