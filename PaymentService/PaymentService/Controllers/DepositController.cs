@@ -165,6 +165,7 @@ namespace PaymentService.Controllers
         public class ReqDepositPay : ReqDeposit
         {
             public int ChannelId { get; set; }
+            public string PayAccount { set; get; }
         }
 
         [HttpPost]
@@ -361,6 +362,7 @@ namespace PaymentService.Controllers
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("IsTest", _common.IsTest());
+                DepReq.Add("PayAccount", reqDeposit.PayAccount);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
