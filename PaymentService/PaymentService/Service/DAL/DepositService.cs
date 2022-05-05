@@ -71,7 +71,7 @@ namespace PaymentService.Service.DAL
                 });
                 p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
-                result = _mainDbClient.Execute("Service_DepositInfo_Set", p, conn, trans);
+                result = _mainDbClient.Execute("Service_DepositInfo_Set_V2", p, conn, trans);
 
                 if (result > 0)
                 {
