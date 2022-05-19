@@ -127,7 +127,7 @@ namespace Payment.DirePay
                 depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
                 var payCode = inputs["PayCode"];
                 var itemId = GetItemId(payCode);
-
+                var payCurrency = GetPayCurrency(inputs["PayCurrencyId"]);
                 if (depositResp != null && depositResp.access_token != null)
                 {
                     var depositGetWalletReq = new DepositGetWalletReq();
@@ -136,11 +136,11 @@ namespace Payment.DirePay
                     depositGetWalletReq.line_items[0] = new line_items();
                     depositGetWalletReq.line_items[0].name = "deposit";
                     depositGetWalletReq.line_items[0].item_id = itemId;
-                    depositGetWalletReq.line_items[0].description = $"Deposit {currMapping(inputs["CurrencyId"])} via {itemId}";
+                    depositGetWalletReq.line_items[0].description = $"Deposit {payCurrency} via {itemId}";
                     var amount = decimal.Parse(inputs["Amount"]);
                     depositGetWalletReq.line_items[0].amount = amount.ToString("#");
                     depositGetWalletReq.line_items[0].quantity = "1";
-                    depositGetWalletReq.currency = currMapping(inputs["CurrencyId"]);
+                    depositGetWalletReq.currency = payCurrency;
                     depositGetWalletReq.token = payCode;
                     depositGetWalletReq.callback_url = inputs["CallBackUrl"];
                     depositGetWalletReq.customer_uid = inputs["CustId"];
