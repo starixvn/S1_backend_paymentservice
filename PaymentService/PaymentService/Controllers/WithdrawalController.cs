@@ -115,6 +115,9 @@ namespace PaymentService.Controllers
                 WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
                 WithReq.Add("IsTest", _common.IsTest());
                 WithReq.Add("IFSCCode", reqWithdrawal.IFSCCode);
+                WithReq.Add("PhoneNo", custInfo.PhoneNo);
+                WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
+                WithReq.Add("AreaCode", custInfo.AreaCode);
 
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
