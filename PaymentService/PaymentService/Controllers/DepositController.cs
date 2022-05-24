@@ -363,9 +363,6 @@ namespace PaymentService.Controllers
                 DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("IsTest", _common.IsTest());
                 DepReq.Add("PayAccount", reqDeposit.PayAccount);
-                DepReq.Add("PhoneNo", custInfo.PhoneNo);
-                DepReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
-                DepReq.Add("AreaCode", custInfo.AreaCode);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
