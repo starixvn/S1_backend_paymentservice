@@ -115,6 +115,9 @@ namespace PaymentService.Controllers
                 WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
                 WithReq.Add("IsTest", _common.IsTest());
                 WithReq.Add("IFSCCode", reqWithdrawal.IFSCCode);
+                WithReq.Add("PhoneNo", custInfo.PhoneNo);
+                WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
+                WithReq.Add("AreaCode", custInfo.AreaCode);
 
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
@@ -197,9 +200,6 @@ namespace PaymentService.Controllers
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
                 WithReq.Add("WithdrawalInfo", withdrawalInfo);
-                WithReq.Add("PhoneNo", custInfo.PhoneNo);
-                WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
-                WithReq.Add("AreaCode", custInfo.AreaCode);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
