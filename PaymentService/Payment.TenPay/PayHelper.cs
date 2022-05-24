@@ -143,9 +143,21 @@ namespace Payment.TenPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
+            // INR TenPay 電話號碼錯誤銀行端會無法成功所以做此驗證
+            if (!inputs["PhoneVerified"].Equals("True", StringComparison.OrdinalIgnoreCase))
+            {
+                return new WithdrawResult
+                {
+                    Success = false,
+                    Message = "Phone verification not complete."
+                };
+            }
             var sUrl = inputs["PayOut"];
             var formData = new Dictionary<string, string>();
             var amount = decimal.Parse(inputs["Amount"]);
+            var phoneNo = (inputs["AreaCode"].Replace("+", "") + inputs["PhoneNo"])
+                .Replace(" ", "");
+            
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("CurrencyId", inputs["PayCurrencyId"]);
             formData.Add("IsTest", inputs["IsTest"]);
@@ -157,6 +169,7 @@ namespace Payment.TenPay
             formData.Add("ShopInformUrl", inputs["CallBackUrl"]);
             formData.Add("ShopOrderId", inputs["TransID"]);
             formData.Add("ShopUserLongId", inputs["merchant_no"]);
+            formData.Add("PayeePhoneNumber", phoneNo);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={inputs["key"]}";
@@ -204,23 +217,10 @@ namespace Payment.TenPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            // INR TenPay 存款電話號碼錯誤會無法成功存款所以做此驗證
-            if (!inputs["PhoneVerified"].Equals("True", StringComparison.OrdinalIgnoreCase))
-            {
-                return new DepositResult
-                {
-                    Success = false,
-                    Message = "Phone verification not complete."
-                };
-            }
-            
             var sUrl = inputs["host"];
             var formData = new Dictionary<string, string>();
             var amount = decimal.Parse(inputs["Amount"]);
             var payAccount = inputs["PayAccount"];
-            var phoneNo = (inputs["AreaCode"].Replace("+", "") + inputs["PhoneNo"])
-                .Replace(" ", "");
-            
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("CurrencyId", inputs["PayCurrencyId"]);
             formData.Add("IsTest", inputs["IsTest"]);
@@ -231,7 +231,6 @@ namespace Payment.TenPay
             formData.Add("ShopOrderId", inputs["TransID"]);
             formData.Add("ShopInformUrl", inputs["CallBackUrl"]);
             formData.Add("ShopUserLongId", inputs["merchant_no"]);
-            formData.Add("PayeePhoneNumber", phoneNo);
 
             if (!string.IsNullOrEmpty(payAccount))
             {

@@ -30,7 +30,7 @@ namespace PaymentService.Service.BLL
         {
             var key = $"CustInfo_{custId}";
             return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)),
+                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(1)),
                 i => custInfoService.GetCustInfo(custId));
         }
 

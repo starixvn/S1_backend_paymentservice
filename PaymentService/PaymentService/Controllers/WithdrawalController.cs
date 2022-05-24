@@ -197,6 +197,9 @@ namespace PaymentService.Controllers
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
                 WithReq.Add("WithdrawalInfo", withdrawalInfo);
+                WithReq.Add("PhoneNo", custInfo.PhoneNo);
+                WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
+                WithReq.Add("AreaCode", custInfo.AreaCode);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
