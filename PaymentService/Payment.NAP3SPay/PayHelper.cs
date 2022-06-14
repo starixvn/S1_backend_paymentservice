@@ -51,6 +51,9 @@ namespace Payment.NAP3SPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
+            var amount = decimal.Parse(formData["amount"]);
+            var realAmount = decimal.Parse(formData["real_amount"]);
+            var minAmount = realAmount < amount ? realAmount : amount;
             return new NotifyDepositResult
             {
                 TransStatus = int.Parse(formData["status"]) switch
@@ -62,8 +65,8 @@ namespace Payment.NAP3SPay
                 },
                 Message = formData["message"],
                 Comment = formData["message"],
-                RequestAmount = decimal.Parse(formData["amount"]),
-                ActualAmount = decimal.Parse(formData["real_amount"]) * decimal.Parse(payResource["Rate"]),
+                RequestAmount = amount,
+                ActualAmount = minAmount * decimal.Parse(payResource["Rate"]),
                 DepositId = formData["request_id"],
                 RefThirdId = formData["tran_id"],
                 ThirdId = formData["tran_id"],
