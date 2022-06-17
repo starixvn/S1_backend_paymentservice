@@ -74,7 +74,7 @@ namespace PaymentService.Controllers
                 var onlineBank = _payBll.GetOnlineBankListForPayout()?.FirstOrDefault(x =>
                     x.PayId == reqWithdrawal.PayId && x.SysId == reqWithdrawal.SysId);
 
-                if (custInfo.CurrencyId != onlineBank.CurrencyId)
+                if (custInfo.CurrencyId != onlineBank?.CurrencyId)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
                     apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
@@ -243,14 +243,6 @@ namespace PaymentService.Controllers
                     bodyText = await reader.ReadToEndAsync();
                 }
 
-                var absoluteUri = string.Concat(
-                    Request.Scheme,
-                    "://",
-                    Request.Host.ToUriComponent(),
-                    Request.PathBase.ToUriComponent(),
-                    Request.Path.ToUriComponent(),
-                    Request.QueryString.ToUriComponent());
-
                 var dicParam = new Dictionary<string, string>();
                 var isFormData = false;
                 if (Request.ContentType == null)
@@ -295,8 +287,6 @@ namespace PaymentService.Controllers
 
         private string CallBackHandler(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
         {
-            var sbody = string.Join("&", dicParam.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
             //查詢訂單在不在db
             var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
             //根據訂單的廠商決定要用那家金流去解讀回傳的資料
@@ -448,9 +438,9 @@ namespace PaymentService.Controllers
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var cryptoList = _payBll.GetCryptoListForPayout().ToList();
                 var crypto = string.IsNullOrEmpty(reqExchange.ChannelName) // 新舊相容過度，以後沒問題再拿掉
-                    ? cryptoList?.FirstOrDefault(x =>
+                    ? cryptoList.FirstOrDefault(x =>
                         x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId)
-                    : cryptoList?.FirstOrDefault(x =>
+                    : cryptoList.FirstOrDefault(x =>
                         x.ChannelName.Equals(reqExchange.ChannelName, StringComparison.OrdinalIgnoreCase)
                         && custInfo.CurrencyId == x.CurrencyId);
 
