@@ -48,106 +48,6 @@ namespace PaymentService.Controllers
             _common = provider.GetRequiredService<Common>();
         }
 
-        public class ReqExchangeRate
-        {
-            public int PayId { get; set; }
-            public int CustId { get; set; }
-        }
-
-        //[HttpPost]
-        //[Route("Payment/ReqExchangeRate")]
-        //public async Task<ApiResult<Dictionary<string, ExchangeRate>>> ReqExchangeRateAsync(ReqExchangeRate reqExchangeRate)
-        //{
-        //    ApiResult<Dictionary<string, ExchangeRate>> apiResult = new ApiResult<Dictionary<string, ExchangeRate>>();
-        //    var custInfo = custInfoBLL.GetCustInfoWithCache(reqExchangeRate.CustId);
-
-        //    if (!ExchangeRateList.ContainsKey(custInfo.SiteId))
-        //    {
-        //        ExchangeRateList.TryAdd(custInfo.SiteId, null);
-        //    }
-
-        //    if (ExchangeRateList[custInfo.SiteId] == null)
-        //    {
-        //        var paySetting = payBLL.GetPaymentList(custInfo.SiteId).Where(x => x.PayId == reqExchangeRate.PayId).FirstOrDefault();
-        //        var exchangerateReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
-        //        var payHelper = (IExchangeHelper)payBLL.GetPayHelper(paySetting.PayName);
-        //        var rExchangeRate = payHelper.GetExchange(exchangerateReq);
-
-        //        timer = new Lazy<Timer>(() => new Timer(DoTaskAsync, reqExchangeRate, TimeSpan.Zero, TimeSpan.Zero)).Value;
-
-        //        if (rExchangeRate.ErrorCode == "0")
-        //        {
-        //            apiResult.Data = new Dictionary<string, ExchangeRate>();
-        //            ExchangeRateList[custInfo.SiteId] = rExchangeRate?.ExchangeRateList;
-        //            foreach (var a1 in rExchangeRate?.ExchangeRateList)
-        //            {
-        //                foreach (var a2 in a1.Value)
-        //                {
-        //                    if (a2.Key == custInfo.CurrencyId)
-        //                    {
-        //                        apiResult.Data.Add(a1.Key, a2.Value);
-        //                    }
-        //                }
-        //            }
-
-        //            apiResult.ErrorCode = 0;
-        //        }
-        //        else
-        //        {
-        //            apiResult.Message = rExchangeRate.Message;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        apiResult.Data = new Dictionary<string, ExchangeRate>();
-
-        //        foreach (var a1 in ExchangeRateList[custInfo.SiteId])
-        //        {
-        //            foreach (var a2 in a1.Value)
-        //            {
-        //                if (a2.Key == custInfo.CurrencyId)
-        //                {
-        //                    apiResult.Data.Add(a1.Key, a2.Value);
-        //                }
-        //            }
-        //        }
-
-        //        apiResult.ErrorCode = 0;
-        //    }
-
-        //    return apiResult;
-        //}
-
-        //private async void DoTaskAsync(object state)
-        //{
-        //    try
-        //    {
-        //        ReqExchangeRate reqExchangeRate = (ReqExchangeRate)state;
-
-        //        foreach (var c1 in ExchangeRateList.Keys.ToArray())
-        //        {
-        //            var paySetting = payBLL.GetPaymentList(c1).Where(x => x.PayId == reqExchangeRate.PayId).FirstOrDefault();
-        //            var exchangerateReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
-        //            var payHelper = (IExchangeHelper)payBLL.GetPayHelper(paySetting.PayName);
-        //            var rExchangeRate = await payHelper.GetExchangeAsync(exchangerateReq);
-
-        //            if (rExchangeRate.ErrorCode == "0")
-        //            {
-        //                ExchangeRateList[c1] = rExchangeRate.ExchangeRateList;
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.LogError(ex, $"Method={GetCurrentMethod()}");
-        //    }
-        //    finally
-        //    {
-        //        TimeSpan dueTimeSpan = TimeSpan.FromSeconds(5);
-        //        timer.Change(dueTimeSpan, TimeSpan.Zero);
-        //    }
-        //}
-
         public class ReqDeposit
         {
             public string TransId { get; set; }
@@ -338,7 +238,13 @@ namespace PaymentService.Controllers
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == payInfo.PayId);
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) &&
-                    (x.PayId == pay.PayId))?.PayLangId;
+                    (x.PayId == pay?.PayId))?.PayLangId;
+                if (pay == null)
+                {
+                    _logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} pay Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
 
                 //DateTimeOffset
                 var payHelper = _payBll.GetPayHelper(pay.PayName);
@@ -463,7 +369,13 @@ namespace PaymentService.Controllers
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == cryptoPayInfo.PayId);
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) &&
-                    (x.PayId == pay.PayId))?.PayLangId;
+                    (x.PayId == pay?.PayId))?.PayLangId;
+                if (pay == null)
+                {
+                    _logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} pay Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
 
                 //DateTimeOffset
                 var payHelper = _payBll.GetPayHelper(pay.PayName);
@@ -564,7 +476,6 @@ namespace PaymentService.Controllers
                 var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
                 var loadCardPay = _payBll.GetLoadCardPayInfoList(custInfo.SiteId)?
                     .FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
-                //var PayCurrency = payBLL.GetPayCurrency().;
 
                 if (loadCardPay == null)
                 {
@@ -590,7 +501,13 @@ namespace PaymentService.Controllers
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == loadCardPay.PayId);
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) &&
-                    (x.PayId == pay.PayId))?.PayLangId;
+                    (x.PayId == pay?.PayId))?.PayLangId;
+                if (pay == null)
+                {
+                    _logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} pay Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
 
                 //DateTimeOffset
                 var payHelper = _payBll.GetPayHelper(pay.PayName);
