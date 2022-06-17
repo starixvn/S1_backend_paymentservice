@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Payment.CoPay\Payment.CoPay.csproj" />
     <ProjectReference Include="..\Payment.NAP3SPay\Payment.NAP3SPay.csproj" />
   </ItemGroup>
 
