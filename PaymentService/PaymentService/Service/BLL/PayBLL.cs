@@ -37,21 +37,21 @@ namespace PaymentService.Service.BLL
         {
             var key = $"OnlineBankList_{siteId}";
             return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetSlidingExpiration(GetExpireTime()),
+                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(10)),
                 i => payService.GetOnlineBankList(siteId));
         }
 
         public IEnumerable<BankInfoPay> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
         {
             return _cacheHelper.TryGetOrCreate($"BankInfoPayList_{siteId}_{depositType}",
-                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(3)),
+                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(10)),
                 i => payService.GetAutoChannelBankInfoList(siteId, depositType));
         }
 
         public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
         {
             return _cacheHelper.TryGetOrCreate($"PayInfoList_{siteId}_{depositType}",
-                new MemoryCacheEntryOptions().SetSlidingExpiration(GetExpireTime()),
+                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(10)),
                 i => payService.GetPayInfo(siteId, depositType));
         }
 
@@ -59,7 +59,7 @@ namespace PaymentService.Service.BLL
         {
             var key = $"CryptoPayInfoList_{siteId}";
             return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetSlidingExpiration(GetExpireTime()),
+                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(10)),
                 i => payService.GetCryptoPayInfo(siteId));
         }
 
@@ -67,7 +67,7 @@ namespace PaymentService.Service.BLL
         {
             var key = $"LoadCardPayInfoList_{siteId}";
             return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetSlidingExpiration(GetExpireTime()),
+                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(10)),
                 i => payService.GetLoadCardPayInfo(siteId));
         }
 
@@ -75,7 +75,7 @@ namespace PaymentService.Service.BLL
         {
             var key = "OnlineBankListForPayout";
             return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetSlidingExpiration(GetExpireTime()),
+                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(10)),
                 i => payService.GetOnlineBankListForPayout());
         }
 
@@ -83,7 +83,7 @@ namespace PaymentService.Service.BLL
         {
             var key = "CryptoListForPayout";
             return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetSlidingExpiration(GetExpireTime()),
+                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(10)),
                 i => payService.GetCryptoListForPayout());
         }
 
