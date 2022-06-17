@@ -34,7 +34,7 @@ namespace Payment.NAP3SPay
             var sResponse = HttpPost(inputs["host"], sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower());
             var result = JsonConvert.DeserializeObject<DepositResponse>(sResponse);
 
-            if (inputs["Lang"].Contains("en"))
+            if (inputs["Lang"] == "en")
             {
                 result.message = result.status switch
                 {
