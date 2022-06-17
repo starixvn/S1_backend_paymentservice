@@ -48,7 +48,8 @@ namespace Payment.NAP3SPay
 
             if (inputs["Lang"].Contains("en"))
             {
-                result.message = StatusEnMassage[result.status];
+                if (StatusEnMassage.ContainsKey(result.status))
+                    result.message = StatusEnMassage[result.status];
             }
 
             return new DepositResult
