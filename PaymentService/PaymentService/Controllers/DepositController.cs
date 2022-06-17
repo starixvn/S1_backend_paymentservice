@@ -156,6 +156,7 @@ namespace PaymentService.Controllers
             public decimal Amount { get; set; }
             public string ClientIP { set; get; }
             public string ReturnUrl { set; get; }
+            public string Lang { set; get; }
         }
 
         public class ReqDepositBank : ReqDeposit
@@ -614,6 +615,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("CustId", reqDeposit.CustId.ToString());
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+                DepReq.Add("Lang", reqDeposit.Lang);
                 DepReq.Add("IsTest", _common.IsTest());
 
                 _logger.LogInformation(
