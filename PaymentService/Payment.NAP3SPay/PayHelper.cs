@@ -8,6 +8,18 @@ namespace Payment.NAP3SPay
 {
     public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
+        Dictionary<int, string> StatusEnMassage = new Dictionary<int, string>()
+        {   {0,"Request sent successfully. Please wait for a response - wait for that handling that callback"},
+            {-1,"Missing parameters - unspecified errors"},
+            {-2,"Wrong format card, for example: vtt card code 13 or 15 digital numbers"},
+            {-3,"Wrong signature"},
+            {-5,"Card is not submitted, return your card - (the system is busy)"},
+            {-6,"User procedes not operating cards (inactived)"},
+            {-10,"Maintenance api system"},
+            {-98,"Card has paided before, insert card"}
+        };
+
+
         public class DepositResponse
         {
             public int status { get; set; }
@@ -33,6 +45,12 @@ namespace Payment.NAP3SPay
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(inputs["host"], sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower());
             var result = JsonConvert.DeserializeObject<DepositResponse>(sResponse);
+
+            if (inputs["Lang"].Contains("en"))
+            {
+                result.message = StatusEnMassage[result.status];
+            }
+
             return new DepositResult
             {
                 Success = result.status == 0,
