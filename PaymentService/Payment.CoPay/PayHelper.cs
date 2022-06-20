@@ -73,7 +73,41 @@ namespace Payment.CoPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            throw new System.NotImplementedException();
+            var oNotify = new NotifyDepositResult();
+            var expectedSign = formData["sign"];
+            formData.Remove("sign");
+            var actualSign = Sign(formData, payResource["key"]);
+            
+            if (actualSign != expectedSign)
+            {
+                var data = FromJson<CallBackDebitRequest>(bodyContent);
+                if (data.status == 10000 && data.result != null)
+                {
+                    oNotify.DepositId = data.result.orderid;
+                    oNotify.ThirdId = data.result.transactionid.ToString();
+                    oNotify.Message = data.status.ToString();
+                    oNotify.Comment = data.status.ToString();
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = data.result.amount;
+                    oNotify.ActualAmount = data.result.real_amount;
+
+                    oNotify.Response = "success";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Response = "OK";
+                }
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Comment = "Signature error";
+                oNotify.Message = "Signature error";
+                oNotify.Response = "Signature error";
+            }
+
+            return oNotify;
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
