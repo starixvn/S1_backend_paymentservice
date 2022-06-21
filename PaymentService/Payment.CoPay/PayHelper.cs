@@ -111,7 +111,7 @@ namespace Payment.CoPay
                 else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.Response = "OK";
+                    oNotify.Response = "success";
                 }
             }
             else
@@ -127,7 +127,36 @@ namespace Payment.CoPay
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            throw new System.NotImplementedException();
+            var expectedSign = formData["sign"];
+            formData.Remove("sign");
+            var actualSign = Sign(formData, payResource["key"]);
+
+            var oNotify = new NotifyWithdrawResult();
+            if (actualSign == expectedSign)
+            {
+                var result = FromJson<CallBackPayoutResult>(formData["result"]);
+                var status = formData["status"];
+                if (status == "10000" && result != null)
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = result.real_amount;
+                    oNotify.ThirdId = result.transactionid.ToString();
+                    oNotify.Message = status;
+                    oNotify.Response = "success";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Response = "success";
+                }
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Message = "Signature error";
+                oNotify.Response = "Signature error";
+            }
+            return oNotify;
         }
 
         public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)

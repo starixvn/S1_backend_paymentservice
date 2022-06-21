@@ -33,4 +33,13 @@
         public PayoutResult result { get; set; }
         public string sign { get; set; }
     }
+    
+    public class CallBackPayoutResult
+    {
+        public int transactionid { get; set; }
+        public string orderid { get; set; }
+        public decimal amount { get; set; }
+        public decimal real_amount { get; set; }
+        public string custom { get; set; }
+    }
 }
