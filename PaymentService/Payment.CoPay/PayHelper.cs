@@ -53,22 +53,36 @@ namespace Payment.CoPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["PayOut"];
-            throw new System.NotImplementedException();
-        }
+            var amount = decimal.Parse(inputs["Amount"]);
+            var formData = new Dictionary<string, string>()
+            {
+                { "uid", inputs["MerchantId"] },
+                { "orderid", inputs["TransID"] },
+                { "channel", inputs["PayCode"] },
+                { "notify_url", inputs["CallBackUrl"] },
+                { "amount", amount.ToString("#") },
+                { "userip", inputs["ClientIP"] },
+                { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
+                { "custom", "" },
+                { "bank_account", inputs["AccountName"] },
+                { "bank_no", inputs["AccountNo"] },
+                { "bank_id", inputs["BankCode"] },
+                { "bank_province", "" },
+                { "bank_city", "" },
+                { "bank_sub", "" },
+            };
+            formData.Add("sign", Sign(formData, inputs["key"]));
 
-        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
-        {
-            throw new System.NotImplementedException();
-        }
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
+            
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = JsonConvert.DeserializeObject<PayoutResponse>(sResponse);
 
-        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
-        {
-            throw new System.NotImplementedException();
-        }
+            withdrawResult.Success = withdrawalRes.status == 0;
+            withdrawResult.Message = withdrawalRes.status.ToString();
 
-        public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
-        {
-            throw new System.NotImplementedException();
+            return withdrawResult;
         }
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
@@ -112,6 +126,21 @@ namespace Payment.CoPay
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
             throw new System.NotImplementedException();
         }
