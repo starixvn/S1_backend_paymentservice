@@ -21,10 +21,4 @@
         public decimal real_amount { get; set; }
         public string custom { get; set; }
     }
-    public class CallBackDebitRequest
-    {
-        public int status { get; set; }
-        public CallBackDebitResult result { get; set; }
-        public string sign { get; set; }
-    }
 }
