@@ -78,18 +78,19 @@ namespace Payment.CoPay
             formData.Remove("sign");
             var actualSign = Sign(formData, payResource["key"]);
             
-            if (actualSign != expectedSign)
+            if (actualSign == expectedSign)
             {
-                var data = FromJson<CallBackDebitRequest>(bodyContent);
-                if (data.status == 10000 && data.result != null)
+                var result = FromJson<CallBackDebitResult>(formData["result"]);
+                var status = formData["status"];
+                if (status == "10000" && result != null)
                 {
-                    oNotify.DepositId = data.result.orderid;
-                    oNotify.ThirdId = data.result.transactionid.ToString();
-                    oNotify.Message = data.status.ToString();
-                    oNotify.Comment = data.status.ToString();
+                    oNotify.DepositId = result.orderid;
+                    oNotify.ThirdId = result.transactionid.ToString();
+                    oNotify.Message = status;
+                    oNotify.Comment = status;
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = data.result.amount;
-                    oNotify.ActualAmount = data.result.real_amount;
+                    oNotify.RequestAmount = result.amount;
+                    oNotify.ActualAmount = result.real_amount;
 
                     oNotify.Response = "success";
                 }
