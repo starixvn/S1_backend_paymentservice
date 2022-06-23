@@ -13,17 +13,20 @@ namespace Payment.CoPay
         {
             var sUrl = inputs["host"];
             var amount = decimal.Parse(inputs["Amount"]);
+            var channel = string.IsNullOrEmpty(inputs["BankCode"]) ? ((int)CoPayChannel.BankPayScan).ToString() : inputs["PayCode"];
+            var bankId = string.IsNullOrEmpty(inputs["BankCode"]) ? inputs["PayCode"] : inputs["BankCode"]; 
             var formData = new Dictionary<string, string>()
             {
                 { "uid", inputs["MerchantId"] },
                 { "orderid", inputs["TransID"] },
-                { "channel", inputs["PayCode"] },
+                { "channel", channel },
                 { "notify_url", inputs["CallBackUrl"] },
                 { "return_url", inputs["ReturnUrl"] },
                 { "amount", amount.ToString("#") },
                 { "userip", inputs["ClientIP"] },
                 { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
-                { "custom", "" }
+                { "custom", "" },
+                { "bank_id", bankId}
             };
             formData.Add("sign", Sign(formData, inputs["key"]));
             
@@ -54,11 +57,12 @@ namespace Payment.CoPay
         {
             var sUrl = inputs["PayOut"];
             var amount = decimal.Parse(inputs["Amount"]);
+            var channel = (int)CoPayChannel.VndBankPayout;
             var formData = new Dictionary<string, string>()
             {
                 { "uid", inputs["MerchantId"] },
                 { "orderid", inputs["TransID"] },
-                { "channel", "712" },
+                { "channel", channel.ToString() },
                 { "notify_url", inputs["CallBackUrl"] },
                 { "amount", amount.ToString("#") },
                 { "userip", inputs["ClientIP"] },
@@ -94,10 +98,10 @@ namespace Payment.CoPay
             
             if (actualSign == expectedSign)
             {
-                var result = FromJson<CallBackDebitResult>(formData["result"]);
                 var status = formData["status"];
-                if (status == "10000" && result != null)
+                if (status == "10000")
                 {
+                    var result = FromJson<CallBackDebitResult>(formData["result"]);
                     oNotify.DepositId = result.orderid;
                     oNotify.ThirdId = result.transactionid.ToString();
                     oNotify.Message = status;
@@ -105,7 +109,6 @@ namespace Payment.CoPay
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = result.amount;
                     oNotify.ActualAmount = result.real_amount;
-
                     oNotify.Response = "success";
                 }
                 else
@@ -131,13 +134,17 @@ namespace Payment.CoPay
             formData.Remove("sign");
             var actualSign = Sign(formData, payResource["key"]);
 
-            var oNotify = new NotifyWithdrawResult();
+            var oNotify = new NotifyWithdrawResult
+            {
+                WithdrawId = ""
+            };
             if (actualSign == expectedSign)
             {
-                var result = FromJson<CallBackPayoutResult>(formData["result"]);
+                
                 var status = formData["status"];
-                if (status == "10000" && result != null)
+                if (status == "10000")
                 {
+                    var result = FromJson<CallBackPayoutResult>(formData["result"]);
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = result.real_amount;
                     oNotify.WithdrawId = result.orderid;
