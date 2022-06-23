@@ -58,7 +58,7 @@ namespace Payment.CoPay
             {
                 { "uid", inputs["MerchantId"] },
                 { "orderid", inputs["TransID"] },
-                { "channel", inputs["PayCode"] },
+                { "channel", "712" },
                 { "notify_url", inputs["CallBackUrl"] },
                 { "amount", amount.ToString("#") },
                 { "userip", inputs["ClientIP"] },
