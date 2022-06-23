@@ -140,6 +140,7 @@ namespace Payment.CoPay
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = result.real_amount;
+                    oNotify.WithdrawId = result.orderid;
                     oNotify.ThirdId = result.transactionid.ToString();
                     oNotify.Message = status;
                     oNotify.Response = "success";
