@@ -79,7 +79,7 @@ namespace Payment.CoPay
             var withdrawResult = new WithdrawResult();
             var withdrawalRes = JsonConvert.DeserializeObject<PayoutResponse>(sResponse);
 
-            withdrawResult.Success = withdrawalRes.status == 0;
+            withdrawResult.Success = withdrawalRes.status == 10000;
             withdrawResult.Message = withdrawalRes.status.ToString();
 
             return withdrawResult;
