@@ -58,7 +58,7 @@ namespace Payment.CoPay
             {
                 { "uid", inputs["MerchantId"] },
                 { "orderid", inputs["TransID"] },
-                { "channel", inputs["PayCode"] },
+                { "channel", "712" },
                 { "notify_url", inputs["CallBackUrl"] },
                 { "amount", amount.ToString("#") },
                 { "userip", inputs["ClientIP"] },
@@ -140,6 +140,7 @@ namespace Payment.CoPay
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = result.real_amount;
+                    oNotify.WithdrawId = result.orderid;
                     oNotify.ThirdId = result.transactionid.ToString();
                     oNotify.Message = status;
                     oNotify.Response = "success";
