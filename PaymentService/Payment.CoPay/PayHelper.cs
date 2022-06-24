@@ -106,10 +106,10 @@ namespace Payment.CoPay
             if (actualSign == expectedSign)
             {
                 var status = formData["status"];
+                var result = FromJson<CallBackDebitResult>(formData["result"]);
+                oNotify.DepositId = result.orderid;
                 if (status == "10000")
                 {
-                    var result = FromJson<CallBackDebitResult>(formData["result"]);
-                    oNotify.DepositId = result.orderid;
                     oNotify.ThirdId = result.transactionid.ToString();
                     oNotify.Message = status;
                     oNotify.Comment = status;
@@ -141,20 +141,16 @@ namespace Payment.CoPay
             formData.Remove("sign");
             var actualSign = Sign(formData, payResource["key"]);
 
-            var oNotify = new NotifyWithdrawResult
-            {
-                WithdrawId = ""
-            };
+            var oNotify = new NotifyWithdrawResult();
             if (actualSign == expectedSign)
             {
-                
                 var status = formData["status"];
+                var result = FromJson<CallBackPayoutResult>(formData["result"]);
+                oNotify.WithdrawId = result.orderid;
                 if (status == "10000")
                 {
-                    var result = FromJson<CallBackPayoutResult>(formData["result"]);
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = result.real_amount;
-                    oNotify.WithdrawId = result.orderid;
                     oNotify.ThirdId = result.transactionid.ToString();
                     oNotify.Message = status;
                     oNotify.Response = "success";
