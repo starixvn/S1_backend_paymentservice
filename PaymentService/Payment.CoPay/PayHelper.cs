@@ -13,26 +13,33 @@ namespace Payment.CoPay
         {
             var sUrl = inputs["host"];
             var amount = decimal.Parse(inputs["Amount"]);
-            var channel = string.IsNullOrEmpty(inputs["BankCode"]) ? ((int)CoPayChannel.BankPayScan).ToString() : inputs["PayCode"];
-            var bankId = string.IsNullOrEmpty(inputs["BankCode"]) ? inputs["PayCode"] : inputs["BankCode"]; 
+            var payCode = int.Parse(inputs["PayCode"]);
+
+            var channel = CoPayChannel.BankPayScan;
+            if(Enum.IsDefined(typeof(CoPayChannel), payCode))
+                channel = (CoPayChannel)payCode;
+             
             var formData = new Dictionary<string, string>()
             {
                 { "uid", inputs["MerchantId"] },
                 { "orderid", inputs["TransID"] },
-                { "channel", channel },
+                { "channel", ((int)channel).ToString() },
                 { "notify_url", inputs["CallBackUrl"] },
                 { "return_url", inputs["ReturnUrl"] },
                 { "amount", amount.ToString("#") },
                 { "userip", inputs["ClientIP"] },
                 { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
                 { "custom", "" },
-                { "bank_id", bankId}
             };
+            if (channel == CoPayChannel.OnlineBanking || channel == CoPayChannel.BankPayScan)
+            {
+                var bankId = string.IsNullOrEmpty(inputs["BankCode"]) ? inputs["PayCode"] : inputs["BankCode"];
+                formData.Add("bank_id", bankId);
+            }
             formData.Add("sign", Sign(formData, inputs["key"]));
             
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
-            
             
             var depositRes = JsonConvert.DeserializeObject<PayResponse>(sResponse);
             var oDepositResult = new DepositResult();
