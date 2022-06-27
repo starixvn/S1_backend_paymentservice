@@ -48,7 +48,10 @@ namespace PaymentService.Service.BLL
             try
             {
                 _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, iDepositResult.ActualAmount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
-                _depositService.InsertDepositRewardPointQueue(depositRequest.TransId);
+                if (depositRequest.SiteId == 1) // 商城暫時只有Nova
+                {
+                    _depositService.InsertDepositRewardPointQueue(depositRequest.TransId);
+                }
             }
             catch (Exception ex)
             {

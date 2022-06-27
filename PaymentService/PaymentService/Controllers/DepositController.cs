@@ -849,10 +849,14 @@ namespace PaymentService.Controllers
                     _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
                         message,
                         (int)depositRequest.Status, rNotifyDepositResult.ActualAmount, depositRequest.PayName);
-                    return rNotifyDepositResult.Response;
                     
-                    // 塞資料進DepositRewardPointQueue
-                    _paymentBll.InsertDepositRewardPointQueue(transId);
+                    // Nova塞資料進DepositRewardPointQueue
+                    if (depositRequest.SiteId == 1)
+                    {
+                        _paymentBll.InsertDepositRewardPointQueue(transId);
+                    }
+                    
+                    return rNotifyDepositResult.Response;
                 }
 
                 if (rNotifyDepositResult.TransStatus == TransStatus.Success && depositRequest.Amount > 0)
