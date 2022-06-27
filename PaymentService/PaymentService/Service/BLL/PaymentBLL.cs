@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentCore;
 using PaymentService.Service.DAL;
@@ -15,12 +16,14 @@ namespace PaymentService.Service.BLL
         private readonly DepositService _depositService;
         private readonly WithdrawalService _withdrawalService;
         private readonly Common _common;
+        private readonly ILogger<PaymentBLL> _logger;
 
         public PaymentBLL(IServiceProvider provider)
         {
             _depositService = provider.GetRequiredService<DepositService>();
             _withdrawalService = provider.GetRequiredService<WithdrawalService>();
             _common = provider.GetRequiredService<Common>();
+            _logger = provider.GetRequiredService<ILogger<PaymentBLL>>();
         }
 
         public DepositRequest GetDepositRequest(string transId)
@@ -45,6 +48,7 @@ namespace PaymentService.Service.BLL
             try
             {
                 _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, iDepositResult.ActualAmount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
+                _depositService.InsertDepositRewardPointQueue(depositRequest.TransId);
             }
             catch (Exception ex)
             {
@@ -101,6 +105,16 @@ namespace PaymentService.Service.BLL
         {
             var depositId = _common.GetId(transId);
             _depositService.SetDepositLog(depositId, siteId, comment,status, actualDeposit, @operator);
+        }
+        
+        public void InsertDepositRewardPointQueue(string transId)
+        {
+            var resultCode = _depositService.InsertDepositRewardPointQueue(transId);
+
+            if (resultCode != (int) ErrorCode.Success)
+            {
+                _logger.LogError($"InsertDepositRewardPointQueue Failed. ResultCode({resultCode}), TransId: {transId}");
+            }
         }
 
 
