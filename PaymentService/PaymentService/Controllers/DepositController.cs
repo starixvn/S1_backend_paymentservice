@@ -850,6 +850,9 @@ namespace PaymentService.Controllers
                         message,
                         (int)depositRequest.Status, rNotifyDepositResult.ActualAmount, depositRequest.PayName);
                     return rNotifyDepositResult.Response;
+                    
+                    // 塞資料進DepositRewardPointQueue
+                    _paymentBll.InsertDepositRewardPointQueue(transId);
                 }
 
                 if (rNotifyDepositResult.TransStatus == TransStatus.Success && depositRequest.Amount > 0)
