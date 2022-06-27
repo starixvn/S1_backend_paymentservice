@@ -81,10 +81,72 @@ namespace Payment.FPay
         {
             throw new NotImplementedException();
         }
-
+        
+        private class WithdrawResp
+        {
+            public bool status { get; set; }
+            public string message { get; set; }
+        }
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var sUrl = inputs["host"];
+            var oDepositResult = new WithdrawResult();
+            try
+            {
+                var dicP = new Dictionary<string, string>()
+                {
+                    { "username", inputs["Username"] },
+                    { "api_key", inputs["key"] }
+                };
+                var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                var sResponse = HttpPost(sUrl + "merchant/auth", sParam, "application/x-www-form-urlencoded", "0");
+
+                var authResp = JsonConvert.DeserializeObject<AuthResp>(sResponse);
+                if (authResp.status)
+                {
+                    var amount = decimal.Parse(inputs["Amount"]);
+                    var withdrawReq = new Dictionary<string, string>()
+                    {
+                        { "auth", authResp.auth },
+                        { "amount", amount.ToString("#") },
+                        { "currency", inputs["PayCurrencyId"] },
+                        { "orderid", inputs["TransID"] },
+                        { "bank_id", inputs["BankCode"] },
+                        { "bank_branch", "" },
+                        { "holder_name", inputs["AccountName"] },
+                        { "account_no", inputs["AccountNo"] }
+                    };
+                    sParam = string.Join("&", withdrawReq.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                    sResponse = HttpPost(sUrl + "merchant/withdraw_orders", sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
+
+                    var depositResp = JsonConvert.DeserializeObject<WithdrawResp>(sResponse);
+                    if (depositResp.status)
+                    {
+                        oDepositResult.Success = true;
+                        oDepositResult.Message = "";
+                    }
+                    else
+                    {
+                        oDepositResult.Message = depositResp.message;
+                        oDepositResult.RawContent = sResponse;
+                    }
+                }
+                else
+                {
+                    oDepositResult.Message = "";
+                    oDepositResult.RawContent = sResponse;
+                }
+            }
+            catch (WebException wEx)
+            {
+                var err = FromJson<Dictionary<string, string>>(new StreamReader(wEx.Response?.GetResponseStream()).ReadToEnd());
+                if (err.ContainsKey("error"))
+                    oDepositResult.Message = $"{err["error"]}-{err["error_message"]}";
+                if (err.ContainsKey("err"))
+                    oDepositResult.Message = $"{err["err"]}";
+            }
+
+            return oDepositResult;
         }
 
         private class AuthReq
@@ -92,14 +154,12 @@ namespace Payment.FPay
             public string username { get; set; }
             public string api_key { get; set; }
         }
-
         private class AuthResp
         {
             public bool status { get; set; }
             public string auth { get; set; }
             public string message { get; set; }
         }
-
         private class DepositReq
         {
             public string username { get; set; }
@@ -117,7 +177,7 @@ namespace Payment.FPay
             public string p_url { get; set; }
             public string message { get; set; }
         }
-
+        
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
