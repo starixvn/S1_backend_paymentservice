@@ -10,9 +10,64 @@ namespace Payment.FPay
 {
     class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
+        private class CallBackCreditReq
+        {
+            public string order_id { get; set; }
+            public decimal amount { get; set; }
+            public string currency { get; set; }
+            public string order_status { get; set; }
+            public bool status { get; set; }
+            public string charge { get; set; }
+            public string token { get; set; }
+            public string name { get; set; }
+            public string type { get; set; }
+            public string remarks { get; set; }
+        }
+
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            var data = FromJson<CallBackCreditReq>(bodyContent);
+            var oNotify = new NotifyWithdrawResult
+            {
+                WithdrawId = data.order_id
+            };
+            var p = payResource["secretkey"] + data.order_id;
+            var sign = ToMD5(p).ToLower();
+
+            if (sign == data.token)
+            {
+                if (data.order_status == "completed")
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = data.amount;
+                    oNotify.ThirdId = data.order_id;
+                    oNotify.Message = data.order_status;
+                    oNotify.Response = "200";
+                }
+                else if (data.order_status == "fail")
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.ThirdId = data.order_id;
+                    oNotify.Message = data.remarks;
+                    oNotify.Response = "200";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Pending;
+                    oNotify.ThirdId = data.order_id;
+                    oNotify.Message = data.remarks;
+                    oNotify.Response = "200";
+                }
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.ThirdId = data.order_id;
+                oNotify.Message = "sign error";
+                oNotify.Response = "sign error";
+            }
+
+            return oNotify;
         }
 
         private class CallBackDebitReq
@@ -77,11 +132,6 @@ namespace Payment.FPay
             return oNotify;
         }
 
-        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
-        
         private class WithdrawResp
         {
             public bool status { get; set; }
@@ -154,12 +204,14 @@ namespace Payment.FPay
             public string username { get; set; }
             public string api_key { get; set; }
         }
+
         private class AuthResp
         {
             public bool status { get; set; }
             public string auth { get; set; }
             public string message { get; set; }
         }
+
         private class DepositReq
         {
             public string username { get; set; }
@@ -177,7 +229,7 @@ namespace Payment.FPay
             public string p_url { get; set; }
             public string message { get; set; }
         }
-        
+
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
@@ -254,6 +306,11 @@ namespace Payment.FPay
         }
 
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
         }
