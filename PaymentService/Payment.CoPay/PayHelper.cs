@@ -108,11 +108,11 @@ namespace Payment.CoPay
                 var status = formData["status"];
                 var result = FromJson<CallBackDebitResult>(formData["result"]);
                 oNotify.DepositId = result.orderid;
+                oNotify.Message = status;
+                oNotify.Comment = status;
                 if (status == "10000")
                 {
                     oNotify.ThirdId = result.transactionid.ToString();
-                    oNotify.Message = status;
-                    oNotify.Comment = status;
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = result.amount;
                     oNotify.ActualAmount = result.real_amount;
@@ -147,12 +147,12 @@ namespace Payment.CoPay
                 var status = formData["status"];
                 var result = FromJson<CallBackPayoutResult>(formData["result"]);
                 oNotify.WithdrawId = result.orderid;
+                oNotify.Message = status;
                 if (status == "10000")
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = result.real_amount;
                     oNotify.ThirdId = result.transactionid.ToString();
-                    oNotify.Message = status;
                     oNotify.Response = "success";
                 }
                 else
