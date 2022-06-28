@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Extensions;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -48,7 +49,7 @@ namespace PaymentService.Service.BLL
             try
             {
                 _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, iDepositResult.ActualAmount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
-                if (depositRequest.SiteId == 1) // 商城暫時只有Nova
+                if (CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId))
                 {
                     _depositService.InsertDepositRewardPointQueue(depositRequest.TransId);
                 }

@@ -13,6 +13,7 @@ using Microsoft.Extensions.Primitives;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -850,8 +851,8 @@ namespace PaymentService.Controllers
                         message,
                         (int)depositRequest.Status, rNotifyDepositResult.ActualAmount, depositRequest.PayName);
                     
-                    // Nova塞資料進DepositRewardPointQueue
-                    if (depositRequest.SiteId == 1)
+                    // 塞資料進DepositRewardPointQueue
+                    if (CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId))
                     {
                         _paymentBll.InsertDepositRewardPointQueue(transId);
                     }
