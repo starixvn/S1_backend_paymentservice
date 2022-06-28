@@ -31,7 +31,7 @@ namespace Payment.FPay
             {
                 WithdrawId = data.order_id
             };
-            var p = payResource["secretkey"] + data.order_id;
+            var p = payResource["WithdrawSecretKey"] + data.order_id;
             var sign = ToMD5(p).ToLower();
 
             if (sign == data.token)
@@ -145,8 +145,8 @@ namespace Payment.FPay
             {
                 var dicP = new Dictionary<string, string>()
                 {
-                    { "username", inputs["Username"] },
-                    { "api_key", inputs["key"] }
+                    { "username", inputs["WithdrawUsername"] },
+                    { "api_key", inputs["WithdrawKey"] }
                 };
                 var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
                 var sResponse = HttpPost(sUrl + "merchant/auth", sParam, "application/x-www-form-urlencoded", "0");
