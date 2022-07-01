@@ -115,7 +115,7 @@ namespace Payment.CoPay
                     oNotify.ThirdId = result.transactionid.ToString();
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = result.amount;
-                    oNotify.ActualAmount = result.real_amount;
+                    oNotify.ActualAmount = result.amount;
                     oNotify.Response = "success";
                 }
                 else
