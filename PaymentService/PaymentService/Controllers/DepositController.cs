@@ -850,13 +850,7 @@ namespace PaymentService.Controllers
                     _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
                         message,
                         (int)depositRequest.Status, rNotifyDepositResult.ActualAmount, depositRequest.PayName);
-                    
-                    // 塞資料進DepositRewardPointQueue
-                    if (CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId))
-                    {
-                        _paymentBll.InsertDepositRewardPointQueue(transId);
-                    }
-                    
+
                     return rNotifyDepositResult.Response;
                 }
 
