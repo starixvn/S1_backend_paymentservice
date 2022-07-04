@@ -49,10 +49,7 @@ namespace PaymentService.Service.BLL
             try
             {
                 _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, iDepositResult.ActualAmount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
-                if (CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId))
-                {
-                    _depositService.InsertDepositRewardPointQueue(depositRequest.TransId);
-                }
+                InsertDepositRewardPointQueue(depositRequest.TransId, depositRequest.SiteId, depositRequest.CurrencyId);
             }
             catch (Exception ex)
             {
@@ -181,6 +178,18 @@ namespace PaymentService.Service.BLL
         public string GetWithdrawalInfo(string transId)
         {
             return _withdrawalService.GetWithdrawalInfo(transId);
+        }
+        
+        private void InsertDepositRewardPointQueue(string transId, int siteId, int currencyId)
+        {
+            if (CommonExtension.CanRewardPoint(siteId, currencyId))
+            {
+                var resultCode = _depositService.InsertDepositRewardPointQueue(transId);
+                if (resultCode != (int) ErrorCode.Success)
+                {
+                    _logger.LogError($"{transId} InsertDepositRewardPointQueue failed, resultCode: {resultCode}");
+                }
+            }
         }
     }
 }
