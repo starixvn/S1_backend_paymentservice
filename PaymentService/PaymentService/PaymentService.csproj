@@ -25,6 +25,7 @@
     <ProjectReference Include="..\Payment.ComitPay\Payment.ComitPay.csproj" />
     <ProjectReference Include="..\Payment.CoPay\Payment.CoPay.csproj" />
     <ProjectReference Include="..\Payment.DirePay\Payment.DirePay.csproj" />
+    <ProjectReference Include="..\Payment.DoitnowPay\Payment.DoitnowPay.csproj" />
     <ProjectReference Include="..\Payment.DragonPay\Payment.DragonPay.csproj" />
     <ProjectReference Include="..\Payment.Eeziepay\Payment.Eeziepay.csproj" />
     <ProjectReference Include="..\Payment.FattyPayATM\Payment.FattyPayATM.csproj" />
