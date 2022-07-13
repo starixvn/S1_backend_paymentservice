@@ -15,7 +15,7 @@ namespace Payment.DoitnowPay
             {
                 { "clientId", inputs["clientId"] },
                 { "transactionId", inputs["TransID"] },
-                { "custName", inputs["PayAccount"] },
+                { "custName", "hulkchou" },
                 { "custMobile", "" },
                 { "custEmail", "" },
                 { "amount", amount.ToString("#") },
