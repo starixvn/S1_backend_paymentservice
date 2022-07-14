@@ -1,0 +1,31 @@
+﻿using System.Collections.Generic;
+using NUnit.Framework;
+using Payment.DoitnowPay;
+
+
+namespace PaymentService.IntegrationTest
+{
+    [TestFixture]
+    public class DoitnowPayHelperTests
+    {
+        [Test]
+        public void HashTest()
+        {
+            var testData = new Dictionary<string, string>()
+            {
+                { "clientId", "NOVA" },
+                { "transactionId", "DD1401406" },
+                { "custName", "hulkchou" },
+                { "amount", "100" },
+                { "returnUrl", "http://www.n88dev.com:/en/Cashier/Deposit?UserLang=en" },
+                { "callbackUrl", "http://payment.n88dev.com:59159/Payment/DepositCallBack/DD1401406" },
+                { "paymentMethod", "eWallet" }
+            };
+            var expect = "e7e032d86ae9e0c3d434657ccbc956adea99d0662129f0e999aba6fee6face5a";
+            var payHelper = new PayHelper(); 
+            var actual = payHelper.Hash(testData, "84dc3f1fae83e831657e339414719b9e4fbfae39");
+
+            Assert.AreEqual(expect, actual);
+        }
+    }
+}
