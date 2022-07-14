@@ -59,7 +59,7 @@ namespace Payment.DoitnowPay
                 { "clientId", payResource["clientId"] },
                 { "referenceId", formData["referenceId"] },
                 { "transactionId", formData["transactionId"] },
-                { "custName", formData["clientId"] },
+                { "custName", formData["custName"] },
                 { "amount", formData["amount"] },
                 { "status", formData["status"] },
             };
