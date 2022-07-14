@@ -53,7 +53,48 @@ namespace Payment.DoitnowPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            throw new System.NotImplementedException();
+            var oNotify = new NotifyDepositResult();
+            var dict = new Dictionary<string, string>()
+            {
+                { "clientId", payResource["clientId"] }
+            };
+            foreach (var (key, value) in formData.Where(data => data.Key != "hashVal"))
+            {
+                dict.Add(key, value);
+            }
+            var expectedSign = formData["hashVal"];
+            var actualSign = Hash(dict, payResource["clientSecret"]);
+            
+            if (actualSign == expectedSign)
+            {
+                var status = formData["status"];
+                oNotify.DepositId = formData["transactionId"];
+                oNotify.Message = status;
+                oNotify.Comment = status;
+                if (status == "success")
+                {
+                    var amount = decimal.Parse(formData["amount"]);
+                    oNotify.ThirdId = formData["referenceId"];
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = amount;
+                    oNotify.ActualAmount = amount;
+                    oNotify.Response = "success";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.Response = "success";
+                }
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Comment = "Signature error";
+                oNotify.Message = "Signature error";
+                oNotify.Response = "Signature error";
+            }
+
+            return oNotify;
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
@@ -65,6 +106,11 @@ namespace Payment.DoitnowPay
         {
             var queryString = string.Join("", para.Select(p => p.Value).ToArray());
             return ToSHA256($"{queryString}{key}").ToLower();
+        }
+        
+        public class CallBackDebitResult
+        {
+            
         }
     }
 }
