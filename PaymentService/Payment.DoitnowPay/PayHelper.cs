@@ -62,36 +62,26 @@ namespace Payment.DoitnowPay
             {
                 dict.Add(key, value);
             }
+            
             var expectedSign = formData["hashVal"];
             var actualSign = Hash(dict, payResource["clientSecret"]);
-            
-            if (actualSign == expectedSign)
+            var status = formData["status"];
+            oNotify.DepositId = formData["transactionId"];
+            oNotify.Message = status;
+            oNotify.Comment = status;
+            if (status == "success")
             {
-                var status = formData["status"];
-                oNotify.DepositId = formData["transactionId"];
-                oNotify.Message = status;
-                oNotify.Comment = status;
-                if (status == "success")
-                {
-                    var amount = decimal.Parse(formData["amount"]);
-                    oNotify.ThirdId = formData["referenceId"];
-                    oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = amount;
-                    oNotify.ActualAmount = amount;
-                    oNotify.Response = "success";
-                }
-                else
-                {
-                    oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.Response = "success";
-                }
+                var amount = decimal.Parse(formData["amount"]);
+                oNotify.ThirdId = formData["referenceId"];
+                oNotify.TransStatus = TransStatus.Success;
+                oNotify.RequestAmount = amount;
+                oNotify.ActualAmount = amount;
+                oNotify.Response = "success";
             }
             else
             {
-                oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Comment = "Signature error";
-                oNotify.Message = "Signature error";
-                oNotify.Response = "Signature error";
+                oNotify.TransStatus = TransStatus.Fail;
+                oNotify.Response = "success";
             }
 
             return oNotify;
