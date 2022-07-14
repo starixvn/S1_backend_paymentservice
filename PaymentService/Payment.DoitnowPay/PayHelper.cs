@@ -23,11 +23,13 @@ namespace Payment.DoitnowPay
             };
             formData.Add("hashVal", Hash(formData, inputs["clientSecret"]));
             
-            var oDepositResult = new DepositResult();
-            oDepositResult.Url = sUrl;
-            oDepositResult.FormData = formData;
-            oDepositResult.Success = true;
-            oDepositResult.Message = "";
+            var oDepositResult = new DepositResult
+            {
+                Url = sUrl,
+                FormData = formData,
+                Success = true,
+                Message = ""
+            };
             return oDepositResult;
         }
 
@@ -107,11 +109,6 @@ namespace Payment.DoitnowPay
         {
             var queryString = string.Join("", para.Select(p => p.Value).ToArray());
             return ToSHA256($"{queryString}{key}").ToLower();
-        }
-        
-        public class CallBackDebitResult
-        {
-            
         }
     }
 }
