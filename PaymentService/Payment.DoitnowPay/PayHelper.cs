@@ -15,9 +15,7 @@ namespace Payment.DoitnowPay
             {
                 { "clientId", inputs["clientId"] },
                 { "transactionId", inputs["TransID"] },
-                { "custName", "hulkchou" },
-                { "custMobile", "" },
-                { "custEmail", "" },
+                { "custName", inputs["CustId"] },
                 { "amount", amount.ToString("#") },
                 { "returnUrl", inputs["ReturnUrl"] },
                 { "callbackUrl", inputs["CallBackUrl"] },
@@ -63,11 +61,10 @@ namespace Payment.DoitnowPay
             throw new System.NotImplementedException();
         }
         
-        private string Hash(Dictionary<string, string> para, string key)
+        public string Hash(Dictionary<string, string> para, string key)
         {
-            var properties = para.Select(p => p.Value);
-            var queryString = string.Join("", properties.ToArray());
-            return ToSHA256($"{queryString}{key}");
+            var queryString = string.Join("", para.Select(p => p.Value).ToArray());
+            return ToSHA256($"{queryString}{key}").ToLower();
         }
     }
 }
