@@ -75,6 +75,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.ComitPay", "Payment
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.CoPay", "Payment.CoPay\Payment.CoPay.csproj", "{26CC573C-DE6F-4086-884F-494F5BD7F185}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.DoitnowPay", "Payment.DoitnowPay\Payment.DoitnowPay.csproj", "{9D9FBA3B-B4B2-42D2-81F2-ACE8E7E06B84}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -221,6 +223,10 @@ Global
 		{26CC573C-DE6F-4086-884F-494F5BD7F185}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26CC573C-DE6F-4086-884F-494F5BD7F185}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{26CC573C-DE6F-4086-884F-494F5BD7F185}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D9FBA3B-B4B2-42D2-81F2-ACE8E7E06B84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D9FBA3B-B4B2-42D2-81F2-ACE8E7E06B84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D9FBA3B-B4B2-42D2-81F2-ACE8E7E06B84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D9FBA3B-B4B2-42D2-81F2-ACE8E7E06B84}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -258,6 +264,7 @@ Global
 		{D9F816F0-1569-499A-AAE0-CA19B0DA64FC} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{D4B7E6E2-9407-4699-A77C-07B9A2F14432} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{26CC573C-DE6F-4086-884F-494F5BD7F185} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{9D9FBA3B-B4B2-42D2-81F2-ACE8E7E06B84} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
