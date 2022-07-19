@@ -264,6 +264,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("Amount", reqDeposit.Amount.ToString());
                 DepReq.Add("PayCode", payInfo.PayCode);
                 DepReq.Add("BankCode", null);
+                DepReq.Add("AccountName", custInfo.AccountName);
                 DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
                 DepReq.Add("PayLangId", payLangId);
                 DepReq.Add("CustId", reqDeposit.CustId.ToString());
