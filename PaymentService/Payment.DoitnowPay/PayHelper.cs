@@ -15,7 +15,7 @@ namespace Payment.DoitnowPay
             {
                 { "clientId", inputs["clientId"] },
                 { "transactionId", inputs["TransID"] },
-                { "custName", inputs["CustId"] },
+                { "custName", inputs["AccountName"] },
                 { "amount", amount.ToString("#") },
                 { "returnUrl", inputs["ReturnUrl"] },
                 { "callbackUrl", inputs["CallBackUrl"] },
