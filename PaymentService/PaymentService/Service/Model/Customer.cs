@@ -21,5 +21,6 @@ namespace PaymentService.Service.Model
         public bool PhoneVerified { get; set; }
         public string PhoneNo { get; set; }
         public string AreaCode { get; set; }
+        public string AccountName { get; set; }
     }
 }
