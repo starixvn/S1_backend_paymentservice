@@ -1,13 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
-using System.Text;
-
-namespace PaymentService.Extensions
+﻿namespace PaymentService.Extensions
 {
     public static class ConfigurationManagerExtension
     {
-        public static MemoryStream GetRemoteConfig(IEnumerable<string> remoteUrls)
+        public static ConfigurationManager AddRemoteJsonConfig(this ConfigurationManager configuration, IEnumerable<string> remoteUrls)
         {
             using var client = new HttpClient();
             Stream result = null;
@@ -26,8 +21,8 @@ namespace PaymentService.Extensions
                 catch { }
             }
 
-            using var streamReader = new StreamReader(result);
-            return new MemoryStream(Encoding.UTF8.GetBytes(streamReader.ReadToEnd()));
+            configuration.AddJsonStream(result);
+            return configuration;
         }
     }
 }
