@@ -174,7 +174,7 @@ namespace Payment.CirclePay
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
             var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", username, password, creditReq.partner_tran_id);
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", username, password, creditReq.partner_tran_id , false);
 
             var payout = new Payout();
             payout = JsonConvert.DeserializeObject<Payout>(sResponse);

@@ -120,7 +120,7 @@ namespace PaymentCore
     }
     public interface IPayHelperNoCallBackUrl
     {
-        string FetchTransId(Dictionary<string, string> formData, string bodyContent);
+        string FetchTransId(Dictionary<string, string> formData, string bodyContent );
     }
     public interface IDepositResult
     {
@@ -190,6 +190,7 @@ namespace PaymentCore
     public abstract class PayHelperBase : IPayHelper
     {
         public static IPayHttpHelper HttpHelper { get; set; }
+        public static IPaymentHelper PaymentHelper { get; set; }
         public event InsertPaymentLogEventHandler InsertPaymentLog;
         public abstract DepositResult Debit(Dictionary<string, string> inputs);
         public abstract WithdrawResult Credit(Dictionary<string, string> inputs);
@@ -347,7 +348,7 @@ namespace PaymentCore
 
             return responseFromServer;
         }
-        protected string HttpPost(string url, string parameters, string contentType, string username, string password, string transID)
+        protected string HttpPost(string url, string parameters, string contentType, string username, string password, string transID , bool isFoxPay)
         {
             var request = WebRequest.Create(url);
 
@@ -360,8 +361,11 @@ namespace PaymentCore
             var postData = parameters;
             var byteArray = Encoding.UTF8.GetBytes(postData);
             request.ContentType = contentType;
-            request.ContentLength = byteArray.Length;
-
+            if (!isFoxPay)
+            {
+                request.ContentLength = byteArray.Length;
+            }
+            
             var svcCredentials = username;
             if (!string.IsNullOrEmpty(password))
             {
@@ -757,6 +761,17 @@ namespace PaymentCore
             var DataToEncrypt = Convert.FromBase64String(content);
             var outBytes = c.DoFinal(DataToEncrypt);//加密
             return Encoding.UTF8.GetString(outBytes);
+        }
+        
+        protected string AES128CBCDecrypt(string key , string iv, string content)
+        { 
+            var keyArray = Encoding.UTF8.GetBytes(key);
+            var ivArray = Encoding.UTF8.GetBytes(iv);
+            var cipher = CipherUtilities.GetCipher("AES/CBC/PKCS7");
+            cipher.Init(false, new ParametersWithIV(new KeyParameter(keyArray), ivArray));
+            var encData = Convert.FromBase64String(content);
+            
+            return Encoding.UTF8.GetString(cipher.DoFinal(encData));
         }
 
         protected string currMapping(string currencyId)

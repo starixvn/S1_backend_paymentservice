@@ -61,6 +61,7 @@ namespace PaymentService
             services.AddSingleton<CourierAdapter>();
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<CacheHelper>();
+            services.AddSingleton<PaymentHelper>();
             services.AddSingleton<IFlurlHttpHelper, FlurlHttpHelper>();
             services.AddTransient<JsonNetSerializer, JsonNetSerializer>();
             //services.AddSingleton<IBCDBLibrary>();
