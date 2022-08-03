@@ -108,48 +108,84 @@ namespace Payment.FoxPay
             public string utrNo { get; set; }
         }
         
-        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        private class CallBackDebitResponse
         {
-            var pay = GetPaySetting(bodyContent);
-            var data = DecryptResponse(pay["Key"].Substring(0,15),pay["Iv"],bodyContent);
-            return data!.thirdOrderNumber;
+            [JsonProperty("code")]
+            public int Code { get; set; }
+            [JsonProperty("message")]
+            public string Message { get; set; }
+            [JsonProperty("success")]
+            public bool Success { get; set; }
+        }
+        
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        { 
+            var preData = JsonConvert.DeserializeObject<CallBackDebitReq>(bodyContent);
+            return preData?.thirdOrderNumber;
         }
         
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var pay = GetPaySetting(bodyContent);
-            var data = DecryptResponse(pay["Key"].Substring(0,15),pay["Iv"],bodyContent);
+            var data = DecryptResponse(pay["key"].Substring(0,16),pay["iv"],bodyContent);
 
+            var response = new CallBackDebitResponse
+            {
+                Code = 1,
+                Message = "success",
+                Success = true
+            };
+            
             var oNotify = new NotifyDepositResult
             {
-                Message = null,
                 DepositId = payResource["TransID"],
-                RefThirdId = data.utrNo,
-                ThirdId = data.fiatOrderId,
-                Comment = data.orderNumber,
-                Response = "success"
+                Comment = "success"
             };
-            if (data.status == 1)
+
+            if (data != null)
             {
-                oNotify.TransStatus = TransStatus.Success;
-                oNotify.Message = "deposit success";
-                
-                oNotify.RequestAmount = decimal.Parse(data.amount);
-                oNotify.ActualAmount = decimal.Parse(data.amount);
-            }
-            else if (data.status == 0)
-            {
-                oNotify.Message = "cancel deposit";
-                oNotify.TransStatus = TransStatus.Fail;
-                
+                oNotify.RefThirdId = data.utrNo;
+                oNotify.ThirdId = data.fiatOrderId;
+
+                data.status = 0;
+                switch (data.status)
+                {
+                    case 1:
+                        oNotify.TransStatus = TransStatus.Success;
+                        oNotify.Message = "deposit success";
+                        oNotify.RequestAmount = decimal.Parse(data.amount);
+                        oNotify.ActualAmount = decimal.Parse(data.amount);
+                        oNotify.Response = JsonConvert.SerializeObject(response);
+                        break;
+                    
+                    case 0:
+                        oNotify.TransStatus = TransStatus.Fail;
+                        oNotify.Message = "cancel deposit";
+                        oNotify.Comment = "Fail";
+                        oNotify.Response = JsonConvert.SerializeObject(response);
+                        break;
+                    
+                    default:
+                        oNotify.TransStatus = TransStatus.Pending;
+                        response.Code = 2;
+                        response.Message = "Unknown status";
+                        response.Success = false;
+                        oNotify.Response = JsonConvert.SerializeObject(response);
+                        break;
+                }
             }
             else
             {
+                response.Code = 2;
+                response.Message = "Decrypt Error";
+                response.Success = false;
+                oNotify.Message = "Decrypt Error";
+                oNotify.Comment = "Decrypt Error";
                 oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Response = JsonConvert.SerializeObject(response);
             }
             
             return oNotify;
-            return null;
         }
         
         #endregion
@@ -313,12 +349,20 @@ namespace Payment.FoxPay
 
         #region private
 
-        private CallBackDebitData DecryptResponse(string key , string iv ,string bodyContent)
+        private CallBackDebitData? DecryptResponse(string key , string iv ,string bodyContent)
         {
-            var preData = JsonConvert.DeserializeObject<CallBackDebitReq>(bodyContent);
-            var decryptData = AES128CBCDecrypt(key, iv, preData.encryptedData);
-            var data = JsonConvert.DeserializeObject<CallBackDebitData>(decryptData);
-            return data;
+            try
+            {
+                var preData = JsonConvert.DeserializeObject<CallBackDebitReq>(bodyContent);
+                var decryptData = AES128CBCDecrypt(key, iv, preData.encryptedData);
+                var data = JsonConvert.DeserializeObject<CallBackDebitData>(decryptData);
+                return data;
+            }
+            catch (Exception e)
+            {
+                _logger.LogInformation($"Decrypt failed, Message:{e.Message}");
+                return null;
+            }
         }
 
         private Dictionary<string, string> GetPaySetting(string bodyContent)
