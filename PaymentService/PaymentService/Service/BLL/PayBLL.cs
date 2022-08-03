@@ -30,7 +30,6 @@ namespace PaymentService.Service.BLL
             environment = provider.GetRequiredService<IHostEnvironment>();
             logger = provider.GetRequiredService<ILogger<PayBLL>>();
             PayHelperBase.HttpHelper = provider.GetRequiredService<HttpHelper>();
-            PayHelperBase.PaymentHelper = provider.GetRequiredService<PaymentHelper>();
             _cacheHelper = provider.GetRequiredService<CacheHelper>();
             _provider = provider;
         }
