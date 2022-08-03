@@ -144,10 +144,11 @@ namespace Payment.FoxPay
 
             if (data != null)
             {
+                _logger.LogInformation($"CallBackDebit Decrypt Data, Message:{JsonConvert.SerializeObject(data)}");
+                
                 oNotify.RefThirdId = data.utrNo;
                 oNotify.ThirdId = data.fiatOrderId;
-
-                data.status = 0;
+                
                 switch (data.status)
                 {
                     case 1:
