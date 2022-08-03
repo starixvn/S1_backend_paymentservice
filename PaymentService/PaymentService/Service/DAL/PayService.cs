@@ -3,9 +3,10 @@ using PaymentService.Service.Model;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
 using PaymentService.Model;
 using PaymentService.Service.Library;
-using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.DAL
 {

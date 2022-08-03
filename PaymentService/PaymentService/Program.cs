@@ -3,6 +3,8 @@ using Serilog;
 using Serilog.Exceptions;
 using PaymentService.Extensions;
 using PaymentService;
+using PaymentService.Service.Library;
+using PaymentCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());

@@ -14,10 +14,11 @@ using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Extensions;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers
