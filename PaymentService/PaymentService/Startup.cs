@@ -102,6 +102,8 @@ namespace PaymentService
             app.UseResponseLogMiddleware();
             //app.UseAuthorization();
 
+            PayHelperBase.PaymentHelper = app.ApplicationServices.GetRequiredService<PaymentHelper>();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGet("/health", async context =>

@@ -36,6 +36,5 @@ if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringCom
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
-PayHelperBase.PaymentHelper = app.Services.GetRequiredService<PaymentHelper>();
 
 app.Run();
