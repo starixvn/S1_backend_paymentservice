@@ -7,13 +7,11 @@ namespace Payment.FoxPay
 {
     class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
-        private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
         
         public PayHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
-            _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
         }
         
         #region Deposit
@@ -131,7 +129,7 @@ namespace Payment.FoxPay
 
             var response = new CallBackDebitResponse
             {
-                Code = 1,
+                Code = (int)DepositStatus.Success,
                 Message = "success",
                 Success = true
             };
@@ -151,7 +149,7 @@ namespace Payment.FoxPay
                 
                 switch (data.status)
                 {
-                    case 1:
+                    case (int)DepositStatus.Success:
                         oNotify.TransStatus = TransStatus.Success;
                         oNotify.Message = "deposit success";
                         oNotify.RequestAmount = decimal.Parse(data.amount);
@@ -159,7 +157,7 @@ namespace Payment.FoxPay
                         oNotify.Response = JsonConvert.SerializeObject(response);
                         break;
                     
-                    case 0:
+                    case (int)DepositStatus.Fail:
                         oNotify.TransStatus = TransStatus.Fail;
                         oNotify.Message = "cancel deposit";
                         oNotify.Comment = "Fail";
@@ -168,7 +166,7 @@ namespace Payment.FoxPay
                     
                     default:
                         oNotify.TransStatus = TransStatus.Pending;
-                        response.Code = 2;
+                        response.Code = (int)DepositStatus.ResponseError;
                         response.Message = "Unknown status";
                         response.Success = false;
                         oNotify.Response = JsonConvert.SerializeObject(response);
@@ -177,7 +175,7 @@ namespace Payment.FoxPay
             }
             else
             {
-                response.Code = 2;
+                response.Code = (int)DepositStatus.ResponseError;
                 response.Message = "Decrypt Error";
                 response.Success = false;
                 oNotify.Message = "Decrypt Error";
