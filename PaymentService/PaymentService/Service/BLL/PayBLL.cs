@@ -79,6 +79,14 @@ namespace PaymentService.Service.BLL
                 new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(10)),
                 i => payService.GetOnlineBankListForPayout());
         }
+        
+        public IEnumerable<EWalletInfoSys> GetEWalletPayList()
+        {
+            var key = "EWalletPayList";
+            return _cacheHelper.TryGetOrCreate(key,
+                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(10)),
+                i => payService.GetEWalletPayList());
+        }
 
         public IEnumerable<BankInfoPay> GetCryptoListForPayout()
         {
