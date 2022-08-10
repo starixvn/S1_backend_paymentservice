@@ -261,6 +261,9 @@ namespace Payment.FoxPay
             };
             
             var reqJson = JsonConvert.SerializeObject(preRequest);
+            
+            _logger.LogInformation($"FoxPay Credit Data, Message:{reqJson}");
+            
             var encryptedData = EncryptResponse(inputs["key"].Substring(0,16),inputs["iv"],reqJson);
             
             var timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
@@ -326,27 +329,42 @@ namespace Payment.FoxPay
                 Success = true
             };
 
-            switch (data.status)
+            if (data != null)
             {
-                case (int)FoxPayStatus.Success:
-                    oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.amount);
-                    oNotify.Response = JsonConvert.SerializeObject(response);
-                    break;
+                _logger.LogInformation($"CallBackCredit Decrypt Data, Message:{JsonConvert.SerializeObject(data)}");
+                
+                switch (data.status)
+                {
+                    case (int)FoxPayStatus.Success:
+                        oNotify.TransStatus = TransStatus.Success;
+                        oNotify.RequestAmount = decimal.Parse(data.amount);
+                        oNotify.Response = JsonConvert.SerializeObject(response);
+                        break;
                     
-                case (int)FoxPayStatus.Fail:
-                    oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.Response = JsonConvert.SerializeObject(response);
-                    break;
+                    case (int)FoxPayStatus.Fail:
+                        oNotify.TransStatus = TransStatus.Fail;
+                        oNotify.Response = JsonConvert.SerializeObject(response);
+                        break;
                     
-                default:
-                    oNotify.TransStatus = TransStatus.Pending;
-                    response.Code = (int)FoxPayStatus.ResponseError;
-                    response.Message = "Unknown status";
-                    response.Success = false;
-                    oNotify.Response = JsonConvert.SerializeObject(response);
-                    break;
+                    default:
+                        oNotify.TransStatus = TransStatus.Pending;
+                        response.Code = (int)FoxPayStatus.ResponseError;
+                        response.Message = "Unknown status";
+                        response.Success = false;
+                        oNotify.Response = JsonConvert.SerializeObject(response);
+                        break;
+                }
             }
+            else
+            {
+                response.Code = (int)FoxPayStatus.ResponseError;
+                response.Message = "Decrypt Error";
+                response.Success = false;
+                oNotify.Message = "Decrypt Error";
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Response = JsonConvert.SerializeObject(response);
+            }
+            
             
             return oNotify;
         }
