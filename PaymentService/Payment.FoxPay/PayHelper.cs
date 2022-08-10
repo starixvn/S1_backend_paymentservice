@@ -241,11 +241,17 @@ namespace Payment.FoxPay
                 accountName = accountName.PadLeft(6, '0');
             }
             
+            var thirdUserId = inputs["CustId"];
+            if (thirdUserId.Length < 6)
+            {
+                thirdUserId = thirdUserId.PadLeft(6, '0');
+            }
+            
             var preRequest = new PreWithdrawalReq
             {
                 amount = Convert.ToDecimal(inputs["Amount"]).ToString(),
                 thirdOrderNumber = inputs["TransID"],
-                thirdUserId = inputs["CustId"],
+                thirdUserId = thirdUserId,
                 issuePayPo = new IssuePayPo
                 {
                     accountName = inputs["AccountNo"],
