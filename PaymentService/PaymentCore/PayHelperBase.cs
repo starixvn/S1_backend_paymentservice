@@ -774,6 +774,17 @@ namespace PaymentCore
             return Encoding.UTF8.GetString(cipher.DoFinal(encData));
         }
 
+        protected string AES128CBCEncrypt(string key , string iv, string content)
+        { 
+            var keyArray = Encoding.UTF8.GetBytes(key);
+            var ivArray = Encoding.UTF8.GetBytes(iv);
+            var cipher = CipherUtilities.GetCipher("AES/CBC/PKCS7");
+            cipher.Init(true, new ParametersWithIV(new KeyParameter(keyArray), ivArray));
+            var DataToEncrypt = Encoding.UTF8.GetBytes(content);
+            var outBytes = cipher.DoFinal(DataToEncrypt);//加密
+            return Convert.ToBase64String(outBytes);
+        }
+        
         protected string currMapping(string currencyId)
         {
             var currMapping = new Dictionary<string, string>

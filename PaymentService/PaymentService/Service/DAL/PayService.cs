@@ -29,6 +29,11 @@ namespace PaymentService.Service.DAL
             return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPayForPayout_Get");
         }
 
+        public IEnumerable<EWalletInfoSys> GetEWalletPayList()
+        {
+            return _reportDbClient.Query<EWalletInfoSys>("Service_EWalletInfoSys_Get");
+        }
+        
         public IEnumerable<BankInfoPay> GetCryptoListForPayout()
         {
             return _reportDbClient.Query<BankInfoPay>("Common_CryptoPayForPayout_Get");
