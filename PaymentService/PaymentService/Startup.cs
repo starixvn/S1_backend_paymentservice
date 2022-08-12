@@ -15,7 +15,6 @@ using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
-using StackExchange.Redis;
 
 namespace PaymentService
 {
@@ -33,8 +32,6 @@ namespace PaymentService
         {
             services.AddMemoryCache();
             services.AddDatabaseConnection(Configuration);
-            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(Configuration.GetValue<string>("RedisConnection")));
-            services.AddSingleton<ICacheHelper, RedisCacheHelper>();
 
             var proxyHost = Configuration.GetValue<string>("ProxyHost");
             var proxyPort = Configuration.GetValue<int>("ProxyPort");
