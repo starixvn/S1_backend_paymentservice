@@ -1,7 +1,4 @@
 ﻿using PaymentService.Service.Model;
-using System;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 using PaymentService.Model;
 using PaymentService.Service.Library;
 

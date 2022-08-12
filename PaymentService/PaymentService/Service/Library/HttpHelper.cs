@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using PaymentCore;
-using System.Net.Http;
+﻿using PaymentCore;
 
 namespace PaymentService.Service.Library
 {

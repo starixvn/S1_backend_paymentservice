@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using PaymentCore.Model.enums;
+﻿using PaymentCore.Model.enums;
 
 namespace PaymentCore.Model
 {

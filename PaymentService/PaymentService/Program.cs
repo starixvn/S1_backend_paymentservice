@@ -3,8 +3,6 @@ using Serilog;
 using Serilog.Exceptions;
 using PaymentService.Extensions;
 using PaymentService;
-using PaymentService.Service.Library;
-using PaymentCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
@@ -36,5 +34,9 @@ if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringCom
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
+
+const int minWorkers = 16;
+const int minIOCPs = 4;
+ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 
 app.Run();

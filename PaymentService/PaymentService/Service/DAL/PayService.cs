@@ -1,8 +1,4 @@
-﻿using System;
-using PaymentService.Service.Model;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
+﻿using PaymentService.Service.Model;
 using PaymentCore.Model;
 using PaymentCore.Model.enums;
 using PaymentService.Model;

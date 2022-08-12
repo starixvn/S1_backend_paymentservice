@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Flurl.Http;
 using Flurl.Http.Content;
@@ -14,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentCore.Exceptions;
-using PaymentCore.Extensions;
 using Serilog.Context;
 using JsonExtension = PaymentCore.Extensions.JsonExtension;
 
