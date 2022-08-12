@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using PaymentService.Model;
+﻿using PaymentService.Model;
 using PaymentService.Service.Library;
 
 namespace PaymentService.Extensions

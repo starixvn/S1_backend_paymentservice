@@ -1,6 +1,4 @@
 ﻿using NUnit.Framework;
-using System.Collections.Generic;
-using System;
 using Payment.NAP3SPay;
 using NSubstitute;
 using PaymentCore;

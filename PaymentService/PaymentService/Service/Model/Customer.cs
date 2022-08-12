@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace PaymentService.Service.Model
+﻿namespace PaymentService.Service.Model
 {
     public class Customer
     {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Payment.DirePay
+﻿namespace Payment.DirePay
 {
     internal class DirePayDefinition
     {

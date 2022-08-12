@@ -1,6 +1,4 @@
-﻿using System;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Caching.Memory;
 using PaymentService.Model;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;

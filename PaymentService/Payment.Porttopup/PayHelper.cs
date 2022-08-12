@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore;
-using System;
-using System.Collections.Generic;
 
 namespace Payment.Porttopup
 {
