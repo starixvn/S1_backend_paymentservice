@@ -29,10 +29,10 @@ namespace PaymentService.Service.BLL
         }
         public Customer GetCustInfoWithCache(int custId)
         {
-           
-            return _redisHelper.TryGetOrCreate($"CustInfo:{custId}", TimeSpan.FromMinutes(1),
-                () => _custInfoService.GetCustInfo(custId),
-                RedisDataBase.Shared);
+            var key = $"CustInfo_{custId}";
+            return _cacheHelper.TryGetOrCreate(key,
+                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(1)),
+                i => _custInfoService.GetCustInfo(custId));
         }
 
         public decimal GetBalance(int custId)
