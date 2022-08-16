@@ -26,5 +26,39 @@ namespace PaymentService.IntegrationTest
 
             Assert.AreEqual(expect, actual);
         }
+        [Test]
+        public void CallBackSuccessHashTest()
+        {
+            var testData = new Dictionary<string, string>()
+            {
+                { "clientId", "NOVA" },
+                { "referenceId", "TK2208172A4E93" },
+                { "transactionId", "DD1401723" },
+                { "custName", "習近平" },
+                { "amount", "500.00" },
+                { "status", "success" }
+            };
+            var expect = "2734ac4aefe0dd265f50830d4dbd25d29e9fe1fd57c62252af7737df4491eede";
+            var payHelper = new PayHelper(); 
+            var actual = payHelper.Hash(testData, "84dc3f1fae83e831657e339414719b9e4fbfae39");
+
+            Assert.AreEqual(expect, actual);
+        }
+        
+        [Test]
+        public void CallBackFailedHashTest()
+        {
+            var testData = new Dictionary<string, string>()
+            {
+                { "clientId", "NOVA" },
+                { "transactionId", "DP2925450" },
+                { "status", "failed" }
+            };
+            var expect = "3732d010c0d0b152097a150904381e842cbc3895801b275ca2c02cf3538e31ca";
+            var payHelper = new PayHelper(); 
+            var actual = payHelper.Hash(testData, "92eac68297c0613385d6329c3c9409e5d623f100");
+
+            Assert.AreEqual(expect, actual);
+        }
     }
 }
