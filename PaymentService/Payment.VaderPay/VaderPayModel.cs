@@ -7,7 +7,7 @@ namespace Payment.VaderPay
     {
         [Required]
         [Description("Merchant Username")]
-        public string Seller { get; set; }
+        public string MerchantCode { get; set; }
         
         [Required]
         [Description("the URL of the page where you want the client to be redirected after a successful transaction")]
@@ -23,7 +23,7 @@ namespace Payment.VaderPay
         
         [Required]
         [Description("Amount to debit from the client’s bank account")]
-        public decimal Amount { get; set; }
+        public string Amount { get; set; }
         
         [Required]
         [Description("The preferred currency for the transaction")]
@@ -39,7 +39,11 @@ namespace Payment.VaderPay
         
         [Required]
         [Description("the client’s full name")]
-        public string ClientName { get; set; }
+        public string PlayerId { get; set; }
+
+        [Required]
+        [Description("hash_hmac() with sha256 of ‘MerchantCode + ItemID + Currency + Amount’ signed with your API Key")]
+        public string Hash { get; set; }
     }
 
     public class MobileDepositReq
