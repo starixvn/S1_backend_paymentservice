@@ -227,7 +227,7 @@ namespace Payment.VaderPay
                     ItemDescription = inputs["TransID"],
                     Amount = inputs["Amount"],
                     Currency = inputs["PayCurrencyId"],
-                    HTTPPostURL = UrlEncode(inputs["CallBackUrl"]),
+                    HTTPPostURL = inputs["CallBackUrl"],
                     PlayerId = inputs["CustId"],
                     ReturnURL = inputs["ReturnUrl"],
                     FailedReturnURL = inputs["ReturnUrl"]
