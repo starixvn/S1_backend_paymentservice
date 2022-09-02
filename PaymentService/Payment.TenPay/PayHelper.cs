@@ -217,7 +217,6 @@ namespace Payment.TenPay
             var sUrl = inputs["host"];
             var formData = new Dictionary<string, string>();
             var amount = decimal.Parse(inputs["Amount"]);
-            var payAccount = inputs["PayAccount"];
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("CurrencyId", inputs["PayCurrencyId"]);
             formData.Add("IsTest", inputs["IsTest"]);
@@ -229,7 +228,7 @@ namespace Payment.TenPay
             formData.Add("ShopInformUrl", inputs["CallBackUrl"]);
             formData.Add("ShopUserLongId", inputs["merchant_no"]);
 
-            if (!string.IsNullOrEmpty(payAccount))
+            if (inputs.TryGetValue("PayAccount", out var payAccount))
             {
                 formData.Add("PayerAccountNumber", payAccount);
             }
