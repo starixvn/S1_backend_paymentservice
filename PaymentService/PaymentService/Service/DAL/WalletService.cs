@@ -22,7 +22,7 @@ namespace PaymentService.Service.DAL
             var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount = amount, Type = type, Memo = memo, RefTransId = refTransId });
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            _mainDbClient.Execute("Wallet_Set", p, conn, trans);
+            _mainDbClient.Execute("Wallet_Set_V2", p, conn, trans);
             is1StDeposit = p.Get<byte?>("Is1stDepoist") ?? 0;
             afterAmount = p.Get<decimal?>("AfterAmount") ?? 0;
             return afterAmount >= 0 ? 1 : 0;
