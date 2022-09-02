@@ -228,7 +228,7 @@ namespace Payment.TenPay
             formData.Add("ShopInformUrl", inputs["CallBackUrl"]);
             formData.Add("ShopUserLongId", inputs["merchant_no"]);
 
-            if (inputs.TryGetValue("PayAccount", out var payAccount))
+            if (inputs.TryGetValue("PayAccount", out var payAccount) && !string.IsNullOrEmpty(payAccount))
             {
                 formData.Add("PayerAccountNumber", payAccount);
             }
