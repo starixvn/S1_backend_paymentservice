@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentCore;
@@ -225,19 +222,19 @@ namespace Payment.VaderPay
             {
                 var depositReq = new DepositReq
                 {
-                    Seller = inputs["merchant"],
+                    MerchantCode = inputs["merchant"],
                     ItemID = inputs["TransID"],
                     ItemDescription = inputs["TransID"],
-                    Amount = Convert.ToDecimal(inputs["Amount"]),
+                    Amount = inputs["Amount"],
                     Currency = inputs["PayCurrencyId"],
-                    HTTPPostURL = UrlEncode(inputs["CallBackUrl"]),
-                    ClientName = inputs["CustId"],
+                    HTTPPostURL = inputs["CallBackUrl"],
+                    PlayerId = inputs["CustId"],
                     ReturnURL = inputs["ReturnUrl"],
                     FailedReturnURL = inputs["ReturnUrl"]
                 };
-                var dicP = FromJson<Dictionary<string, string>>(ToJson(depositReq));
-                var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-                sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["key"], null, depositReq.ItemID);
+                var parameter = $"{depositReq.MerchantCode}{depositReq.ItemID}{depositReq.Currency}{depositReq.Amount}";
+                depositReq.Hash = ToHMACSHA256(parameter, inputs["key"]);
+                sResponse = HttpPost(sUrl, ToJson(depositReq), "application/json", depositReq.ItemID, false);
             }
             else
             {

@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Net.Http;
 using Flurl.Http.Configuration;
 
 namespace PaymentCore.Helpers

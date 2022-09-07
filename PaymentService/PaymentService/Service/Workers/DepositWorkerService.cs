@@ -1,12 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
+﻿using MySql.Data.MySqlClient;
 using PaymentCore;
 using PaymentService.Service.BLL;
-using System;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace PaymentService.Service.Workers
 {

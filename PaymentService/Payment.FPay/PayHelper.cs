@@ -1,18 +1,69 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 
 namespace Payment.FPay
 {
     class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
+        private class CallBackCreditReq
+        {
+            public string order_id { get; set; }
+            public decimal amount { get; set; }
+            public string currency { get; set; }
+            public string order_status { get; set; }
+            public bool status { get; set; }
+            public string charge { get; set; }
+            public string token { get; set; }
+            public string name { get; set; }
+            public string type { get; set; }
+            public string remarks { get; set; }
+        }
+
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            var data = FromJson<CallBackCreditReq>(bodyContent);
+            var oNotify = new NotifyWithdrawResult
+            {
+                WithdrawId = data.order_id
+            };
+            var p = payResource["WithdrawSecretKey"] + data.order_id;
+            var sign = ToMD5(p).ToLower();
+
+            if (sign == data.token)
+            {
+                if (data.order_status == "completed")
+                {
+                    oNotify.TransStatus = TransStatus.Success;
+                    oNotify.RequestAmount = data.amount;
+                    oNotify.ThirdId = data.order_id;
+                    oNotify.Message = data.order_status;
+                    oNotify.Response = "200";
+                }
+                else if (data.order_status == "fail")
+                {
+                    oNotify.TransStatus = TransStatus.Fail;
+                    oNotify.ThirdId = data.order_id;
+                    oNotify.Message = data.remarks;
+                    oNotify.Response = "200";
+                }
+                else
+                {
+                    oNotify.TransStatus = TransStatus.Pending;
+                    oNotify.ThirdId = data.order_id;
+                    oNotify.Message = data.remarks;
+                    oNotify.Response = "200";
+                }
+            }
+            else
+            {
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.ThirdId = data.order_id;
+                oNotify.Message = "sign error";
+                oNotify.Response = "sign error";
+            }
+
+            return oNotify;
         }
 
         private class CallBackDebitReq
@@ -77,14 +128,71 @@ namespace Payment.FPay
             return oNotify;
         }
 
-        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
+        private class WithdrawResp
         {
-            throw new NotImplementedException();
+            public bool status { get; set; }
+            public string message { get; set; }
         }
-
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var sUrl = inputs["host"];
+            var oDepositResult = new WithdrawResult();
+            try
+            {
+                var dicP = new Dictionary<string, string>()
+                {
+                    { "username", inputs["WithdrawUsername"] },
+                    { "api_key", inputs["WithdrawKey"] }
+                };
+                var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                var sResponse = HttpPost(sUrl + "merchant/auth", sParam, "application/x-www-form-urlencoded", "0");
+
+                var authResp = JsonConvert.DeserializeObject<AuthResp>(sResponse);
+                if (authResp.status)
+                {
+                    var amount = decimal.Parse(inputs["Amount"]);
+                    var withdrawReq = new Dictionary<string, string>()
+                    {
+                        { "auth", authResp.auth },
+                        { "amount", amount.ToString("#") },
+                        { "currency", inputs["PayCurrencyId"] },
+                        { "orderid", inputs["TransID"] },
+                        { "bank_id", inputs["BankCode"] },
+                        { "bank_branch", "" },
+                        { "holder_name", inputs["AccountName"] },
+                        { "account_no", inputs["AccountNo"] }
+                    };
+                    sParam = string.Join("&", withdrawReq.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                    sResponse = HttpPost(sUrl + "merchant/withdraw_orders", sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
+
+                    var depositResp = JsonConvert.DeserializeObject<WithdrawResp>(sResponse);
+                    if (depositResp.status)
+                    {
+                        oDepositResult.Success = true;
+                        oDepositResult.Message = "";
+                    }
+                    else
+                    {
+                        oDepositResult.Message = depositResp.message;
+                        oDepositResult.RawContent = sResponse;
+                    }
+                }
+                else
+                {
+                    oDepositResult.Message = "";
+                    oDepositResult.RawContent = sResponse;
+                }
+            }
+            catch (WebException wEx)
+            {
+                var err = FromJson<Dictionary<string, string>>(new StreamReader(wEx.Response?.GetResponseStream()).ReadToEnd());
+                if (err.ContainsKey("error"))
+                    oDepositResult.Message = $"{err["error"]}-{err["error_message"]}";
+                if (err.ContainsKey("err"))
+                    oDepositResult.Message = $"{err["err"]}";
+            }
+
+            return oDepositResult;
         }
 
         private class AuthReq
@@ -194,6 +302,11 @@ namespace Payment.FPay
         }
 
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
         }

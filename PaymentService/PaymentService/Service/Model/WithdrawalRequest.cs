@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using PaymentService.Service.Model.enums;
+﻿using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.Model
 {

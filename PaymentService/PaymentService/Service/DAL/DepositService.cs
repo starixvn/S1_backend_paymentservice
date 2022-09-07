@@ -1,10 +1,6 @@
 ﻿using Dapper;
 using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 using PaymentService.Extensions;
 using PaymentService.Model;
 using PaymentService.Service.Library;
@@ -71,7 +67,7 @@ namespace PaymentService.Service.DAL
                 });
                 p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
-                result = _mainDbClient.Execute("Service_DepositInfo_Set", p, conn, trans);
+                result = _mainDbClient.Execute("Service_DepositInfo_Set_V3", p, conn, trans);
 
                 if (result > 0)
                 {

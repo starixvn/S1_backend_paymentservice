@@ -1,10 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Text;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentService.Service.Library;
 using Serilog.Context;
@@ -26,6 +21,7 @@ namespace PaymentService.Extensions.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
+            context.Request.EnableBuffering();
             var url = context.Request.GetDisplayUrl();
             var requestBodyStream = new MemoryStream();
             var originalRequestBody = context.Request.Body;

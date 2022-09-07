@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
@@ -264,6 +256,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("Amount", reqDeposit.Amount.ToString());
                 DepReq.Add("PayCode", payInfo.PayCode);
                 DepReq.Add("BankCode", null);
+                DepReq.Add("AccountName", custInfo.AccountName);
                 DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
                 DepReq.Add("PayLangId", payLangId);
                 DepReq.Add("CustId", reqDeposit.CustId.ToString());

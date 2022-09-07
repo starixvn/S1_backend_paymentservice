@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Dapper;
-using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using PaymentService.Model;
 using Serilog.Context;

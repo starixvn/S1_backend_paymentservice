@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using PaymentService.Extensions.Middlewares;
+﻿using PaymentService.Extensions.Middlewares;
 
 namespace PaymentService.Extensions
 {

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace PaymentService.Service.Model
+﻿namespace PaymentService.Service.Model
 {
     public class BankInfoSys
     {

@@ -1,9 +1,5 @@
 ﻿using System.Diagnostics;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Serilog.Context;
 
 namespace PaymentService.Extensions.Middlewares
