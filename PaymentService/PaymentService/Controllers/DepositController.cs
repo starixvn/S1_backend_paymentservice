@@ -5,6 +5,7 @@ using Microsoft.Extensions.Primitives;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -842,6 +843,7 @@ namespace PaymentService.Controllers
                     _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
                         message,
                         (int)depositRequest.Status, rNotifyDepositResult.ActualAmount, depositRequest.PayName);
+
                     return rNotifyDepositResult.Response;
                 }
 
