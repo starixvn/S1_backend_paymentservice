@@ -29,6 +29,7 @@ namespace PaymentService.Service.Model
         public DepositType DepositType { set; get; }
         public int CustId { set; get; }
         public int SiteId { set; get; }
+        public int CurrencyId { set; get; }
         public string DepositInfo { set; get; }
         public decimal Amount { set; get; }
         public decimal ActualDeposit { set; get; }

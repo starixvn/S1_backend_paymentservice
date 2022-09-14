@@ -14,14 +14,12 @@ namespace PaymentService.Service.BLL
         private readonly DepositService _depositService;
         private readonly WithdrawalService _withdrawalService;
         private readonly Common _common;
-        private readonly ILogger<PaymentBLL> _logger;
 
         public PaymentBLL(IServiceProvider provider)
         {
             _depositService = provider.GetRequiredService<DepositService>();
             _withdrawalService = provider.GetRequiredService<WithdrawalService>();
             _common = provider.GetRequiredService<Common>();
-            _logger = provider.GetRequiredService<ILogger<PaymentBLL>>();
         }
 
         public DepositRequest GetDepositRequest(string transId)
@@ -45,8 +43,24 @@ namespace PaymentService.Service.BLL
             };
             try
             {
-                _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, iDepositResult.ActualAmount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
-                InsertDepositRewardPointQueue(depositRequest.TransId, depositRequest.SiteId, depositRequest.CurrencyId);
+                if (depositRequest.SiteId == 0 || depositRequest.CurrencyId == 0)
+                {
+                    var deposit = GetDepositInfo(depositRequest.TransId);
+                    depositRequest.SiteId = deposit.SiteId;
+                    depositRequest.CurrencyId = deposit.CurrencyId;
+                }
+                
+                _depositService.SetDepositInfo(depositRequest.TransId,
+                    depositRequest.SiteId,
+                    (IPay)depositRequest.depositInfo,
+                    iDepositResult.ActualAmount,
+                    iDepositResult.Comment,
+                    iDepositResult.RefThirdId,
+                    iDepositResult.ThirdId,
+                    depositRequest.PayName,
+                    forStatus,
+                    DepositStatus.Approved,
+                    CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId));
             }
             catch (Exception ex)
             {
@@ -69,7 +83,7 @@ namespace PaymentService.Service.BLL
             
             try
             {
-                return _depositService.SetDepositInfo(
+                var result = _depositService.SetDepositInfo(
                     depositInfoData.TransId, 
                     depositInfoData.SiteId,
                     (IPay)depositInfoData.depositInfo, 
@@ -79,7 +93,10 @@ namespace PaymentService.Service.BLL
                     depositInfoData.RefId, 
                     depositInfoData.Operator, 
                     forStatus, 
-                    DepositStatus.Approved);
+                    DepositStatus.Approved,
+                    CommonExtension.CanRewardPoint(depositInfoData.SiteId, depositInfoData.CurrencyId));
+                
+                return result;
             }
             catch (Exception ex)
             {
@@ -104,17 +121,6 @@ namespace PaymentService.Service.BLL
             var depositId = _common.GetId(transId);
             _depositService.SetDepositLog(depositId, siteId, comment,status, actualDeposit, @operator);
         }
-        
-        public void InsertDepositRewardPointQueue(string transId)
-        {
-            var resultCode = _depositService.InsertDepositRewardPointQueue(transId);
-
-            if (resultCode != (int) ErrorCode.Success)
-            {
-                _logger.LogError($"InsertDepositRewardPointQueue Failed. ResultCode({resultCode}), TransId: {transId}");
-            }
-        }
-
 
         public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
         {
@@ -175,18 +181,6 @@ namespace PaymentService.Service.BLL
         public string GetWithdrawalInfo(string transId)
         {
             return _withdrawalService.GetWithdrawalInfo(transId);
-        }
-        
-        private void InsertDepositRewardPointQueue(string transId, int siteId, int currencyId)
-        {
-            if (CommonExtension.CanRewardPoint(siteId, currencyId))
-            {
-                var resultCode = _depositService.InsertDepositRewardPointQueue(transId);
-                if (resultCode != (int) ErrorCode.Success)
-                {
-                    _logger.LogError($"{transId} InsertDepositRewardPointQueue failed, resultCode: {resultCode}");
-                }
-            }
         }
     }
 }
