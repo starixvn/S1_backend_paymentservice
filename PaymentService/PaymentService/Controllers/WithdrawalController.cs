@@ -4,6 +4,7 @@ using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
 using PaymentService.Service.BLL;
+using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
@@ -21,6 +22,7 @@ namespace PaymentService.Controllers
         private readonly ILogger<WithdrawalController> _logger;
         private readonly Common _common;
         private readonly PaymentBLL _paymentBll;
+        private readonly WalletService _walletService;
 
         public WithdrawalController(IServiceProvider provider)
         {
@@ -31,6 +33,7 @@ namespace PaymentService.Controllers
             _logger = provider.GetRequiredService<ILogger<WithdrawalController>>();
             _common = provider.GetRequiredService<Common>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
+            _walletService = provider.GetRequiredService<WalletService>();
         }
         public class ReqWithdrawal
         {
@@ -212,7 +215,7 @@ namespace PaymentService.Controllers
                     apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
                     apiResult.Message = result.Message;
                 }
-                
+
                 return apiResult;
             }
             catch (Exception e)
@@ -300,7 +303,7 @@ namespace PaymentService.Controllers
                 var rNotifyWithdrawalResult = payHelper.CallBackCredit(dicParam, bodyText, WithReq);
 
                 var temp = rNotifyWithdrawalResult.WithdrawId;
-                while(temp.Substring(0,1) == "0")
+                while (temp.Substring(0, 1) == "0")
                 {
                     temp = temp.Remove(0, 1);
                 }
@@ -313,7 +316,7 @@ namespace PaymentService.Controllers
                 if (withdrawalRequest.Status == WithdrawalStatus.Approved ||
                     withdrawalRequest.Status == WithdrawalStatus.Rejected)
                 {
-                    var status = rNotifyWithdrawalResult.TransStatus switch 
+                    var status = rNotifyWithdrawalResult.TransStatus switch
                     {
                         TransStatus.Success => WithdrawalStatus.Approved,
                         TransStatus.Fail => WithdrawalStatus.Verify,
@@ -321,7 +324,7 @@ namespace PaymentService.Controllers
                     };
                     var message = $"{transId} status is currently {withdrawalRequest.Status.ToString()}, cannot change status to {status.ToString()}";
                     _logger.LogInformation($"Method={GetCurrentMethod()}, {message}");
-                    
+
                     _paymentBll.SetWithdrawalLog(transId, withdrawalRequest.SiteId,
                         message,
                         (int)withdrawalRequest.Status,
@@ -367,7 +370,7 @@ namespace PaymentService.Controllers
                         return "Update WithdrawalFail error";
                     }
                 }
-                else 
+                else
                 {
 
                     try
@@ -398,7 +401,8 @@ namespace PaymentService.Controllers
             {
                 _logger.LogInformation($"Method={GetCurrentMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, transId={transId}, key={key}");
                 var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
-                if (withdrawalRequest != null) {
+                if (withdrawalRequest != null)
+                {
 
                     //var payHelper = payBLL.GetPayHelper(withdrawalRequest.PayName);
                     //payHelper.
@@ -494,5 +498,170 @@ namespace PaymentService.Controllers
                 return apiResult;
             }
         }
+
+        /// <summary>
+        /// 手動更改提款單狀態，改成 Approve
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("Payment/WithdrawalManualApprove")]
+        public  ApiResult WithdrawalManualApprove(WithdrawalManualApproveRequest request)
+        {
+            var apiResult = new ApiResult();
+
+            #region Check
+
+            // 檢查 IP 是否在白名單內
+            const string payName = "Manual";
+            var clientIp = _common.GetClientIP(HttpContext);
+            if (!IsWhiteList(clientIp, payName, request.TransId))
+            {
+                _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
+                apiResult.ErrorCode = (int)ErrorCode.Fail;
+                apiResult.Message = "Invalid IP!";
+                return apiResult;
+            }
+
+            // 查詢訂單在不在db
+            var withdrawalRequest = _paymentBll.GetWithdrawalRequest(request.TransId);
+            if (withdrawalRequest == null)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.SystemError;
+                apiResult.Message = $"withdrawal transId：{request.TransId} not found";
+                return apiResult;
+            }
+
+            // 提款單狀態是否原本就 Approved
+            if (withdrawalRequest.Status == WithdrawalStatus.Approved)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.SystemError;
+                apiResult.Message = $"withdrawal transId：{request.TransId} status already has approve，can't change";
+                return apiResult;
+            }
+
+            #endregion
+
+            // ELK log 紀錄原本的狀態變更至 Approve
+            _logger.LogInformation($"{withdrawalRequest.TransId} old status is {withdrawalRequest.Status},prepare change status to {WithdrawalStatus.Approved}");
+
+            try
+            {
+                _paymentBll.WithdrawalManualApprove(withdrawalRequest, "Manual Approve",request.ThirdId, request.Operator);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"withdrawal transId WithdrawalManualApprove Fail。exceptionMessage：{ex.Message}");
+                apiResult.ErrorCode = (int)ErrorCode.SystemError;
+                apiResult.Message = ex.Message;
+                return apiResult;
+            }
+
+            apiResult.ErrorCode = 0;
+            apiResult.Message = "Withdrawal Manual Approve Success";
+            return apiResult;
+        }
+
+        /// <summary>
+        /// 手動更改提款單狀態，改成 Reject
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("Payment/WithdrawalManualReject")]
+        public  ApiResult WithdrawalManualReject(WithdrawalManualRejectRequest request)
+        {
+            var apiResult = new ApiResult();
+
+            #region Check
+
+            // 檢查 IP 是否在白名單內
+            const string payName = "Manual";
+            var clientIp = _common.GetClientIP(HttpContext);
+            if (!IsWhiteList(clientIp, payName, request.TransId))
+            {
+                _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
+                apiResult.ErrorCode = (int)ErrorCode.Fail;
+                apiResult.Message = "Invalid IP!";
+                return apiResult;
+            }
+
+            // 查詢訂單在不在db
+            var withdrawalRequest = _paymentBll.GetWithdrawalRequest(request.TransId);
+            if (withdrawalRequest == null)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.SystemError;
+                apiResult.Message = $"withdrawal transId：{request.TransId} not found";
+                return apiResult;
+            }
+
+            // 提款單狀態是否原本就 Rejected
+            if (withdrawalRequest.Status == WithdrawalStatus.Rejected)
+            {
+                apiResult.ErrorCode = (int)ErrorCode.SystemError;
+                apiResult.Message = $"withdrawal transId：{request.TransId} status already has rejected，can't change";
+                return apiResult;
+            }
+
+            #endregion
+
+            // ELK log 紀錄原本的狀態變更至 Rejected
+            _logger.LogInformation($"{withdrawalRequest.TransId} old status is {withdrawalRequest.Status},prepare change status to {WithdrawalStatus.Approved}");
+
+            try
+            {
+                _paymentBll.WithdrawalManualReject(withdrawalRequest, "Manual Rejected", request.ThirdId, request.Operator);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"withdrawal transId WithdrawalManualReject Fail。exceptionMessage：{ex.Message}");
+                apiResult.ErrorCode = (int)ErrorCode.SystemError;
+                apiResult.Message = ex.Message;
+                return apiResult;
+            }
+
+            apiResult.ErrorCode = 0;
+            apiResult.Message = "Withdrawal Manual Rejected Success";
+            return apiResult;
+        }
+
+        #region private method
+
+        /// <summary>
+        /// 檢查 IP 是否是辦公室 或是合法 IP
+        /// </summary>
+        /// <param name="clientIP"></param>
+        /// <param name="PaymentName"></param>
+        /// <param name="transId"></param>
+        /// <returns></returns>
+        private bool IsWhiteList(string clientIP, string PaymentName, string transId)
+        {
+            _logger.LogInformation($"Method={GetCurrentMethod()}, Request: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
+            var officeList = _configuration.GetSection("OfficeIP")?.Get<string[]>();
+            if (officeList.Any(x => x == clientIP))
+            {
+                return true;
+            }
+
+            var whiteList = _configuration.GetSection("WhiteList")?.Get<Dictionary<string, string[]>>();
+            if (whiteList != null)
+            {
+                var whiteListIgnoreCase = new Dictionary<string, string[]>(whiteList, StringComparer.OrdinalIgnoreCase);
+                if (whiteListIgnoreCase.ContainsKey(PaymentName))
+                {
+                    string[] iplist;
+                    whiteListIgnoreCase.TryGetValue(PaymentName, out iplist);
+                    if (!iplist.Any(x => x == clientIP))
+                    {
+                        _logger.LogInformation($"Method={GetCurrentMethod()}, Reject: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return true;
+        }
+
+        #endregion
     }
 }
