@@ -27,7 +27,7 @@ namespace PaymentService.Service.BLL
             var depositId = _common.GetId(transId);
             return _depositService.GetDepositRequest(depositId);
         }
-        
+
         public DepositInfoData GetDepositInfo(string transId)
         {
             var depositId = _common.GetId(transId);
@@ -49,7 +49,7 @@ namespace PaymentService.Service.BLL
                     depositRequest.SiteId = deposit.SiteId;
                     depositRequest.CurrencyId = deposit.CurrencyId;
                 }
-                
+
                 _depositService.SetDepositInfo(depositRequest.TransId,
                     depositRequest.SiteId,
                     (IPay)depositRequest.depositInfo,
@@ -67,7 +67,7 @@ namespace PaymentService.Service.BLL
                 throw ex;
             }
         }
-        
+
         public int DepositManualSuccess(DepositInfoData depositInfoData)
         {
             var forStatus = new List<int>
@@ -80,22 +80,22 @@ namespace PaymentService.Service.BLL
                 (int)DepositStatus.OnHold,
                 (int)DepositStatus.Error
             };
-            
+
             try
             {
                 var result = _depositService.SetDepositInfo(
-                    depositInfoData.TransId, 
+                    depositInfoData.TransId,
                     depositInfoData.SiteId,
-                    (IPay)depositInfoData.depositInfo, 
-                    depositInfoData.ActualDeposit, 
-                    depositInfoData.Comment, 
+                    (IPay)depositInfoData.depositInfo,
+                    depositInfoData.ActualDeposit,
+                    depositInfoData.Comment,
                     null,
-                    depositInfoData.RefId, 
-                    depositInfoData.Operator, 
-                    forStatus, 
+                    depositInfoData.RefId,
+                    depositInfoData.Operator,
+                    forStatus,
                     DepositStatus.Approved,
                     CommonExtension.CanRewardPoint(depositInfoData.SiteId, depositInfoData.CurrencyId));
-                
+
                 return result;
             }
             catch (Exception ex)
@@ -115,11 +115,11 @@ namespace PaymentService.Service.BLL
             var forStatus = new List<int> { (int)DepositStatus.Pending };
             _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Pending);
         }
-        
+
         public void SetDepositLog(string transId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
         {
             var depositId = _common.GetId(transId);
-            _depositService.SetDepositLog(depositId, siteId, comment,status, actualDeposit, @operator);
+            _depositService.SetDepositLog(depositId, siteId, comment, status, actualDeposit, @operator);
         }
 
         public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
@@ -133,11 +133,81 @@ namespace PaymentService.Service.BLL
             return _withdrawalService.GetWithdrawalRequest(withdrawalId);
         }
 
+        public void ManualWithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
+        {
+            var forStatus = new List<int> { (int)WithdrawalStatus.Process };
+            _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
+        }
+
         public void WithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
             var forStatus = new List<int> { (int)WithdrawalStatus.Process };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
         }
+
+        /// <summary>
+        /// 提款單手動 Approve
+        /// </summary>
+        /// <param name="withdrawalRequest"></param>
+        /// <param name="comment"></param>
+        /// <param name="refId"></param>
+        /// <param name="operator"></param>
+        public void WithdrawalManualApprove(WithdrawalRequest withdrawalRequest, string comment, string refId, string @operator)
+        {
+            var forStatus = new List<int>
+            {
+                (int)WithdrawalStatus.Draft,
+                (int)WithdrawalStatus.Pending,
+                (int)WithdrawalStatus.OnHold,
+                (int)WithdrawalStatus.Verify,
+                (int)WithdrawalStatus.Process,
+                (int)WithdrawalStatus.Cancelled,
+                (int)WithdrawalStatus.Rejected,
+                (int)WithdrawalStatus.ToKYC,
+                (int)WithdrawalStatus.Error
+            };
+
+            _withdrawalService.SetWithdrawalInfoByManualApprove(withdrawalRequest.TransId,
+                withdrawalRequest.SiteId,
+                withdrawalRequest,
+                comment,
+                refId,
+                @operator,
+                forStatus, WithdrawalStatus.Approved, withdrawalRequest);
+        }
+
+
+        /// <summary>
+        /// 提款單手動 Reject
+        /// </summary>
+        /// <param name="withdrawalRequest"></param>
+        /// <param name="comment"></param>
+        /// <param name="refId"></param>
+        /// <param name="operator"></param>
+        public void WithdrawalManualReject(WithdrawalRequest withdrawalRequest, string comment, string refId, string @operator)
+        {
+            var forStatus = new List<int>
+            {
+                (int)WithdrawalStatus.Draft,
+                (int)WithdrawalStatus.Pending,
+                (int)WithdrawalStatus.OnHold,
+                (int)WithdrawalStatus.Verify,
+                (int)WithdrawalStatus.Process,
+                (int)WithdrawalStatus.Cancelled,
+                (int)WithdrawalStatus.Approved,
+                (int)WithdrawalStatus.ToKYC,
+                (int)WithdrawalStatus.Error
+            };
+
+            _withdrawalService.SetWithdrawalInfoByManualReject(withdrawalRequest.TransId,
+                withdrawalRequest.SiteId,
+                withdrawalRequest,
+                comment,
+                refId,
+                @operator,
+                forStatus, WithdrawalStatus.Rejected, withdrawalRequest);
+        }
+
 
         public void WithdrawalFail(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
@@ -150,7 +220,7 @@ namespace PaymentService.Service.BLL
             var forStatus = new List<int> { (int)WithdrawalStatus.Process };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Process);
         }
-        
+
         public void SetWithdrawalLog(string transId, int siteId, string comment, int status, string @operator)
         {
             var withdrawalId = _common.GetId(transId);

@@ -16,7 +16,27 @@ namespace PaymentService.Service.Model
         public decimal Amount { set; get; }
         public string BankCode { get; set; }
         public WithdrawalStatus Status { get; set; }
+        public int CustId { get; set; }
+        public string UserName { get; set; }
 
         //public virtual IEnumerable<Comments> Comments { get; set; }
+    }
+
+    public class WithdrawalManualApproveRequest
+    {
+        public string TransId { set; get; }
+
+        public string ThirdId { get; set; }
+
+        public string Operator { get; set; }
+    }
+
+    public class WithdrawalManualRejectRequest
+    {
+        public string TransId { set; get; }
+
+        public string ThirdId { get; set; }
+
+        public string Operator { get; set; }
     }
 }
