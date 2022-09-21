@@ -155,7 +155,15 @@ namespace PaymentService.Service.BLL
         {
             var forStatus = new List<int>
             {
-                (int)withdrawalRequest.Status
+                (int)WithdrawalStatus.Draft,
+                (int)WithdrawalStatus.Pending,
+                (int)WithdrawalStatus.OnHold,
+                (int)WithdrawalStatus.Verify,
+                (int)WithdrawalStatus.Process,
+                (int)WithdrawalStatus.Cancelled,
+                (int)WithdrawalStatus.Rejected,
+                (int)WithdrawalStatus.ToKYC,
+                (int)WithdrawalStatus.Error
             };
 
             _withdrawalService.SetWithdrawalInfoByManualApprove(withdrawalRequest.TransId,
@@ -179,7 +187,15 @@ namespace PaymentService.Service.BLL
         {
             var forStatus = new List<int>
             {
-                 (int)withdrawalRequest.Status
+                (int)WithdrawalStatus.Draft,
+                (int)WithdrawalStatus.Pending,
+                (int)WithdrawalStatus.OnHold,
+                (int)WithdrawalStatus.Verify,
+                (int)WithdrawalStatus.Process,
+                (int)WithdrawalStatus.Cancelled,
+                (int)WithdrawalStatus.Approved,
+                (int)WithdrawalStatus.ToKYC,
+                (int)WithdrawalStatus.Error
             };
 
             _withdrawalService.SetWithdrawalInfoByManualReject(withdrawalRequest.TransId,
