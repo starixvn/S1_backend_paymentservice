@@ -537,12 +537,12 @@ namespace PaymentService.Controllers
                 apiResult.ErrorCode = (int)ErrorCode.SystemError;
                 apiResult.Message = $"withdrawal transId：{request.TransId} status already has approve，can't change";
                 return apiResult;
-            };
+            }
 
             #endregion
 
             // ELK log 紀錄原本的狀態變更至 Approve
-            _logger.LogInformation($"{withdrawalRequest.TransId} old status is {withdrawalRequest.Status.ToString()},prepare change status to {WithdrawalStatus.Approved.ToString()}");
+            _logger.LogInformation($"{withdrawalRequest.TransId} old status is {withdrawalRequest.Status},prepare change status to {WithdrawalStatus.Approved}");
 
             try
             {
@@ -599,12 +599,12 @@ namespace PaymentService.Controllers
                 apiResult.ErrorCode = (int)ErrorCode.SystemError;
                 apiResult.Message = $"withdrawal transId：{request.TransId} status already has rejected，can't change";
                 return apiResult;
-            };
+            }
 
             #endregion
 
             // ELK log 紀錄原本的狀態變更至 Rejected
-            _logger.LogInformation($"{withdrawalRequest.TransId} old status is {withdrawalRequest.Status.ToString()},prepare change status to {WithdrawalStatus.Approved.ToString()}");
+            _logger.LogInformation($"{withdrawalRequest.TransId} old status is {withdrawalRequest.Status},prepare change status to {WithdrawalStatus.Approved}");
 
             try
             {

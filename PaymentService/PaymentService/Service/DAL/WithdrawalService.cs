@@ -97,15 +97,16 @@ namespace PaymentService.Service.DAL
             var withdrawalId = _common.GetId(transId);
             var result = 0;
             try
-            {
-                using var conn = new MySqlConnection(_connectionString);
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+            {             
                 var sForStatus = Newtonsoft.Json.JsonConvert.SerializeObject(forStatus);
                 var p = new DynamicParameters(new { WithdrawalId = withdrawalId, SiteId = siteId, Comment = comment, ForStatus = sForStatus, Status = (int)status, WithdrawalInfo = (string)null, WithdrawalType = (int?)null, RefId = refId, Operator = Operator });
                 p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
                 p.Add("Amount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+                using var conn = new MySqlConnection(_connectionString);
+                conn.Open();
+                using var trans = conn.BeginTransaction();
                 result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set", p, conn, trans);
                 var amount = p.Get<decimal>("Amount");
                 if (result > 0)
@@ -159,15 +160,16 @@ namespace PaymentService.Service.DAL
             var withdrawalId = _common.GetId(transId);
             var result = 0;
             try
-            {
-                using var conn = new MySqlConnection(_connectionString);
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+            {            
                 var sForStatus = Newtonsoft.Json.JsonConvert.SerializeObject(forStatus);
                 var p = new DynamicParameters(new { WithdrawalId = withdrawalId, SiteId = siteId, Comment = comment, ForStatus = sForStatus, Status = (int)status, WithdrawalInfo = (string)null, WithdrawalType = (int?)null, RefId = refId, Operator = Operator });
                 p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
                 p.Add("Amount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+                using var conn = new MySqlConnection(_connectionString);
+                conn.Open();
+                using var trans = conn.BeginTransaction();
                 result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set", p, conn, trans);
                 var amount = p.Get<decimal>("Amount");
                 if (result > 0)
