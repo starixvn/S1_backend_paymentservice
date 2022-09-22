@@ -2,6 +2,7 @@
 using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 using PaymentCore;
+using PaymentService.Model;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -15,7 +16,7 @@ namespace PaymentService.Service.BLL
         private readonly IHostEnvironment environment;
         private readonly ILogger<PayBLL> logger;
         private static ConcurrentDictionary<string, IPayHelper> PayHelperContainer = new ConcurrentDictionary<string, IPayHelper>();
-        private readonly CacheHelper _cacheHelper;
+        private readonly ICacheHelper _redisHelper;
         private readonly IServiceProvider _provider;
 
         public PayBLL(IServiceProvider provider)
@@ -24,94 +25,81 @@ namespace PaymentService.Service.BLL
             environment = provider.GetRequiredService<IHostEnvironment>();
             logger = provider.GetRequiredService<ILogger<PayBLL>>();
             PayHelperBase.HttpHelper = provider.GetRequiredService<HttpHelper>();
-            _cacheHelper = provider.GetRequiredService<CacheHelper>();
+            _redisHelper = provider.GetRequiredService<ICacheHelper>();
             _provider = provider;
         }
 
         public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
         {
-            var key = $"OnlineBankList_{siteId}";
-            return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(10)),
-                i => payService.GetOnlineBankList(siteId));
+            var key = $"BankInfoPayList_{siteId}";
+            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
+                () => payService.GetOnlineBankList(siteId), RedisDataBase.Shared);
         }
 
         public IEnumerable<BankInfoPay> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
         {
-            return _cacheHelper.TryGetOrCreate($"BankInfoPayList_{siteId}_{depositType}",
-                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(10)),
-                i => payService.GetAutoChannelBankInfoList(siteId, depositType));
+            var key = $"BankInfoPayList_{siteId}_{depositType}";
+            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
+                () => payService.GetAutoChannelBankInfoList(siteId, depositType), RedisDataBase.Shared);
         }
 
         public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
         {
-            return _cacheHelper.TryGetOrCreate($"PayInfoList_{siteId}_{depositType}",
-                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(10)),
-                i => payService.GetPayInfo(siteId, depositType));
+            var key = $"PayInfoList_{siteId}_{depositType}";
+            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
+                () => payService.GetPayInfo(siteId, depositType), RedisDataBase.Shared);
         }
 
         public IEnumerable<CryptoPayInfo> GetCryptoPayInfoList(int siteId)
         {
             var key = $"CryptoPayInfoList_{siteId}";
-            return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(10)),
-                i => payService.GetCryptoPayInfo(siteId));
+            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
+                () => payService.GetCryptoPayInfo(siteId), RedisDataBase.Shared);
         }
 
         public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfoList(int siteId)
         {
             var key = $"LoadCardPayInfoList_{siteId}";
-            return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(10)),
-                i => payService.GetLoadCardPayInfo(siteId));
+            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
+                () => payService.GetLoadCardPayInfo(siteId), RedisDataBase.Shared);
         }
 
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
         {
-            var key = "OnlineBankListForPayout";
-            return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(10)),
-                i => payService.GetOnlineBankListForPayout());
+            return _redisHelper.TryGetOrCreate("OnlineBankListForPayout", TimeSpan.FromSeconds(10),
+                () => payService.GetOnlineBankListForPayout(), RedisDataBase.Shared);
         }
 
         public IEnumerable<BankInfoPay> GetCryptoListForPayout()
         {
-            var key = "CryptoListForPayout";
-            return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(10)),
-                i => payService.GetCryptoListForPayout());
+            return _redisHelper.TryGetOrCreate("CryptoListForPayout", TimeSpan.FromSeconds(10),
+                () => payService.GetCryptoListForPayout(), RedisDataBase.Shared);
         }
 
         public IEnumerable<PayCurrency> GetPayCurrency()
         {
-            var key = "PayCurrency";
-            return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)),
-                i => payService.GetPayCurrency());
+            return _redisHelper.TryGetOrCreate("PayCurrency", TimeSpan.FromMinutes(5),
+                () => payService.GetPayCurrency(), RedisDataBase.Shared);
         }
 
         public IEnumerable<PayLanguage> GetPayLanguage()
         {
-            var key = "PayLanguage";
-            return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)),
-                i => payService.GetPayLanguage());
+            return _redisHelper.TryGetOrCreate("PayLanguage", TimeSpan.FromMinutes(5),
+                () => payService.GetPayLanguage(), RedisDataBase.Shared);
         }
 
         public IEnumerable<Pay> GetPaymentList(int siteId)
         {
             var key = $"Pay_{siteId}";
-            return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)),
-                i => payService.GetPaymentList(siteId));
+            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromMinutes(5),
+                () => payService.GetPaymentList(siteId), RedisDataBase.Shared);
         }
 
         public IEnumerable<Pay> GetPaymentAllList(int siteId)
         {
             var key = $"PayAll_{siteId}";
-            return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)),
-                i => payService.GetPaymentAllList(siteId));
+            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromMinutes(5),
+                () => payService.GetPaymentAllList(siteId), RedisDataBase.Shared);
         }
 
         public IPayHelper GetPayHelper(string PayName)
