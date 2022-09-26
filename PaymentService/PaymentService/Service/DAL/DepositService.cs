@@ -17,6 +17,7 @@ namespace PaymentService.Service.DAL
         private readonly WithdrawalLimitService _withdrawalLimitService;
         private readonly Common _common;
         private const int PayTypePosition = 100;
+        private readonly ILogger<DepositService> _logger;
 
         public DepositService(IServiceProvider provider)
         {
@@ -25,6 +26,7 @@ namespace PaymentService.Service.DAL
             _walletService = provider.GetRequiredService<WalletService>();
             _withdrawalLimitService = provider.GetRequiredService<WithdrawalLimitService>();
             _common = provider.GetRequiredService<Common>();
+            _logger = provider.GetRequiredService<ILogger<DepositService>>();
         }
         public DepositRequest GetDepositRequest(int depositId)
         {
@@ -41,7 +43,7 @@ namespace PaymentService.Service.DAL
             return _mainDbClient.Query<DepositRequest>("Service_DepositRequesPayEnquiry_Get");
         }
 
-        public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string refThirdId, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status)
+        public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string refThirdId, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status, bool canReward = false)
         {
             var type = PayTypePosition + pay.PayId;
             var depositId = _common.GetId(transId);
@@ -93,9 +95,23 @@ namespace PaymentService.Service.DAL
                         {
                             result = SetDepositInfoFirstDeposit(depositId, siteId, conn, trans);
                         }
+                        
                         if (result > 0)
                         {
                             result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, actualDeposit, conn, trans);
+                        }
+
+                        if (result > 0 && canReward)
+                        {
+                            var resultCode = InsertDepositRewardPointQueue(transId, conn, trans);
+                            if (resultCode != (int) ErrorCode.Success)
+                            {
+                                _logger.LogError($"InsertDepositRewardPointQueue Failed. ResultCode({resultCode}), TransId: {transId}");
+                            }
+                            else
+                            {
+                                result = 1;
+                            }
                         }
                     }
 
@@ -131,6 +147,19 @@ namespace PaymentService.Service.DAL
                     ActualDeposit = actualDeposit,
                     Operator = @operator
                 });
+        }
+        
+        public int InsertDepositRewardPointQueue(string transId, IDbConnection conn, IDbTransaction trans)
+        {
+            var para = new DynamicParameters();
+            para.Add("_TransId", transId);
+            para.Add("_Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+            _ = conn.Execute("Service_DepositRewardPointQueue_Ins", para, transaction: trans,
+                commandType: CommandType.StoredProcedure);
+            var resultCode = para.Get<int?>("_Result") ?? -9;
+            
+            return resultCode;
         }
 
         public int SetThirdId(string transId, string thirdId)

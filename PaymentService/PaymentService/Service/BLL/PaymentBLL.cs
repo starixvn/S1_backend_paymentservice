@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Extensions;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -41,7 +42,24 @@ namespace PaymentService.Service.BLL
             };
             try
             {
-                _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, iDepositResult.ActualAmount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Approved);
+                if (depositRequest.SiteId == 0 || depositRequest.CurrencyId == 0)
+                {
+                    var deposit = GetDepositInfo(depositRequest.TransId);
+                    depositRequest.SiteId = deposit.SiteId;
+                    depositRequest.CurrencyId = deposit.CurrencyId;
+                }
+                
+                _depositService.SetDepositInfo(depositRequest.TransId,
+                    depositRequest.SiteId,
+                    (IPay)depositRequest.depositInfo,
+                    iDepositResult.ActualAmount,
+                    iDepositResult.Comment,
+                    iDepositResult.RefThirdId,
+                    iDepositResult.ThirdId,
+                    depositRequest.PayName,
+                    forStatus,
+                    DepositStatus.Approved,
+                    CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId));
             }
             catch (Exception ex)
             {
@@ -64,7 +82,7 @@ namespace PaymentService.Service.BLL
             
             try
             {
-                return _depositService.SetDepositInfo(
+                var result = _depositService.SetDepositInfo(
                     depositInfoData.TransId, 
                     depositInfoData.SiteId,
                     (IPay)depositInfoData.depositInfo, 
@@ -74,7 +92,10 @@ namespace PaymentService.Service.BLL
                     depositInfoData.RefId, 
                     depositInfoData.Operator, 
                     forStatus, 
-                    DepositStatus.Approved);
+                    DepositStatus.Approved,
+                    CommonExtension.CanRewardPoint(depositInfoData.SiteId, depositInfoData.CurrencyId));
+                
+                return result;
             }
             catch (Exception ex)
             {
@@ -99,7 +120,6 @@ namespace PaymentService.Service.BLL
             var depositId = _common.GetId(transId);
             _depositService.SetDepositLog(depositId, siteId, comment,status, actualDeposit, @operator);
         }
-
 
         public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
         {
