@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
-using PaymentCore;
+﻿using PaymentCore;
 
 namespace Payment.DoitnowPay
 {
@@ -56,21 +53,31 @@ namespace Payment.DoitnowPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var oNotify = new NotifyDepositResult();
+            var status = formData["status"];
             var dict = new Dictionary<string, string>()
             {
-                { "clientId", payResource["clientId"] },
-                { "referenceId", formData["referenceId"] },
-                { "transactionId", formData["transactionId"] },
-                { "custName", formData["custName"] },
-                { "amount", formData["amount"] },
-                { "status", formData["status"] },
+                { "clientId", payResource["clientId"] }
             };
-
+            
+            if (status == "success")
+            {
+                dict.Add("referenceId", formData["referenceId"]);
+                dict.Add("transactionId", formData["transactionId"]);
+                dict.Add("custName", formData["custName"]);
+                dict.Add("amount", formData["amount"]);
+                dict.Add("status", formData["status"]);
+            }
+            else
+            {
+                dict.Add("transactionId", formData["transactionId"]);
+                dict.Add("status", formData["status"]);
+            }
+            
             var hashVal = formData["hashVal"];
             var actual = Hash(dict, payResource["clientSecret"]);
             if (string.Equals(hashVal, actual))
             {
-                var status = formData["status"];
+                
                 oNotify.DepositId = formData["transactionId"];
                 oNotify.Message = status;
                 oNotify.Comment = status;

@@ -1,9 +1,6 @@
 ﻿using Dapper;
 using MySql.Data.MySqlClient;
-using System;
 using System.Data;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 using PaymentService.Model;
 using PaymentService.Service.Library;
 

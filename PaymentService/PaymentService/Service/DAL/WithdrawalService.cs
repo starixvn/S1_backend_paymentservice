@@ -2,11 +2,7 @@
 using MySql.Data.MySqlClient;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 using PaymentService.Extensions;
 using PaymentService.Model;
 using PaymentService.Service.Library;

@@ -35,4 +35,8 @@ if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringCom
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
 
+const int minWorkers = 16;
+const int minIOCPs = 4;
+ThreadPool.SetMinThreads(minWorkers, minIOCPs);
+
 app.Run();
