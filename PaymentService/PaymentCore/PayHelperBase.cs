@@ -763,7 +763,8 @@ namespace PaymentCore
                 {"13", "CNY"},
                 {"15", "IDR"},
                 {"51", "VND"},
-                {"61", "INR"}
+                {"61", "INR"},
+                {"74", "BDT"}
             };
 
             if (currMapping.ContainsKey(currencyId))
