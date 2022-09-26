@@ -512,7 +512,7 @@ namespace PaymentService.Controllers
             #region Check
 
             // 檢查 IP 是否在白名單內
-            const string payName = "WithdrawalManualApprove";
+            const string payName = "Manual";
             var clientIp = _common.GetClientIP(HttpContext);
             if (!IsWhiteList(clientIp, payName, request.TransId))
             {
@@ -574,7 +574,7 @@ namespace PaymentService.Controllers
             #region Check
 
             // 檢查 IP 是否在白名單內
-            const string payName = "WithdrawalManualReject";
+            const string payName = "Manual";
             var clientIp = _common.GetClientIP(HttpContext);
             if (!IsWhiteList(clientIp, payName, request.TransId))
             {
