@@ -64,7 +64,7 @@ namespace PaymentService.Service.DAL
                             new { _WithdrawalId = withdrawalId }, conn, trans);
                     }
 
-                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator);
+                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, conn, trans);
                     if (result > 0)
                     {
                         trans.Commit();
@@ -124,10 +124,10 @@ namespace PaymentService.Service.DAL
                     {
                         const int financialType = 1001;
                         _walletService.SetBalance(withdrawalRequest.CustId, withdrawalRequest.SiteId, withdrawalRequest.UserName, -1 * withdrawalRequest.Amount, financialType,
-                            $"Manual Withdrawal Approved: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out var afterAmount, out var is1stDepoist, conn, trans);
+                            $"Manual Withdrawal Approved: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out _, out _, conn, trans);
                     }
 
-                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator);
+                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, conn, trans);
                     if (result > 0)
                     {
                         trans.Commit();
@@ -189,9 +189,9 @@ namespace PaymentService.Service.DAL
                     // 提款單狀態變成 Reject 都要退玩家錢
                     const int financialType = 1002;
                     _walletService.SetBalance(withdrawalRequest.CustId, withdrawalRequest.SiteId, withdrawalRequest.UserName, withdrawalRequest.Amount, financialType,
-                        $"Manual Withdrawal Rejected: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out var afterAmount, out var is1stDepoist, conn, trans);
+                        $"Manual Withdrawal Rejected: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out _, out _, conn, trans);
 
-                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator);
+                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, conn, trans);
                     if (result > 0)
                     {
                         trans.Commit();
@@ -216,6 +216,18 @@ namespace PaymentService.Service.DAL
                 Action = status,
                 Operator = @operator
             });
+        }
+
+        public int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status, string @operator, MySqlConnection conn, MySqlTransaction trans)
+        {
+            return _mainDbClient.Execute("WithdrawalLog_Ins", new
+            {
+                WithdrawalId = withdrawalId,
+                SiteId = siteId,
+                Comment = comment,
+                Action = status,
+                Operator = @operator
+            }, conn, trans);
         }
 
         public int UpdateWithdrawalInfo(string transId, string withdrawalInfo)
