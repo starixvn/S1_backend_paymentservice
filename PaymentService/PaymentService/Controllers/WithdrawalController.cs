@@ -508,13 +508,13 @@ namespace PaymentService.Controllers
         public  ApiResult WithdrawalManualApprove(WithdrawalManualApproveRequest request)
         {
             var apiResult = new ApiResult();
-
+           
             #region Check
 
             // 檢查 IP 是否在白名單內
             const string payName = "Manual";
             var clientIp = _common.GetClientIP(HttpContext);
-            if (!IsWhiteList(clientIp, payName, request.TransId))
+            if (!_common.IsWhiteList(clientIp, payName, request.TransId, GetCurrentMethod()))
             {
                 _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
@@ -576,7 +576,7 @@ namespace PaymentService.Controllers
             // 檢查 IP 是否在白名單內
             const string payName = "Manual";
             var clientIp = _common.GetClientIP(HttpContext);
-            if (!IsWhiteList(clientIp, payName, request.TransId))
+            if (!_common.IsWhiteList(clientIp, payName, request.TransId, GetCurrentMethod()))
             {
                 _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
@@ -622,46 +622,5 @@ namespace PaymentService.Controllers
             apiResult.Message = "Withdrawal Manual Rejected Success";
             return apiResult;
         }
-
-        #region private method
-
-        /// <summary>
-        /// 檢查 IP 是否是辦公室 或是合法 IP
-        /// </summary>
-        /// <param name="clientIP"></param>
-        /// <param name="PaymentName"></param>
-        /// <param name="transId"></param>
-        /// <returns></returns>
-        private bool IsWhiteList(string clientIP, string PaymentName, string transId)
-        {
-            _logger.LogInformation($"Method={GetCurrentMethod()}, Request: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
-            var officeList = _configuration.GetSection("OfficeIP")?.Get<string[]>();
-            if (officeList.Any(x => x == clientIP))
-            {
-                return true;
-            }
-
-            var whiteList = _configuration.GetSection("WhiteList")?.Get<Dictionary<string, string[]>>();
-            if (whiteList != null)
-            {
-                var whiteListIgnoreCase = new Dictionary<string, string[]>(whiteList, StringComparer.OrdinalIgnoreCase);
-                if (whiteListIgnoreCase.ContainsKey(PaymentName))
-                {
-                    string[] iplist;
-                    whiteListIgnoreCase.TryGetValue(PaymentName, out iplist);
-                    if (!iplist.Any(x => x == clientIP))
-                    {
-                        _logger.LogInformation($"Method={GetCurrentMethod()}, Reject: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            return true;
-        }
-
-        #endregion
     }
 }

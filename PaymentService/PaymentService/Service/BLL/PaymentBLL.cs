@@ -132,12 +132,6 @@ namespace PaymentService.Service.BLL
             return _withdrawalService.GetWithdrawalRequest(withdrawalId);
         }
 
-        public void ManualWithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
-        {
-            var forStatus = new List<int> { (int)WithdrawalStatus.Process };
-            _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
-        }
-
         public void WithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
             var forStatus = new List<int> { (int)WithdrawalStatus.Process };
