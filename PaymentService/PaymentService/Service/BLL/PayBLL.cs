@@ -31,35 +31,35 @@ namespace PaymentService.Service.BLL
 
         public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
         {
-            var key = $"BankInfoPayList_{siteId}";
+            var key = $"BankInfoPayList:{siteId}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
                 () => payService.GetOnlineBankList(siteId), RedisDataBase.Shared);
         }
 
         public IEnumerable<BankInfoPay> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
         {
-            var key = $"BankInfoPayList_{siteId}_{depositType}";
+            var key = $"BankInfoPayList:{siteId}:{depositType}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
                 () => payService.GetAutoChannelBankInfoList(siteId, depositType), RedisDataBase.Shared);
         }
 
         public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
         {
-            var key = $"PayInfoList_{siteId}_{depositType}";
+            var key = $"PayInfoList:{siteId}:{depositType}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
                 () => payService.GetPayInfo(siteId, depositType), RedisDataBase.Shared);
         }
 
         public IEnumerable<CryptoPayInfo> GetCryptoPayInfoList(int siteId)
         {
-            var key = $"CryptoPayInfoList_{siteId}";
+            var key = $"CryptoPayInfoList:{siteId}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
                 () => payService.GetCryptoPayInfo(siteId), RedisDataBase.Shared);
         }
 
         public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfoList(int siteId)
         {
-            var key = $"LoadCardPayInfoList_{siteId}";
+            var key = $"LoadCardPayInfoList:{siteId}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
                 () => payService.GetLoadCardPayInfo(siteId), RedisDataBase.Shared);
         }
@@ -67,13 +67,13 @@ namespace PaymentService.Service.BLL
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
         {
             return _redisHelper.TryGetOrCreate("OnlineBankListForPayout", TimeSpan.FromSeconds(10),
-                () => payService.GetOnlineBankListForPayout(), RedisDataBase.Shared);
+                () => payService.GetOnlineBankListForPayout());
         }
 
         public IEnumerable<BankInfoPay> GetCryptoListForPayout()
         {
             return _redisHelper.TryGetOrCreate("CryptoListForPayout", TimeSpan.FromSeconds(10),
-                () => payService.GetCryptoListForPayout(), RedisDataBase.Shared);
+                () => payService.GetCryptoListForPayout());
         }
 
         public IEnumerable<PayCurrency> GetPayCurrency()
@@ -85,21 +85,21 @@ namespace PaymentService.Service.BLL
         public IEnumerable<PayLanguage> GetPayLanguage()
         {
             return _redisHelper.TryGetOrCreate("PayLanguage", TimeSpan.FromMinutes(5),
-                () => payService.GetPayLanguage(), RedisDataBase.Shared);
+                () => payService.GetPayLanguage());
         }
 
         public IEnumerable<Pay> GetPaymentList(int siteId)
         {
-            var key = $"Pay_{siteId}";
+            var key = $"Pay:{siteId}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromMinutes(5),
-                () => payService.GetPaymentList(siteId), RedisDataBase.Shared);
+                () => payService.GetPaymentList(siteId));
         }
 
         public IEnumerable<Pay> GetPaymentAllList(int siteId)
         {
-            var key = $"PayAll_{siteId}";
+            var key = $"PayAll:{siteId}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromMinutes(5),
-                () => payService.GetPaymentAllList(siteId), RedisDataBase.Shared);
+                () => payService.GetPaymentAllList(siteId));
         }
 
         public IPayHelper GetPayHelper(string PayName)
