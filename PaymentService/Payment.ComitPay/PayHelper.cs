@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore;
 using System.Globalization;
+using PaymentCore.Interface;
+using PaymentCore.Models.Result;
 
 namespace Payment.ComitPay
 {

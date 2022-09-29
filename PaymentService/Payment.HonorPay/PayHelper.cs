@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Models.Result;
 
 namespace Payment.HonorPay
 {
@@ -89,7 +90,7 @@ namespace Payment.HonorPay
                     oNotify.ActualAmount = decimal.Parse(data.payMoney);
                     oNotify.Response = "888888";
                 }
-                else 
+                else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
                     oNotify.Response = "888888";
@@ -151,7 +152,7 @@ namespace Payment.HonorPay
             formData["notifyURL"] = inputs["CallBackUrl"];
 
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"]);
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"], false);
 
             var withdrawResult = new WithdrawResult();
             var withdrawalRes = new WithdrawalRes();
@@ -200,7 +201,7 @@ namespace Payment.HonorPay
             formData.Add("orderNo", inputs["TransID"]);
 
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"]);
+            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"], false);
 
             var depositRes = new DepositRes();
             depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);

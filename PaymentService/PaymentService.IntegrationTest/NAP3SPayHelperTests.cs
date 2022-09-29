@@ -2,6 +2,7 @@
 using Payment.NAP3SPay;
 using NSubstitute;
 using PaymentCore;
+using PaymentCore.Models.Result;
 
 namespace PaymentService.IntegrationTest
 {

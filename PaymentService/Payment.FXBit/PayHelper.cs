@@ -6,6 +6,8 @@ using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
+using PaymentCore.Interface;
+using PaymentCore.Models.Result;
 
 namespace Payment.FXBit
 {

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Models.Result;
 
 namespace Payment.FattyPay
 {

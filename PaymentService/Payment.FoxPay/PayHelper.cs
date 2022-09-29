@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Interface;
+using PaymentCore.Models.Result;
 
 namespace Payment.FoxPay
 {
@@ -96,7 +98,7 @@ namespace Payment.FoxPay
                 thirdUserId = thirdUserId
             };
             
-            var sResponse = HttpPost(sUrl, ToJson(req), "application/json", inputs["apiId"], inputs["key"], req.thirdOrderNumber , true);
+            var sResponse = HttpPost(sUrl, ToJson(req), "application/json", inputs["apiId"], inputs["key"], req.thirdOrderNumber);
 
             var depositRes = JsonConvert.DeserializeObject<Response>(sResponse);
             var oDepositResult = new DepositResult();

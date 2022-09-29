@@ -1,6 +1,7 @@
 ﻿using PaymentCore;
 using System.Globalization;
 using System.Xml.Serialization;
+using PaymentCore.Models.Result;
 
 namespace Payment.Help2Pay
 {

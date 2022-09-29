@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentCore.Exceptions;
+using PaymentCore.Interface;
 using Serilog.Context;
 using JsonExtension = PaymentCore.Extensions.JsonExtension;
 

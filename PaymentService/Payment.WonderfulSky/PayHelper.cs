@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore;
 using System.Text;
+using PaymentCore.Models.Result;
 
 namespace Payment.WonderfulSky
 {

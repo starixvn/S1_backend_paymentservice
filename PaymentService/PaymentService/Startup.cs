@@ -3,6 +3,7 @@ using System.Text;
 using Flurl.Http;
 using PaymentCore;
 using PaymentCore.Helpers;
+using PaymentCore.Interface;
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
@@ -54,7 +55,7 @@ namespace PaymentService
             /*Library*/
             services.AddSingleton<Common>();
             services.AddSingleton<CourierAdapter>();
-            services.AddSingleton<HttpHelper>();
+            services.AddSingleton<IPayHttpHelper, HttpHelper>();
             services.AddSingleton<CacheHelper>();
             services.AddSingleton<PaymentHelper>();
             services.AddSingleton<IFlurlHttpHelper, FlurlHttpHelper>();
@@ -76,8 +77,8 @@ namespace PaymentService
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();
             
-            PaymentCore.PayHelperBase.proxyHost = proxyHost;
-            PaymentCore.PayHelperBase.proxyPort = proxyPort;
+            PaymentCore.PayHelperBase.ProxyHost = proxyHost;
+            PaymentCore.PayHelperBase.ProxyPort = proxyPort;
 
             services.AddControllers();
         }
