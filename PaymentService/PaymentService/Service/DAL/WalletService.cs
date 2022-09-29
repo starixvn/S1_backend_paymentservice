@@ -27,6 +27,7 @@ namespace PaymentService.Service.DAL
             afterAmount = p.Get<decimal?>("AfterAmount") ?? 0;
             return afterAmount >= 0 ? 1 : 0;
         }
+
         public decimal GetBalance(int custId)
         {
             return _reportDbClient.ExecuteScalar<decimal>("Balance_Get", new { CustId = custId });

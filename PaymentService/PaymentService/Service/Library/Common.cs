@@ -1,13 +1,20 @@
 ﻿using System.Text.RegularExpressions;
+using PaymentService.Extensions;
 
 namespace PaymentService.Service.Library
 {
     public class Common
     {
         private readonly IWebHostEnvironment environment;
-        public Common(IWebHostEnvironment environment)
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<Common> _logger;
+
+
+        public Common(IWebHostEnvironment environment, IConfiguration configuration, ILogger<Common> _logger)
         {
             this.environment = environment;
+            this._configuration = configuration;
+            this._logger = _logger;
         }
         public string GetEnv()
         {
@@ -133,6 +140,37 @@ namespace PaymentService.Service.Library
         {
             return (userIp >= begin) && (userIp <= end);
         }
+
+        public bool IsWhiteList(string clientIp, string paymentName, string transId,string methodName)
+        {
+            _logger.LogInformation($"Method={methodName}, Request: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
+            var officeList = _configuration.GetSection("OfficeIP")?.Get<string[]>();
+            if (officeList.Any(x => x == clientIp))
+            {
+                return true;
+            }
+
+            var whiteList = _configuration.GetSection("WhiteList")?.Get<Dictionary<string, string[]>>();
+            if (whiteList != null)
+            {
+                var whiteListIgnoreCase = new Dictionary<string, string[]>(whiteList, StringComparer.OrdinalIgnoreCase);
+                if (whiteListIgnoreCase.ContainsKey(paymentName))
+                {
+                    string[] iplist;
+                    whiteListIgnoreCase.TryGetValue(paymentName, out iplist);
+                    if (!iplist.Any(x => x == clientIp))
+                    {
+                        _logger.LogInformation($"Method={methodName}, Reject: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return true;
+        }
+
         #endregion
     }
 }

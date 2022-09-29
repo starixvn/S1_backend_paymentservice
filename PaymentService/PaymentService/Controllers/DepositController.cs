@@ -585,38 +585,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        bool IsWhiteList(string clientIP, string PaymentName, string transId)
-        {
-            _logger.LogInformation($"Method={GetCurrentMethod()}, Request: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
-
-            var officeList = _configuration.GetSection("OfficeIP")?.Get<string[]>();
-
-            if (officeList.Any(x => x == clientIP))
-            {
-                return true;
-            }
-
-            var WhiteList = _configuration.GetSection("WhiteList")?.Get<Dictionary<string, string[]>>();
-            if (WhiteList != null)
-            {
-                var WhiteListIgnoreCase = new Dictionary<string, string[]>(WhiteList, StringComparer.OrdinalIgnoreCase);
-                string[] iplist;
-                if (WhiteListIgnoreCase.ContainsKey(PaymentName))
-                {
-                    WhiteListIgnoreCase.TryGetValue(PaymentName, out iplist);
-                    if (!iplist.Any(x => x == clientIP))
-                    {
-                        _logger.LogInformation($"Method={GetCurrentMethod()}, Reject: PaymentName={PaymentName} clientIP={clientIP} transId={transId}");
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            return true;
-        }
-
+        
         [Route("Payment/GetClientIp")]
         [HttpGet, HttpPost]
         public string GetClientIp()
@@ -647,7 +616,7 @@ namespace PaymentService.Controllers
                 };
                 const string payName = "Manual";
                 var clientIp = _common.GetClientIP(HttpContext);
-                if (!IsWhiteList(clientIp, payName, request.TransId))
+                if (! _common.IsWhiteList(clientIp, payName, request.TransId, GetCurrentMethod()))
                 {
                     _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
                     response.ErrorCode = (int)ErrorCode.Fail;
@@ -798,7 +767,7 @@ namespace PaymentService.Controllers
                     return $"PayName of TransId={transId} is not exist";
                 }
 
-                if (!IsWhiteList(_common.GetClientIP(HttpContext), paySetting.PayName, transId))
+                if (!_common.IsWhiteList(_common.GetClientIP(HttpContext), paySetting.PayName, transId, GetCurrentMethod()))
                 {
                     _logger.LogError($"Method={GetCurrentAsyncMethod()}, {paySetting.PayName} requested of {transId} from {_common.GetClientIP(HttpContext)} is Invalid IP!");
                     return "Invalid IP!";
