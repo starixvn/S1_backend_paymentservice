@@ -31,6 +31,13 @@
         public int SSort { get; set; }
         public bool SelBank { get; set; }
     }
+    
+    public class AutoChannelBankInfo : BankInfoPay
+    {
+        public decimal MinAmount { get; set; }
+        public decimal MaxAmount { get; set; }
+    }
+    
     public class PayInfo
     {
         public int PayId { get; set; }

@@ -64,9 +64,9 @@ namespace PaymentService.Service.DAL
             return _reportDbClient.Query<PayInfo>("Service_PayInfo_Get", new { SiteId = siteId, DepositType = (int)depositType });
         }
 
-        public IEnumerable<BankInfoPay> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
+        public IEnumerable<AutoChannelBankInfo> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
         {
-            return _reportDbClient.Query<BankInfoPay>("Service_AutoChannelBankInfo_Get", new { SiteId = siteId, DepositType = (int)depositType });
+            return _reportDbClient.Query<AutoChannelBankInfo>("Service_AutoChannelBankInfo_Get", new { SiteId = siteId, DepositType = (int)depositType });
         }
     }
 }
