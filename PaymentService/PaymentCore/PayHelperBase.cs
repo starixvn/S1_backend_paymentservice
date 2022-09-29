@@ -1,190 +1,26 @@
 ﻿using Newtonsoft.Json;
 using System.Net;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Web;
-using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Security;
 using System.Security.Cryptography;
 using Org.BouncyCastle.Crypto.Parameters;
+using PaymentCore.Interface;
+using PaymentCore.Models.Result;
+using Serilog.Context;
 
 namespace PaymentCore
 {
-    public enum TransStatus
-    {
-        Pending,
-        Success,
-        Fail
-    }
+    public delegate void InsertPaymentLogEventHandler(string url, string input, string output, string transId);
 
-    public class ExchangeRate
-    {
-        public long Updated_timestamp { get; set; }
-        public decimal BuyRate { get; set; }
-        public decimal SellRate { get; set; }
-    }
-
-    public class ExchangeResult
-    {
-        public ExchangeResult()
-        {
-        }
-
-        public ExchangeResult(string errorCode)
-            : this(errorCode, null, null)
-        {
-        }
-
-        public ExchangeResult(string errorCode, string message)
-            : this(errorCode, message, null)
-        {
-        }
-
-        public ExchangeResult(string errorCode, string message, Dictionary<string, string> formData)
-        {
-            this.ErrorCode = errorCode;
-            this.Message = message;
-            this.FormData = formData;
-        }
-
-        public string Message { get; set; }
-        public Dictionary<string, string> FormData { get; set; }
-        public string ErrorCode { get; set; }
-    }
-
-    public class DepositResult
-    {
-        public DepositResult()
-        {
-        }
-
-        public DepositResult(bool success, string errorCode, string message = "")
-        {
-            this.Success = success;
-            this.ErrorCode = errorCode;
-            this.Message = message;
-        }
-        
-        public bool Success { get; set; }
-        public string Message { get; set; }
-        public string ErrorCode { get; set; }
-        public decimal DepositAmount { get; set; }
-        public decimal SuggestAmount { get; set; }
-        public string Url { get; set; }
-        public Dictionary<string, string> FormData { get; set; }
-        public string ThirdId { get; set; }
-        public string Memo { get; set; }
-        public string RawContent { get; set; }
-        /// <summary>
-        /// 需要更新 DepositInfo.DepositInfo 時使用此欄位
-        /// </summary>
-        public string DepositInfo { get; set; }
-    }
-    public class WithdrawResult
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; }
-        public string WithdrawId { get; set; }
-        public decimal Amount { get; set; }
-        public string RawContent { get; set; }
-        /// <summary>
-        /// 需要更新 WithdrawalInfo.WithdrawalInfo 時使用此欄位
-        /// </summary>
-        public string WithdrawalInfo { get; set; }
-    }
-
-    public delegate void InsertPaymentLogEventHandler(string url, string input, string output, string transID);
-    public delegate void ErrorLogEventHandler(string log);
-    public interface IPayHelper
-    {
-        DepositResult Debit(Dictionary<string, string> inputs);
-        WithdrawResult Credit(Dictionary<string, string> inputs);
-        Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs);
-
-        event InsertPaymentLogEventHandler InsertPaymentLog;
-        EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs);
-        EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs);
-        NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
-        NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
-    }
-    public interface IExchangeHelper
-    {
-        //ExchangeResult GetExchangeAsync(Dictionary<string, string> payResource);
-        //public System.Threading.Tasks.Task<ExchangeResult> GetExchangeAsync(Dictionary<string, string> payResource);
-        public ExchangeResult GetExchange(Dictionary<string, string> payResource);
-    }
-    public interface IPayHelperNoCallBackUrl
-    {
-        string FetchTransId(Dictionary<string, string> formData, string bodyContent);
-    }
-    public interface IDepositResult
-    {
-        TransStatus TransStatus { get; set; }
-        string Message { get; set; }
-        string DepositId { get; set; }
-        string ThirdId { get; set; }
-        decimal RequestAmount { get; set; }
-        decimal ActualAmount { get; set; }
-        decimal Fee { get; }
-        string Comment { get; set; }
-        string RefThirdId { get; set; }
-    }
-    public class EnquiryDepositResult : IDepositResult
-    {
-        public TransStatus TransStatus { get; set; }
-        public string Message { get; set; }
-        public string DepositId { get; set; }
-        public string ThirdId { get; set; }
-        public decimal RequestAmount { get; set; }
-        public decimal ActualAmount { get; set; }
-        public decimal Fee { get { return RequestAmount - ActualAmount; } }
-        public string Comment { get; set; }
-        public string RawContent { get; set; }
-        public string RefThirdId { get; set; }
-    }
-    public interface IWithdrawResult
-    {
-        public TransStatus TransStatus { get; set; }
-        public string Message { get; set; }
-        public string WithdrawId { get; set; }
-        public decimal RequestAmount { get; set; }
-        public string ThirdId { get; set; }
-    }
-    public class EnquiryWithdrawResult : IWithdrawResult
-    {
-        public TransStatus TransStatus { get; set; }
-        public string Message { get; set; }
-        public string WithdrawId { get; set; }
-        public decimal RequestAmount { get; set; }
-        public string ThirdId { get; set; }
-        public string RawContent { get; set; }
-    }
-    public class NotifyDepositResult : IDepositResult
-    {
-        public TransStatus TransStatus { get; set; }
-        public string Message { get; set; }
-        public string DepositId { get; set; }
-        public string RefThirdId { get; set; }
-        public string ThirdId { get; set; }
-        public decimal RequestAmount { get; set; }
-        public decimal ActualAmount { get; set; }
-        public decimal Fee { get { return RequestAmount - ActualAmount; } }
-        public string Comment { get; set; }
-        public string Response { get; set; }
-    }
-    public class NotifyWithdrawResult : IWithdrawResult
-    {
-        public TransStatus TransStatus { get; set; }
-        public string Message { get; set; }
-        public string WithdrawId { get; set; }
-        public decimal RequestAmount { get; set; }
-        //public decimal Fee { get { return OrderAmount - FactAmount; } }
-        public string ThirdId { get; set; }
-        public string Response { get; set; }
-    }
     public abstract class PayHelperBase : IPayHelper
     {
-        public static IPayHttpHelper HttpHelper { get; set; }
+        // Startup 的時候 Setter
+        public static string ProxyHost;
+
+        // Startup 的時候 Setter
+        public static int ProxyPort;
+
         public event InsertPaymentLogEventHandler InsertPaymentLog;
         public abstract DepositResult Debit(Dictionary<string, string> inputs);
         public abstract WithdrawResult Credit(Dictionary<string, string> inputs);
@@ -193,246 +29,140 @@ namespace PaymentCore
         public abstract EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs);
         public abstract NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
         public abstract NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
-        /// <summary>
-        /// 1. 會夾帶Content-Type
-        /// 2. 簡體字會變成亂碼，且無法還原
-        /// </summary>
-        /// 
-        public static string proxyHost;
-        public static int proxyPort;
 
-        protected string HttpGet(string url, string parameters, string transID, bool ignoreCertificate = false)
+        protected string HttpGet(string url, string parameters, string transId, bool ignoreCertificate = false)
         {
-            var request = WebRequest.CreateHttp($"{url}?{parameters}");
-            request.Method = "GET";
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-
-            if (ignoreCertificate)
-            {
-                request.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
-            }
-
-            using var response = request.GetResponse();
-            using var dataStream = response.GetResponseStream();
-            using var reader = new StreamReader(dataStream);
-            var responseFromServer = reader.ReadToEnd();
-
-            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
-
-            return responseFromServer;
-        }
-        
-        protected string HttpPost(string url, string parameters, string contentType, string transId, bool ignoreCertificate = false)
-        {
-            var request = WebRequest.CreateHttp(url);
-
-            request.Method = "POST";
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-
-            var postData = parameters;
-            var byteArray = Encoding.UTF8.GetBytes(postData);
-            request.ContentType = contentType;
-            request.ContentLength = byteArray.Length;
-            if (ignoreCertificate)
-            {
-                request.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
-            }
-
-            var dataStream = request.GetRequestStream();
-            dataStream.Write(byteArray, 0, byteArray.Length);
-            dataStream.Close();
-            WebResponse response;
-
             try
             {
-                response = request.GetResponse();
+                var requestUri = $"{url}?{parameters}";
+                var response = HttpClientSend(httpMethod: HttpMethod.Get,
+                    content: string.Empty,
+                    requestUri: requestUri,
+                    contentType: string.Empty,
+                    ignoreCertificate: ignoreCertificate);
+
+                LogInformationProxy(url, parameters, response, transId);
+
+                return response;
             }
-            catch (WebException e)
+            catch (Exception ex)
             {
-                response = (HttpWebResponse)e.Response;
+                LogInformationProxy(url, parameters, ex.Message, transId);
+                throw;
             }
-
-            dataStream = response.GetResponseStream();
-            using var reader = new StreamReader(dataStream);
-            var responseFromServer = reader.ReadToEnd();
-            reader.Close();
-            dataStream.Close();
-            response.Close();
-            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transId);
-
-            return responseFromServer;
         }
 
-        protected string HttpPost(string url, string parameters, string contentType, string accesstoken, string transID, bool ignoreCertificate)
+        protected string HttpPost(string url, string parameters, string contentType, string transId, bool ignoreCertificate = false)
         {
-            var request = WebRequest.CreateHttp(url);
-
-            request.Method = "POST";
-            if (!string.IsNullOrEmpty(proxyHost))
+            try
             {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
+                var response = HttpClientSend(httpMethod: HttpMethod.Post,
+                    content: parameters,
+                    requestUri: url,
+                    contentType: contentType,
+                    ignoreCertificate: ignoreCertificate);
 
-            var postData = parameters;
-            var byteArray = Encoding.UTF8.GetBytes(postData);
-            request.ContentType = contentType;
-            request.ContentLength = byteArray.Length;
-            if (ignoreCertificate)
+                LogInformationProxy(url, parameters, response, transId);
+
+                return response;
+            }
+            catch (Exception ex)
             {
-                request.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+                LogInformationProxy(url, parameters, ex.Message, transId);
+                throw;
             }
-            request.Headers.Add("Authorization", "Bearer " + accesstoken);
-            request.Headers.Add("accept", contentType);
-            request.Headers.Add("x-api-key", accesstoken);
-
-            InsertPaymentLog?.Invoke(url, $"request: {parameters}, " +
-                                          $"Headers: {ToJson(request.Headers)}", string.Empty, transID);
-
-            var dataStream = request.GetRequestStream();
-            dataStream.Write(byteArray, 0, byteArray.Length);
-            dataStream.Close();
-            using var response = request.GetResponse();
-
-            dataStream = response.GetResponseStream();
-            using var reader = new StreamReader(dataStream);
-            var responseFromServer = reader.ReadToEnd();
-            reader.Close();
-            dataStream.Close();
-            response.Close();
-            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
-
-            return responseFromServer;
-        }
-        protected string HttpPost(string url, string parameters, string contentType, string accesstoken, string transID)
-        {
-            var request = WebRequest.Create(url);
-
-            request.Method = "POST";
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-
-            var postData = parameters;
-            var byteArray = Encoding.UTF8.GetBytes(postData);
-            request.ContentType = contentType;
-            request.ContentLength = byteArray.Length;
-            request.Headers.Add("Authorization", "Bearer " + accesstoken);
-            request.Headers.Add("accept", contentType);
-            request.Headers.Add("x-api-key", accesstoken);
-
-            var dataStream = request.GetRequestStream();
-            dataStream.Write(byteArray, 0, byteArray.Length);
-            dataStream.Close();
-            using var response = request.GetResponse();
-
-            dataStream = response.GetResponseStream();
-            using var reader = new StreamReader(dataStream);
-            var responseFromServer = reader.ReadToEnd();
-            reader.Close();
-            dataStream.Close();
-            response.Close();
-            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
-
-            return responseFromServer;
-        }
-        protected string HttpPost(string url, string parameters, string contentType, string username, string password, string transID)
-        {
-            var request = WebRequest.Create(url);
-
-            request.Method = "POST";
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-
-            var postData = parameters;
-            var byteArray = Encoding.UTF8.GetBytes(postData);
-            request.ContentType = contentType;
-            request.ContentLength = byteArray.Length;
-
-            var svcCredentials = username;
-            if (!string.IsNullOrEmpty(password))
-            {
-                svcCredentials = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(username + ":" + password));
-            }
-            
-            request.Headers.Add("Authorization", "Basic " + svcCredentials);
-            var dataStream = request.GetRequestStream();
-            dataStream.Write(byteArray, 0, byteArray.Length);
-            dataStream.Close();
-            using var response = request.GetResponse();
-
-            dataStream = response.GetResponseStream();
-            using var reader = new StreamReader(dataStream);
-            var responseFromServer = reader.ReadToEnd();
-            reader.Close();
-            dataStream.Close();
-            response.Close();
-            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
-
-            return responseFromServer;
-        }
-        protected string HttpPostGBK(string url, string parameters, string contentType, string transID)
-        {
-            var request = WebRequest.Create(url);
-            request.Method = "POST";
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-
-            var postData = parameters;
-            var byteArray = UTF8ToGBK(parameters);
-            request.ContentType = contentType;
-            request.ContentLength = byteArray.Length;
-
-            var dataStream = request.GetRequestStream();
-            dataStream.Write(byteArray, 0, byteArray.Length);
-            dataStream.Close();
-            using var response = request.GetResponse();
-
-            dataStream = response.GetResponseStream();
-            using var reader = new StreamReader(dataStream);
-            var responseFromServer = reader.ReadToEnd();
-            reader.Close();
-            dataStream.Close();
-            response.Close();
-            InsertPaymentLog?.Invoke(url, parameters, responseFromServer, transID);
-
-            return responseFromServer;
         }
 
-        public void DoInsertPaymentLog(string url, string input, string output, string SerialID)
+        protected string HttpPost(string url, string parameters, string contentType, string accessToken, string transId, bool ignoreCertificate)
         {
-            InsertPaymentLog?.Invoke(url, input, output, SerialID);
+            try
+            {
+                var httpHeaders = new Dictionary<string, string>
+                {
+                    { "Authorization", "Bearer " + accessToken },
+                    { "accept", contentType },
+                    { "x-api-key", accessToken }
+                };
+
+                LogInformationProxy(url, $"request: {parameters}, " +
+                                $"Headers: {ToJson(httpHeaders)}", string.Empty, transId);
+
+                var response = HttpClientSend(httpMethod: HttpMethod.Post,
+                    content: parameters,
+                    requestUri: url,
+                    contentType: contentType,
+                    ignoreCertificate: ignoreCertificate,
+                    httpHeaders: httpHeaders);
+
+                LogInformationProxy(url, parameters, response, transId);
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                LogInformationProxy(url, parameters, ex.Message, transId);
+                throw;
+            }
         }
 
-        /// <summary>
-        /// 1. 不會夾帶Content-Type
-        /// 2. 簡體字可正常顯示
-        /// </summary>
-        protected async System.Threading.Tasks.Task<string> HttpPostAsync(string url, Dictionary<string, string> parameters, string SerialID)
+        protected string HttpPost(string url, string parameters, string contentType, string username, string password, string transId)
         {
-            var responseBody = "";
-
-            using (var client = new HttpClient())
+            try
             {
-                client.Timeout = TimeSpan.FromSeconds(30);
-                var content = new FormUrlEncodedContent(parameters);
-                var response = await client.PostAsync(url, content).ConfigureAwait(false);
-                responseBody = await response.Content.ReadAsStringAsync();
+                var svcCredentials = username;
+                if (!string.IsNullOrEmpty(password))
+                {
+                    svcCredentials = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(username + ":" + password));
+                }
 
-                InsertPaymentLog?.Invoke(url, string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}").ToArray()), responseBody, SerialID);
+                var httpHeaders = new Dictionary<string, string>
+                {
+                    { "Authorization", "Basic " + svcCredentials }
+                };
+
+                LogInformationProxy(url, $"request: {parameters}, " +
+                                $"Headers: {ToJson(httpHeaders)}", string.Empty, transId);
+
+                var response = HttpClientSend(httpMethod: HttpMethod.Post,
+                    content: parameters,
+                    requestUri: url,
+                    contentType: contentType,
+                    ignoreCertificate: false,
+                    httpHeaders: httpHeaders);
+
+                LogInformationProxy(url, parameters, response, transId);
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                LogInformationProxy(url, parameters, ex.Message, transId);
+                throw;
+            }
+        }
+
+        protected string HttpPostGBK(string url, string parameters, string contentType, string transId)
+        {
+            try
+            {
+                var gBkEncoding = Encoding.GetEncoding("GB2312"); // GBK 编码
+                var response = HttpClientSend(httpMethod: HttpMethod.Post,
+                    content: UTF8StrToGBKStr(parameters),
+                    requestUri: url,
+                    contentType: contentType,
+                    ignoreCertificate: false,
+                    encoding: gBkEncoding);
+
+                LogInformationProxy(url, parameters, response, transId);
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                LogInformationProxy(url, parameters, ex.Message, transId);
+                throw;
             }
 
-            return responseBody;
         }
 
         protected string ToMD5(string encodeStr)
@@ -484,7 +214,6 @@ namespace PaymentCore
             return base64String;
         }
 
-
         protected string ToSHA256(string encodeStr)
         {
             var bytes = Encoding.UTF8.GetBytes(encodeStr);
@@ -533,27 +262,6 @@ namespace PaymentCore
             }
             return builder.ToString();
         }
-        protected int GetTimestemp()
-        {
-            return Convert.ToInt32((DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
-        }
-        protected string unicode_js_1(string str)
-        {
-            var outStr = "";
-            var reg = new Regex(@"(?i)\\u([0-9a-f]{4})");
-            try
-            {
-                outStr = reg.Replace(str, delegate (Match m1)
-                {
-                    return ((char)Convert.ToInt32(m1.Groups[1].Value, 16)).ToString();
-                });
-            }
-            catch (Exception ex)
-            {
-
-            }
-            return outStr;
-        }
 
         protected T FromJson<T>(string jsonString)
         {
@@ -566,6 +274,7 @@ namespace PaymentCore
                 return default(T);
             }
         }
+
         protected string ToJson(object t)
         {
             return JsonConvert.SerializeObject(t, new JsonSerializerSettings
@@ -573,41 +282,8 @@ namespace PaymentCore
                 NullValueHandling = NullValueHandling.Ignore
             });
         }
-        protected bool IsJSON(string jsonString)
-        {
-            var value = jsonString.Trim();
 
-            return (value.StartsWith("{") && value.EndsWith("}")) || (value.StartsWith("[") && value.EndsWith("]"));
-        }
-
-        /// <summary>
-        /// 移除小數點後多餘的0
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        protected decimal RemoveZeroAfterPoint(decimal value)
-        {
-            return value / 1.000000000000000000000000000000000m;
-        }
-
-        protected int LengthAfterPoint(string str)
-        {
-
-            if (str.IndexOf('.') > 0 && str.IndexOf('.') != str.Length)
-            {
-                var result = str.Substring(str.IndexOf('.') + 1, str.Length - str.IndexOf('.') - 1);
-                if (result == "")
-                    return 0;
-                else if (int.Parse(result) == 0)
-                    return 0;
-                else
-                    return result.Length;
-            }
-            else
-            {
-                return 0;
-            }
-        }
+        // 先保留
         protected byte[] UTF8ToGBK(string str)
         {
             var GBK = Encoding.GetEncoding("GB2312"); // GBK 编码
@@ -618,6 +294,19 @@ namespace PaymentCore
 
             return gbkbytes;
         }
+
+        protected string UTF8StrToGBKStr(string str)
+        {
+            var GBK = Encoding.GetEncoding("GB2312"); // GBK 编码
+            Encoding UTF8 = new UTF8Encoding(true); // UTF-8 编码
+
+            var utf8bytes = Encoding.UTF8.GetBytes(str);
+            var gbkbytes = Encoding.Convert(UTF8, GBK, utf8bytes);
+            var toString = GBK.GetString(utf8bytes);
+
+            return toString;
+        }
+
 
         protected string GBKToUTF8(string str)
         {
@@ -660,45 +349,10 @@ namespace PaymentCore
             return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
 
-        protected string AddPrivateHeader(string text)
-        {
-            return $"-----BEGIN RSA PRIVATE KEY-----\n{text}\n-----END RSA PRIVATE KEY-----";
-        }
-
-        protected string AddPublicHeader(string text)
-        {
-            return $"-----BEGIN PUBLIC KEY-----\n{text}\n-----END PUBLIC KEY-----";
-        }
-
-        protected static string RSAPublicKeyJava2DotNet(string publicKey)
-        {
-            var publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
-            return DotNetUtilities.ToRSA(publicKeyParam).ToXmlString(false);
-        }
-
         protected static string RSAPrivateKeyJava2DotNet(string privateKey)
         {
             var privateKeyParam = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
             return DotNetUtilities.ToRSA(privateKeyParam).ToXmlString(true);
-        }
-        
-        protected string RSAEncryptWithPublicKey(string publickey, string content)
-        {
-            var rsa = new RSACryptoServiceProvider();
-            //byte[] cipherbytes;
-            rsa.FromXmlString(publickey);
-            var rp = rsa.ExportParameters(false);
-
-            //转换密钥
-            AsymmetricKeyParameter pbk = DotNetUtilities.GetRsaPublicKey(rp);
-
-            var c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
-            //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
-            c.Init(true, pbk);
-
-            var DataToEncrypt = Encoding.UTF8.GetBytes(content);
-            var outBytes = c.DoFinal(DataToEncrypt);
-            return Convert.ToBase64String(outBytes);
         }
 
         protected string RSAEncryptWithPrivateKey(string privateKey, string content)
@@ -718,30 +372,11 @@ namespace PaymentCore
             return Convert.ToBase64String(outBytes);
         }
 
-        protected string RSADecryptWithPublicKey(string publicKey, string content)
-        {
-            var rsa = new RSACryptoServiceProvider();
-            rsa.FromXmlString(publicKey);
-            var rp = rsa.ExportParameters(false);
-
-            //转换密钥
-            AsymmetricKeyParameter pbk = DotNetUtilities.GetRsaPublicKey(rp);
-
-            var c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
-
-            //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
-            c.Init(false, pbk);
-
-            var DataToDecrypt = Convert.FromBase64String(content);
-            var outBytes = c.DoFinal(DataToDecrypt);//解密
-            return Encoding.UTF8.GetString(outBytes);
-        }
-
-        protected string RSADecryptWithPrivateKey(string privatekey, string content)
+        protected string RSADecryptWithPrivateKey(string privateKey, string content)
         {
             //加载私钥
             var privateRsa = new RSACryptoServiceProvider();
-            privateRsa.FromXmlString(privatekey);
+            privateRsa.FromXmlString(privateKey);
 
             //转换密钥
             var keyPair = DotNetUtilities.GetKeyPair(privateRsa);
@@ -754,9 +389,9 @@ namespace PaymentCore
             return Encoding.UTF8.GetString(outBytes);
         }
 
-        protected string currMapping(string currencyId)
+        protected string CurrencyMapping(string currencyId)
         {
-            var currMapping = new Dictionary<string, string>
+            var currencyMapping = new Dictionary<string, string>
             {
                 {"2", "MYR"},
                 {"4", "THB"},
@@ -767,15 +402,88 @@ namespace PaymentCore
                 {"74", "BDT"}
             };
 
-            if (currMapping.ContainsKey(currencyId))
-            {
+            return currencyMapping.ContainsKey(currencyId) ? currencyMapping[currencyId] : "";
+        }
 
-                return currMapping[currencyId];
-             }
-            else
+        private string HttpClientSend(HttpMethod httpMethod,
+            string content,
+            string requestUri,
+            string contentType,
+            bool ignoreCertificate,
+            Dictionary<string, string> httpHeaders = null,
+            Encoding encoding = null)
+        {
+            var httpRequestMessage = GetHttpRequestMessage(httpMethod: httpMethod,
+                requestUri: requestUri,
+                contentType: contentType,
+                content: content,
+                encoding: encoding);
+
+            var httpClientHandler = GetHttpClientHandler(ProxyHost, ProxyPort, ignoreCertificate);
+            using var client = new HttpClient(httpClientHandler);
+            SetHttpHeader(httpHeaders, client);
+            var response = client.Send(httpRequestMessage);
+            return response.Content.ReadAsStringAsync().Result;
+        }
+
+        private static void SetHttpHeader(Dictionary<string, string> httpHeaders, HttpClient client)
+        {
+            if (httpHeaders == null) return;
+
+            foreach (var header in httpHeaders)
             {
-                return ""; 
+                client.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value);
             }
+        }
+
+        private static HttpClientHandler GetHttpClientHandler(string proxyHost, int proxyPort, bool ignoreCertificate)
+        {
+            var httpClientHandler = new HttpClientHandler();
+
+            if (ignoreCertificate)
+            {
+                httpClientHandler.ServerCertificateCustomValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            }
+
+            if (string.IsNullOrEmpty(proxyHost)) return httpClientHandler;
+
+            httpClientHandler.UseProxy = true;
+            httpClientHandler.Proxy = new WebProxy(ProxyHost, ProxyPort);
+            return httpClientHandler;
+        }
+
+        private static HttpRequestMessage GetHttpRequestMessage(HttpMethod httpMethod, string requestUri, string contentType, string content, Encoding encoding = null)
+        {
+            if (httpMethod == HttpMethod.Post)
+            {
+                if (encoding == null) // 預設 Encoding.UTF8
+                {
+                    return new HttpRequestMessage(HttpMethod.Post, requestUri)
+                    {
+                        Content = new StringContent(content, Encoding.UTF8, contentType)
+                    };
+                }
+
+                // 指定 Encoding
+                return new HttpRequestMessage(HttpMethod.Post, requestUri)
+                {
+                    Content = new StringContent(content, encoding, contentType)
+                };
+            }
+
+            if (httpMethod == HttpMethod.Get)
+            {
+                return new HttpRequestMessage(HttpMethod.Get, requestUri);
+            }
+
+            throw new Exception("httpMethod not implement please check use httpMethod");
+        }
+
+        private void LogInformationProxy(string url, string input, string output, string transId)
+        { 
+            const string logTag = "PayHelperBaseHttpRequestResponse";
+            LogContext.PushProperty("LogTag", logTag);
+            InsertPaymentLog?.Invoke(url, input, output, transId);
         }
     }
 }

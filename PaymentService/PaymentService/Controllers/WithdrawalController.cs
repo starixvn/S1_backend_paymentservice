@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Interface;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;

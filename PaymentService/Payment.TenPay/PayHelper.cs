@@ -1,5 +1,6 @@
 ﻿using PaymentCore;
 using Newtonsoft.Json;
+using PaymentCore.Models.Result;
 
 namespace Payment.TenPay
 {

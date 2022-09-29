@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
+using PaymentCore.Interface;
+using PaymentCore.Models.Result;
 
 namespace Payment.DirePay
 {
@@ -299,7 +301,7 @@ namespace Payment.DirePay
                     withdrawGetWalletReq.command = "partner_withdraw";
                     var amount = decimal.Parse(inputs["Amount"]);
                     withdrawGetWalletReq.amount = amount.ToString("#");
-                    withdrawGetWalletReq.currency = currMapping(inputs["CurrencyId"]);
+                    withdrawGetWalletReq.currency = CurrencyMapping(inputs["CurrencyId"]);
                     withdrawGetWalletReq.withdrawal_token = inputs["PayCode"];
                     withdrawGetWalletReq.callback_url = inputs["CallBackUrl"];
                     withdrawGetWalletReq.address = inputs["AccountNo"];

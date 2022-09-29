@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Payment.CoPay.Models;
 using PaymentCore;
+using PaymentCore.Models.Result;
 
 namespace Payment.CoPay
 {

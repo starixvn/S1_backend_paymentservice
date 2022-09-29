@@ -1,5 +1,7 @@
 ﻿using PaymentCore;
 using Newtonsoft.Json;
+using PaymentCore.Interface;
+using PaymentCore.Models.Result;
 
 namespace Payment.OneClickPay
 {

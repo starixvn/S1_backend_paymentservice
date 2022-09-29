@@ -19,4 +19,9 @@
     <PackageReference Include="Serilog" Version="2.11.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\Result\" />
+    <Folder Include="Interface\" />
+  </ItemGroup>
+
 </Project>
