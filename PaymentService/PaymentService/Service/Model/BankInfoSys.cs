@@ -32,6 +32,12 @@
         public bool SelBank { get; set; }
     }
     
+    public class AutoChannelBankInfo : BankInfoPay
+    {
+        public decimal MinAmount { get; set; }
+        public decimal MaxAmount { get; set; }
+    }
+    
     public class EWalletInfoSys
     {
         public int SysId { get; set; }

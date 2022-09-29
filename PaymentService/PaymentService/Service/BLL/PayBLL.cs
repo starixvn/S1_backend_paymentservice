@@ -33,10 +33,11 @@ namespace PaymentService.Service.BLL
         {
             var key = $"BankInfoPayList:{siteId}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
-                () => payService.GetOnlineBankList(siteId), RedisDataBase.Shared);
+                () => payService.GetOnlineBankList(siteId).OrderBy(x => x.MSort).ThenBy(x => x.SSort),
+                RedisDataBase.Shared);
         }
 
-        public IEnumerable<BankInfoPay> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
+        public IEnumerable<AutoChannelBankInfo> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
         {
             var key = $"BankInfoPayList:{siteId}:{depositType}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
@@ -47,21 +48,24 @@ namespace PaymentService.Service.BLL
         {
             var key = $"PayInfoList:{siteId}:{depositType}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
-                () => payService.GetPayInfo(siteId, depositType), RedisDataBase.Shared);
+                () => payService.GetPayInfo(siteId, depositType).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
+                RedisDataBase.Shared);
         }
 
         public IEnumerable<CryptoPayInfo> GetCryptoPayInfoList(int siteId)
         {
             var key = $"CryptoPayInfoList:{siteId}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
-                () => payService.GetCryptoPayInfo(siteId), RedisDataBase.Shared);
+                () => payService.GetCryptoPayInfo(siteId).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
+            RedisDataBase.Shared);
         }
 
         public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfoList(int siteId)
         {
             var key = $"LoadCardPayInfoList:{siteId}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
-                () => payService.GetLoadCardPayInfo(siteId), RedisDataBase.Shared);
+                () => payService.GetLoadCardPayInfo(siteId).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
+                RedisDataBase.Shared);
         }
 
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
