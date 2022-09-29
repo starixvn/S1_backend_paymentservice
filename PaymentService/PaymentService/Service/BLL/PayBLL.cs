@@ -2,6 +2,7 @@
 using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 using PaymentCore;
+using PaymentCore.Interface;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -23,7 +24,6 @@ namespace PaymentService.Service.BLL
             payService = provider.GetRequiredService<PayService>();
             environment = provider.GetRequiredService<IHostEnvironment>();
             logger = provider.GetRequiredService<ILogger<PayBLL>>();
-            PayHelperBase.HttpHelper = provider.GetRequiredService<HttpHelper>();
             _cacheHelper = provider.GetRequiredService<CacheHelper>();
             _provider = provider;
         }
@@ -134,17 +134,6 @@ namespace PaymentService.Service.BLL
         public void InsertPaymentLog(string url, string input, string output, string refId)
         {
             logger.LogInformation($"Url={url}, Input={input}, Output={output}, RefId={refId}");
-        }
-        
-        private TimeSpan GetExpireTime()
-        {
-            var expireTime = TimeSpan.FromMinutes(1);
-            if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "QA")
-            {
-                expireTime = TimeSpan.FromMinutes(5);
-            }
-
-            return expireTime;
         }
     }
 }

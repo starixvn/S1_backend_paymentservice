@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore;
 using System.Net;
+using PaymentCore.Interface;
+using PaymentCore.Models.Result;
 
 namespace Payment.FPay
 {

@@ -1,4 +1,6 @@
 ﻿using PaymentCore;
+using PaymentCore.Interface;
+using PaymentCore.Models.Result;
 
 namespace Payment.NganLuong
 {

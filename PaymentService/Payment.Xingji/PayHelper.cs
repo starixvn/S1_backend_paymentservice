@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore;
 using System.Globalization;
+using PaymentCore.Models.Result;
 
 namespace Payment.Xingji
 {

@@ -1,13 +1,8 @@
 ﻿using System.Net;
 using System.Xml.Linq;
 
-namespace PaymentCore
+namespace PaymentCore.Interface
 {
-    public interface IPayHttpHelper
-    {
-        HttpClient GetClient();
-    }
-
     public interface IFlurlHttpHelper
     {
         Task<(TResult Result, HttpStatusCode StatusCode)> GetAsync<TResult>(string url, string query)
