@@ -131,9 +131,9 @@ namespace PaymentService.Service.BLL
             return PayHelperContainer[PayName];
         }
 
-        public void InsertPaymentLog(string url, string input, string output, string refId, string logTag = "")
+        public void InsertPaymentLog(string url, string input, string output, string refId)
         {
-            logger.LogInformation($"Url={url}, Input={input}, Output={output}, RefId={refId}, LogTag={logTag}");
+            logger.LogInformation($"Url={url}, Input={input}, Output={output}, RefId={refId}");
         }
     }
 }
