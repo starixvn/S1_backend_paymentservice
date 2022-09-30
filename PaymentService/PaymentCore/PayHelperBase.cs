@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using Org.BouncyCastle.Crypto.Parameters;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
+using Serilog.Context;
 
 namespace PaymentCore
 {
@@ -505,7 +506,8 @@ namespace PaymentCore
         private void LogInformationProxy(string url, string input, string output, string transId)
         { 
             const string logTag = "PayHelperBaseHttpRequestResponse";
-            InsertPaymentLog?.Invoke(url, input, output, transId, logTag);
+            LogContext.PushProperty("LogTag", logTag);
+            InsertPaymentLog?.Invoke(url, input, output, transId);
         }
     }
 }
