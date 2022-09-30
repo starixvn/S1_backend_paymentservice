@@ -42,13 +42,13 @@ namespace PaymentCore
                     contentType: string.Empty,
                     ignoreCertificate: ignoreCertificate);
 
-                InsertPaymentLog?.Invoke(url, parameters, response, transId);
+                InsertPaymentLog?.Invoke(url, parameters, response, transId + "MickeyTest");
 
                 return response;
             }
             catch (Exception ex)
             {
-                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId);
+                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId + "MickeyTest");
                 throw;
             }
         }
@@ -63,13 +63,13 @@ namespace PaymentCore
                     contentType: contentType,
                     ignoreCertificate: ignoreCertificate);
 
-                InsertPaymentLog?.Invoke(url, parameters, response, transId);
+                InsertPaymentLog?.Invoke(url, parameters, response, transId + "MickeyTest");
 
                 return response;
             }
             catch (Exception ex)
             {
-                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId);
+                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId + "MickeyTest");
                 throw;
             }
         }
@@ -95,13 +95,13 @@ namespace PaymentCore
                     ignoreCertificate: ignoreCertificate,
                     httpHeaders: httpHeaders);
 
-                InsertPaymentLog?.Invoke(url, parameters, response, transId);
+                InsertPaymentLog?.Invoke(url, parameters, response, transId + "MickeyTest");
 
                 return response;
             }
             catch (Exception ex)
             {
-                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId);
+                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId + "MickeyTest");
                 throw;
             }
         }
@@ -131,13 +131,13 @@ namespace PaymentCore
                     ignoreCertificate: false,
                     httpHeaders: httpHeaders);
 
-                InsertPaymentLog?.Invoke(url, parameters, response, transId);
+                InsertPaymentLog?.Invoke(url, parameters, response, transId + "MickeyTest");
 
                 return response;
             }
             catch (Exception ex)
             {
-                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId);
+                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId + "MickeyTest");
                 throw;
             }
         }
@@ -154,13 +154,13 @@ namespace PaymentCore
                     ignoreCertificate: false,
                     encoding: gBkEncoding);
 
-                InsertPaymentLog?.Invoke(url, parameters, response, transId);
+                InsertPaymentLog?.Invoke(url, parameters, response, transId + "MickeyTest");
 
                 return response;
             }
             catch (Exception ex)
             {
-                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId);
+                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId + "MickeyTest");
                 throw;
             }
 
