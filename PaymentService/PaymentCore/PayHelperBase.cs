@@ -10,7 +10,7 @@ using PaymentCore.Models.Result;
 
 namespace PaymentCore
 {
-    public delegate void InsertPaymentLogEventHandler(string url, string input, string output, string transId);
+    public delegate void InsertPaymentLogEventHandler(string url, string input, string output, string transId, string logTag = "");
 
     public abstract class PayHelperBase : IPayHelper
     {
@@ -40,13 +40,13 @@ namespace PaymentCore
                     contentType: string.Empty,
                     ignoreCertificate: ignoreCertificate);
 
-                InsertPaymentLog?.Invoke(url, parameters, response, transId + "MickeyTest");
+                LogInformationProxy(url, parameters, response, transId);
 
                 return response;
             }
             catch (Exception ex)
             {
-                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId + "MickeyTest");
+                LogInformationProxy(url, parameters, ex.Message, transId);
                 throw;
             }
         }
@@ -61,13 +61,13 @@ namespace PaymentCore
                     contentType: contentType,
                     ignoreCertificate: ignoreCertificate);
 
-                InsertPaymentLog?.Invoke(url, parameters, response, transId + "MickeyTest");
+                LogInformationProxy(url, parameters, response, transId);
 
                 return response;
             }
             catch (Exception ex)
             {
-                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId + "MickeyTest");
+                LogInformationProxy(url, parameters, ex.Message, transId);
                 throw;
             }
         }
@@ -83,8 +83,8 @@ namespace PaymentCore
                     { "x-api-key", accessToken }
                 };
 
-                InsertPaymentLog?.Invoke(url, $"request: {parameters}, " +
-                                             $"Headers: {ToJson(httpHeaders)}", string.Empty, transId);
+                LogInformationProxy(url, $"request: {parameters}, " +
+                                $"Headers: {ToJson(httpHeaders)}", string.Empty, transId);
 
                 var response = HttpClientSend(httpMethod: HttpMethod.Post,
                     content: parameters,
@@ -93,13 +93,13 @@ namespace PaymentCore
                     ignoreCertificate: ignoreCertificate,
                     httpHeaders: httpHeaders);
 
-                InsertPaymentLog?.Invoke(url, parameters, response, transId + "MickeyTest");
+                LogInformationProxy(url, parameters, response, transId);
 
                 return response;
             }
             catch (Exception ex)
             {
-                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId + "MickeyTest");
+                LogInformationProxy(url, parameters, ex.Message, transId);
                 throw;
             }
         }
@@ -119,8 +119,8 @@ namespace PaymentCore
                     { "Authorization", "Basic " + svcCredentials }
                 };
 
-                InsertPaymentLog?.Invoke(url, $"request: {parameters}, " +
-                                              $"Headers: {ToJson(httpHeaders)}", string.Empty, transId);
+                LogInformationProxy(url, $"request: {parameters}, " +
+                                $"Headers: {ToJson(httpHeaders)}", string.Empty, transId);
 
                 var response = HttpClientSend(httpMethod: HttpMethod.Post,
                     content: parameters,
@@ -129,13 +129,13 @@ namespace PaymentCore
                     ignoreCertificate: false,
                     httpHeaders: httpHeaders);
 
-                InsertPaymentLog?.Invoke(url, parameters, response, transId + "MickeyTest");
+                LogInformationProxy(url, parameters, response, transId);
 
                 return response;
             }
             catch (Exception ex)
             {
-                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId + "MickeyTest");
+                LogInformationProxy(url, parameters, ex.Message, transId);
                 throw;
             }
         }
@@ -152,18 +152,18 @@ namespace PaymentCore
                     ignoreCertificate: false,
                     encoding: gBkEncoding);
 
-                InsertPaymentLog?.Invoke(url, parameters, response, transId + "MickeyTest");
+                LogInformationProxy(url, parameters, response, transId);
 
                 return response;
             }
             catch (Exception ex)
             {
-                InsertPaymentLog?.Invoke(url, parameters, ex.Message, transId + "MickeyTest");
+                LogInformationProxy(url, parameters, ex.Message, transId);
                 throw;
             }
 
         }
-        
+
         protected string ToMD5(string encodeStr)
         {
             using (var cryptoMD5 = MD5.Create())
@@ -476,6 +476,12 @@ namespace PaymentCore
             }
 
             throw new Exception("httpMethod not implement please check use httpMethod");
+        }
+
+        private void LogInformationProxy(string url, string input, string output, string transId)
+        { 
+            const string logTag = "PayHelperBaseHttpRequestResponse";
+            InsertPaymentLog?.Invoke(url, input, output, transId, logTag);
         }
     }
 }
