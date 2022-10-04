@@ -11,7 +11,7 @@ using Serilog.Context;
 
 namespace PaymentCore
 {
-    public delegate void InsertPaymentLogEventHandler(string url, string input, string output, string transId, string logTag = "");
+    public delegate void InsertPaymentLogEventHandler(string url, string input, string output, string transId);
 
     public abstract class PayHelperBase : IPayHelper
     {
