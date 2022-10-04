@@ -32,7 +32,7 @@ namespace PaymentService.Service.BLL
         public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
         {
             var key = $"BankInfoPayList:{siteId}";
-            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
+            return _redisHelper.TryGetOrCreate<IEnumerable<BankInfoPay>>(key, TimeSpan.FromSeconds(10),
                 () => payService.GetOnlineBankList(siteId).OrderBy(x => x.MSort).ThenBy(x => x.SSort),
                 RedisDataBase.Shared);
         }
@@ -47,7 +47,7 @@ namespace PaymentService.Service.BLL
         public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
         {
             var key = $"PayInfoList:{siteId}:{depositType}";
-            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
+            return _redisHelper.TryGetOrCreate<IEnumerable<PayInfo>>(key, TimeSpan.FromSeconds(10),
                 () => payService.GetPayInfo(siteId, depositType).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
                 RedisDataBase.Shared);
         }
@@ -55,7 +55,7 @@ namespace PaymentService.Service.BLL
         public IEnumerable<CryptoPayInfo> GetCryptoPayInfoList(int siteId)
         {
             var key = $"CryptoPayInfoList:{siteId}";
-            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
+            return _redisHelper.TryGetOrCreate<IEnumerable<CryptoPayInfo>>(key, TimeSpan.FromSeconds(10),
                 () => payService.GetCryptoPayInfo(siteId).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
             RedisDataBase.Shared);
         }
@@ -63,7 +63,7 @@ namespace PaymentService.Service.BLL
         public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfoList(int siteId)
         {
             var key = $"LoadCardPayInfoList:{siteId}";
-            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
+            return _redisHelper.TryGetOrCreate<IEnumerable<LoadCardPayInfo>>(key, TimeSpan.FromSeconds(10),
                 () => payService.GetLoadCardPayInfo(siteId).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
                 RedisDataBase.Shared);
         }
