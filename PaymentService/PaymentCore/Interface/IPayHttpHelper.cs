@@ -1,0 +1,6 @@
+﻿namespace PaymentCore.Interface;
+
+public interface IPayHttpHelper
+{
+    HttpClient GetClient();
+}
