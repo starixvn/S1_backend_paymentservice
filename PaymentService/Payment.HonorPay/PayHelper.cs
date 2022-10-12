@@ -1,110 +1,116 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
+using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
 namespace Payment.HonorPay
 {
     class PayHelper : PayHelperBase
     {
-        private class CallBackWithdrawalReq
+        private readonly IFlurlHttpHelper _httpHelper;
+        private readonly ILogger<PayHelper> _logger;
+
+        public PayHelper(IServiceProvider provider)
         {
-            public string account { get; set; }
-            public string amount { get; set; }
-            public string fee { get; set; }
-            public string orderNo { get; set; }
-            public string nonceStr { get; set; }
-            public string uuid { get; set; }
-            public string status { get; set; }
-            public string sign { get; set; }
+            _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+            _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
+        }
+        
+        #region Debit
+
+        public override DepositResult Debit(Dictionary<string, string> input)
+        {
+            var baseApiUrl = input["host"];
+            var key = input["key"];
+            var apiToken = input["access_token"];
+            var payType = input["PayCode"];
+            var transId = input["TransID"];
+
+            try
+            {
+                var formData = new Dictionary<string, string>
+                {
+                    { "account", input["merchant_no"] },
+                    { "payType", payType },
+                    { "payMoney", input["Amount"] },
+                    { "ip", input["ClientIP"] },
+                    { "notifyURL", input["deposit_notify_url"] },
+                    { "orderNo", transId }
+                };
+
+                if (NeedBankCode(payType))
+                {
+                    formData.Add("BankCode", input["BankCode"]);
+                }
+                
+                formData.Add("sign", GetSign(formData, key));
+
+                var (response, statusCode) = _httpHelper
+                    .WithOAuthBearerToken(apiToken)
+                    .PostUrlEncoded<Dictionary<string, string>, DepositResponse>($"{baseApiUrl}{Path.Deposit}", formData);
+
+                if (!statusCode.IsSuccessStatus())
+                {
+                    throw new CustomException($"HonorPay deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
+                }
+
+                if (!IsSuccess(response.ErrorCode))
+                {
+                    var msg = GetDepositErrorMsg(response.ErrorCode);
+                    throw new CustomException(msg, response.ErrorCode);
+                }
+                
+                return new DepositResult
+                {
+                    Success = true,
+                    ErrorCode = ErrorCode.Success,
+                    Url = response.RedirectUrl,
+                    ThirdId = response.TpTransId,
+                    FormData = formData
+                };
+            }
+            catch (CustomException ex)
+            {
+                _logger.LogError($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+
+                return new DepositResult(false, ex.Code, ex.Message);
+            }
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> input)
         {
-            var data = FromJson<CallBackWithdrawalReq>(ToJson(formData));
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"+key={payResource["key"]}";
+            var apiKey = input["key"];
+            var req = FromJson<DepositCallbackRequest>(bodyContent);
+            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
 
-            var sign = ToHMACSHA256(p, payResource["key"]).ToUpper();
-
-            var oNotify = new NotifyWithdrawResult();
-            oNotify.WithdrawId = data.orderNo;
-            oNotify.ThirdId = data.uuid;
-            oNotify.Message = data.status;
-            if (sign == data.sign)
+            if (!VerifySign(dicReq, apiKey, req.sign))
             {
-                if (data.status == "1")
+                return new NotifyDepositResult
                 {
-                    oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.amount);
-                    oNotify.Response = "888888";
-                }
-                else
-                {
-                    oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.Response = "888888";
-                }
-            }
-            else
-            {
-                oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Message = "Signature error";
-                oNotify.Response = "Signature error";
+                    TransStatus = TransStatus.Pending,
+                    Comment = "Signature does not match.",
+                    Response = HonorPayDefinition.CallbackResponse
+                };
             }
 
-            return oNotify;
-        }
+            var transId = input["TransID"];
+            var transStatus = DepositStatus.Success.Equals(req.payStatus)
+                ? TransStatus.Success
+                : TransStatus.Pending;
 
-        private class CallBackDebitReq
-        {
-            public string account { get; set; }
-            public string nonceStr { get; set; }
-            public string orderNo { get; set; }
-            public string payMoney { get; set; }
-            public string payStatus { get; set; }
-            public string realCharge { get; set; }
-            public string uuid { get; set; }
-            public string sign { get; set; }
-        }
-
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
-        {
-            var data = FromJson<CallBackDebitReq>(ToJson(formData));
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={payResource["key"]}";
-
-            var sign = ToHMACSHA256(p, payResource["key"]).ToUpper();
-
-            var oNotify = new NotifyDepositResult();
-            oNotify.DepositId = data.orderNo;
-            oNotify.ThirdId = data.uuid;
-            oNotify.Comment = data.payStatus;
-            oNotify.Message = data.payStatus;
-
-            if (sign == data.sign)
+            return new NotifyDepositResult
             {
-                if (data.payStatus == "success")
-                {
-                    oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.payMoney);
-                    oNotify.ActualAmount = decimal.Parse(data.payMoney);
-                    oNotify.Response = "888888";
-                }
-                else
-                {
-                    oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.Response = "888888";
-                }
-            }
-            else
-            {
-                oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Comment = "Signature error";
-                oNotify.Message = "Signature error";
-                oNotify.Response = "failed";
-            }
-
-            return oNotify;
+                DepositId = transId,
+                ActualAmount = req.realCharge,
+                ThirdId = req.uuid,
+                Comment = req.payStatus,
+                TransStatus = transStatus,
+                Response = HonorPayDefinition.CallbackResponse
+            };
         }
 
         public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
@@ -112,114 +118,99 @@ namespace Payment.HonorPay
             throw new NotImplementedException();
         }
 
-
-        private class WithdrawalRes
+        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> input)
         {
-            public string retCode { get; set; }
-            public string uuid { get; set; }
-            public string orderNo { get; set; }
-            public string amount { get; set; }
-            public string fee { get; set; }
-            public string retMsg { get; set; }
+            throw new NotImplementedException();
         }
+
+        #endregion
+
+        #region Credit
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var sUrl = inputs["PayOut"];
-            var formData = new Dictionary<string, string>
+            var baseApiUrl = inputs["host"];
+            var key = inputs["key"];
+            var apiToken = inputs["access_token"];
+            var merchant = inputs["merchant_no"];
+            var reqAmount = inputs["Amount"];
+            var transId = inputs["TransID"];
+            
+            try
             {
-                { "account", inputs["merchant_no"] },
-                { "orderNo", inputs["TransID"] }
-            };
+                var formData = new Dictionary<string, string>
+                {
+                    { "account", merchant },
+                    { "orderNo", transId },
+                    { "withdrawalType", "bankcard" },
+                    { "amount", reqAmount },
+                    { "bankName", inputs["BankCode"] },
+                    { "bankNumber", inputs["AccountNo"] },
+                    { "bankHolder", inputs["AccountName"] },
+                    { "nonceStr", GenerateNonceStr() },
+                    { "notifyURL", inputs["withdrawal_notify_url"] }
+                };
 
-            var amount = decimal.Parse(inputs["Amount"]);
-            formData.Add("amount", amount.ToString("#"));
-            formData.Add("bankName", UrlEncode(inputs["BankName"]));
-            formData.Add("bankHolder", UrlEncode(inputs["AccountName"]));
-            formData.Add("bankNumber", inputs["AccountNo"]);
-            formData.Add("bankBranch", "");
-            formData.Add("bankProvince", "");
-            formData.Add("bankCity", "");
-            formData.Add("nonceStr", GetRandomString4(20));
-            formData.Add("notifyURL", UrlEncode(inputs["CallBackUrl"]));
+                formData.Add("sign", GetSign(formData, key));
+               
+                var (response, statusCode) = _httpHelper
+                    .WithOAuthBearerToken(apiToken)
+                    .PostUrlEncoded<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", formData);
 
+                if (!statusCode.IsSuccessStatus())
+                {
+                    throw new CustomException($"HonorPay withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
+                }
 
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            var p = string.Join("&", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&key={inputs["key"]}";
-            formData.Add("sign", ToHMACSHA256(p, inputs["key"]).ToUpper());
-            formData["bankName"] = inputs["BankName"];
-            formData["bankHolder"] = inputs["AccountName"];
-            formData["notifyURL"] = inputs["CallBackUrl"];
+                if (!IsSuccess(response.ErrorCode))
+                {
+                    var msg = GetWithdrawalErrorMsg(response.ErrorCode);
+                    throw new CustomException(msg, response.ErrorCode);
+                }
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"], false);
-
-            var withdrawResult = new WithdrawResult();
-            var withdrawalRes = new WithdrawalRes();
-            withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
-
-            if (withdrawalRes.retCode == "0")
-            {
-                withdrawResult.Success = true;
-                withdrawResult.Message = withdrawalRes.retCode;
+                return new WithdrawResult
+                {
+                    Success = true,
+                    RawContent = JsonConvert.SerializeObject(response)
+                };
             }
-            else
+            catch (CustomException ex)
             {
-                withdrawResult.Success = false;
-                withdrawResult.Message = withdrawalRes.retMsg;
-            }
+                _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
 
-            return withdrawResult;
+                return new WithdrawResult
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
         }
 
-        private class DepositRes
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            public string retCode { get; set; }
-            public string uuid { get; set; }
-            public string qrContent { get; set; }
-            public string realCharge { get; set; }
-            public string bankName { get; set; }
-            public string bankBranch { get; set; }
-            public string bankNumber { get; set; }
-            public string bankHolder { get; set; }
-            public string number { get; set; }
-            public string verifyName { get; set; }
-        }
+            var key = payResource["key"];
+            var req = FromJson<WithdrawalCallbackRequest>(bodyContent);
+            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
 
-        public override DepositResult Debit(Dictionary<string, string> inputs)
-        {
-            var sUrl = inputs["host"];
-            var formData = new Dictionary<string, string>
+            if (!VerifySign(dicReq, key, req.sign))
             {
-                { "account", inputs["merchant_no"] },
-                { "payType", inputs["PayCode"] }
+                return new NotifyWithdrawResult
+                {
+                    TransStatus = TransStatus.Pending,
+                    Message = "Signature does not match.",
+                    Response = HonorPayDefinition.CallbackResponse
+                };
+            }
+
+            var transId = payResource["TransID"];
+            var transStatus = HonorPayDefinition.GetWithdrawalTransStatus(req.status);
+
+            return new NotifyWithdrawResult
+            {
+                ThirdId = req.uuid,
+                TransStatus = transStatus,
+                Response = HonorPayDefinition.CallbackResponse
             };
-            var amount = decimal.Parse(inputs["Amount"]);
-            formData.Add("payMoney", amount.ToString("#"));
-            formData.Add("ip", inputs["ClientIP"]);
-            formData.Add("notifyURL", inputs["CallBackUrl"]);
-            formData.Add("orderNo", inputs["TransID"]);
-
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["token"], formData["orderNo"], false);
-
-            var depositRes = new DepositRes();
-            depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            var oDepositResult = new DepositResult();
-            if (depositRes.retCode == "0")
-            {
-                oDepositResult.Url = depositRes.qrContent;
-                oDepositResult.Success = true;
-                oDepositResult.FormData = null;
-                oDepositResult.Message = "";
-            }
-            else
-            {
-                oDepositResult.Success = false;
-                oDepositResult.Message = depositRes.retCode;
-            }
-
-            return oDepositResult;
         }
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
@@ -227,9 +218,60 @@ namespace Payment.HonorPay
             throw new NotImplementedException();
         }
 
-        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+        #endregion
+
+        #region Private
+
+        private string GetSign(IEnumerable<KeyValuePair<string, string>> input, string key)
         {
-            throw new NotImplementedException();
+            var str = string.Join('&', input
+                .Where(x => !string.IsNullOrEmpty(x.Value))
+                .OrderBy(x => x.Key)
+                .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
+            
+            var sign = ToHMACSHA256(str, key).ToUpper();
+
+            return sign;
         }
+
+
+
+        private static bool NeedBankCode(string payType)
+            => HonorPayDefinition.NeedBankCodeChannels.Contains(payType);
+
+        private static bool IsSuccess(string errorCode)
+            => DepositStatus.Success.Equals(errorCode);
+
+        private static string GetDepositErrorMsg(string errorCode)
+        {
+            if (HonorPayDefinition.DepositErrorMsgMap.ContainsKey(errorCode))
+            {
+                return HonorPayDefinition.DepositErrorMsgMap[errorCode];
+            }
+
+            return "Unknown error";
+        }
+        
+        private static string GetWithdrawalErrorMsg(string errorCode)
+        {
+            if (HonorPayDefinition.WithdrawalErrorMsgMap.ContainsKey(errorCode))
+            {
+                return HonorPayDefinition.WithdrawalErrorMsgMap[errorCode];
+            }
+
+            return "Unknown error";
+        }
+        
+        private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)
+        {
+            var sign = GetSign(param, apiKey);
+
+            return sign.Equals(target);
+        }
+        
+        private static string GenerateNonceStr()
+            => Guid.NewGuid().ToString()[..32];
+
+        #endregion
     }
 }

@@ -81,6 +81,14 @@ namespace PaymentCore.Helpers
 
             return (result, statusCode);
         }
+        
+        public (TResult Result, HttpStatusCode StatusCode) PostUrlEncoded<TBody, TResult>(string url, TBody body)
+        {
+            var (stream, statusCode) = PostData(url, body, ContentType.UrlEncoded);
+            var result = JsonConvert.DeserializeObject<TResult>(stream);
+
+            return (result, statusCode);
+        }
 
         public (TResult Result, HttpStatusCode StatusCode) Post<TBody, TResult>(string url, TBody body, Func<XDocument, TResult> selecor)
             where TResult : class
