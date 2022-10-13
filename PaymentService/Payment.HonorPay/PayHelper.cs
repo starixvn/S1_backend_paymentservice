@@ -59,7 +59,7 @@ namespace Payment.HonorPay
                     throw new CustomException($"HonorPay deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
                 }
 
-                if (!IsSuccess(response.ErrorCode))
+                if (!ErrorCode.Success.Equals(response.ErrorCode))
                 {
                     var msg = string.IsNullOrEmpty(response.ErrorMessage)
                         ? GetDepositErrorMsg(response.ErrorCode) : response.ErrorMessage;
@@ -227,7 +227,7 @@ namespace Payment.HonorPay
         private string GetSign(IEnumerable<KeyValuePair<string, string>> input, string key)
         {
             var str = string.Join('&', input
-                .Where(x => !string.IsNullOrEmpty(x.Value))
+                .Where(x => !string.IsNullOrEmpty(x.Value) && !x.Key.Equals("sign"))
                 .OrderBy(x => x.Key)
                 .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
             
