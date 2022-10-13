@@ -153,7 +153,7 @@ namespace Payment.HonorPay
                     { "notifyURL", inputs["withdrawal_notify_url"] }
                 };
 
-                formData.Add("sign", GetSign(formData, key));
+                //formData.Add("sign", GetSign(formData, key));
                
                 var (response, statusCode) = _httpHelper
                     .WithOAuthBearerToken(apiToken)
