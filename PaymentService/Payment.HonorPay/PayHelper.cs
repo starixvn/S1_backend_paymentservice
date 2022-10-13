@@ -86,10 +86,9 @@ namespace Payment.HonorPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> input)
         {
             var apiKey = input["key"];
-            var req = FromJson<DepositCallbackRequest>(bodyContent);
-            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+            var req = FromJson<DepositCallbackRequest>(JsonConvert.SerializeObject(formData));
 
-            if (!VerifySign(dicReq, apiKey, req.sign))
+            if (!VerifySign(formData, apiKey, req.sign))
             {
                 return new NotifyDepositResult
                 {
@@ -191,10 +190,9 @@ namespace Payment.HonorPay
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var key = payResource["key"];
-            var req = FromJson<WithdrawalCallbackRequest>(bodyContent);
-            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+            var req = FromJson<WithdrawalCallbackRequest>(JsonConvert.SerializeObject(formData));
 
-            if (!VerifySign(dicReq, key, req.sign))
+            if (!VerifySign(formData, key, req.sign))
             {
                 return new NotifyWithdrawResult
                 {
