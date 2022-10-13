@@ -27,24 +27,25 @@ namespace Payment.HonorPay
             var baseApiUrl = input["host"];
             var key = input["key"];
             var apiToken = input["access_token"];
-            var payType = input["PayCode"];
+            var payCode = input["PayCode"];
             var transId = input["TransID"];
-
+            
             try
             {
+                var (payType, bankCode) = ParseDepositPayCode(payCode);
                 var formData = new Dictionary<string, string>
                 {
                     { "account", input["merchant_no"] },
                     { "payType", payType },
                     { "payMoney", input["Amount"] },
                     { "ip", input["ClientIP"] },
-                    { "notifyURL", input["deposit_notify_url"] },
+                    { "notifyURL", input["CallBackUrl"] },
                     { "orderNo", transId }
                 };
 
                 if (NeedBankCode(payType))
                 {
-                    formData.Add("BankCode", input["BankCode"]);
+                    formData.Add("BankCode", bankCode);
                 }
                 
                 formData.Add("sign", GetSign(formData, key));
@@ -60,7 +61,8 @@ namespace Payment.HonorPay
 
                 if (!IsSuccess(response.ErrorCode))
                 {
-                    var msg = GetDepositErrorMsg(response.ErrorCode);
+                    var msg = string.IsNullOrEmpty(response.ErrorMessage)
+                        ? GetDepositErrorMsg(response.ErrorCode) : response.ErrorMessage;
                     throw new CustomException(msg, response.ErrorCode);
                 }
                 
@@ -271,6 +273,18 @@ namespace Payment.HonorPay
         
         private static string GenerateNonceStr()
             => Guid.NewGuid().ToString()[..32];
+
+        private static (string PayType, string BankCode) ParseDepositPayCode(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return (string.Empty, string.Empty);
+            }
+            
+            var arr = str.Split('-');
+
+            return arr.Length > 1 ? (arr[0], arr[1]) : (arr[0], string.Empty);
+        }
 
         #endregion
     }

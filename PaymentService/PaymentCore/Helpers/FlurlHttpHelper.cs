@@ -168,10 +168,15 @@ namespace PaymentCore.Helpers
 
         private (string Result, HttpStatusCode StatusCode) PostData<TBody>(string url, TBody data, string postType)
         {
+            var sw = Stopwatch.StartNew();
             var request = CreateFlurlRequest(url);
             request = _header.Aggregate(request, (current, item)
                 => current.WithHeader(item.Key, item.Value));
-
+            _logger.LogInformation($"POST ({postType}): {url}");
+            _logger.LogInformation("Headers:"
+                                   + JsonConvert.SerializeObject(request.Headers.ToDictionary(x => x.Name, x => x.Value)));
+            _logger.LogInformation(JsonConvert.SerializeObject(data));
+            
             IFlurlResponse response = default(FlurlResponse);
             if (postType == ContentType.Json)
             {
@@ -190,7 +195,7 @@ namespace PaymentCore.Helpers
                     .GetAwaiter()
                     .GetResult();
             }
-            else if (postType == "form-data")
+            else if (postType == ContentType.UrlEncoded)
             {
                 response = request
                     .PostUrlEncodedAsync(data)
@@ -198,12 +203,17 @@ namespace PaymentCore.Helpers
                     .GetAwaiter()
                     .GetResult();
             }
+            
+            
+            LogContext.PushProperty("Url", url);
+            LogContext.PushProperty("Elapsed", sw.Elapsed.TotalMilliseconds);
 
             var result = response.ResponseMessage.Content
                 .ReadAsStringAsync()
                 .GetAwaiter()
                 .GetResult();
-
+            
+            _logger.LogInformation(result);
             _header.Clear();
 
             return (Result: result, response.ResponseMessage.StatusCode);
@@ -233,9 +243,9 @@ namespace PaymentCore.Helpers
             {
                 response = await request.PostUrlEncodedAsync(data);
             }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            LogContext.PushProperty("url", url);
+            
+            LogContext.PushProperty("Url", url);
+            LogContext.PushProperty("Elapsed", sw.Elapsed.TotalMilliseconds);
 
             _logger.LogInformation(await response.ResponseMessage.Content.ReadAsStringAsync());
 
