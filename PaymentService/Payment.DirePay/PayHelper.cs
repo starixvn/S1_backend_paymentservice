@@ -303,7 +303,7 @@ namespace Payment.DirePay
                     withdrawGetWalletReq.command = "partner_withdraw";
                     var amount = decimal.Parse(inputs["Amount"]);
                     withdrawGetWalletReq.amount = amount.ToString("#");
-                    withdrawGetWalletReq.currency = CurrencyMapping(inputs["CurrencyId"]);
+                    withdrawGetWalletReq.currency = GetPayCurrency(inputs["PayCurrencyId"]);
                     withdrawGetWalletReq.withdrawal_token = inputs["PayCode"];
                     withdrawGetWalletReq.callback_url = inputs["CallBackUrl"];
                     withdrawGetWalletReq.address = inputs["AccountNo"];
