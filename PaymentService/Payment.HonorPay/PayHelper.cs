@@ -166,7 +166,7 @@ namespace Payment.HonorPay
                     throw new CustomException($"HonorPay withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
                 }
 
-                if (!IsSuccess(response.ErrorCode))
+                if (!ErrorCode.Success.Equals(response.ErrorCode))
                 {
                     var msg = GetWithdrawalErrorMsg(response.ErrorCode);
                     throw new CustomException(msg, response.ErrorCode);
@@ -205,7 +205,6 @@ namespace Payment.HonorPay
                 };
             }
 
-            var transId = payResource["TransID"];
             var transStatus = HonorPayDefinition.GetWithdrawalTransStatus(req.status);
 
             return new NotifyWithdrawResult
@@ -241,9 +240,6 @@ namespace Payment.HonorPay
 
         private static bool NeedBankCode(string payType)
             => HonorPayDefinition.NeedBankCodeChannels.Contains(payType);
-
-        private static bool IsSuccess(string errorCode)
-            => DepositStatus.Success.Equals(errorCode);
 
         private static string GetDepositErrorMsg(string errorCode)
         {
