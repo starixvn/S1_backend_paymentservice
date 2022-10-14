@@ -45,11 +45,14 @@ namespace Payment.HonorPay
 
                 if (NeedBankCode(payType))
                 {
+                    if (payType == PayType.OnlineBanking)
+                    {
+                        bankCode = input["BankCode"];
+                    }
+                    
                     formData.Add("BankCode", bankCode);
                 }
                 
-                //formData.Add("sign", GetSign(formData, key));
-
                 var (response, statusCode) = _httpHelper
                     .WithOAuthBearerToken(apiToken)
                     .PostUrlEncoded<Dictionary<string, string>, DepositResponse>($"{baseApiUrl}{Path.Deposit}", formData);
