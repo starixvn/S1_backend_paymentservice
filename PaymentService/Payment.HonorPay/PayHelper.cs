@@ -211,7 +211,8 @@ namespace Payment.HonorPay
             {
                 ThirdId = req.uuid,
                 TransStatus = transStatus,
-                Response = HonorPayDefinition.CallbackResponse
+                Response = HonorPayDefinition.CallbackResponse,
+                WithdrawId = req.orderNo
             };
         }
 
