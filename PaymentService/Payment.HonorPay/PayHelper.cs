@@ -152,7 +152,7 @@ namespace Payment.HonorPay
                     { "bankNumber", inputs["AccountNo"] },
                     { "bankHolder", inputs["AccountName"] },
                     { "nonceStr", GenerateNonceStr() },
-                    { "notifyURL", inputs["withdrawal_notify_url"] }
+                    { "notifyURL", inputs["CallBackUrl"] }
                 };
 
                 formData.Add("sign", GetSign(formData, key));
