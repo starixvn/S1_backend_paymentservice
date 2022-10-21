@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using PaymentCore;
 using PaymentCore.Extensions;
 using PaymentCore.Model;
 using PaymentCore.Model.enums;
