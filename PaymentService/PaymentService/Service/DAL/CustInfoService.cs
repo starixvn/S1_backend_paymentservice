@@ -11,9 +11,9 @@ namespace PaymentService.Service.DAL
         {
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
-        public int GetVipLevel(int custId)
+        public int GetPointLevel(int custId)
         {
-            return _reportDbClient.ExecuteScalar<int>("VipLevel_Get", new { CustId = custId });
+            return _reportDbClient.ExecuteScalar<int>("Member_PointLevel_Get", new { CustId = custId });
         }
         public Customer GetCustInfo(int custId)
         {

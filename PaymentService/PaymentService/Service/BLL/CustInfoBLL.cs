@@ -10,22 +10,19 @@ namespace PaymentService.Service.BLL
     {
         private readonly CustInfoService _custInfoService;
         private readonly Common _common;
-        private readonly CacheHelper _cacheHelper;
         private readonly ICacheHelper _redisHelper;
 
         public CustInfoBLL(IServiceProvider provider)
         {
             _custInfoService = provider.GetRequiredService<CustInfoService>();
             _common = provider.GetRequiredService<Common>();
-            _cacheHelper = provider.GetRequiredService<CacheHelper>();
             _redisHelper = provider.GetRequiredService<ICacheHelper>();
         }
-        public int GetVipLevelWithCache(int custId)
+        public int GetPointLevelWithCache(int custId)
         {
-            var key = $"VipLevelCache_{custId}";
-            return _cacheHelper.TryGetOrCreate(key,
-                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(1)),
-                i => _custInfoService.GetVipLevel(custId));
+            return _redisHelper.TryGetOrCreate($"PointLevel:{custId}", TimeSpan.FromMinutes(1),
+                () => _custInfoService.GetPointLevel(custId),
+                RedisDataBase.Shared);
         }
         public Customer GetCustInfoWithCache(int custId)
         {
