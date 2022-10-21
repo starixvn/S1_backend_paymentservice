@@ -5,7 +5,6 @@ using Microsoft.Extensions.Primitives;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
-using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models;
 using PaymentCore.Models.Result;

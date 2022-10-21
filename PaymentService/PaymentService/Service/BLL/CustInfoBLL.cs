@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using PaymentService.Model;
+﻿using PaymentService.Model;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;

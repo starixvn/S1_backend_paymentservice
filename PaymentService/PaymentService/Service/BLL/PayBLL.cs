@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
-using Microsoft.Extensions.Caching.Memory;
-using PaymentCore;
 using PaymentService.Model;
 using PaymentCore.Interface;
 using PaymentService.Service.DAL;
