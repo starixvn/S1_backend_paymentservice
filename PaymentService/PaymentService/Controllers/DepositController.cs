@@ -111,8 +111,7 @@ namespace PaymentService.Controllers
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && x.PayId == reqDeposit.PayId)?.PayLangId;
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == reqDeposit.PayId);
-                var payCurrency = _payBll.GetPayCurrency()?.FirstOrDefault(x =>
-                    x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
+                
                 if (pay == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} pay Setting Not Found");
@@ -130,7 +129,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-                DepReq.Add("PayCurrencyId", payCurrency.PayCurrencyId);
+                DepReq.Add("PayCurrencyId", onlineBank.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
                 DepReq.Add("Amount", reqDeposit.Amount.ToString());

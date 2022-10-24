@@ -30,10 +30,7 @@
         public int MSort { get; set; }
         public int SSort { get; set; }
         public bool SelBank { get; set; }
-    }
-    
-    public class AutoChannelBankInfo : BankInfoPay
-    {
+        public string PayCurrencyId { get; set; }
         public decimal MinAmount { get; set; }
         public decimal MaxAmount { get; set; }
     }

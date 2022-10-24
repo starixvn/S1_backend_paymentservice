@@ -14,9 +14,10 @@ namespace PaymentService.Service.DAL
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
 
-        public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
+        public IEnumerable<BankInfoPay> GetBankInfoPayList(int siteId, DepositType depositType)
         {
-            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPay_Get_V2", new { _SiteId = siteId });
+            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPay_Get_V2"
+                , new { _SiteId = siteId, _DepositType = depositType });
         }
 
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout(int siteId)
@@ -62,11 +63,6 @@ namespace PaymentService.Service.DAL
         public IEnumerable<PayInfo> GetPayInfo(int siteId, DepositType depositType)
         {
             return _reportDbClient.Query<PayInfo>("Service_PayInfo_Get_V2", new { _SiteId = siteId, _DepositType = (int)depositType });
-        }
-
-        public IEnumerable<AutoChannelBankInfo> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
-        {
-            return _reportDbClient.Query<AutoChannelBankInfo>("Service_AutoChannelBankInfo_Get", new { SiteId = siteId, DepositType = (int)depositType });
         }
     }
 }
