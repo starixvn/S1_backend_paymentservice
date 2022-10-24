@@ -68,10 +68,10 @@ namespace PaymentService.Service.BLL
                 RedisDataBase.Shared);
         }
 
-        public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
+        public IEnumerable<BankInfoPay> GetOnlineBankListForPayout(int siteId)
         {
-            return _redisHelper.TryGetOrCreate("OnlineBankListForPayout", TimeSpan.FromSeconds(10),
-                () => payService.GetOnlineBankListForPayout());
+            return _redisHelper.TryGetOrCreate($"OnlineBankListForPayout:{siteId}", TimeSpan.FromSeconds(10),
+                () => payService.GetOnlineBankListForPayout(siteId));
         }
         
         public IEnumerable<EWalletInfoSys> GetEWalletPayList()
@@ -80,10 +80,10 @@ namespace PaymentService.Service.BLL
                 () => payService.GetEWalletPayList());
         }
 
-        public IEnumerable<BankInfoPay> GetCryptoListForPayout()
+        public IEnumerable<BankInfoPay> GetCryptoListForPayout(int siteId)
         {
-            return _redisHelper.TryGetOrCreate("CryptoListForPayout", TimeSpan.FromSeconds(10),
-                () => payService.GetCryptoListForPayout());
+            return _redisHelper.TryGetOrCreate($"CryptoListForPayout:{siteId}", TimeSpan.FromSeconds(10),
+                () => payService.GetCryptoListForPayout(siteId));
         }
 
         public IEnumerable<PayCurrency> GetPayCurrency()

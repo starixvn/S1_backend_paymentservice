@@ -68,16 +68,17 @@ namespace PaymentService.Controllers
             {
                 var custId = reqWithdrawal.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var onlineBank = _payBll.GetOnlineBankListForPayout()?.FirstOrDefault(x =>
-                    x.PayId == reqWithdrawal.PayId && x.SysId == reqWithdrawal.SysId);
+                var onlineBank = _payBll.GetOnlineBankListForPayout(custInfo.SiteId)?.FirstOrDefault(x =>
+                    x.PayId == reqWithdrawal.PayId
+                    && x.SysId == reqWithdrawal.SysId
+                    && x.CurrencyId == custInfo.CurrencyId);
 
-                if (custInfo.CurrencyId != onlineBank?.CurrencyId)
+                if (onlineBank == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
                     apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
                     return apiResult;
                 }
-
 
                 var pay = _payBll.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
                 var payCurrency = _payBll.GetPayCurrency()?.FirstOrDefault(x =>
@@ -231,8 +232,10 @@ namespace PaymentService.Controllers
             {
                 var custId = reqWithdrawal.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var crypto = _payBll.GetCryptoListForPayout()?.FirstOrDefault(x =>
-                    x.PayId == reqWithdrawal.PayId && x.ChannelId == reqWithdrawal.ChannelId);
+                var crypto = _payBll.GetCryptoListForPayout(custInfo.SiteId)?.FirstOrDefault(x =>
+                    x.PayId == reqWithdrawal.PayId
+                    && x.ChannelId == reqWithdrawal.ChannelId
+                    && x.CurrencyId == custInfo.CurrencyId);
                 if (crypto == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
@@ -512,11 +515,8 @@ namespace PaymentService.Controllers
             {
                 var custId = reqExchange.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var cryptoList = _payBll.GetCryptoListForPayout().ToList();
-                var crypto = string.IsNullOrEmpty(reqExchange.ChannelName) // 新舊相容過度，以後沒問題再拿掉
-                    ? cryptoList.FirstOrDefault(x =>
-                        x.PayId == reqExchange.PayId && custInfo.CurrencyId == x.CurrencyId)
-                    : cryptoList.FirstOrDefault(x =>
+                var cryptoList = _payBll.GetCryptoListForPayout(custInfo.SiteId).ToList();
+                var crypto = cryptoList.FirstOrDefault(x =>
                         x.ChannelName.Equals(reqExchange.ChannelName, StringComparison.OrdinalIgnoreCase)
                         && custInfo.CurrencyId == x.CurrencyId);
 
