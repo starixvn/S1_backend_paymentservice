@@ -81,8 +81,6 @@ namespace PaymentService.Controllers
                 }
 
                 var pay = _payBll.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
-                var payCurrency = _payBll.GetPayCurrency()?.FirstOrDefault(x =>
-                    x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
                 if (pay == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} pay Setting Not Found");
@@ -100,7 +98,7 @@ namespace PaymentService.Controllers
                 }
 
                 var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-                WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
+                WithReq.Add("PayCurrencyId", onlineBank.PayCurrencyId);
                 WithReq.Add("ClientIP", _common.GetClientIP(HttpContext));
                 WithReq.Add("OutgoingIp", _outgoingIp);
                 WithReq.Add("CustId", custInfo.CustId.ToString());
@@ -244,8 +242,6 @@ namespace PaymentService.Controllers
                 }
 
                 var pay = _payBll.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
-                var payCurrency = _payBll.GetPayCurrency()?.FirstOrDefault(x =>
-                    x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId);
                 if (pay == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} pay Setting Not Found");
@@ -264,7 +260,7 @@ namespace PaymentService.Controllers
 
                 var withdrawalInfo = _paymentBll.GetWithdrawalInfo(reqWithdrawal.TransId);
                 var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-                WithReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
+                WithReq.Add("PayCurrencyId", crypto.PayCurrencyId);
                 //WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
                 WithReq.Add("OutgoingIp", _outgoingIp);
                 WithReq.Add("CustId", custInfo.CustId.ToString());
@@ -528,8 +524,6 @@ namespace PaymentService.Controllers
                 }
 
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == crypto.PayId);
-                var payCurrency = _payBll.GetPayCurrency()?.FirstOrDefault(x =>
-                    x.ChannelId == crypto.ChannelId && x.CurrencyId == custInfo.CurrencyId);
                 if (pay == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, pay Setting Not Found");
@@ -546,7 +540,7 @@ namespace PaymentService.Controllers
                 }
 
                 var exchangeReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-                exchangeReq.Add("PayCurrencyId", payCurrency?.PayCurrencyId);
+                exchangeReq.Add("PayCurrencyId", crypto.PayCurrencyId);
                 exchangeReq.Add("Amount", reqExchange.Amount.ToString());
                 exchangeReq.Add("PayCode", crypto.PayCode);
                 exchangeReq.Add("CurrencyId", custInfo.CurrencyId.ToString());

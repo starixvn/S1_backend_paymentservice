@@ -33,15 +33,15 @@ namespace PaymentService.Service.BLL
         {
             var key = $"BankInfoPayList:{siteId}";
             return _redisHelper.TryGetOrCreate<IEnumerable<BankInfoPay>>(key, TimeSpan.FromSeconds(10),
-                () => payService.GetOnlineBankList(siteId).OrderBy(x => x.MSort).ThenBy(x => x.SSort),
+                () => payService.GetBankInfoPayList(siteId, DepositType.LocalBank).OrderBy(x => x.MSort).ThenBy(x => x.SSort),
                 RedisDataBase.Shared);
         }
 
-        public IEnumerable<AutoChannelBankInfo> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
+        public IEnumerable<BankInfoPay> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
         {
             var key = $"BankInfoPayList:{siteId}:{depositType}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
-                () => payService.GetAutoChannelBankInfoList(siteId, depositType), RedisDataBase.Shared);
+                () => payService.GetBankInfoPayList(siteId, depositType), RedisDataBase.Shared);
         }
 
         public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
