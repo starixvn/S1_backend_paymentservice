@@ -33,7 +33,7 @@ namespace PaymentService.Service.BLL
         {
             var key = $"BankInfoPayList:{siteId}";
             return _redisHelper.TryGetOrCreate<IEnumerable<BankInfoPay>>(key, TimeSpan.FromSeconds(10),
-                () => payService.GetBankInfoPayList(siteId, DepositType.LocalBank).OrderBy(x => x.MSort).ThenBy(x => x.SSort),
+                () => payService.GetBankInfoPayList(siteId, DepositType.OnlineBanking).OrderBy(x => x.MSort).ThenBy(x => x.SSort),
                 RedisDataBase.Shared);
         }
 
