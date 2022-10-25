@@ -5,10 +5,11 @@ using PaymentCore.Models.Result;
 using Flurl;
 using System;
 using Org.BouncyCastle.Math.EC.Rfc7748;
+using PaymentCore.Interface;
 
 namespace Payment.RapidPay
 {
-    public class PayHelper : PayHelperBase
+    public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
         #region Model
         private class BankResp
@@ -435,7 +436,8 @@ namespace Payment.RapidPay
 
         public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
         {
-            throw new NotImplementedException();
+            var data = FromJson<CallBackDebitReq>(bodyContent);
+            return data.order_id;
         }
     }
 }
