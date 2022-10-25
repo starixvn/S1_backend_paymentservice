@@ -21,6 +21,8 @@ namespace PaymentCore
         // Startup 的時候 Setter
         public static int ProxyPort;
 
+        public static IPaymentHelper PaymentHelper;
+
         public event InsertPaymentLogEventHandler InsertPaymentLog;
         public abstract DepositResult Debit(Dictionary<string, string> inputs);
         public abstract WithdrawResult Credit(Dictionary<string, string> inputs);
@@ -388,7 +390,29 @@ namespace PaymentCore
             var outBytes = c.DoFinal(DataToEncrypt);//加密
             return Encoding.UTF8.GetString(outBytes);
         }
+        
+        protected string AES128CBCDecrypt(string key , string iv, string content)
+        { 
+            var keyArray = Encoding.UTF8.GetBytes(key);
+            var ivArray = Encoding.UTF8.GetBytes(iv);
+            var cipher = CipherUtilities.GetCipher("AES/CBC/PKCS7");
+            cipher.Init(false, new ParametersWithIV(new KeyParameter(keyArray), ivArray));
+            var encData = Convert.FromBase64String(content);
+            
+            return Encoding.UTF8.GetString(cipher.DoFinal(encData));
+        }
 
+        protected string AES128CBCEncrypt(string key , string iv, string content)
+        { 
+            var keyArray = Encoding.UTF8.GetBytes(key);
+            var ivArray = Encoding.UTF8.GetBytes(iv);
+            var cipher = CipherUtilities.GetCipher("AES/CBC/PKCS7");
+            cipher.Init(true, new ParametersWithIV(new KeyParameter(keyArray), ivArray));
+            var DataToEncrypt = Encoding.UTF8.GetBytes(content);
+            var outBytes = cipher.DoFinal(DataToEncrypt);//加密
+            return Convert.ToBase64String(outBytes);
+        }
+        
         protected string CurrencyMapping(string currencyId)
         {
             var currencyMapping = new Dictionary<string, string>

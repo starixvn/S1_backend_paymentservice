@@ -5,6 +5,8 @@ using Microsoft.Extensions.Primitives;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models;
@@ -12,7 +14,6 @@ using PaymentCore.Models.Result;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers
@@ -77,7 +78,7 @@ namespace PaymentService.Controllers
                    ? DepositType.BankAutoChannel : DepositType.OnlineBanking;
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
+                var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
 
                 var onlineBankList = depositType == DepositType.OnlineBanking ?
                     _payBll.GetOnlineBankList(custInfo.SiteId) :
@@ -111,8 +112,7 @@ namespace PaymentService.Controllers
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && x.PayId == reqDeposit.PayId)?.PayLangId;
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == reqDeposit.PayId);
-                var payCurrency = _payBll.GetPayCurrency()?.FirstOrDefault(x =>
-                    x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
+                
                 if (pay == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} pay Setting Not Found");
@@ -130,7 +130,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-                DepReq.Add("PayCurrencyId", payCurrency.PayCurrencyId);
+                DepReq.Add("PayCurrencyId", onlineBank.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
                 DepReq.Add("Amount", reqDeposit.Amount.ToString());
@@ -207,7 +207,7 @@ namespace PaymentService.Controllers
                     ? DepositType.QRPayPayment : DepositType.MobilePayment;
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
+                var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
                 var payInfo = _payBll.GetPayInfoList(custInfo.SiteId, depositType)?
                     .FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
 
@@ -337,7 +337,7 @@ namespace PaymentService.Controllers
             {
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
+                var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
                 var cryptoPayInfo = _payBll.GetCryptoPayInfoList(custInfo.SiteId)?.FirstOrDefault(x =>
                     reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel &&
                     x.CurrencyId == custInfo.CurrencyId);
@@ -471,7 +471,7 @@ namespace PaymentService.Controllers
             {
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
+                var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
                 var loadCardPay = _payBll.GetLoadCardPayInfoList(custInfo.SiteId)?
                     .FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
 

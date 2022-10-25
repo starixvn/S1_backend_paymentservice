@@ -1,13 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
-using Microsoft.Extensions.Caching.Memory;
 using PaymentCore;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
 using PaymentService.Model;
 using PaymentCore.Interface;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.BLL
 {
@@ -33,15 +33,15 @@ namespace PaymentService.Service.BLL
         {
             var key = $"BankInfoPayList:{siteId}";
             return _redisHelper.TryGetOrCreate<IEnumerable<BankInfoPay>>(key, TimeSpan.FromSeconds(10),
-                () => payService.GetOnlineBankList(siteId).OrderBy(x => x.MSort).ThenBy(x => x.SSort),
+                () => payService.GetBankInfoPayList(siteId, DepositType.LocalBank).OrderBy(x => x.MSort).ThenBy(x => x.SSort),
                 RedisDataBase.Shared);
         }
 
-        public IEnumerable<AutoChannelBankInfo> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
+        public IEnumerable<BankInfoPay> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
         {
             var key = $"BankInfoPayList:{siteId}:{depositType}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
-                () => payService.GetAutoChannelBankInfoList(siteId, depositType), RedisDataBase.Shared);
+                () => payService.GetBankInfoPayList(siteId, depositType), RedisDataBase.Shared);
         }
 
         public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
@@ -68,16 +68,22 @@ namespace PaymentService.Service.BLL
                 RedisDataBase.Shared);
         }
 
-        public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
+        public IEnumerable<BankInfoPay> GetOnlineBankListForPayout(int siteId)
         {
-            return _redisHelper.TryGetOrCreate("OnlineBankListForPayout", TimeSpan.FromSeconds(10),
-                () => payService.GetOnlineBankListForPayout());
+            return _redisHelper.TryGetOrCreate($"OnlineBankListForPayout:{siteId}", TimeSpan.FromSeconds(10),
+                () => payService.GetOnlineBankListForPayout(siteId));
+        }
+        
+        public IEnumerable<EWalletInfoSys> GetEWalletPayList()
+        {
+            return _redisHelper.TryGetOrCreate("EWalletPayList", TimeSpan.FromSeconds(10),
+                () => payService.GetEWalletPayList());
         }
 
-        public IEnumerable<BankInfoPay> GetCryptoListForPayout()
+        public IEnumerable<BankInfoPay> GetCryptoListForPayout(int siteId)
         {
-            return _redisHelper.TryGetOrCreate("CryptoListForPayout", TimeSpan.FromSeconds(10),
-                () => payService.GetCryptoListForPayout());
+            return _redisHelper.TryGetOrCreate($"CryptoListForPayout:{siteId}", TimeSpan.FromSeconds(10),
+                () => payService.GetCryptoListForPayout(siteId));
         }
 
         public IEnumerable<PayCurrency> GetPayCurrency()

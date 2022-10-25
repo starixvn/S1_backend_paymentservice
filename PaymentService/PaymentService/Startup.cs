@@ -57,6 +57,7 @@ namespace PaymentService
             services.AddSingleton<CourierAdapter>();
             services.AddSingleton<IPayHttpHelper, HttpHelper>();
             services.AddSingleton<CacheHelper>();
+            services.AddSingleton<PaymentHelper>();
             services.AddSingleton<IFlurlHttpHelper, FlurlHttpHelper>();
             services.AddTransient<JsonNetSerializer, JsonNetSerializer>();
             //services.AddSingleton<IBCDBLibrary>();
@@ -96,6 +97,8 @@ namespace PaymentService
             app.UseRequestLogMiddleware();
             app.UseResponseLogMiddleware();
             //app.UseAuthorization();
+
+            PayHelperBase.PaymentHelper = app.ApplicationServices.GetRequiredService<PaymentHelper>();
 
             app.UseEndpoints(endpoints =>
             {

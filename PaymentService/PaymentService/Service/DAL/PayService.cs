@@ -1,7 +1,8 @@
 ﻿using PaymentService.Service.Model;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
 using PaymentService.Model;
 using PaymentService.Service.Library;
-using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.DAL
 {
@@ -14,19 +15,25 @@ namespace PaymentService.Service.DAL
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
 
-        public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
+        public IEnumerable<BankInfoPay> GetBankInfoPayList(int siteId, DepositType depositType)
         {
-            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPay_Get", new { SiteId = siteId });
+            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPay_Get_V2"
+                , new { _SiteId = siteId, _DepositType = depositType });
         }
 
-        public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
+        public IEnumerable<BankInfoPay> GetOnlineBankListForPayout(int siteId)
         {
-            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPayForPayout_Get");
+            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPayForPayout_Get_V3", new { _SiteId = siteId });
         }
 
-        public IEnumerable<BankInfoPay> GetCryptoListForPayout()
+        public IEnumerable<EWalletInfoSys> GetEWalletPayList()
         {
-            return _reportDbClient.Query<BankInfoPay>("Common_CryptoPayForPayout_Get");
+            return _reportDbClient.Query<EWalletInfoSys>("Service_EWalletInfoSys_Get");
+        }
+        
+        public IEnumerable<BankInfoPay> GetCryptoListForPayout(int siteId)
+        {
+            return _reportDbClient.Query<BankInfoPay>("Common_CryptoPayForPayout_Get_V2", new { _SiteId = siteId });
         }
 
         public IEnumerable<PayCurrency> GetPayCurrency()
@@ -61,12 +68,7 @@ namespace PaymentService.Service.DAL
 
         public IEnumerable<PayInfo> GetPayInfo(int siteId, DepositType depositType)
         {
-            return _reportDbClient.Query<PayInfo>("Service_PayInfo_Get", new { SiteId = siteId, DepositType = (int)depositType });
-        }
-
-        public IEnumerable<AutoChannelBankInfo> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
-        {
-            return _reportDbClient.Query<AutoChannelBankInfo>("Service_AutoChannelBankInfo_Get", new { SiteId = siteId, DepositType = (int)depositType });
+            return _reportDbClient.Query<PayInfo>("Service_PayInfo_Get_V2", new { _SiteId = siteId, _DepositType = (int)depositType });
         }
     }
 }
