@@ -77,7 +77,7 @@ namespace PaymentService.Controllers
                    ? DepositType.BankAutoChannel : DepositType.OnlineBanking;
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
+                var vipLevel = 1;
 
                 var onlineBankList = depositType == DepositType.OnlineBanking ?
                     _payBll.GetOnlineBankList(custInfo.SiteId) :
