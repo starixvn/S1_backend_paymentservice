@@ -116,7 +116,7 @@ namespace Payment.RapidPay
                 "IDR" => payResource["IDRSecret"]
             };
             var p = secretkey + data.order_id;
-            var sign = ToMD5(p);
+            var sign = ToMD5(p).ToLower();
 
             if (sign == data.token)
             {
@@ -161,7 +161,7 @@ namespace Payment.RapidPay
             };
 
             var p = secretkey + data.order_id;
-            var sign = ToMD5(p);
+            var sign = ToMD5(p).ToLower();
 
             if (sign == data.token)
             {
