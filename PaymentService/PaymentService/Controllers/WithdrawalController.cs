@@ -67,7 +67,7 @@ namespace PaymentService.Controllers
             {
                 var custId = reqWithdrawal.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var onlineBank = _payBll.GetOnlineBankListForPayout()?.FirstOrDefault(x =>
+                var onlineBank = _payBll.GetOnlineBankListForPayout(custInfo.SiteId)?.FirstOrDefault(x =>
                     x.PayId == reqWithdrawal.PayId && x.SysId == reqWithdrawal.SysId);
 
                 if (custInfo.CurrencyId != onlineBank?.CurrencyId)
