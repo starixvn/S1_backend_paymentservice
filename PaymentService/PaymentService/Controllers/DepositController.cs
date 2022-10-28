@@ -94,7 +94,7 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
-                if (custInfo.CurrencyId != onlineBank.CurrencyId && onlineBank.CurrencyId != 0)
+                if (custInfo.CurrencyId != onlineBank.CurrencyId)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
                     apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
