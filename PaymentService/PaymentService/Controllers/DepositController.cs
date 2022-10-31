@@ -5,7 +5,6 @@ using Microsoft.Extensions.Primitives;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
-using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models;
 using PaymentCore.Models.Result;
@@ -77,7 +76,7 @@ namespace PaymentService.Controllers
                    ? DepositType.BankAutoChannel : DepositType.OnlineBanking;
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
+                var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
 
                 var onlineBankList = depositType == DepositType.OnlineBanking ?
                     _payBll.GetOnlineBankList(custInfo.SiteId) :
@@ -207,7 +206,7 @@ namespace PaymentService.Controllers
                     ? DepositType.QRPayPayment : DepositType.MobilePayment;
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
+                var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
                 var payInfo = _payBll.GetPayInfoList(custInfo.SiteId, depositType)?
                     .FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
 
@@ -337,7 +336,7 @@ namespace PaymentService.Controllers
             {
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
+                var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
                 var cryptoPayInfo = _payBll.GetCryptoPayInfoList(custInfo.SiteId)?.FirstOrDefault(x =>
                     reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel &&
                     x.CurrencyId == custInfo.CurrencyId);
@@ -471,7 +470,7 @@ namespace PaymentService.Controllers
             {
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var vipLevel = _custInfoBll.GetVipLevelWithCache(custId);
+                var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
                 var loadCardPay = _payBll.GetLoadCardPayInfoList(custInfo.SiteId)?
                     .FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
 

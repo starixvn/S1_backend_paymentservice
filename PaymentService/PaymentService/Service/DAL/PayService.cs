@@ -19,9 +19,9 @@ namespace PaymentService.Service.DAL
             return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPay_Get", new { SiteId = siteId });
         }
 
-        public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
+        public IEnumerable<BankInfoPay> GetOnlineBankListForPayout(int siteId)
         {
-            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPayForPayout_Get");
+            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPayForPayout_Get_V2", new { _SiteId = siteId });
         }
 
         public IEnumerable<BankInfoPay> GetCryptoListForPayout()

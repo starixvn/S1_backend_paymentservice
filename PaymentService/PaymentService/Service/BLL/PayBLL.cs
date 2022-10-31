@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
-using Microsoft.Extensions.Caching.Memory;
-using PaymentCore;
 using PaymentService.Model;
 using PaymentCore.Interface;
 using PaymentService.Service.DAL;
@@ -68,10 +66,10 @@ namespace PaymentService.Service.BLL
                 RedisDataBase.Shared);
         }
 
-        public IEnumerable<BankInfoPay> GetOnlineBankListForPayout()
+        public IEnumerable<BankInfoPay> GetOnlineBankListForPayout(int siteId)
         {
             return _redisHelper.TryGetOrCreate("OnlineBankListForPayout", TimeSpan.FromSeconds(10),
-                () => payService.GetOnlineBankListForPayout());
+                () => payService.GetOnlineBankListForPayout(siteId));
         }
 
         public IEnumerable<BankInfoPay> GetCryptoListForPayout()
