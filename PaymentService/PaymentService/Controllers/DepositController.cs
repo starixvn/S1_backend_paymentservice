@@ -85,7 +85,8 @@ namespace PaymentService.Controllers
 
                 var onlineBank = onlineBankList?.FirstOrDefault(x =>
                     x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) &&
-                    x.PointLevel <= vipLevel);
+                    x.PointLevel <= vipLevel &&
+                    x.CurrencyId == custInfo.CurrencyId);
 
                 if (onlineBank == null)
                 {
