@@ -111,9 +111,9 @@ namespace Payment.RapidPay
 
             var secretkey = data.currency switch
             {
-                "MYR" => payResource["MYRSecret"],
-                "THB" => payResource["THBSecret"],
-                "IDR" => payResource["IDRSecret"]
+                "MYR" => payResource["wMYRSecret"],
+                "THB" => payResource["wTHBSecret"],
+                "IDR" => payResource["wIDRSecret"]
             };
             var p = secretkey + data.order_id;
             var sign = ToMD5(p).ToLower();
@@ -155,9 +155,9 @@ namespace Payment.RapidPay
 
             var secretkey = data.currency switch
             {
-                "MYR" => payResource["MYRSecret"],
-                "THB" => payResource["THBSecret"],
-                "IDR" => payResource["IDRSecret"]
+                "MYR" => payResource["dMYRSecret"],
+                "THB" => payResource["dTHBSecret"],
+                "IDR" => payResource["dIDRSecret"]
             };
 
             var p = secretkey + data.order_id;
@@ -207,13 +207,13 @@ namespace Payment.RapidPay
                 var currencyData = PayCurrencyId switch
                 {
                     "MYR" => new Dictionary<string, string> {
-                    { "User", inputs["MYRUser"] },{ "APIKey", inputs["MYRAPI"]}
+                    { "User", inputs["wMYRUser"] },{ "APIKey", inputs["wMYRAPI"]}
                     },
                     "THB" => new Dictionary<string, string> {
-                    { "User", inputs["THBUser"] },{ "APIKey", inputs["THBAPI"]}
+                    { "User", inputs["wTHBUser"] },{ "APIKey", inputs["wTHBAPI"]}
                     },
                     "IDR" => new Dictionary<string, string> {
-                    { "User", inputs["IDRUser"] },{ "APIKey", inputs["IDRAPI"]}
+                    { "User", inputs["wIDRUser"] },{ "APIKey", inputs["wIDRAPI"]}
                     }
                 };
 
@@ -312,13 +312,13 @@ namespace Payment.RapidPay
             var currencyData = PayCurrencyId switch
             {
                 "MYR"=> new Dictionary<string, string> { 
-                { "User", inputs["MYRUser"] },{ "APIKey", inputs["MYRAPI"]}
+                { "User", inputs["dMYRUser"] },{ "APIKey", inputs["dMYRAPI"]}
                 },
                 "THB" => new Dictionary<string, string> {
-                { "User", inputs["THBUser"] },{ "APIKey", inputs["THBAPI"]}
+                { "User", inputs["dTHBUser"] },{ "APIKey", inputs["dTHBAPI"]}
                 },
                 "IDR" => new Dictionary<string, string> {
-                { "User", inputs["IDRUser"] },{ "APIKey", inputs["IDRAPI"]}
+                { "User", inputs["dIDRUser"] },{ "APIKey", inputs["dIDRAPI"]}
                 }
             };
             var sUrl = inputs["host"];
