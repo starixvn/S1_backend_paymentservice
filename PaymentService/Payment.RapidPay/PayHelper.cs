@@ -152,7 +152,7 @@ namespace Payment.RapidPay
 
             var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.order_id;
-
+            var QRISSecretkey = payResource["QRISSecret"];
             var secretkey = data.currency switch
             {
                 "MYR" => payResource["dMYRSecret"],
@@ -163,7 +163,10 @@ namespace Payment.RapidPay
             var p = secretkey + data.order_id;
             var sign = ToMD5(p).ToLower();
 
-            if (sign == data.token)
+            var t = QRISSecretkey + data.order_id;
+            var QRISsign = ToMD5(t).ToLower();
+
+            if (sign == data.token || QRISsign == data.token)
             {
                 if (data.order_status == "completed")
                 {
@@ -308,6 +311,8 @@ namespace Payment.RapidPay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var PayCurrencyId = inputs["PayCurrencyId"];
+            var payCode = inputs["PayCode"];
+            bool isQRIS = payCode == "QRIS";
 
             var currencyData = PayCurrencyId switch
             {
@@ -323,10 +328,10 @@ namespace Payment.RapidPay
             };
             var sUrl = inputs["host"];
             var currencyReq = new CurrencyReq();
-            currencyReq.username = currencyData["User"];
+            currencyReq.username = isQRIS ? inputs["QRISUser"] : currencyData["User"];
             var authReq = new AuthReq();
-            authReq.username = currencyData["User"];
-            authReq.api_key = currencyData["APIKey"];
+            authReq.username = isQRIS ? inputs["QRISUser"] : currencyData["User"];
+            authReq.api_key = isQRIS ? inputs["QRISAPI"] : currencyData["APIKey"];
             string sResponse = null;
             var oDepositResult = new DepositResult();
             oDepositResult.Success = false;
@@ -346,7 +351,7 @@ namespace Payment.RapidPay
                     oDepositResult.RawContent = sResponse;
                     return oDepositResult;
                 }
-                else if(!currencyResp.rate.ToList().Exists(x=> x.currency == PayCurrencyId))
+                else if (!currencyResp.rate.ToList().Exists(x => x.currency == PayCurrencyId))
                 {
                     oDepositResult.Message = "";
                     oDepositResult.RawContent = sResponse;
@@ -355,7 +360,7 @@ namespace Payment.RapidPay
                 else
                 {
                     var currencydata = currencyResp.rate.ToList().Find(x => x.currency == PayCurrencyId);
-                    if(currencydata.min > amount || currencydata.max < amount)
+                    if (currencydata.min > amount || currencydata.max < amount)
                     {
                         oDepositResult.Message = "";
                         oDepositResult.RawContent = sResponse;
