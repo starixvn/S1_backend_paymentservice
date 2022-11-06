@@ -84,6 +84,12 @@ namespace PaymentService.Service.DAL
 
                         var custId = p.Get<int?>("CustId") ?? 0;
                         var userName = p.Get<string>("UserName");
+
+
+                        _logger.LogInformation($"transId:{transId}，呼叫 _walletService.SetBalance 參數 custId:{custId},siteId:{siteId},userName:{userName},actualDeposit:{actualDeposit},type:{type}," +
+                                               $"Deposit Approved: {actualDeposit},transId:{transId},afterAmount:{afterAmount}"); // 紀錄
+
+
                         result = _walletService.SetBalance(custId, siteId, userName, actualDeposit, type,
                             $"Deposit Approved: {actualDeposit}", transId, out afterAmount, out var is1stDepoist, conn,
                             trans);
