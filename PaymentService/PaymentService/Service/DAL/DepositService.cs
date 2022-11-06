@@ -45,7 +45,7 @@ namespace PaymentService.Service.DAL
 
         public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string refThirdId, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status, bool canReward = false)
         {
-            //102;
+            
             var type = PayTypePosition + pay.PayId;
             var depositId = _common.GetId(transId);
 
