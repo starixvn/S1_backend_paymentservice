@@ -71,7 +71,7 @@ namespace PaymentService.Service.DAL
                 p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
                 result = _mainDbClient.Execute("Service_DepositInfo_Set_V3", p, conn, trans);
-
+                
                 if (result > 0)
                 {
                     SetDepositLog(depositId, siteId, comment, (int)status, actualDeposit, Operator);
@@ -86,7 +86,7 @@ namespace PaymentService.Service.DAL
                             $"Deposit Approved: {actualDeposit}", transId, out afterAmount, out var is1stDepoist, conn,
                             trans);
 
-                        if (result > 0)
+                        if (result >= 0)
                         {
                             result = _withdrawalLimitService.SetWithdrawalLimit(custId, userName, siteId, actualDeposit,
                                 $"WithdrawalLimit: {actualDeposit}", transId, out _, conn, trans);
