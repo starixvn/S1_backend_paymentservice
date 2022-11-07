@@ -73,7 +73,7 @@ namespace PaymentService.Service.DAL
                 result = _mainDbClient.Execute("Service_DepositInfo_Set_V3", p, conn, trans);
                 logMsg += $"transId:{transId} Execute Service_DepositInfo_Set_V3 after result:{result} Step1";
 
-                if (result > 0)
+                if (result >= 0)
                 {
                     SetDepositLog(depositId, siteId, comment, (int)status, actualDeposit, Operator);
 
