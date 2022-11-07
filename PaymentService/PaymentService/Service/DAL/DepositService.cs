@@ -86,7 +86,7 @@ namespace PaymentService.Service.DAL
                             $"Deposit Approved: {actualDeposit}", transId, out afterAmount, out var is1stDepoist, conn,
                             trans);
 
-                        if (result >= 0)
+                        if (result > 0)
                         {
                             result = _withdrawalLimitService.SetWithdrawalLimit(custId, userName, siteId, actualDeposit,
                                 $"WithdrawalLimit: {actualDeposit}", transId, out _, conn, trans);
