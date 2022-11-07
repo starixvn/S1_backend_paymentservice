@@ -94,7 +94,7 @@ namespace PaymentService.Service.DAL
 
                         logMsg += $"transId:{transId} Execute _walletService.SetBalance after result:{result} Step2-2";
 
-                        if (result > 0)
+                        if (result >= 0)
                         {
                             logMsg += $"transId:{transId} Execute _withdrawalLimitService.SetWithdrawalLimit parameter custId:{custId},userName:{userName},siteId:{siteId}" +
                                               $"actualDeposit:{actualDeposit},WithdrawalLimit: {actualDeposit},Step3-1";
