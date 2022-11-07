@@ -153,6 +153,10 @@ namespace PaymentService.Service.DAL
                         trans.Rollback();
                     }
                 }
+                else
+                {
+                    _logger.LogInformation(logMsg); // 沒有正常Commit，將 Log 送到 ELK，以便查問題
+                }
             }
             catch (Exception ex)
             {
