@@ -36,11 +36,6 @@ namespace PaymentService.Service.DAL
             return _reportDbClient.Query<BankInfoPay>("Common_CryptoPayForPayout_Get_V2", new { _SiteId = siteId });
         }
 
-        public IEnumerable<PayCurrency> GetPayCurrency()
-        {
-            return _reportDbClient.Query<PayCurrency>("PayCurrency_Get");
-        }
-
         public IEnumerable<PayLanguage> GetPayLanguage()
         {
             return _reportDbClient.Query<PayLanguage>("PayLanguage_Get");
@@ -58,12 +53,14 @@ namespace PaymentService.Service.DAL
 
         public IEnumerable<CryptoPayInfo> GetCryptoPayInfo(int siteId)
         {
-            return _reportDbClient.Query<CryptoPayInfo>("Common_CryptoPay_Get", new { SiteId = siteId });
+            return _reportDbClient.Query<CryptoPayInfo>("Service_DepositPaySetting_Get",
+                new { _SiteId = siteId, _DepositType = DepositType.CryptoPayPayment });
         }
 
         public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfo(int siteId)
         {
-            return _reportDbClient.Query<LoadCardPayInfo>("Common_LoadCardPay_Get", new { SiteId = siteId });
+            return _reportDbClient.Query<LoadCardPayInfo>("Service_DepositPaySetting_Get",
+                new { _SiteId = siteId, _DepositType = DepositType.LoadCardPayment });
         }
 
         public IEnumerable<PayInfo> GetPayInfo(int siteId, DepositType depositType)

@@ -1,10 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
-using PaymentCore;
-using PaymentCore.Model;
-using PaymentCore.Model.enums;
 using PaymentService.Model;
 using PaymentCore.Interface;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -84,12 +83,6 @@ namespace PaymentService.Service.BLL
         {
             return _redisHelper.TryGetOrCreate($"CryptoListForPayout:{siteId}", TimeSpan.FromSeconds(10),
                 () => payService.GetCryptoListForPayout(siteId));
-        }
-
-        public IEnumerable<PayCurrency> GetPayCurrency()
-        {
-            return _redisHelper.TryGetOrCreate("PayCurrency", TimeSpan.FromMinutes(5),
-                () => payService.GetPayCurrency(), RedisDataBase.Shared);
         }
 
         public IEnumerable<PayLanguage> GetPayLanguage()
