@@ -94,7 +94,7 @@ namespace PaymentService.Service.BLL
         public IEnumerable<Pay> GetPaymentList(int siteId)
         {
             var key = $"Pay:{siteId}";
-            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromMinutes(5),
+            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromSeconds(10),
                 () => payService.GetPaymentList(siteId));
         }
 
