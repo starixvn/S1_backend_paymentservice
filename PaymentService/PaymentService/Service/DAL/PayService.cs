@@ -37,14 +37,8 @@ namespace PaymentService.Service.DAL
 
         public IEnumerable<Pay> GetPaymentList(int siteId)
         {
-            return _reportDbClient.Query<Pay>("PaySetting_Get", new { SiteId = siteId });
+            return _reportDbClient.Query<Pay>("Service_PaySetting_Get", new { _SiteId = siteId });
         }
-
-        public IEnumerable<Pay> GetPaymentAllList(int siteId)
-        {
-            return _reportDbClient.Query<Pay>("PaySettingAll_Get", new { SiteId = siteId });
-        }
-
         public IEnumerable<CryptoPayInfo> GetCryptoPayInfo(int siteId)
         {
             return _reportDbClient.Query<CryptoPayInfo>("Service_PayInfo_Get_V2",

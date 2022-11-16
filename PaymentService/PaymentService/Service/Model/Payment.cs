@@ -1,4 +1,6 @@
-﻿namespace PaymentService.Service.Model
+﻿using PaymentService.Service.Model.enums;
+
+namespace PaymentService.Service.Model
 {
     public interface IPay
     {
@@ -39,6 +41,8 @@
         public int PayId { get; set; }
         public string PayName { get; set; }
         public string Setting { get; set; }
+        public PayStatusEnum PayStatus { get; set; }
+        public PayStatusEnum SitePayStatus { get; set; }
     }
 
     public class PayGroup
