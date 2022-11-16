@@ -88,11 +88,10 @@
         Error = 99
     }
 
-    public enum AdminUserStatus
+    public enum PayStatusEnum
     {
-        Running = 1,
-        Suspend = 2,
-        Closed = 3,
+        Enabled = 1,
+        Disabled = 2
     }
     public enum WithdrawalStatus
     {

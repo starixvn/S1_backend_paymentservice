@@ -1,4 +1,6 @@
-﻿namespace PaymentCore.Model;
+﻿using PaymentCore.Model.enums;
+
+namespace PaymentCore.Model;
 
 public interface IPay
 {
@@ -13,4 +15,6 @@ public class Pay
     public int PayId { get; set; }
     public string PayName { get; set; }
     public string Setting { get; set; }
+    public PayStatusEnum PayStatus { get; set; }
+    public PayStatusEnum SitePayStatus { get; set; }
 }
