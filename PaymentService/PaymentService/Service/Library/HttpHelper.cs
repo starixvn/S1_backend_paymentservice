@@ -1,5 +1,4 @@
-﻿using PaymentCore;
-using PaymentCore.Interface;
+﻿using PaymentCore.Interface;
 
 namespace PaymentService.Service.Library
 {
