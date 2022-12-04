@@ -82,7 +82,8 @@ namespace PaymentService.Controllers
                     _payBll.GetOnlineBankList(custInfo.SiteId) :
                     _payBll.GetAutoChannelBankInfoList(custInfo.SiteId, depositType);
 
-                var onlineBank = onlineBankList?.FirstOrDefault(x =>
+                var onlineBank = onlineBankList?.OrderByDescending(x => x.CurrencyId)
+                    .FirstOrDefault(x =>
                     x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) &&
                     x.PointLevel <= vipLevel);
                 
