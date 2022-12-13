@@ -40,7 +40,7 @@ namespace PaymentService.Service.DAL
 
         public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
         {
-            return _mainDbClient.Query<DepositRequest>("Service_DepositRequesPayEnquiry_Get");
+            return _mainDbClient.QueryUseCommandDefinition<DepositRequest>("Service_DepositRequesPayEnquiry_Get", new DynamicParameters());
         }
 
         public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string refThirdId, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status, bool canReward = false)
@@ -86,7 +86,7 @@ namespace PaymentService.Service.DAL
 
                         logMsg += $"transId:{transId} _walletService.SetBalance parameter custId:{custId},siteId:{siteId},userName:{userName}," +
                                           $"actualDeposit:{actualDeposit},type:{type},Deposit Approved: {actualDeposit},afterAmount:{afterAmount} Step2-1";
-                      
+
 
                         result = _walletService.SetBalance(custId, siteId, userName, actualDeposit, type,
                             $"Deposit Approved: {actualDeposit}", transId, out afterAmount, out var is1stDepoist, conn,
@@ -210,6 +210,23 @@ namespace PaymentService.Service.DAL
                 {
                     _TransId = transId,
                     _DepositInfo = depositInfo
+                });
+        }
+
+        public IEnumerable<DepositAutoCancel> GetDepositAutoCancelList(int limit)
+        {
+            return _mainDbClient.QueryUseCommandDefinition<DepositAutoCancel>("Service_DepositAutoCancel_Get", new DynamicParameters(new { _Limit = limit }));
+        }
+
+        public int DepositAutoCancel(int depositId, int siteId, int custId, string Operator)
+        {
+            return _mainDbClient.Execute("Service_DepositAutoCancel_Set",
+                new
+                {
+                    _DepositId = depositId,
+                    _SiteId = siteId,
+                    _CustId = custId,
+                    _Operator = Operator
                 });
         }
     }

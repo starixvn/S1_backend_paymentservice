@@ -87,4 +87,14 @@ namespace PaymentService.Service.Model
 
         public decimal ActualDeposit { get; set; }
     }
+    public class DepositAutoCancel
+    {
+        public int DepositId { get; set; }
+        public int SiteId { get; set; }
+        public int CustId { get; set; }
+        public string UserName { get; set; }
+        public string TransId { get; set; }
+        public int Status { get; set; }
+        public int DepositType { get; set; }
+    }
 }
