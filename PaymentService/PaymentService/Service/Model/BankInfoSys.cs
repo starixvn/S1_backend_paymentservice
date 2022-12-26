@@ -33,8 +33,6 @@
         public string PayCurrencyId { get; set; }
         public decimal MinAmount { get; set; }
         public decimal MaxAmount { get; set; }
-        public decimal ChargeFeePercentage { get; set; }
-        public decimal ChargeFeePreCount { get; set; }
     }
     
     public class EWalletInfoSys
@@ -70,8 +68,6 @@
         public IEnumerable<decimal> AmountList => AmountShow == null ? null : Newtonsoft.Json.JsonConvert.DeserializeObject<IEnumerable<decimal>>(AmountShow);
         public int GSort { get; set; }
         public int SSort { get; set; }
-        public decimal ChargeFeePercentage { get; set; }
-        public decimal ChargeFeePreCount { get; set; }
     }
     public class CryptoPayInfo
     {
@@ -95,8 +91,6 @@
         public string PayCode { get; set; }
         public int GSort { get; set; }
         public int SSort { get; set; }
-        public decimal ChargeFeePercentage { get; set; }
-        public decimal ChargeFeePreCount { get; set; }
     }
     public class LoadCardPayInfo
     {
@@ -122,7 +116,5 @@
         public long Updated_timestamp { get; set; }
         public string Code { get; set; }
         public string Serial { get; set; }
-        public decimal ChargeFeePercentage { get; set; }
-        public decimal ChargeFeePreCount { get; set; }
     }
 }
