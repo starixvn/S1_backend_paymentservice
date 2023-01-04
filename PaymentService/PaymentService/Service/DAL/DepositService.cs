@@ -13,6 +13,7 @@ namespace PaymentService.Service.DAL
     {
         private readonly string _connectionString;
         private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
         private readonly WalletService _walletService;
         private readonly WithdrawalLimitService _withdrawalLimitService;
         private readonly Common _common;
@@ -23,6 +24,7 @@ namespace PaymentService.Service.DAL
         {
             _connectionString = ServiceCollectionExtension.ConnectionString;
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _walletService = provider.GetRequiredService<WalletService>();
             _withdrawalLimitService = provider.GetRequiredService<WithdrawalLimitService>();
             _common = provider.GetRequiredService<Common>();
@@ -215,17 +217,15 @@ namespace PaymentService.Service.DAL
 
         public IEnumerable<DepositAutoCancel> GetDepositAutoCancelList(int limit)
         {
-            return _mainDbClient.QueryUseCommandDefinition<DepositAutoCancel>("Service_DepositAutoCancel_Get", new DynamicParameters(new { _Limit = limit }));
+            return _reportDbClient.QueryUseCommandDefinition<DepositAutoCancel>("Service_DepositAutoCancel_Get", new DynamicParameters(new { _Limit = limit }));
         }
 
-        public int DepositAutoCancel(int depositId, int siteId, int custId, string Operator)
+        public int DepositAutoCancel(int depositId, string Operator)
         {
             return _mainDbClient.Execute("Service_DepositAutoCancel_Set",
                 new
                 {
                     _DepositId = depositId,
-                    _SiteId = siteId,
-                    _CustId = custId,
                     _Operator = Operator
                 });
         }

@@ -5,21 +5,21 @@ namespace PaymentService.Service.Workers
 {
     public class DepositAutoCancelWorkerService : BackgroundService
     {
-        private readonly ILogger<DepositAutoCancelWorkerService> logger;
-        private readonly PaymentBLL paymentBLL;
-        private Timer timer;
+        private readonly ILogger<DepositAutoCancelWorkerService> _logger;
+        private readonly PaymentBLL _paymentBLL;
+        private Timer _timer;
         private readonly Random _random;
 
         public DepositAutoCancelWorkerService(ILogger<DepositAutoCancelWorkerService> logger, PaymentBLL paymentBLL)
         {
-            this.logger = logger;
-            this.paymentBLL = paymentBLL;
+            _logger = logger;
+            _paymentBLL = paymentBLL;
             _random = new Random();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -27,34 +27,36 @@ namespace PaymentService.Service.Workers
         {
             try
             {
-                var depositAutoCancelList = paymentBLL.GetDepositAutoCancelList(_random.Next(950, 1000));
+                _logger.LogInformation("Deposit Auto Cancel Task Start");
+                var depositAutoCancelList = _paymentBLL.GetDepositAutoCancelList(_random.Next(950, 1000)).ToList();
+                _logger.LogInformation($"GetDepositAutoCancelList Data Count：{depositAutoCancelList.Count}");
                 foreach (var depositAutoCancel in depositAutoCancelList)
                 {
                     try
                     {
-                        paymentBLL.DepositAutoCancel(depositAutoCancel.DepositId, depositAutoCancel.SiteId, depositAutoCancel.CustId, "AutoCancel");
+                        _paymentBLL.DepositAutoCancel(depositAutoCancel.DepositId, "System");
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError(ex, $"DepositAutoCancel Fail\r\nTransId: {depositAutoCancel.TransId}\r\n{ex.Message}");
+                        _logger.LogError(ex, $"DepositAutoCancel Fail\r\nTransId: {depositAutoCancel.TransId}\r\n{ex.Message}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {
                 var dueTimeSpan = TimeSpan.FromMinutes(5);
-                timer.Change(dueTimeSpan, TimeSpan.Zero);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("DepositAutoCancelWorkerService: Process Stopped");
-            timer?.Change(Timeout.Infinite, 0);
+            _logger.LogInformation("DepositAutoCancelWorkerService: Process Stopped");
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

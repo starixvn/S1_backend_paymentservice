@@ -251,9 +251,9 @@ namespace PaymentService.Service.BLL
             return _depositService.GetDepositAutoCancelList(limit);
         }
 
-        public int DepositAutoCancel(int depositId, int siteId, int custId, string Operator)
+        public int DepositAutoCancel(int depositId, string Operator)
         {
-            return _depositService.DepositAutoCancel(depositId, siteId, custId, Operator);
+            return _depositService.DepositAutoCancel(depositId, Operator);
         }
     }
 }
