@@ -32,8 +32,8 @@ namespace PaymentService.Service.DAL
         }
         public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry(string payIds)
         {
-            return _reportDbClient.Query<WithdrawalRequest>("Service_WithdrawalRequestPayEnquiry_Get",
-                new { _PayIds = payIds });
+            return _reportDbClient.QueryUseCommandDefinition<WithdrawalRequest>("Service_WithdrawalRequestPayEnquiry_Get",
+                new DynamicParameters(new { _PayIds = payIds }));
         }
 
         public int SetWithdrawalInfo(string transId, int siteId, IPay pay, string comment, string refId, string Operator, IEnumerable<int> forStatus, WithdrawalStatus status)
