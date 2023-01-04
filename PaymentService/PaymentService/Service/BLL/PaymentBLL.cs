@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore.Extensions;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
 using PaymentCore.Interface;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.BLL
 {
@@ -131,7 +132,7 @@ namespace PaymentService.Service.BLL
             var withdrawalId = _common.GetId(transId);
             return _withdrawalService.GetWithdrawalRequest(withdrawalId);
         }
-
+     
         public void WithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
             var forStatus = new List<int> { (int)WithdrawalStatus.Process };

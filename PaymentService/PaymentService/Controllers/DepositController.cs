@@ -5,13 +5,15 @@ using Microsoft.Extensions.Primitives;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
+using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models;
 using PaymentCore.Models.Result;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers
@@ -82,12 +84,10 @@ namespace PaymentService.Controllers
                     _payBll.GetOnlineBankList(custInfo.SiteId) :
                     _payBll.GetAutoChannelBankInfoList(custInfo.SiteId, depositType);
 
-                var onlineBank = onlineBankList?.OrderByDescending(x => x.CurrencyId)
-                    .FirstOrDefault(x =>
+                var onlineBank = onlineBankList?.FirstOrDefault(x =>
                     x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) &&
-                    x.PointLevel <= vipLevel);
-                
-                _logger.LogInformation("onlineBank: " + JsonConvert.SerializeObject(onlineBank));
+                    x.PointLevel <= vipLevel &&
+                    x.CurrencyId == custInfo.CurrencyId);
 
                 if (onlineBank == null)
                 {
@@ -96,7 +96,7 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
-                if (custInfo.CurrencyId != onlineBank.CurrencyId && onlineBank.CurrencyId != 0)
+                if (custInfo.CurrencyId != onlineBank.CurrencyId)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} Invalid Currency");
                     apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
@@ -112,17 +112,7 @@ namespace PaymentService.Controllers
 
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && x.PayId == reqDeposit.PayId)?.PayLangId;
-                
-                _logger.LogInformation($"payLangId: {payLangId}");
-                
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == reqDeposit.PayId);
-                
-                _logger.LogInformation("pay: "+ JsonConvert.SerializeObject(pay));
-                
-                var payCurrency = _payBll.GetPayCurrency()?.FirstOrDefault(x =>
-                    x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
-                
-                _logger.LogInformation("payCurrency: "+ JsonConvert.SerializeObject(payCurrency));
                 
                 if (pay == null)
                 {
@@ -141,7 +131,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-                DepReq.Add("PayCurrencyId", payCurrency.PayCurrencyId);
+                DepReq.Add("PayCurrencyId", onlineBank.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
                 DepReq.Add("Amount", reqDeposit.Amount.ToString());

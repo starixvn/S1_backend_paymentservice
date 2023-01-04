@@ -30,12 +30,21 @@
         public int MSort { get; set; }
         public int SSort { get; set; }
         public bool SelBank { get; set; }
-    }
-    
-    public class AutoChannelBankInfo : BankInfoPay
-    {
+        public string PayCurrencyId { get; set; }
         public decimal MinAmount { get; set; }
         public decimal MaxAmount { get; set; }
+    }
+    
+    public class EWalletInfoSys
+    {
+        public int SysId { get; set; }
+        public int CurrencyId { get; set; }
+        public string EWalletCode { get; set; }
+        public string EWalletName { get; set; }
+        public string EWalletLogo { get; set; }
+        public string EWalletSite { get; set; }
+        public int Status { get; set; }
+        public int Sort { get; set; }
     }
     
     public class PayInfo

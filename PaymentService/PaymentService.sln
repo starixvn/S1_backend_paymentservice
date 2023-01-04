@@ -79,6 +79,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.DoitnowPay", "Payme
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.RapidPay", "Payment.RapidPay\Payment.RapidPay.csproj", "{0ED7478F-A647-4FF5-B976-72C8165C402E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.FoxPay", "Payment.FoxPay\Payment.FoxPay.csproj", "{6078B1A4-70E3-4518-A84B-3E3BB470FC39}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -1,10 +1,11 @@
 ﻿using Dapper;
 using MySql.Data.MySqlClient;
 using System.Data;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
 using PaymentService.Extensions;
 using PaymentService.Model;
 using PaymentService.Service.Library;
-using PaymentService.Service.Model.enums;
 using PaymentService.Service.Model;
 
 namespace PaymentService.Service.DAL
