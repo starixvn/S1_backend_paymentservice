@@ -38,7 +38,7 @@ namespace PaymentService.Service.Workers
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"DepositAutoCancel Fail\r\nTransId: {depositAutoCancel.TransId}\r\n{ex.Message}");
+                        _logger.LogError(ex, $"DepositAutoCancel Fail\r\nDepositId: {depositAutoCancel.DepositId}\r\n{ex.Message}");
                     }
                 }
             }
