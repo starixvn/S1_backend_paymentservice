@@ -82,9 +82,12 @@ namespace PaymentService.Controllers
                     _payBll.GetOnlineBankList(custInfo.SiteId) :
                     _payBll.GetAutoChannelBankInfoList(custInfo.SiteId, depositType);
 
-                var onlineBank = onlineBankList?.FirstOrDefault(x =>
+                var onlineBank = onlineBankList?.OrderByDescending(x => x.CurrencyId)
+                    .FirstOrDefault(x =>
                     x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) &&
                     x.PointLevel <= vipLevel);
+                
+                _logger.LogInformation("onlineBank: " + JsonConvert.SerializeObject(onlineBank));
 
                 if (onlineBank == null)
                 {
@@ -109,9 +112,18 @@ namespace PaymentService.Controllers
 
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && x.PayId == reqDeposit.PayId)?.PayLangId;
+                
+                _logger.LogInformation($"payLangId: {payLangId}");
+                
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == reqDeposit.PayId);
+                
+                _logger.LogInformation("pay: "+ JsonConvert.SerializeObject(pay));
+                
                 var payCurrency = _payBll.GetPayCurrency()?.FirstOrDefault(x =>
                     x.ChannelId == onlineBank.ChannelId && x.CurrencyId == custInfo.CurrencyId);
+                
+                _logger.LogInformation("payCurrency: "+ JsonConvert.SerializeObject(payCurrency));
+                
                 if (pay == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} pay Setting Not Found");
