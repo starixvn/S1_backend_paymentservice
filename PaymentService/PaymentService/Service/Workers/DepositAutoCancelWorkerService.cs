@@ -6,14 +6,14 @@ namespace PaymentService.Service.Workers
     public class DepositAutoCancelWorkerService : BackgroundService
     {
         private readonly ILogger<DepositAutoCancelWorkerService> _logger;
-        private readonly PaymentBLL _paymentBLL;
+        private readonly PaymentBLL _paymentBll;
         private Timer _timer;
         private readonly Random _random;
 
-        public DepositAutoCancelWorkerService(ILogger<DepositAutoCancelWorkerService> logger, PaymentBLL paymentBLL)
+        public DepositAutoCancelWorkerService(ILogger<DepositAutoCancelWorkerService> logger, PaymentBLL paymentBll)
         {
             _logger = logger;
-            _paymentBLL = paymentBLL;
+            _paymentBll = paymentBll;
             _random = new Random();
         }
 
@@ -28,13 +28,13 @@ namespace PaymentService.Service.Workers
             try
             {
                 _logger.LogInformation("Deposit Auto Cancel Task Start");
-                var depositAutoCancelList = _paymentBLL.GetDepositAutoCancelList(_random.Next(950, 1000)).ToList();
+                var depositAutoCancelList = _paymentBll.GetDepositAutoCancelList(_random.Next(950, 1000)).ToList();
                 _logger.LogInformation($"GetDepositAutoCancelList Data Count：{depositAutoCancelList.Count}");
                 foreach (var depositAutoCancel in depositAutoCancelList)
                 {
                     try
                     {
-                        _paymentBLL.DepositAutoCancel(depositAutoCancel.DepositId, "System");
+                        _paymentBll.DepositAutoCancel(depositAutoCancel.DepositId, "System");
                     }
                     catch (Exception ex)
                     {
