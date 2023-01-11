@@ -29,7 +29,8 @@ if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringCom
 {
     builder.Services
         .AddHostedService<DepositWorkerService>()
-        .AddHostedService<WithdrawalWorkerService>();
+        .AddHostedService<WithdrawalWorkerService>()
+        .AddHostedService<DepositAutoCancelWorkerService>();
 }
 
 var app = builder.Build();

@@ -13,6 +13,7 @@ namespace PaymentService.Service.DAL
     {
         private readonly string _connectionString;
         private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
         private readonly WalletService _walletService;
         private readonly WithdrawalLimitService _withdrawalLimitService;
         private readonly Common _common;
@@ -23,6 +24,7 @@ namespace PaymentService.Service.DAL
         {
             _connectionString = ServiceCollectionExtension.ConnectionString;
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _walletService = provider.GetRequiredService<WalletService>();
             _withdrawalLimitService = provider.GetRequiredService<WithdrawalLimitService>();
             _common = provider.GetRequiredService<Common>();
@@ -40,7 +42,7 @@ namespace PaymentService.Service.DAL
 
         public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
         {
-            return _mainDbClient.Query<DepositRequest>("Service_DepositRequesPayEnquiry_Get");
+            return _mainDbClient.QueryUseCommandDefinition<DepositRequest>("Service_DepositRequesPayEnquiry_Get", new DynamicParameters());
         }
 
         public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string refThirdId, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status, bool canReward = false)
@@ -86,7 +88,7 @@ namespace PaymentService.Service.DAL
 
                         logMsg += $"transId:{transId} _walletService.SetBalance parameter custId:{custId},siteId:{siteId},userName:{userName}," +
                                           $"actualDeposit:{actualDeposit},type:{type},Deposit Approved: {actualDeposit},afterAmount:{afterAmount} Step2-1";
-                      
+
 
                         result = _walletService.SetBalance(custId, siteId, userName, actualDeposit, type,
                             $"Deposit Approved: {actualDeposit}", transId, out afterAmount, out var is1stDepoist, conn,
@@ -210,6 +212,21 @@ namespace PaymentService.Service.DAL
                 {
                     _TransId = transId,
                     _DepositInfo = depositInfo
+                });
+        }
+
+        public IEnumerable<DepositAutoCancel> GetDepositAutoCancelList(int limit)
+        {
+            return _reportDbClient.QueryUseCommandDefinition<DepositAutoCancel>("Service_DepositAutoCancel_Get", new DynamicParameters(new { _Limit = limit }));
+        }
+
+        public int DepositAutoCancel(int depositId, string Operator)
+        {
+            return _mainDbClient.Execute("Service_DepositAutoCancel_Set",
+                new
+                {
+                    _DepositId = depositId,
+                    _Operator = Operator
                 });
         }
     }
