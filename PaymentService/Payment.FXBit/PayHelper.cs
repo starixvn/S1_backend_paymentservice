@@ -36,7 +36,7 @@ namespace Payment.FXBit
                 var reqAmount = input["Amount"];
 
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
-                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.SellRate, toCurrency);
+                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.BuyRate, toCurrency);
                 var exchangeRate = new Dictionary<string, string>
                 {
                     { "To_Amount", exchangeAmount },
@@ -73,7 +73,7 @@ namespace Payment.FXBit
             {
                 // Step 1: 取得當下匯率並換算為加密貨幣金額
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
-                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.BuyRate, toCurrency);
+                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.SellRate, toCurrency);
 
                 // 檢查 DepositInfo
                 if (depositInfo == null)
@@ -226,7 +226,7 @@ namespace Payment.FXBit
             {
                 // Step 1: 取得當下匯率並換算為加密貨幣金額
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
-                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.SellRate, toCurrency);
+                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.BuyRate, toCurrency);
 
                 // 將匯率資訊加入 WithdrawalInfo
                 if (withdrawalInfo == null)
