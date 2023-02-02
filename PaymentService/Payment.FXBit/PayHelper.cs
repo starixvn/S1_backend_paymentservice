@@ -40,7 +40,7 @@ namespace Payment.FXBit
                 var exchangeRate = new Dictionary<string, string>
                 {
                     { "To_Amount", exchangeAmount },
-                    { "Rate", rateInfo.BuyRate },
+                    { "Rate", rateInfo.SellRate },
                     { "Updated_timestamp", rateInfo.UpdatedTimestamp.ToUnixTimeSeconds().ToString() }
                 };
 
