@@ -61,7 +61,8 @@ namespace Payment.DirePay
                 var fromCurrency = GetPayCurrency(input["PayCurrencyId"]);
                 var toCurrency = input["PayCode"];
                 var amount = input["Amount"];
-                var toAmount = GetExchangeAmountAsync(amount, fromCurrency, toCurrency, input).Result;
+                var type = input["ExchangeType"];
+                var toAmount = GetExchangeAmountAsync(amount, fromCurrency, toCurrency, input, type).Result;
                 var strToAmount = toAmount.ToString();
 
                 if (toAmount > 0)
@@ -507,7 +508,7 @@ namespace Payment.DirePay
             return result.Result.access_token;
         }
 
-        private async Task<decimal> GetExchangeAmountAsync(string amount, string fromCurrency, string toCurrency, Dictionary<string, string> inputs)
+        private async Task<decimal> GetExchangeAmountAsync(string amount, string fromCurrency, string toCurrency, Dictionary<string, string> inputs, string type = "1")
         {
             var baseApiUrl = inputs["host"];
             var getExchangeUrl = baseApiUrl + Path.ExchangeRate;
@@ -519,7 +520,7 @@ namespace Payment.DirePay
                     { "amount", amount },
                     { "from_currency", fromCurrency },
                     { "to_currency", toCurrency },
-                    { "type", "SELL" }
+                    { "type", _dicExchangeType[type] }
                 };
 
             var result = await _httpHelper
@@ -552,6 +553,12 @@ namespace Payment.DirePay
 
             return splitStr[0];
         }
+
+        private static readonly Dictionary<string, string> _dicExchangeType = new()
+        {
+            {"0", "SELL"},
+            {"1", "BUY"},
+        };
 
         #endregion
     }

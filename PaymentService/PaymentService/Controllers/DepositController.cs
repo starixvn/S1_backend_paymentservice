@@ -384,8 +384,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-                var currency = (CurrencyMap)custInfo.CurrencyId;
-                DepReq.Add("CurrencyId", currency.ToString());
+               
                 DepReq.Add("PayCurrencyId", cryptoPayInfo.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);

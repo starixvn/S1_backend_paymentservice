@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Interface;
 using PaymentService.Service.BLL;
-using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
@@ -23,7 +22,6 @@ namespace PaymentService.Controllers
         private readonly ILogger<WithdrawalController> _logger;
         private readonly Common _common;
         private readonly PaymentBLL _paymentBll;
-        private readonly WalletService _walletService;
 
         public WithdrawalController(IServiceProvider provider)
         {
@@ -34,7 +32,6 @@ namespace PaymentService.Controllers
             _logger = provider.GetRequiredService<ILogger<WithdrawalController>>();
             _common = provider.GetRequiredService<Common>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
-            _walletService = provider.GetRequiredService<WalletService>();
         }
         public class ReqWithdrawal
         {
@@ -50,14 +47,7 @@ namespace PaymentService.Controllers
             public string IFSCCode { set; get; }
             //public string ReturnUrl { set; get; }
         }
-        public class ReqExchange
-        {
-            public int PayId { get; set; }
-            public string ChannelName { get; set; }
-            public int CustId { get; set; }
-            public decimal Amount { get; set; }
-        }
-
+        
         [HttpPost]
         [Route("Payment/Withdrawal")]
         public ApiResult Withdrawal(ReqWithdrawal reqWithdrawal)
@@ -420,77 +410,6 @@ namespace PaymentService.Controllers
             {
                 _logger.LogError(e, GetCurrentMethod());
                 return Content(false.ToString());
-            }
-        }
-
-        [HttpPost]
-        [Route("Payment/CryptoExchange")]
-        public ApiResult<Service.Model.ExchangeResult> CryptoExchange(ReqExchange reqExchange)
-        {
-            var apiResult = new ApiResult<Service.Model.ExchangeResult>();
-            try
-            {
-                var custId = reqExchange.CustId;
-                var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var cryptoList = _payBll.GetCryptoListForPayout(custInfo.SiteId).ToList();
-                var crypto = cryptoList.FirstOrDefault(x =>
-                        x.ChannelName.Equals(reqExchange.ChannelName, StringComparison.OrdinalIgnoreCase)
-                        && custInfo.CurrencyId == x.CurrencyId);
-
-                if (crypto == null)
-                {
-                    _logger.LogError($"Method={GetCurrentMethod()}, Invalid Currency");
-                    apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
-                    return apiResult;
-                }
-
-                var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == crypto.PayId);
-                if (pay == null)
-                {
-                    _logger.LogError($"Method={GetCurrentMethod()}, pay Setting Not Found");
-                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                    return apiResult;
-                }
-
-                var payHelper = (IExchangeHelper)_payBll.GetPayHelper(pay.PayName);
-                if (payHelper == null)
-                {
-                    _logger.LogError($"Method={GetCurrentMethod()}, payHelper Setting Not Found");
-                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
-                    return apiResult;
-                }
-
-                var exchangeReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-                exchangeReq.Add("PayCurrencyId", crypto.PayCurrencyId);
-                exchangeReq.Add("Amount", reqExchange.Amount.ToString());
-                exchangeReq.Add("PayCode", crypto.PayCode);
-                exchangeReq.Add("CurrencyId", custInfo.CurrencyId.ToString());
-
-                _logger.LogInformation(
-                    $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(exchangeReq)}");
-
-                var result = payHelper.GetExchange(exchangeReq);
-                if (result.ErrorCode == "0")
-                {
-                    apiResult.ErrorCode = (int)ErrorCode.Success;
-                    var exchangeResult = new Service.Model.ExchangeResult();
-                    exchangeResult.FormData = result.FormData;
-                    apiResult.Data = exchangeResult;
-                    apiResult.Message = result.Message;
-                }
-                else
-                {
-                    apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
-                    apiResult.Message = result.Message;
-                }
-
-                return apiResult;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, GetCurrentMethod());
-                apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
-                return apiResult;
             }
         }
 

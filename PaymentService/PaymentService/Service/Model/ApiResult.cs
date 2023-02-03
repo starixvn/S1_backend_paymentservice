@@ -1,4 +1,6 @@
-﻿namespace PaymentService.Service.Model
+﻿using PaymentService.Service.Model.enums;
+
+namespace PaymentService.Service.Model
 {
     public interface ISelLang
     {
@@ -41,6 +43,8 @@
         public ApiResult() : this(9000, "", "", "") { }
         public ApiResult(ISelLang selLang) : this(9000, "", "", "") { this.SelLang = selLang; }
         public ApiResult(int ErrorCode, string Message) : this(ErrorCode, Message, "", "") { }
+        public ApiResult(ErrorCode errorCode, string message = "")
+            : this((int)errorCode, string.IsNullOrEmpty(message) ? errorCode.ToString() : message, string.Empty, string.Empty) { }
         public ApiResult(int _ErrorCode, string Message, string RawErrorCode, string RawMessage)
         {
             this.ErrorCode = _ErrorCode;
@@ -54,6 +58,8 @@
         public ApiResult() : this(9000, "", default) { }
         public ApiResult(ISelLang selLang) : this(9000, "", default) { this.SelLang = selLang; }
         public ApiResult(int ErrorCode, string Message, TData data) : base(ErrorCode, Message) { this.Data = data; }
+        public ApiResult(ErrorCode errorCode, string message = "")
+            : this((int)errorCode, string.IsNullOrEmpty(message) ? errorCode.ToString() : message, default) { }
         public TData Data { get; set; }
     }
 

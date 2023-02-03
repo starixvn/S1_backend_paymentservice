@@ -28,6 +28,7 @@
         BankNotFound = 3001,
         PayOutFail = 3002,
         ChannelNotFound = 3003,
+        GetExchangeRateFailed = 3004,
         #endregion
         Not_allowed_country = 5001,
         Not_allowed_currency = 5002,
@@ -106,9 +107,22 @@
         ToKYC = 8,
         Error = 99
     }
-
-    public enum CurrencyMap
+    
+    public enum CryptoPaymentEnum
     {
-        USDT = 96
+        DirePay = 22,
+        FXBit = 5
+    }
+    
+    public enum ExchangeTypeEnum
+    {
+        /// <summary>
+        /// 我方賣出(玩家提款)
+        /// </summary>
+        Sell = 0,
+        /// <summary>
+        /// 我方買入(玩家存款)
+        /// </summary>
+        Buy = 1
     }
 }
