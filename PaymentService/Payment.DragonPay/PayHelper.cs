@@ -209,7 +209,7 @@ namespace Payment.DragonPay
             var amount = decimal.Parse(inputs["Amount"]) * 100;
             formData.Add("amount", amount.ToString("#"));
 
-            if (inputs["PayCode"] != null)
+            if (!string.IsNullOrEmpty(inputs["PayCode"]))
             {
                 sUrl = inputs["host"] + "/pms/api/eWalletDeposit/request";
                 formData.Add("eWalletCode", inputs["PayCode"]);

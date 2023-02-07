@@ -192,7 +192,7 @@ namespace Payment.YRPay
                 { "userip", inputs["ClientIP"] },
                 { "notifyurl", inputs["CallBackUrl"] }
             };
-            if (inputs["PayCode"] != null)
+            if (!string.IsNullOrEmpty(inputs["PayCode"]))
             {
                 if (inputs["PayCode"] == "ALIPAY" || inputs["PayCode"] == "WXPAY" || inputs["PayCode"] == "UNIPAY")
                     formData.Add("paytype", "qrcode");

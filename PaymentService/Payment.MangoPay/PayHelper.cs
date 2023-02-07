@@ -155,7 +155,7 @@ namespace Payment.MangoPay
         {
             var sUrl = "";
             var formData = new Dictionary<string, string>();
-            if (inputs["PayCode"] != null)
+            if (!string.IsNullOrEmpty(inputs["PayCode"]))
             {
                 sUrl = inputs["host"];
                 formData.Add("type", "2");
