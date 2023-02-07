@@ -228,7 +228,7 @@ namespace Payment.Eeziepay
             formData.Add("trans_time", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
             formData.Add("redirect_url", inputs["ReturnUrl"]);
             formData.Add("backend_url", inputs["CallBackUrl"]);
-            if (inputs["PayCode"] != null)
+            if (!string.IsNullOrEmpty(inputs["PayCode"]))
                 formData.Add("bank_code", inputs["PayCode"]);
             else
                 formData.Add("bank_code", inputs["BankCode"]);
