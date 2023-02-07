@@ -210,7 +210,7 @@ namespace Payment.TruePay
                 { "ts", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
             };
 
-            if (inputs["PayCode"] != null)
+            if (!string.IsNullOrEmpty(inputs["PayCode"]))
                 formData.Add("bCode", inputs["PayCode"]);
             else
                 formData.Add("bCode", inputs["BankCode"]);
