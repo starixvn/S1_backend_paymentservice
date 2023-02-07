@@ -87,4 +87,8 @@ namespace PaymentService.Service.Model
 
         public decimal ActualDeposit { get; set; }
     }
+    public class DepositAutoCancel
+    {
+        public int DepositId { get; set; }
+    }
 }
