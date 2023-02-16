@@ -300,7 +300,6 @@ namespace PaymentService.Service.Library
             return result;
         }
 
-        
         public int Execute(string command)
         {
             var result = 0;
