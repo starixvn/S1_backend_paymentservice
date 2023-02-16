@@ -48,7 +48,7 @@ namespace PaymentService.Service.DAL
                 p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
                 p.Add("Amount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set", trans ,p);
+                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set" ,p, trans);
                 var amount = p.Get<decimal>("Amount");
                 if (result > 0)
                 {
@@ -59,8 +59,8 @@ namespace PaymentService.Service.DAL
 
                     if (result > 0 && (status == WithdrawalStatus.Approved || status == WithdrawalStatus.Rejected))
                     {
-                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",trans,
-                            new { _WithdrawalId = withdrawalId });
+                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",
+                            new { _WithdrawalId = withdrawalId } ,trans);
                     }
 
                     SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, trans);
@@ -109,7 +109,7 @@ namespace PaymentService.Service.DAL
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 
-                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set", trans , p);
+                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set" , p, trans);
                 var amount = p.Get<decimal>("Amount");
                 if (result > 0)
                 {
@@ -117,8 +117,8 @@ namespace PaymentService.Service.DAL
 
                     if (result > 0)
                     {
-                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",trans,
-                            new { _WithdrawalId = withdrawalId });
+                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set" ,
+                            new { _WithdrawalId = withdrawalId }, trans);
                     }
 
                     // 如果是從 Reject 到 Approved 要再扣玩家一次錢，因為狀態變更成 Reject 的時候有把錢還給玩家
@@ -175,7 +175,7 @@ namespace PaymentService.Service.DAL
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 
-                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set", trans , p);
+                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set" , p, trans);
                 var amount = p.Get<decimal>("Amount");
                 if (result > 0)
                 {
@@ -187,8 +187,8 @@ namespace PaymentService.Service.DAL
 
                     if (result > 0)
                     {
-                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set", trans,
-                            new { _WithdrawalId = withdrawalId });
+                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",
+                            new { _WithdrawalId = withdrawalId }, trans);
                     }
 
                     // 提款單狀態變成 Reject 都要退玩家錢
@@ -227,14 +227,14 @@ namespace PaymentService.Service.DAL
 
         private int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status, string @operator, IDbTransaction trans)
         {
-            return _mainDbClient.Execute("WithdrawalLog_Ins", trans ,new
+            return _mainDbClient.Execute("WithdrawalLog_Ins" ,new
             {
                 WithdrawalId = withdrawalId,
                 SiteId = siteId,
                 Comment = comment,
                 Action = status,
                 Operator = @operator
-            });
+            }, trans);
         }
 
         public int UpdateWithdrawalInfo(string transId, string withdrawalInfo)

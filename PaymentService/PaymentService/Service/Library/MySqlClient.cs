@@ -284,7 +284,7 @@ namespace PaymentService.Service.Library
             return result;
         }
         
-        public int Execute(string name, IDbTransaction transaction, object parameters = null)
+        public int Execute(string name, object parameters , IDbTransaction transaction)
         {
             var sw = Stopwatch.StartNew();
             int result;

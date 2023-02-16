@@ -70,7 +70,7 @@ namespace PaymentService.Service.DAL
                 });
                 p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
-                result = _mainDbClient.Execute("Service_DepositInfo_Set_V3", trans , p);
+                result = _mainDbClient.Execute("Service_DepositInfo_Set_V3", p, trans);
                 logMsg += $"transId:{transId} Execute Service_DepositInfo_Set_V3 after result:{result} Step1";
 
                 if (result >= 0)
@@ -171,7 +171,7 @@ namespace PaymentService.Service.DAL
         
         private int SetDepositInfoFirstDeposit(int depositId, int siteId, IDbTransaction trans)
         {
-            return _mainDbClient.Execute("DepositInfoFirstDeposit_Set", trans , new { DepositId = depositId, SiteId = siteId });
+            return _mainDbClient.Execute("DepositInfoFirstDeposit_Set", new { DepositId = depositId, SiteId = siteId } ,trans);
         }
        
         public int SetDepositLog(int depositId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
@@ -194,7 +194,7 @@ namespace PaymentService.Service.DAL
             para.Add("_TransId", transId);
             para.Add("_Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            _ = _mainDbClient.Execute("Service_DepositRewardPointQueue_Ins", trans , para);
+            _ = _mainDbClient.Execute("Service_DepositRewardPointQueue_Ins", para ,trans);
             var resultCode = para.Get<int?>("_Result") ?? -9;
 
             return resultCode;
