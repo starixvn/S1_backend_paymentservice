@@ -1,9 +1,7 @@
 ﻿using Dapper;
-using MySql.Data.MySqlClient;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
 using System.Data;
-using PaymentService.Extensions;
 using PaymentService.Model;
 using PaymentService.Service.Library;
 
@@ -11,7 +9,6 @@ namespace PaymentService.Service.DAL
 {
     public class WithdrawalService
     {
-        private readonly string _connectionString;
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
         private readonly WalletService _walletService;
@@ -19,16 +16,17 @@ namespace PaymentService.Service.DAL
 
         public WithdrawalService(IServiceProvider provider)
         {
-            _connectionString = ServiceCollectionExtension.ConnectionString;
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _walletService = provider.GetRequiredService<WalletService>();
             _common = provider.GetRequiredService<Common>();
         }
+        
         public WithdrawalRequest GetWithdrawalRequest(int withdrawalId)
         {
             return _reportDbClient.QueryFirst<WithdrawalRequest>("Service_WithdrawalRequestPay_Get", new { WithdrawalId = withdrawalId });
         }
+        
         public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry(string payIds)
         {
             return _reportDbClient.QueryUseCommandDefinition<WithdrawalRequest>("Service_WithdrawalRequestPayEnquiry_Get",
@@ -41,35 +39,38 @@ namespace PaymentService.Service.DAL
             var result = 0;
             try
             {
-                using var conn = new MySqlConnection(_connectionString);
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
+                
                 var sForStatus = Newtonsoft.Json.JsonConvert.SerializeObject(forStatus);
                 var p = new DynamicParameters(new { WithdrawalId = withdrawalId, SiteId = siteId, Comment = comment, ForStatus = sForStatus, Status = (int)status, WithdrawalInfo = (string)null, WithdrawalType = (int?)null, RefId = refId, Operator = Operator });
                 p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
                 p.Add("Amount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set", p, conn, trans);
+                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set", trans ,p);
                 var amount = p.Get<decimal>("Amount");
                 if (result > 0)
                 {
                     if (status == WithdrawalStatus.Approved)
                     {
-                        result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, -1 * amount, conn, trans);
+                        result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, -1 * amount, trans);
                     }
 
                     if (result > 0 && (status == WithdrawalStatus.Approved || status == WithdrawalStatus.Rejected))
                     {
-                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",
-                            new { _WithdrawalId = withdrawalId }, conn, trans);
+                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",trans,
+                            new { _WithdrawalId = withdrawalId });
                     }
 
-                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, conn, trans);
+                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, trans);
                     if (result > 0)
                     {
                         trans.Commit();
                     }
                 }
+                conn.Close();
+                conn.Dispose();
             }
             catch (Exception ex)
             {
@@ -104,19 +105,20 @@ namespace PaymentService.Service.DAL
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
                 p.Add("Amount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-                using var conn = new MySqlConnection(_connectionString);
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set", p, conn, trans);
+                
+                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set", trans , p);
                 var amount = p.Get<decimal>("Amount");
                 if (result > 0)
                 {
-                    result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, -1 * amount, conn, trans);
+                    result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, -1 * amount, trans);
 
                     if (result > 0)
                     {
-                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",
-                            new { _WithdrawalId = withdrawalId }, conn, trans);
+                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",trans,
+                            new { _WithdrawalId = withdrawalId });
                     }
 
                     // 如果是從 Reject 到 Approved 要再扣玩家一次錢，因為狀態變更成 Reject 的時候有把錢還給玩家
@@ -124,15 +126,17 @@ namespace PaymentService.Service.DAL
                     {
                         const int financialType = 1001;
                         _walletService.SetBalance(withdrawalRequest.CustId, withdrawalRequest.SiteId, withdrawalRequest.UserName, -1 * withdrawalRequest.Amount, financialType,
-                            $"Manual Withdrawal Approved: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out _, out _, conn, trans);
+                            $"Manual Withdrawal Approved: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out _, out _, trans);
                     }
 
-                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, conn, trans);
+                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, trans);
                     if (result > 0)
                     {
                         trans.Commit();
                     }
                 }
+                conn.Close();
+                conn.Dispose();
             }
             catch (Exception ex)
             {
@@ -167,36 +171,39 @@ namespace PaymentService.Service.DAL
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
                 p.Add("Amount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-                using var conn = new MySqlConnection(_connectionString);
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set", p, conn, trans);
+                
+                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set", trans , p);
                 var amount = p.Get<decimal>("Amount");
                 if (result > 0)
                 {
                     // 如果提款單原本的狀態是 Approved，然後變更成 Rejected，要把 PayDummy 的金額加回去
                     if (withdrawalRequest.Status == WithdrawalStatus.Approved)
                     {
-                        result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, amount, conn, trans);
+                        result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, amount, trans);
                     }
 
                     if (result > 0)
                     {
-                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",
-                            new { _WithdrawalId = withdrawalId }, conn, trans);
+                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set", trans,
+                            new { _WithdrawalId = withdrawalId });
                     }
 
                     // 提款單狀態變成 Reject 都要退玩家錢
                     const int financialType = 1002;
                     _walletService.SetBalance(withdrawalRequest.CustId, withdrawalRequest.SiteId, withdrawalRequest.UserName, withdrawalRequest.Amount, financialType,
-                        $"Manual Withdrawal Rejected: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out _, out _, conn, trans);
+                        $"Manual Withdrawal Rejected: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out _, out _, trans);
 
-                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, conn, trans);
+                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, trans);
                     if (result > 0)
                     {
                         trans.Commit();
                     }
                 }
+                conn.Close();
+                conn.Dispose();
             }
             catch (Exception ex)
             {
@@ -218,16 +225,16 @@ namespace PaymentService.Service.DAL
             });
         }
 
-        public int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status, string @operator, MySqlConnection conn, MySqlTransaction trans)
+        private int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status, string @operator, IDbTransaction trans)
         {
-            return _mainDbClient.Execute("WithdrawalLog_Ins", new
+            return _mainDbClient.Execute("WithdrawalLog_Ins", trans ,new
             {
                 WithdrawalId = withdrawalId,
                 SiteId = siteId,
                 Comment = comment,
                 Action = status,
                 Operator = @operator
-            }, conn, trans);
+            });
         }
 
         public int UpdateWithdrawalInfo(string transId, string withdrawalInfo)

@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using MySql.Data.MySqlClient;
 using System.Data;
 using PaymentService.Model;
 using PaymentService.Service.Library;
@@ -14,11 +13,11 @@ namespace PaymentService.Service.DAL
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
-        public int SetWithdrawalLimit(int custId, string userName, int siteId, decimal withdrawalLimit, string memo, string refTransId, out decimal afterWithdrawalLimit, MySqlConnection conn, MySqlTransaction trans)
+        public int SetWithdrawalLimit(int custId, string userName, int siteId, decimal withdrawalLimit, string memo, string refTransId, out decimal afterWithdrawalLimit, IDbTransaction trans)
         {
             var p = new DynamicParameters(new { CustId = custId, UserName = userName, SiteId = siteId, WithdrawalLimit = withdrawalLimit, Memo = memo, RefTransId = refTransId });
             p.Add("AfterWithdrawalLimit", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            var result = _mainDbClient.Execute("Common_WithdrawalLimit_Set", p, conn, trans);
+            var result = _mainDbClient.Execute("Common_WithdrawalLimit_Set", trans ,p);
             afterWithdrawalLimit = p.Get<decimal?>("AfterWithdrawalLimit") ?? 0;
             return result;
         }
