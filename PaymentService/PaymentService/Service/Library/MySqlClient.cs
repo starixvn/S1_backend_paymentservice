@@ -108,7 +108,7 @@ namespace PaymentService.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name,
+                var command = new CommandDefinition(name,parameters,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 result = connection.Query<T>(command);
@@ -133,8 +133,8 @@ namespace PaymentService.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(sql,
-                    commandType: CommandType.StoredProcedure,
+                var command = new CommandDefinition(sql,parameters,
+                    commandType: commandType,
                     flags: CommandFlags.NoCache);
                 result = connection.Query<T>(command);
                 connection.Close();
@@ -303,7 +303,6 @@ namespace PaymentService.Service.Library
             return result;
         }
 
-        
         public int Execute(string command)
         {
             var result = 0;
