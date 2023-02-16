@@ -261,7 +261,7 @@ namespace PaymentService.Service.DAL
 
         private int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status, string @operator, IDbTransaction trans)
         {
-            return _mainDbClient.Execute("WithdrawalLog_Ins", new
+            return _mainDbClient.Execute("WithdrawalLog_Ins" ,new
             {
                 WithdrawalId = withdrawalId,
                 SiteId = siteId,

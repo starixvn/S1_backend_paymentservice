@@ -169,11 +169,12 @@ namespace PaymentService.Service.DAL
 
             return result;
         }
-       
-        private int SetDepositInfoFirstDeposit(int depositId, int siteId,  IDbTransaction trans)
+        
+        private int SetDepositInfoFirstDeposit(int depositId, int siteId, IDbTransaction trans)
         {
-            return _mainDbClient.Execute("DepositInfoFirstDeposit_Set", new { DepositId = depositId, SiteId = siteId }, trans);
+            return _mainDbClient.Execute("DepositInfoFirstDeposit_Set", new { DepositId = depositId, SiteId = siteId } ,trans);
         }
+       
         public int SetDepositLog(int depositId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
         {
             return _mainDbClient.Execute("DepositLog_Ins",

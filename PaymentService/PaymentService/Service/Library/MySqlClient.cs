@@ -33,7 +33,8 @@ namespace PaymentService.Service.Library
             try
             {
                 await using var connection = new MySqlConnection(_connectionString);
-                result = await connection.QueryFirstOrDefaultAsync<T>(name, parameters, commandType: CommandType.StoredProcedure);
+                result = await connection.QueryFirstOrDefaultAsync<T>(name, parameters,
+                    commandType: CommandType.StoredProcedure);
                 await connection.CloseAsync();
                 await connection.DisposeAsync();
             }
@@ -59,6 +60,7 @@ namespace PaymentService.Service.Library
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 result = connection.QueryFirstOrDefault<T>(command);
+                
                 connection.Close();
                 connection.Dispose();
             }
@@ -81,7 +83,7 @@ namespace PaymentService.Service.Library
             {
                 using var connection = new MySqlConnection(_connectionString);
                 var command = new CommandDefinition(name,
-                    commandType: CommandType.Text,
+                    commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 result = connection.Query<T>(command);
                 connection.Close();
@@ -193,7 +195,7 @@ namespace PaymentService.Service.Library
 
             LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
+            return result.ToList();
         }
 
         public async Task<T> QueryAsync<T>(string name, object parameters, Func<SqlMapper.GridReader, T> func)
@@ -203,8 +205,12 @@ namespace PaymentService.Service.Library
             try
             {
                 await using var connection = new MySqlConnection(_connectionString);
-                var multiple = connection.QueryMultipleAsync(name, parameters, commandType: CommandType.StoredProcedure);
+                var command = new CommandDefinition(name, parameters, // 使用 CommandDefinition 不讓 Dapper 用預設值建立
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+                var multiple = connection.QueryMultipleAsync(command);
                 result = func.Invoke(await multiple);
+                
                 await connection.CloseAsync();
                 await connection.DisposeAsync();
             }
@@ -255,7 +261,7 @@ namespace PaymentService.Service.Library
 
         public int Execute(string name, object parameters)
         {
-            int result;
+            var result = 0;
             var sw = Stopwatch.StartNew();
             try
             {
@@ -274,11 +280,11 @@ namespace PaymentService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-
-        public int Execute(string name, object parameters, IDbTransaction transaction)
+        
+        public int Execute(string name, object parameters , IDbTransaction transaction)
         {
-            int result;
             var sw = Stopwatch.StartNew();
+            int result;
             try
             {
                 result = transaction.Connection.Execute(name, parameters, commandType: CommandType.StoredProcedure);
@@ -293,6 +299,7 @@ namespace PaymentService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
+
         
         public int Execute(string command)
         {
@@ -337,7 +344,7 @@ namespace PaymentService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-
+        
         public T ExecuteScalar<T>(string name, object parameters)
         {
             T result;
@@ -345,7 +352,8 @@ namespace PaymentService.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = connection.ExecuteScalar<T>(name, parameters, commandType: CommandType.StoredProcedure);
+                result = connection.ExecuteScalar<T>(name, parameters,
+                    commandType: CommandType.StoredProcedure);
                 connection.Close();
                 connection.Dispose();
             }
@@ -367,7 +375,8 @@ namespace PaymentService.Service.Library
             try
             {
                 await using var connection = new MySqlConnection(_connectionString);
-                result = await connection.ExecuteScalarAsync<T>(name, parameters, commandType: CommandType.StoredProcedure);
+                result = await connection.ExecuteScalarAsync<T>(name, parameters,
+                    commandType: CommandType.StoredProcedure);
                 await connection.CloseAsync();
                 await connection.DisposeAsync();
             }
@@ -383,6 +392,5 @@ namespace PaymentService.Service.Library
         }
         
         #endregion
-        
     }
 }
