@@ -1,7 +1,5 @@
 ﻿using Dapper;
-using MySql.Data.MySqlClient;
 using System.Data;
-using PaymentService.Extensions;
 using PaymentService.Model;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model.enums;
@@ -11,7 +9,6 @@ namespace PaymentService.Service.DAL
 {
     public class DepositService
     {
-        private readonly string _connectionString;
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
         private readonly WalletService _walletService;
@@ -22,7 +19,6 @@ namespace PaymentService.Service.DAL
 
         public DepositService(IServiceProvider provider)
         {
-            _connectionString = ServiceCollectionExtension.ConnectionString;
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _walletService = provider.GetRequiredService<WalletService>();
@@ -30,6 +26,7 @@ namespace PaymentService.Service.DAL
             _common = provider.GetRequiredService<Common>();
             _logger = provider.GetRequiredService<ILogger<DepositService>>();
         }
+        
         public DepositRequest GetDepositRequest(int depositId)
         {
             return _mainDbClient.QueryFirst<DepositRequest>("DepositCallBack_Get", new { DepositId = depositId });
@@ -54,9 +51,10 @@ namespace PaymentService.Service.DAL
             int result;
             try
             {
-                using var conn = new MySqlConnection(_connectionString);
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
+                
                 var sForStatus = Newtonsoft.Json.JsonConvert.SerializeObject(forStatus);
                 var p = new DynamicParameters(new
                 {
@@ -72,7 +70,7 @@ namespace PaymentService.Service.DAL
                 });
                 p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
-                result = _mainDbClient.Execute("Service_DepositInfo_Set_V3", p, conn, trans);
+                result = _mainDbClient.Execute("Service_DepositInfo_Set_V3", p, trans);
                 logMsg += $"transId:{transId} Execute Service_DepositInfo_Set_V3 after result:{result} Step1";
 
                 if (result >= 0)
@@ -91,8 +89,7 @@ namespace PaymentService.Service.DAL
 
 
                         result = _walletService.SetBalance(custId, siteId, userName, actualDeposit, type,
-                            $"Deposit Approved: {actualDeposit}", transId, out afterAmount, out var is1stDepoist, conn,
-                            trans);
+                            $"Deposit Approved: {actualDeposit}", transId, out afterAmount, out var is1stDepoist, trans);
 
                         logMsg += $"transId:{transId} Execute _walletService.SetBalance after result:{result} Step2-2";
 
@@ -102,7 +99,7 @@ namespace PaymentService.Service.DAL
                                               $"actualDeposit:{actualDeposit},WithdrawalLimit: {actualDeposit},Step3-1";
 
                             result = _withdrawalLimitService.SetWithdrawalLimit(custId, userName, siteId, actualDeposit,
-                                $"WithdrawalLimit: {actualDeposit}", transId, out _, conn, trans);
+                                $"WithdrawalLimit: {actualDeposit}", transId, out _, trans);
 
                             logMsg += $"transId:{transId} Execute _withdrawalLimitService.SetWithdrawalLimit after result:{result} Step3-2";
                         }
@@ -111,7 +108,7 @@ namespace PaymentService.Service.DAL
                         {
                             logMsg += $"transId:{transId} Execute SetDepositInfoFirstDeposit parameter depositId:{depositId},siteId:{siteId} Step4-1";
 
-                            result = SetDepositInfoFirstDeposit(depositId, siteId, conn, trans);
+                            result = SetDepositInfoFirstDeposit(depositId, siteId, trans);
 
                             logMsg += $"transId:{transId} Execute SetDepositInfoFirstDeposit after result:{result} Step4-2";
                         }
@@ -121,7 +118,7 @@ namespace PaymentService.Service.DAL
                             logMsg += $"transId:{transId} Execute _walletService.SetPayDummy parameter siteId:{siteId},PayId:{pay.PayId},CurrencyId:{pay.CurrencyId}" +
                                               $"actualDeposit:{actualDeposit} Step5-1";
 
-                            result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, actualDeposit, conn, trans);
+                            result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, actualDeposit, trans);
 
                             logMsg += $"transId:{transId} Execute _walletService.SetPayDummy after result:{result} Step5-2";
                         }
@@ -130,7 +127,7 @@ namespace PaymentService.Service.DAL
                         {
                             logMsg += $"transId:{transId} Execute InsertDepositRewardPointQueue parameter Step6-1";
 
-                            var resultCode = InsertDepositRewardPointQueue(transId, conn, trans);
+                            var resultCode = InsertDepositRewardPointQueue(transId, trans);
                             if (resultCode != (int)ErrorCode.Success)
                             {
                                 _logger.LogError($"InsertDepositRewardPointQueue Failed. ResultCode({resultCode}), TransId: {transId}");
@@ -159,6 +156,9 @@ namespace PaymentService.Service.DAL
                 {
                     _logger.LogInformation(logMsg); // 沒有正常Commit，將 Log 送到 ELK，以便查問題
                 }
+                
+                conn.Close();
+                conn.Dispose();
             }
             catch (Exception ex)
             {
@@ -168,11 +168,12 @@ namespace PaymentService.Service.DAL
 
             return result;
         }
-        private int SetDepositInfoFirstDeposit(int depositId, int siteId, MySqlConnection conn, MySqlTransaction trans)
+        
+        private int SetDepositInfoFirstDeposit(int depositId, int siteId, IDbTransaction trans)
         {
-            return _mainDbClient.Execute("DepositInfoFirstDeposit_Set", new { DepositId = depositId, SiteId = siteId },
-                conn, trans);
+            return _mainDbClient.Execute("DepositInfoFirstDeposit_Set", new { DepositId = depositId, SiteId = siteId } ,trans);
         }
+       
         public int SetDepositLog(int depositId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
         {
             return _mainDbClient.Execute("DepositLog_Ins",
@@ -187,14 +188,13 @@ namespace PaymentService.Service.DAL
                 });
         }
 
-        public int InsertDepositRewardPointQueue(string transId, IDbConnection conn, IDbTransaction trans)
+        private int InsertDepositRewardPointQueue(string transId, IDbTransaction trans)
         {
             var para = new DynamicParameters();
             para.Add("_TransId", transId);
             para.Add("_Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            _ = conn.Execute("Service_DepositRewardPointQueue_Ins", para, transaction: trans,
-                commandType: CommandType.StoredProcedure);
+            _ = _mainDbClient.Execute("Service_DepositRewardPointQueue_Ins", para ,trans);
             var resultCode = para.Get<int?>("_Result") ?? -9;
 
             return resultCode;
