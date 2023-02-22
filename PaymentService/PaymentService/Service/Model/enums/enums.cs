@@ -111,4 +111,10 @@
     {
         USDT = 96
     }
+    
+    public enum WithdrawalLimitLogCreateFromEnum 
+    {
+        Default = 0,
+        Deposit = 1
+    }
 }
