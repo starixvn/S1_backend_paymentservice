@@ -101,7 +101,7 @@ namespace PaymentService.Service.DAL
                                               $"actualDeposit:{actualDeposit},WithdrawalLimit: {actualDeposit},Step3-1";
 
                             result = _withdrawalLimitService.SetWithdrawalLimit(custId, userName, siteId, actualDeposit,
-                                $"WithdrawalLimit: {actualDeposit}", transId, out _, trans);
+                                $"WithdrawalLimit: {actualDeposit}", transId, (int)WithdrawalLimitLogCreateFromEnum.Deposit ,Operator , out _, trans);
 
                             logMsg += $"transId:{transId} Execute _withdrawalLimitService.SetWithdrawalLimit after result:{result} Step3-2";
                         }
