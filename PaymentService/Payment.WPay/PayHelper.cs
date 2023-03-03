@@ -224,7 +224,8 @@ public class PayHelper : PayHelperBase
         {
             ThirdId = req.tradeNo,
             TransStatus = transStatus,
-            Response = CallbackResponse.Success
+            Response = CallbackResponse.Success,
+            WithdrawId = req.orderNo
         };
 
         return result;
