@@ -28,7 +28,7 @@ public class PayHelper : PayHelperBase
         var reqAmount = decimal.Parse(input["Amount"]);
         var strAmount = reqAmount.ToString("#");
         var transId = input["TransID"];
-        var bankName = input["BankName"];
+        var bankCode = input["BankCode"];
         var merchantNo = input["merchantNo"];
         var now = DateTimeOffset.UtcNow;
         var datetime = $"{DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm:ss}";
@@ -57,7 +57,7 @@ public class PayHelper : PayHelperBase
                 {"userName", input["UserName"]},
                 {"channelNo", input["PayCode"]},
                 {"amount", strAmount},
-                {"bankName", bankName},
+                {"bankName", bankCode},
                 {"datetime", datetime},
                 {"notifyUrl", notifyUrl},
                 {"time", ts},
@@ -134,7 +134,7 @@ public class PayHelper : PayHelperBase
         var transId = inputs["TransID"];
         var accountName = inputs["AccountName"];
         var accountNo = inputs["AccountNo"];
-        var bankName = inputs["BankName"];
+        var bankCode = inputs["BankCode"];
         var merchantNo = inputs["merchantNo"];
         var now = DateTimeOffset.UtcNow;
         var datetime = $"{DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm:ss}";
@@ -149,7 +149,7 @@ public class PayHelper : PayHelperBase
                 {"orderNo", transId},
                 {"amount", strAmount},
                 {"name", accountName},
-                {"bankName", bankName},
+                {"bankName", bankCode},
                 {"bankAccount", accountNo},
                 {"mobile", ""},
                 {"datetime", datetime},
@@ -165,7 +165,7 @@ public class PayHelper : PayHelperBase
                 {"orderNo", transId},
                 {"amount", strAmount},
                 {"name", accountName},
-                {"bankName", bankName},
+                {"bankName", bankCode},
                 {"bankAccount", accountNo},
                 {"datetime", datetime},
                 {"notifyUrl", notifyUrl},
