@@ -34,6 +34,14 @@ public class PayHelper : PayHelperBase
         var datetime = $"{DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm:ss}";
         var ts = now.ToUnixTimeSeconds().ToString();
         var notifyUrl = input["CallBackUrl"];
+        var payCode = input["PayCode"];
+        
+        if (payCode.Contains('-'))
+        {
+            var p = payCode.Split('-');
+            payCode = p[0];
+            bankCode = p[1];
+        }
 
         try
         {
@@ -55,7 +63,7 @@ public class PayHelper : PayHelperBase
                 {"merchantNo", merchantNo},
                 {"orderNo", transId},
                 {"userName", input["UserName"]},
-                {"channelNo", input["PayCode"]},
+                {"channelNo", payCode},
                 {"amount", strAmount},
                 {"bankName", bankCode},
                 {"datetime", datetime},
