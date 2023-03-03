@@ -81,7 +81,7 @@ public class PayHelper : PayHelperBase
                 Success = true,
                 ErrorCode = "0",
                 Url = res.TargetUrl,
-                ThirdId = res.TargetUrl
+                ThirdId = res.TradeNo
             };
 
             return response;
