@@ -269,6 +269,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("IsTest", _common.IsTest());
                 DepReq.Add("PayAccount", reqDeposit.PayAccount);
+                DepReq.Add("UserName", custInfo.UserName);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
