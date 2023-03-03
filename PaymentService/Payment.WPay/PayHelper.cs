@@ -25,29 +25,48 @@ public class PayHelper : PayHelperBase
     {
         var apiUrl = input["host"];
         var apiKey = input["key"];
-        var reqAmount = input["Amount"];
+        var reqAmount = decimal.Parse(input["Amount"]);
+        var strAmount = reqAmount.ToString("#");
         var transId = input["TransID"];
         var bankName = input["BankName"];
+        var merchantNo = input["merchantNo"];
+        var now = DateTimeOffset.UtcNow;
+        var datetime = $"{DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm:ss}";
+        var ts = now.ToUnixTimeSeconds().ToString();
+        var notifyUrl = input["CallBackUrl"];
 
         try
         {
-            var now = DateTimeOffset.UtcNow;
-            var req = new CreatOrderRequest
+            var signDic = new Dictionary<string, string>
             {
-                MerchantNo = input["merchantNo"],
-                TransId = transId,
-                UserName = input["UserName"],
-                ChannelNo = input["PayCode"],
-                Amount = reqAmount,
-                BankName = bankName,
-                DateTime = $"{now: yyyy-MM-dd HH:mm:ss}",
-                NotifyUrl = input["CallBackUrl"],
-                Timestamp = now.ToUnixTimeSeconds(),
-                AppSecret = input["appSecret"]
+                {"merchantNo", merchantNo},
+                {"userNo", ""},
+                {"orderNo", transId},
+                {"amount", strAmount},
+                {"discount", ""},
+                {"extra", ""},
+                {"datetime", datetime},
+                {"notifyUrl", notifyUrl},
+                {"time", ts},
             };
             
-            var res = CreateOrder(apiUrl, req);
+            var req = new Dictionary<string, string>
+            {
+                {"merchantNo", merchantNo},
+                {"orderNo", transId},
+                {"userName", input["UserName"]},
+                {"channelNo", input["PayCode"]},
+                {"amount", strAmount},
+                {"bankName", bankName},
+                {"datetime", datetime},
+                {"notifyUrl", notifyUrl},
+                {"time", ts},
+                {"appSecret", input["appSecret"]}
+            };
+            
+            req.Add("sign", GetSign(signDic, apiKey, OrderTypeEnum.Payin));
 
+            var res = CreateOrder(apiUrl, req);
 
             var response = new DepositResult
             {
@@ -110,29 +129,53 @@ public class PayHelper : PayHelperBase
     {
         var apiUrl = inputs["host"];
         var apiKey = inputs["key"];
-        var reqAmount = inputs["Amount"];
+        var reqAmount = decimal.Parse(inputs["Amount"]);
+        var strAmount = reqAmount.ToString("#");
         var transId = inputs["TransID"];
+        var accountName = inputs["AccountName"];
+        var accountNo = inputs["AccountNo"];
+        var bankName = inputs["BankName"];
+        var merchantNo = inputs["merchantNo"];
+        var now = DateTimeOffset.UtcNow;
+        var datetime = $"{DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm:ss}";
+        var ts = now.ToUnixTimeSeconds().ToString();
+        var notifyUrl = inputs["CallBackUrl"];
 
         try
         {
-            var now = DateTimeOffset.UtcNow;
-            var payoutReq = new Dictionary<string, string>
+            var signDic = new Dictionary<string, string>
             {
-                { "merchantNo", inputs["merchantNo"] },
-                { "orderNo", transId },
-                { "amount", reqAmount },
-                { "name", inputs["AccountName"] },
-                { "bankName", inputs["BankName"] },
-                { "bankAccount", inputs["AccountNo"] },
-                { "datetime", $"{now: yyyy-MM-dd HH:mm:ss}" },
-                { "notifyUrl", inputs["CallBackUrl"] },
-                { "time", now.ToUnixTimeSeconds().ToString() },
-                { "appSecret", inputs["appSecret"] }
+                {"merchantNo", merchantNo},
+                {"orderNo", transId},
+                {"amount", strAmount},
+                {"name", accountName},
+                {"bankName", bankName},
+                {"bankAccount", accountNo},
+                {"mobile", ""},
+                {"datetime", datetime},
+                {"notifyUrl", notifyUrl},
+                {"reverseUrl", ""},
+                {"extra", ""},
+                {"time", ts},
+            };
+            
+            var req = new Dictionary<string, string>
+            {
+                {"merchantNo", merchantNo},
+                {"orderNo", transId},
+                {"amount", strAmount},
+                {"name", accountName},
+                {"bankName", bankName},
+                {"bankAccount", accountNo},
+                {"datetime", datetime},
+                {"notifyUrl", notifyUrl},
+                {"time", ts},
+                {"appSecret", inputs["appSecret"]}
             };
 
-            payoutReq.Add("sign", GetSign(payoutReq, apiKey, OrderTypeEnum.Payout));
+            req.Add("sign", GetSign(signDic, apiKey, OrderTypeEnum.Payout));
            
-            var res = Payout(apiUrl, payoutReq);
+            var res = Payout(apiUrl, req);
             var response = new WithdrawResult
             {
                 Success = true,
@@ -193,13 +236,13 @@ public class PayHelper : PayHelperBase
 
     #region Private Methods
     
-    private CreatOrderResponse CreateOrder(string baseApiUrl, CreatOrderRequest req)
+    private CreatOrderResponse CreateOrder(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreateOrder;
 
         var (result, statusCode) = _httpHelper
             .WithHeader("accept", MediaType.Json)
-            .PostJson<CreatOrderRequest, CreatOrderResponse>(apiUrl, req);
+            .PostJson<Dictionary<string, string>, CreatOrderResponse>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -249,14 +292,16 @@ public class PayHelper : PayHelperBase
     
     private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key, OrderTypeEnum type)
     {
-        var str = string.Join("&amp;", param
+        var str = string.Join("&", param
             .Where(x => _ignoreKeys[type].All(k => !x.Key.Equals(k, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(x => x.Key)
-            .Select(x => $"{x.Key}={x.Value}")) + $"&amp;key={key}";
-
-        var sign = base.ToMD5(base.ToSHA256(str))
-            .ToUpper();
-
+            .Select(x => $"{x.Key}={x.Value}")) + key;
+        
+        //_logger.LogInformation(str);
+        var digest = base.ToSHA256(str).ToLower();
+        //_logger.LogInformation(digest);
+        var sign = base.ToMD5(digest).ToUpper();
+        //_logger.LogInformation(sign);
         return sign;
     }
 
