@@ -265,8 +265,9 @@ public class PayHelper : PayHelperBase
         return result;
     }
 
-    private CreatPayoutResponse Payout(string apiUrl, Dictionary<string, string> req)
+    private CreatPayoutResponse Payout(string baseApiUrl, Dictionary<string, string> req)
     {
+        var apiUrl = baseApiUrl + Path.CreatePayout;
         var (result, statusCode) = _httpHelper
             .WithHeader("accept", MediaType.Json)
             .PostJson<Dictionary<string, string>, CreatPayoutResponse>(apiUrl, req);
