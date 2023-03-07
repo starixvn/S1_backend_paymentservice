@@ -115,6 +115,7 @@ public class PayHelper : PayHelperBase
         var result = new NotifyDepositResult
         {
             ThirdId = req.tradeNo,
+            DepositId = req.orderNo,
             Comment = req.status,
             TransStatus = transStatus,
             ActualAmount = req.paid,
