@@ -18,7 +18,7 @@ namespace PaymentCore.Exceptions
         {
         }
 
-        public CustomException(string message, string code)
+        public CustomException(string message, string code = "9000")
             : base(message)
         {
             Code = code;
