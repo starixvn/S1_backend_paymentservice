@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.DirePay
@@ -63,21 +64,18 @@ namespace Payment.DirePay
                 var amount = input["Amount"];
                 var type = input["ExchangeType"];
                 var toAmount = GetExchangeAmountAsync(amount, fromCurrency, toCurrency, input, type).Result;
-                var strToAmount = toAmount.ToString();
-
+        
                 if (toAmount > 0)
                 {
-                    var rateData = new Dictionary<string, string>
+                    return new ExchangeResult(ErrorCode.Success, "success", new CryptoExchangeInfo
                     {
-                        { "To_Amount", strToAmount },
-                        { "Rate", (toAmount / decimal.Parse(amount)).ToString() },
-                        { "Updated_timestamp", new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString() }
-                    };
-
-                    return new ExchangeResult(ErrorCode.Success, "success", rateData);
+                        Rate = toAmount / decimal.Parse(amount),
+                        ExchangeAmount = toAmount,
+                        Timestamp = DateTimeOffset.Now.ToUnixTimeSeconds()
+                    });
                 }
 
-                throw new CustomException("Incorrect exchange amount: " + strToAmount,
+                throw new CustomException("Incorrect exchange amount: " + toAmount,
                     ErrorCode.GetExchangeRateFailed);
             }
             catch (CustomException ex)

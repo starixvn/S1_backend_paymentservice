@@ -7,6 +7,7 @@ using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.FXBit
@@ -38,7 +39,7 @@ namespace Payment.FXBit
 
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
                 var rate = type.Equals("0") ? rateInfo.BuyRate : rateInfo.SellRate; // FxBit的匯率買入買出和一般是反過來
-                var exchangeAmount = GetExchangeAmountString(reqAmount,rate , toCurrency);
+                var exchangeAmount = GetExchangeAmountString(reqAmount, rate , toCurrency);
                 var exchangeRate = new Dictionary<string, string>
                 {
                     { "To_Amount", exchangeAmount },
@@ -46,7 +47,12 @@ namespace Payment.FXBit
                     { "Updated_timestamp", rateInfo.UpdatedTimestamp.ToUnixTimeSeconds().ToString() }
                 };
 
-                return new ExchangeResult(ErrorCode.Success, "Success", exchangeRate);
+                return new ExchangeResult(ErrorCode.Success, "Success", new CryptoExchangeInfo
+                {
+                    Rate = decimal.Parse(rate),
+                    ExchangeAmount = decimal.Parse(exchangeAmount),
+                    Timestamp = rateInfo.UpdatedTimestamp.ToUnixTimeSeconds()
+                });
             }
             catch (CustomException ex)
             {
