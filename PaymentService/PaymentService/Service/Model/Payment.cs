@@ -26,11 +26,6 @@
         public string LangId { get; set; }
         public string PayLangId { get; set; }
     }
-    
-    public class PayGroup
-    {
-
-    }
 
     public class ExchangeResult
     {
