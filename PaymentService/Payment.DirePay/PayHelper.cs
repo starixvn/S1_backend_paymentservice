@@ -543,7 +543,7 @@ namespace Payment.DirePay
         {
             var splitStr = payCode.Split('-');
 
-            return splitStr[1];
+            return splitStr.Length > 1 ? splitStr[1] : splitStr[0];
         }
 
         private string GetPayCurrency(string payCurrencyId)
