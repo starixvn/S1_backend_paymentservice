@@ -257,12 +257,12 @@ public class PayHelper : PayHelperBase
         if (!statusCode.IsSuccessStatus())
         {
             throw new CustomException(
-                $"WPay GetReceptionToken failed, HttpStatus: {(int)statusCode} {statusCode}" +
+                $"WPay CreatOrder failed, HttpStatus: {(int)statusCode} {statusCode}" +
                 $",errorMsg: {result.ErrorMessage}");
         }
         
         if (result.Code != 0)
-            throw new CustomException($"WPay GetReceptionToken response error message: {result.ErrorMessage}");
+            throw new CustomException($"WPay CreatOrder response error message: {result.ErrorMessage}");
 
         return result;
     }
