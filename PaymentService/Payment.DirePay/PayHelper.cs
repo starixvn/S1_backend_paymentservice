@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.DirePay
@@ -61,22 +62,20 @@ namespace Payment.DirePay
                 var fromCurrency = GetPayCurrency(input["PayCurrencyId"]);
                 var toCurrency = input["PayCode"];
                 var amount = input["Amount"];
-                var toAmount = GetExchangeAmountAsync(amount, fromCurrency, toCurrency, input).Result;
-                var strToAmount = toAmount.ToString();
-
+                var type = input["ExchangeType"];
+                var toAmount = GetExchangeAmountAsync(amount, fromCurrency, toCurrency, input, type).Result;
+        
                 if (toAmount > 0)
                 {
-                    var rateData = new Dictionary<string, string>
+                    return new ExchangeResult(ErrorCode.Success, "success", new CryptoExchangeInfo
                     {
-                        { "To_Amount", strToAmount },
-                        { "Rate", (toAmount / decimal.Parse(amount)).ToString() },
-                        { "Updated_timestamp", new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString() }
-                    };
-
-                    return new ExchangeResult(ErrorCode.Success, "success", rateData);
+                        Rate = toAmount / decimal.Parse(amount),
+                        ExchangeAmount = toAmount,
+                        Timestamp = DateTimeOffset.Now.ToUnixTimeSeconds()
+                    });
                 }
 
-                throw new CustomException("Incorrect exchange amount: " + strToAmount,
+                throw new CustomException("Incorrect exchange amount: " + toAmount,
                     ErrorCode.GetExchangeRateFailed);
             }
             catch (CustomException ex)
@@ -507,7 +506,7 @@ namespace Payment.DirePay
             return result.Result.access_token;
         }
 
-        private async Task<decimal> GetExchangeAmountAsync(string amount, string fromCurrency, string toCurrency, Dictionary<string, string> inputs)
+        private async Task<decimal> GetExchangeAmountAsync(string amount, string fromCurrency, string toCurrency, Dictionary<string, string> inputs, string type = "1")
         {
             var baseApiUrl = inputs["host"];
             var getExchangeUrl = baseApiUrl + Path.ExchangeRate;
@@ -519,7 +518,7 @@ namespace Payment.DirePay
                     { "amount", amount },
                     { "from_currency", fromCurrency },
                     { "to_currency", toCurrency },
-                    { "type", "SELL" }
+                    { "type", _dicExchangeType[type] }
                 };
 
             var result = await _httpHelper
@@ -552,6 +551,12 @@ namespace Payment.DirePay
 
             return splitStr[0];
         }
+
+        private static readonly Dictionary<string, string> _dicExchangeType = new()
+        {
+            {"0", "SELL"},
+            {"1", "BUY"},
+        };
 
         #endregion
     }

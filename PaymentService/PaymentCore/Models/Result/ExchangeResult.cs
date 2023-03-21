@@ -16,14 +16,14 @@ public class ExchangeResult
     {
     }
 
-    public ExchangeResult(string errorCode, string message, Dictionary<string, string> formData)
+    public ExchangeResult(string errorCode, string message, CryptoExchangeInfo formData)
     {
         this.ErrorCode = errorCode;
         this.Message = message;
-        this.FormData = formData;
+        this.ExchangeInfo = formData;
     }
 
     public string Message { get; set; }
-    public Dictionary<string, string> FormData { get; set; }
+    public CryptoExchangeInfo ExchangeInfo { get; set; }
     public string ErrorCode { get; set; }
 }

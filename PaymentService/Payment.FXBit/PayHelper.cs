@@ -7,6 +7,7 @@ using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.FXBit
@@ -28,6 +29,7 @@ namespace Payment.FXBit
         {
             var baseApiUrl = input["host"];
             var apiKey = input["key"];
+            var type = input["ExchangeType"]; // 0: 提款, 1: 存款
 
             try
             {
@@ -36,15 +38,21 @@ namespace Payment.FXBit
                 var reqAmount = input["Amount"];
 
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
-                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.BuyRate, toCurrency);
+                var rate = type.Equals("0") ? rateInfo.BuyRate : rateInfo.SellRate; // FxBit的匯率買入買出和一般是反過來
+                var exchangeAmount = GetExchangeAmountString(reqAmount, rate , toCurrency);
                 var exchangeRate = new Dictionary<string, string>
                 {
                     { "To_Amount", exchangeAmount },
-                    { "Rate", rateInfo.BuyRate },
+                    { "Rate", rate },
                     { "Updated_timestamp", rateInfo.UpdatedTimestamp.ToUnixTimeSeconds().ToString() }
                 };
 
-                return new ExchangeResult(ErrorCode.Success, "Success", exchangeRate);
+                return new ExchangeResult(ErrorCode.Success, "Success", new CryptoExchangeInfo
+                {
+                    Rate = decimal.Parse(rate),
+                    ExchangeAmount = decimal.Parse(exchangeAmount),
+                    Timestamp = rateInfo.UpdatedTimestamp.ToUnixTimeSeconds()
+                });
             }
             catch (CustomException ex)
             {
@@ -487,7 +495,7 @@ namespace Payment.FXBit
             return sign.Equals(target, StringComparison.OrdinalIgnoreCase);
         }
 
-        private decimal GetActualAmount(decimal requestAmount,
+        private static decimal GetActualAmount(decimal requestAmount,
             decimal requestCryptoAmount,
             decimal receivedCryptoAmount,
             decimal exchangeRate)
@@ -500,11 +508,11 @@ namespace Payment.FXBit
             return actualAmount;
         }
 
-        private string GetPayoutId(string transId)
+        private static string GetPayoutId(string transId)
             => Regex.Replace(transId, "[^0-9]", "")
                 .PadLeft(11, '0');
 
-        private string GetExchangeAmountString(string reqAmount, string rate, string toCurrency)
+        private static string GetExchangeAmountString(string reqAmount, string rate, string toCurrency)
         {
             // 小數位數 ETH BTC 8 位，其餘 2 位
             var unit = toCurrency.Equals("ETH", StringComparison.OrdinalIgnoreCase)
@@ -516,7 +524,7 @@ namespace Payment.FXBit
             return amount.ToString($"f{unit}");
         }
 
-        private string GetExchangeRateString(string rate)
+        private static string GetExchangeRateString(string rate)
             => (1M / decimal.Parse(rate)).ToString("f15");
         
         #endregion

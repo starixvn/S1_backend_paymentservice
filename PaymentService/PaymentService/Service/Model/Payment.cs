@@ -45,11 +45,6 @@ namespace PaymentService.Service.Model
         public PayStatusEnum SitePayStatus { get; set; }
     }
 
-    public class PayGroup
-    {
-
-    }
-
     public class ExchangeResult
     {
         public Dictionary<string, string> FormData { get; set; }
