@@ -98,8 +98,8 @@ namespace PaymentService.Service.DAL
                             logMsg += $"transId:{transId} Execute _withdrawalLimitService.SetWithdrawalLimit parameter custId:{custId},userName:{userName},siteId:{siteId}" +
                                               $"actualDeposit:{actualDeposit},WithdrawalLimit: {actualDeposit},Step3-1";
 
-                            result = _withdrawalLimitService.SetWithdrawalLimit(custId, userName, siteId, actualDeposit,
-                                $"WithdrawalLimit: {actualDeposit}", transId, out _, trans);
+                            result = _withdrawalLimitService.SetWithdrawalLimit(custId, userName, siteId, actualDeposit, (int) WithdrawalLimitAdjustmentReasonEnum.Deposit ,
+                                $"WithdrawalLimit: {actualDeposit}", transId, (int)WithdrawalLimitLogCreateFromEnum.Deposit ,Operator , out _, trans);
 
                             logMsg += $"transId:{transId} Execute _withdrawalLimitService.SetWithdrawalLimit after result:{result} Step3-2";
                         }

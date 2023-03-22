@@ -1,4 +1,6 @@
-﻿namespace PaymentService.Service.Model.enums
+﻿using System.ComponentModel;
+
+namespace PaymentService.Service.Model.enums
 {
     public enum ErrorCode : int
     {
@@ -124,5 +126,33 @@
         /// 我方買入(玩家存款)
         /// </summary>
         Buy = 1
+    }
+    
+    public enum WithdrawalLimitLogCreateFromEnum 
+    {
+        Default = 0,
+        Deposit = 1
+    }
+    
+    public enum WithdrawalLimitAdjustmentReasonEnum
+    {
+        [Description("None - (Default)")]
+        None = 1,
+        [Description("Retention Bonus")]
+        RetentionBonus = 2,
+        [Description("Manual Bonus(Special Bonus)")]
+        ManualBonus = 3,
+        [Description("Vip Upgrade Reward")]
+        VipUpgradeReward = 4,
+        [Description("Prize Drop")]
+        PrizeDrop = 5,
+        [Description("Tech Issue None Affected")]
+        TechIssueNoneAffected = 6,
+        Test = 7,
+        [Description("Vendor Mistake")]
+        VendorMistake = 8,
+        Deposit = 9,
+        Withdrawal = 10,
+        Other = 11
     }
 }
