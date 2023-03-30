@@ -34,8 +34,6 @@ namespace PaymentCore.Helpers
             var tResult = default(TResult);
             var result = await GetDataAsync(url, query);
 
-            _header.Clear();
-
             if (result.StatusCode == HttpStatusCode.OK)
                 tResult = _serializer.DeserializeFormStream<TResult>(result.ContentStream);
 
@@ -124,12 +122,6 @@ namespace PaymentCore.Helpers
             return (result, returnObj.StatusCode);
         }
 
-        public (TResult Result, HttpStatusCode StatusCode) PostJson<TResult>(string url, string data, string loggerContent = "")
-            where TResult : class
-        {
-            var returnObj = PostJsonFromString<TResult>(url, data, loggerContent);
-            return returnObj;
-        }
 
         public IFlurlHttpHelper WithOAuthBearerToken(string token)
         {
@@ -165,145 +157,159 @@ namespace PaymentCore.Helpers
 
             return request;
         }
+        
+        private void ClearAll()
+        {
+            _header.Clear();
+            _authToken = string.Empty;
+        }
+
 
         private (string Result, HttpStatusCode StatusCode) PostData<TBody>(string url, TBody data, string postType)
         {
-            var sw = Stopwatch.StartNew();
-            var request = CreateFlurlRequest(url);
-            request = _header.Aggregate(request, (current, item)
-                => current.WithHeader(item.Key, item.Value));
-            _logger.LogInformation($"POST ({postType}): {url}");
-            _logger.LogInformation("Headers:"
-                                   + JsonConvert.SerializeObject(request.Headers.ToDictionary(x => x.Name, x => x.Value)));
-            _logger.LogInformation(JsonConvert.SerializeObject(data));
-            
-            IFlurlResponse response = default(FlurlResponse);
-            if (postType == ContentType.Json)
+            try
             {
-                response = request
-                    .PostJsonAsync(data)
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
-            }
-            else if (postType == ContentType.Text)
-            {
-                var content = data.ToString();
-                response = request
-                    .PostStringAsync(content)
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
-            }
-            else if (postType == ContentType.UrlEncoded)
-            {
-                response = request
-                    .PostUrlEncodedAsync(data)
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
-            }
-            
-            
-            LogContext.PushProperty("Url", url);
-            LogContext.PushProperty("Elapsed", sw.Elapsed.TotalMilliseconds);
+                var sw = Stopwatch.StartNew();
+                var request = CreateFlurlRequest(url);
+                request = _header.Aggregate(request, (current, item)
+                    => current.WithHeader(item.Key, item.Value));
+                _logger.LogInformation($"POST ({postType}): {url}");
+                _logger.LogInformation("Headers:"
+                                       + JsonConvert.SerializeObject(
+                                           request.Headers.ToDictionary(x => x.Name, x => x.Value)));
+                _logger.LogInformation(JsonConvert.SerializeObject(data));
 
-            var result = response.ResponseMessage.Content
-                .ReadAsStringAsync()
-                .GetAwaiter()
-                .GetResult();
-            
-            _logger.LogInformation(result);
-            _header.Clear();
+                IFlurlResponse response = default(FlurlResponse);
+                if (postType == ContentType.Json)
+                {
+                    response = request
+                        .PostJsonAsync(data)
+                        .ConfigureAwait(false)
+                        .GetAwaiter()
+                        .GetResult();
+                }
+                else if (postType == ContentType.Text)
+                {
+                    var content = data.ToString();
+                    response = request
+                        .PostStringAsync(content)
+                        .ConfigureAwait(false)
+                        .GetAwaiter()
+                        .GetResult();
+                }
+                else if (postType == ContentType.UrlEncoded)
+                {
+                    response = request
+                        .PostUrlEncodedAsync(data)
+                        .ConfigureAwait(false)
+                        .GetAwaiter()
+                        .GetResult();
+                }
 
-            return (Result: result, response.ResponseMessage.StatusCode);
+
+                LogContext.PushProperty("Url", url);
+                LogContext.PushProperty("Elapsed", sw.Elapsed.TotalMilliseconds);
+
+                var result = response.ResponseMessage.Content
+                    .ReadAsStringAsync()
+                    .GetAwaiter()
+                    .GetResult();
+
+                _logger.LogInformation(result);
+
+                return (Result: result, response.ResponseMessage.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("PostData Exception", ex);
+                throw;
+            }
+            finally
+            {
+                ClearAll();
+            }
         }
 
         private async Task<(Stream Result, HttpStatusCode StatusCode)> PostDataAsync<TBody>(string url, TBody data, string postType)
         {
-            var sw = Stopwatch.StartNew();
-            var request = CreateFlurlRequest(url);
-            request = _header.Aggregate(request, (current, item) => current.WithHeader(item.Key, item.Value));
+            try
+            {
+                var sw = Stopwatch.StartNew();
+                var request = CreateFlurlRequest(url);
+                request = _header.Aggregate(request, (current, item) => current.WithHeader(item.Key, item.Value));
 
-            _logger.LogInformation($"POST ({postType}): {url}");
-            _logger.LogInformation("Headers:"
-                + JsonConvert.SerializeObject(request.Headers.ToDictionary(x => x.Name, x => x.Value)));
-            _logger.LogInformation(JsonConvert.SerializeObject(data));
-            IFlurlResponse response = default(FlurlResponse);
-            if (postType == ContentType.Json)
-            {
-                response = await request.PostJsonAsync(data);
-            }
-            else if (postType == ContentType.Text)
-            {
-                var content = data.ToString();
-                response = await request.PostStringAsync(content);
-            }
-            else if (postType == ContentType.UrlEncoded)
-            {
-                response = await request.PostUrlEncodedAsync(data);
-            }
+                _logger.LogInformation($"POST ({postType}): {url}");
+                _logger.LogInformation("Headers:"
+                                       + JsonConvert.SerializeObject(request.Headers.ToDictionary(x => x.Name, x => x.Value)));
+                _logger.LogInformation(JsonConvert.SerializeObject(data));
+                IFlurlResponse response = default(FlurlResponse);
+                if (postType == ContentType.Json)
+                {
+                    response = await request.PostJsonAsync(data);
+                }
+                else if (postType == ContentType.Text)
+                {
+                    var content = data.ToString();
+                    response = await request.PostStringAsync(content);
+                }
+                else if (postType == ContentType.UrlEncoded)
+                {
+                    response = await request.PostUrlEncodedAsync(data);
+                }
             
-            LogContext.PushProperty("Url", url);
-            LogContext.PushProperty("Elapsed", sw.Elapsed.TotalMilliseconds);
+                LogContext.PushProperty("Url", url);
+                LogContext.PushProperty("Elapsed", sw.Elapsed.TotalMilliseconds);
 
-            _logger.LogInformation(await response.ResponseMessage.Content.ReadAsStringAsync());
+                _logger.LogInformation(await response.ResponseMessage.Content.ReadAsStringAsync());
 
-            var result = await response.ResponseMessage.Content.ReadAsStreamAsync();
-            _header.Clear();
+                var result = await response.ResponseMessage.Content.ReadAsStreamAsync();
+                _header.Clear();
 
-            return (Result: result, response.ResponseMessage.StatusCode);
-        }
-
-        private (TResult Result, HttpStatusCode StatusCode) PostJsonFromString<TResult>(string url, string data, string loggerContent)
-        {
-            var sw = Stopwatch.StartNew();
-            sw.Start();
-            var request = CreateFlurlRequest(url);
-            request = _header.Aggregate(request, (current, item) => current.WithHeader(item.Key, item.Value));
-
-            var cancellationToken = default(CancellationToken);
-            var completionOption = HttpCompletionOption.ResponseContentRead;
-            var capturedJsonContent = new CapturedJsonContent(data);
-            var response = request
-                .SendAsync(HttpMethod.Post, capturedJsonContent, cancellationToken, completionOption)
-                .ConfigureAwait(false)
-                .GetAwaiter()
-                .GetResult();
-
-            var result = response.ResponseMessage.Content.ReadAsStringAsync().Result;
-
-            var returnObj = JsonConvert.DeserializeObject<TResult>(result);
-            _header.Clear();
-            sw.Stop();
-
-            _logger.LogInformation($"Cost: {sw.ElapsedMilliseconds}, {loggerContent}");
-            return (Result: returnObj, response.ResponseMessage.StatusCode);
+                return (Result: result, response.ResponseMessage.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("PostData Exception", ex);
+                throw;
+            }
+            finally
+            {
+                ClearAll();
+            }
         }
 
         private async Task<(Stream ContentStream, HttpStatusCode StatusCode)> GetDataAsync(string url, string query)
         {
-            var sw = Stopwatch.StartNew();
-            var urlWithQuery = $"{url}?{query}";
-            var request = CreateFlurlRequest(urlWithQuery);
-            request = _header.Aggregate(request, (current, item)
-                => current.WithHeader(item.Key, item.Value));
+            try
+            {
+                var sw = Stopwatch.StartNew();
+                var urlWithQuery = $"{url}?{query}";
+                var request = CreateFlurlRequest(urlWithQuery);
+                request = _header.Aggregate(request, (current, item)
+                    => current.WithHeader(item.Key, item.Value));
 
-            _logger.LogInformation(
-                $"header, Keys: {string.Join(",", request.Headers.ToList())}, Values: {string.Join(",", request.Headers.ToList())}");
+                _logger.LogInformation(
+                    $"header, Keys: {string.Join(",", request.Headers.ToList())}, Values: {string.Join(",", request.Headers.ToList())}");
 
-            var response = await request.GetAsync();
-            _header.Clear();
+                var response = await request.GetAsync();
 
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            LogContext.PushProperty("url", urlWithQuery);
-            _logger.LogInformation(await response.ResponseMessage.Content.ReadAsStringAsync());
-            var stream = response.ResponseMessage.Content.ReadAsStreamAsync();
+                LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+                LogContext.PushProperty("url", urlWithQuery);
+                _logger.LogInformation(await response.ResponseMessage.Content.ReadAsStringAsync());
+                var stream = response.ResponseMessage.Content.ReadAsStreamAsync();
 
-            return (await stream, response.ResponseMessage.StatusCode);
+                return (await stream, response.ResponseMessage.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("PostData Exception", ex);
+                throw;
+            }
+            finally
+            {
+                ClearAll();
+            }
         }
-
-        
     }
 
     internal class ContentType
