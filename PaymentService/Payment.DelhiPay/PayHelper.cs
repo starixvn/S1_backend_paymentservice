@@ -14,6 +14,7 @@ namespace Payment.DelhiPay
     {
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
+        private const decimal AmountFixed = 100;
 
         public PayHelper(IServiceProvider provider)
         {
@@ -28,7 +29,7 @@ namespace Payment.DelhiPay
         {
             var apiUrl = input["host"];
             var apiKey = input["key"];
-            var reqAmount = decimal.Parse(input["Amount"]) * 100;
+            var reqAmount = decimal.Parse(input["Amount"]) * AmountFixed;
             var strAmount = Math.Floor(reqAmount).ToString("#");
             var transId = input["TransID"];
             var merchantCode = input["merchantCode"];
@@ -95,7 +96,7 @@ namespace Payment.DelhiPay
                 DepositId = req.TransId,
                 Comment = req.OrderStatus,
                 TransStatus = transStatus,
-                ActualAmount = req.ActualAmount,
+                ActualAmount = req.ActualAmount / AmountFixed,
                 Message = req.Message,
                 Response = CallbackResponse.Success
             };
@@ -116,8 +117,8 @@ namespace Payment.DelhiPay
         {
             var apiUrl = inputs["host"];
             var apiKey = inputs["key"];
-            var reqAmount = decimal.Parse(inputs["Amount"]);
-            var strAmount = reqAmount.ToString("#");
+            var reqAmount = decimal.Parse(inputs["Amount"]) * AmountFixed;
+            var strAmount = Math.Floor(reqAmount).ToString("#");
             var transId = inputs["TransID"];
             var accountName = inputs["AccountName"];
             var accountNo = inputs["AccountNo"];
