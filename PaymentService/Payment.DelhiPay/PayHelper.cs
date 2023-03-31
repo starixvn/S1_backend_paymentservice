@@ -264,8 +264,7 @@ namespace Payment.DelhiPay
             _logger.LogInformation(str);
             var md5Str = base.ToMD5(str).ToUpper();
             _logger.LogInformation(md5Str);
-            var sign = Convert.ToHexString(Encoding.UTF8.GetBytes(md5Str))
-                .Replace("-", string.Empty);
+            var sign = Convert.ToHexString(Encoding.UTF8.GetBytes(md5Str));
             _logger.LogInformation(sign);
             return sign;
         }
