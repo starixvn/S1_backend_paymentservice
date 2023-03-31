@@ -24,15 +24,11 @@ namespace PaymentCore.Interface
         (TResult Result, HttpStatusCode StatusCode) PostJson<TBody, TResult>(string url, TBody data)
             where TResult : class;
 
-        (TResult Result, HttpStatusCode StatusCode) PostJson<TResult>(string url, string data, string loggerContent = @"")
-            where TResult : class;
-
         Task<(TResult Result, HttpStatusCode StatusCode)> PostJsonAsync<TBody, TResult>(string url, TBody data)
             where TResult : class;
 
         IFlurlHttpHelper WithOAuthBearerToken(string token);
 
         IFlurlHttpHelper WithHeader(string key, string value);
-        
     }
 }
