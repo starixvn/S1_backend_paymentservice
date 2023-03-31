@@ -217,7 +217,7 @@ namespace Payment.Help2Pay
             var time = new DateTimeOffset(DateTime.Now);
 
             formData.Add("Datetime", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd hh:mm:sstt", CultureInfo.InvariantCulture));
-            formData.Add("FrontURI", inputs["CallBackUrl"]);
+            formData.Add("FrontURI", inputs["ReturnUrl"]);
             formData.Add("BackURI", inputs["CallBackUrl"]);
             formData.Add("Bank", inputs["BankCode"]);
             formData.Add("Language", inputs["PayLangId"]);
