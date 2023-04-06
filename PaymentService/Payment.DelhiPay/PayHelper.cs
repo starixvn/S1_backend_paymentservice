@@ -262,7 +262,7 @@ namespace Payment.DelhiPay
                 .Select(x => x.Value)) + key;
 
             _logger.LogInformation(str);
-            var sign = base.ToMD5(str).ToUpper();
+            var sign = base.ToMD5(str);
             _logger.LogInformation(sign);
             return sign;
         }
