@@ -80,7 +80,7 @@ namespace Payment.DelhiPay
             var req = FromJson<CallBackRequest>(bodyContent);
             var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
 
-            if (GetSign(dicReq, apiKey) != req.Sign)
+            if (!GetSign(dicReq, apiKey).Equals(req.Sign, StringComparison.OrdinalIgnoreCase))
             {
                 return new NotifyDepositResult
                 {
@@ -175,7 +175,7 @@ namespace Payment.DelhiPay
             var req = FromJson<CallBackRequest>(bodyContent);
             var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
 
-            if (GetSign(dicReq, apiKey) != req.Sign)
+            if (!GetSign(dicReq, apiKey).Equals(req.Sign, StringComparison.OrdinalIgnoreCase))
             {
                 return new NotifyWithdrawResult
                 {
