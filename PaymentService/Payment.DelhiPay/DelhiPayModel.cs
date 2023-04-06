@@ -131,6 +131,6 @@ public class CallBackRequest
     [JsonProperty("sign")]
     public string Sign { get; set; }
     
-    [JsonProperty("orderStatus ")]
+    [JsonProperty("orderStatus")]
     public string OrderStatus   { get; set; }
 }
