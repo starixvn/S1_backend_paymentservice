@@ -167,7 +167,9 @@ namespace Payment.DirePay
                         }
 
                         oDepositResult.Success = true;
-                        oDepositResult.Url = depositGetWalletResp.payment_address;
+                        oDepositResult.Url = payCode.Equals("XRP")
+                            ? GetPayinXRPAddress(depositGetWalletResp.payment_address)
+                            : depositGetWalletResp.payment_address;
                         oDepositResult.ThirdId = depositGetWalletResp.txid;
                         oDepositResult.FormData = ResData;
                         // 塞入匯率相關資訊
@@ -542,12 +544,19 @@ namespace Payment.DirePay
         {
             var splitStr = payCode.Split('-');
 
-            return splitStr[1];
+            return splitStr.Length > 1 ? splitStr[1] : splitStr[0];
         }
 
         private string GetPayCurrency(string payCurrencyId)
         {
             var splitStr = payCurrencyId.Split('_');
+
+            return splitStr[0];
+        }
+        
+        private string GetPayinXRPAddress(string addr)
+        {
+            var splitStr = addr.Split(':');
 
             return splitStr[0];
         }
