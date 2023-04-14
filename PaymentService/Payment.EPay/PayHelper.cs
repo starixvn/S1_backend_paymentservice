@@ -145,6 +145,8 @@ namespace Payment.EPay
             };
             var sResponse = HttpPost(sUrl, ToJson(req), "application/json", inputs["TransID"] , true);
 
+            _logger.LogInformation($"Debit Response Data, Message:{sResponse}");
+            
             var depositRes = JsonConvert.DeserializeObject<DebitResponse>(sResponse);
             var depositDataRes = JsonConvert.DeserializeObject<DebitResponseData>(depositRes.Data);
             var depositContentRes = JsonConvert.DeserializeObject<DebitResponseContent>(depositDataRes.Content);
