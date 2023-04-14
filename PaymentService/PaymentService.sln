@@ -85,6 +85,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.WPay", "Payment.WPa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.LionPay", "Payment.LionPay\Payment.LionPay.csproj", "{9A40EC8F-DBE5-4538-B551-14A06D0D3CF6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.EPay", "Payment.EPay\Payment.EPay.csproj", "{8EA62D79-6B86-4B57-9526-785A0BC03C7F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
