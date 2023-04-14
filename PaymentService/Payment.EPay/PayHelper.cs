@@ -189,7 +189,7 @@ namespace Payment.EPay
                 Comment = "success"
             };
 
-            if (data != null)
+            if (dataContent != null)
             {
                 _logger.LogInformation($"CallBackDebit Data, Message:{JsonConvert.SerializeObject(data)}");
                 
@@ -203,13 +203,13 @@ namespace Payment.EPay
                         oNotify.Message = "deposit success";
                         oNotify.RequestAmount = decimal.Parse(dataContent.Amount);
                         oNotify.ActualAmount = decimal.Parse(dataContent.Amount);
-                        oNotify.Response = "success";
+                        oNotify.Response = "SUCCESS";
                         break;
                     
                     case "PAYMENT_FAILURE":
                         oNotify.TransStatus = TransStatus.Fail;
                         oNotify.Message = "cancel deposit";
-                        oNotify.Response = "success";
+                        oNotify.Response = "SUCCESS";
                         break;
                     
                     default:
