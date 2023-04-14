@@ -31,6 +31,7 @@
     <ProjectReference Include="..\Payment.DoitnowPay\Payment.DoitnowPay.csproj" />
     <ProjectReference Include="..\Payment.DragonPay\Payment.DragonPay.csproj" />
     <ProjectReference Include="..\Payment.Eeziepay\Payment.Eeziepay.csproj" />
+    <ProjectReference Include="..\Payment.EPay\Payment.EPay.csproj" />
     <ProjectReference Include="..\Payment.FattyPayATM\Payment.FattyPayATM.csproj" />
     <ProjectReference Include="..\Payment.FattyPay\Payment.FattyPay.csproj" />
     <ProjectReference Include="..\Payment.FPay\Payment.FPay.csproj" />
