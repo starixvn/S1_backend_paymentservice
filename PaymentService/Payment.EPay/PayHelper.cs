@@ -118,7 +118,11 @@ namespace Payment.EPay
         
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            var sUrl = inputs["host"];
+            var hostDic = JsonConvert.DeserializeObject<dynamic>(inputs["host"]);
+            var keyDic = JsonConvert.DeserializeObject<dynamic>(inputs["key"]);
+            var sUrl = hostDic[inputs["PayCurrencyId"]].ToString();
+            var key = keyDic[inputs["PayCurrencyId"]].ToString();
+
             sUrl += "pay/center/deposit/apply";
             
             var content = new DepositReqContent
@@ -134,7 +138,7 @@ namespace Payment.EPay
             };
             
             var dicP = FromJson<Dictionary<string, string>>(ToJson(content)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            var p = string.Join("", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}").ToArray()) + inputs["key"];
+            var p = string.Join("", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}").ToArray()) + key ;
             content.Sign = ToMD5(p).ToLower();
             
             var req = new DepositReq
@@ -143,6 +147,7 @@ namespace Payment.EPay
                 SignType = "md5",
                 Content = JsonConvert.SerializeObject(content)
             };
+      
             var sResponse = HttpPost(sUrl, ToJson(req), "application/json", inputs["TransID"] , true);
             
             var depositRes = JsonConvert.DeserializeObject<DebitResponse>(sResponse);
