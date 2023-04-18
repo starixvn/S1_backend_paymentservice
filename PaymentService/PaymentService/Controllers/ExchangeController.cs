@@ -39,7 +39,7 @@ public class ExchangeController : ControllerBase
         {
             try
             {
-                var cryptoList = _payBll.GetCryptoListForPayout(req.SiteId)
+                var cryptoList = _payBll.GetCryptoExchangeSetting(req.SiteId)
                     .Where(x => x.ChannelName.Equals(req.ChannelName, StringComparison.OrdinalIgnoreCase)
                     && req.CurrencyId == x.CurrencyId);
 
