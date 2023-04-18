@@ -126,5 +126,11 @@ namespace PaymentService.Service.BLL
         {
             logger.LogInformation($"Url={url}, Input={input}, Output={output}, RefId={refId}");
         }
+        
+        public IEnumerable<CryptoExchangeSetting> GetCryptoExchangeSetting(int siteId)
+        {
+            return _redisHelper.TryGetOrCreate($"PaySetting:Crypto:Exchange:{siteId}", TimeSpan.FromMinutes(5),
+                () => payService.GetCryptoExchangeSetting(siteId));
+        }
     }
 }

@@ -61,5 +61,11 @@ namespace PaymentService.Service.DAL
         {
             return _reportDbClient.Query<PayInfo>("Service_PayInfo_Get_V2", new { _SiteId = siteId, _DepositType = (int)depositType });
         }
+        
+        public IEnumerable<CryptoExchangeSetting> GetCryptoExchangeSetting(int siteId)
+        {
+            return _reportDbClient.Query<CryptoExchangeSetting>("Service_CryptoPayForExchange_Get", new { _SiteId = siteId });
+        }
+
     }
 }
