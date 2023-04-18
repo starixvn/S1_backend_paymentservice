@@ -215,6 +215,90 @@ namespace PaymentService.Controllers
                 return apiResult;
             }
         }
+        
+        [HttpPost]
+        [Route("Payment/EWalletWithdrawal")]
+        public ApiResult EWalletWithdrawal(ReqWithdrawal reqWithdrawal)
+        {
+            var apiResult = new ApiResult();
+            try
+            {
+                var custId = reqWithdrawal.CustId;
+                var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
+                var eWalletPay = _payBll.GetEWalletPayListForPayout(custInfo.SiteId)?.FirstOrDefault(x =>
+                    x.PayId == reqWithdrawal.PayId
+                    && x.SysId == reqWithdrawal.SysId
+                    && x.CurrencyId == custInfo.CurrencyId);
+
+                if (eWalletPay == null)
+                {
+                    _logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} Invalid Currency");
+                    apiResult.ErrorCode = (int)ErrorCode.InvalidCurrency;
+                    return apiResult;
+                }
+
+                var pay = _payBll.GetPaymentList(custInfo.SiteId).FirstOrDefault(x => x.PayId == reqWithdrawal.PayId);
+                if (pay == null)
+                {
+                    _logger.LogError($"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} pay Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var payHelper = _payBll.GetPayHelper(pay.PayName);
+                if (payHelper == null)
+                {
+                    _logger.LogError(
+                        $"Method={GetCurrentMethod()}, {reqWithdrawal.TransId} payHelper Setting Not Found");
+                    apiResult.ErrorCode = (int)ErrorCode.SettingNotFound;
+                    return apiResult;
+                }
+
+                var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                WithReq.Add("PayCurrencyId", eWalletPay.PayCurrencyId);
+                WithReq.Add("ClientIP", _common.GetClientIP(HttpContext));
+                WithReq.Add("OutgoingIp", _outgoingIp);
+                WithReq.Add("CustId", custInfo.CustId.ToString());
+                WithReq.Add("TransID", reqWithdrawal.TransId);
+                WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
+                WithReq.Add("PayCode", eWalletPay.PayCode);
+                WithReq.Add("BankCode", eWalletPay.EWalletCode);
+                WithReq.Add("BankName", eWalletPay.EWalletName);
+                WithReq.Add("AccountName", reqWithdrawal.AccountName);
+                WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
+                WithReq.Add("IsTest", _common.IsTest());
+                WithReq.Add("IFSCCode", reqWithdrawal.IFSCCode);
+                WithReq.Add("PhoneNo", custInfo.PhoneNo);
+                WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
+                WithReq.Add("AreaCode", custInfo.AreaCode);
+
+                var callBackUrl = _configuration.GetValue<string>("CallBack");
+                WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
+
+                _logger.LogInformation(
+                    $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
+
+                var result = payHelper.Credit(WithReq);
+                if (result.Success)
+                {
+                    apiResult.ErrorCode = 0;
+                    apiResult.Message = result.Message;
+                }
+                else
+                {
+                    apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
+                    apiResult.Message = result.Message;
+                }
+
+                return apiResult;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, GetCurrentMethod());
+                apiResult.ErrorCode = (int)ErrorCode.PayOutFail;
+                return apiResult;
+            }
+        }
 
         [Route("Payment/WithdrawalCallBack/{TransId}")]
         [HttpPost]

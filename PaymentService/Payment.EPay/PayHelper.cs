@@ -25,10 +25,14 @@ namespace Payment.EPay
             [JsonProperty("signType")]
             public string SignType { get; set; }
         }
-
-        #region Debit
-
-        public class DebitResponse
+        
+        private class RequestBase : EPayBase
+        {
+            [JsonProperty("content")]
+            public string Content { get; set; }
+        }
+        
+        public class ResponseBase
         {
             [JsonProperty("status")]
             public string Status { get; set; }
@@ -40,11 +44,13 @@ namespace Payment.EPay
             public string Data { get; set; }
         }
 
-        public class DebitResponseData : EPayBase
+        public class ResponseDataBase : EPayBase
         {
             [JsonProperty("content")]
             public string Content { get; set; }
         }
+
+        #region Debit
         
         public class DebitResponseContent
         {
@@ -89,13 +95,7 @@ namespace Payment.EPay
         #endregion
         
         #region Deposit
-
-        private class DepositReq : EPayBase
-        {
-            [JsonProperty("content")]
-            public string Content { get; set; }
-        }
-
+        
         private class DepositReqContent
         {
             [JsonProperty("merchantCode")]
@@ -141,7 +141,7 @@ namespace Payment.EPay
             var p = string.Join("", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}").ToArray()) + key ;
             content.Sign = ToMD5(p).ToLower();
             
-            var req = new DepositReq
+            var req = new RequestBase
             {
                 MerchantCode = inputs["merchantCode"],
                 SignType = "md5",
@@ -150,13 +150,13 @@ namespace Payment.EPay
       
             var sResponse = HttpPost(sUrl, ToJson(req), "application/json", inputs["TransID"] , true);
             
-            var depositRes = JsonConvert.DeserializeObject<DebitResponse>(sResponse);
+            var depositRes = JsonConvert.DeserializeObject<ResponseBase>(sResponse);
 
-            var depositDataRes = new DebitResponseData();
+            var depositDataRes = new ResponseDataBase();
             var depositContentRes = new DebitResponseContent();
             if (depositRes.Data != null)
             {
-                depositDataRes = JsonConvert.DeserializeObject<DebitResponseData>(depositRes.Data);
+                depositDataRes = JsonConvert.DeserializeObject<ResponseDataBase>(depositRes.Data);
             }
             if (depositDataRes.Content != null)
             {
@@ -247,174 +247,146 @@ namespace Payment.EPay
 
         #region Withdrawal
         
-        public class PreWithdrawalReq
+        private class WithdrawalReqContent
         {
-            public string amount { get; set; }
-            public string thirdOrderNumber { get; set; }
-            public string thirdUserId { get; set; }
-            public IssuePayPo issuePayPo { get; set; }
-        }
-
-        public class IssuePayPo
-        {
-            public string accountName { get; set; }
-            public string name { get; set; }
-            public string paymentId { get; set; }
-        }
-        
-        public class WithdrawalReq
-        {
-            public string encryptedData { get; set; }
-            public SignaturePo signaturePo { get; set; }
-        }
-        
-        public class SignaturePo
-        {
-            public string apiId { get; set; }
-            public string nonce { get; set; }
-            public string signature { get; set; }
-            public string timestamp { get; set; }
+            [JsonProperty("merchantCode")]
+            public string MerchantCode { get; set; }
+            [JsonProperty("merchantTradeNo")]
+            public string MerchantTradeNo { get; set; }
+            [JsonProperty("accountName")]
+            public string AccountName { get; set; }
+            [JsonProperty("amount")]
+            public string Amount { get; set; }
+            [JsonProperty("notifyUrl")]
+            public string NotifyUrl { get; set; }
+            [JsonProperty("bankCardNumber")]
+            public string BankCardNumber { get; set; }
+            [JsonProperty("bankCode")]
+            public string BankCode { get; set; }
+            [JsonProperty("bankName")]
+            public string BankName { get; set; }
+            [JsonProperty("channel")]
+            public string Channel { get; set; }
+            [JsonProperty("sign")]
+            public string Sign { get; set; }
         }
         
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            // var sUrl = inputs["host"];
-            // sUrl += "issue";
-            //
-            // var accountName = inputs["AccountName"];
-            // if (accountName.Length < 6)
-            // {
-            //     accountName = accountName.PadLeft(6, '0');
-            // }
-            //
-            // var thirdUserId = inputs["CustId"];
-            // if (thirdUserId.Length < 6)
-            // {
-            //     thirdUserId = thirdUserId.PadLeft(6, '0');
-            // }
-            //
-            // var preRequest = new PreWithdrawalReq
-            // {
-            //     amount = Convert.ToDecimal(inputs["Amount"]).ToString(),
-            //     thirdOrderNumber = inputs["TransID"],
-            //     thirdUserId = thirdUserId,
-            //     issuePayPo = new IssuePayPo
-            //     {
-            //         accountName = inputs["AccountNo"],
-            //         name = accountName,
-            //         paymentId = inputs["EWalletSysId"] == ((int)FoxPayEWalletSysId.Nagad).ToString() ? ((int)FoxPayPaymentId.Nagad).ToString() : ((int)FoxPayPaymentId.Bkash).ToString()
-            //     }
-            // };
-            //
-            // var reqJson = JsonConvert.SerializeObject(preRequest);
-            //
-            // _logger.LogInformation($"FoxPay Credit Data, Message:{reqJson}");
-            //
-            // var encryptedData = EncryptResponse(inputs["key"].Substring(0,16),inputs["iv"],reqJson);
-            //
-            // var timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
-            // var nonce = DateTime.Now.ToString("HHmmssddMMyyyy");
-            // var reqArr = new[] { inputs["key"], timestamp, nonce , inputs["apiId"]};
-            // Array.Sort(reqArr);
-            // var content = new StringBuilder();
-            // foreach (var t in reqArr)
-            // {
-            //     content.Append(t);
-            // }
-            //
-            // content.Append(reqJson);
-            // var signature = ToSHA1(content.ToString());
-            //
-            // var sendReq = new WithdrawalReq
-            // {
-            //     encryptedData = encryptedData,
-            //     signaturePo = new SignaturePo
-            //     {
-            //         apiId = inputs["apiId"],
-            //         nonce = nonce,
-            //         signature = signature,
-            //         timestamp = timestamp
-            //     }
-            // };
-            //
-            // var sResponse = HttpPost(sUrl, ToJson(sendReq), "application/json", preRequest.thirdOrderNumber);
-            //
-            // var withdrawResult = new WithdrawResult();
-            // var withdrawalRes = JsonConvert.DeserializeObject<Response>(sResponse);
-            // if (withdrawalRes.Code == "0")
-            // {
-            //     withdrawResult.Success = true;
-            //     withdrawResult.Message = withdrawalRes.Message;
-            //     withdrawResult.RawContent = JsonConvert.SerializeObject(withdrawalRes.Data);
-            // }
-            // else
-            // {
-            //     withdrawResult.Success = false;
-            //     withdrawResult.Message = withdrawalRes.Message;
-            //     withdrawResult.RawContent = JsonConvert.SerializeObject(withdrawalRes.Data);
-            // }
-            //
-            // return withdrawResult;
-            return null;
+            var hostDic = JsonConvert.DeserializeObject<dynamic>(inputs["host"]);
+            var keyDic = JsonConvert.DeserializeObject<dynamic>(inputs["key"]);
+            var sUrl = hostDic[inputs["PayCurrencyId"]].ToString();
+            var key = keyDic[inputs["PayCurrencyId"]].ToString();
+
+            sUrl += "pay/center/withdrawal/apply";
+            
+            var content = new WithdrawalReqContent
+            {
+                MerchantCode = inputs["merchantCode"],
+                MerchantTradeNo = inputs["TransID"],
+                AccountName = inputs["AccountName"],
+                Amount = decimal.Parse(inputs["Amount"]).ToString("0.00"),
+                NotifyUrl = inputs["CallBackUrl"],
+                BankCardNumber = inputs["AccountNo"],
+                BankCode = inputs["BankCode"],
+                BankName = inputs["BankName"],
+                Channel = inputs["PayCode"],
+                Sign = null
+            };
+            
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(content)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
+            var p = string.Join("", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) 
+                                                    && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)
+                                                    && !x.Key.Equals("bankName", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}").ToArray()) + key ;
+            content.Sign = ToMD5(p).ToLower();
+            
+            var req = new RequestBase
+            {
+                MerchantCode = inputs["merchantCode"],
+                SignType = "md5",
+                Content = JsonConvert.SerializeObject(content)
+            };
+            
+            var sResponse = HttpPost(sUrl, ToJson(req), "application/json", inputs["TransID"] , true).ToString();
+            
+            var withdrawalResponse = JsonConvert.DeserializeObject<ResponseBase>(sResponse);
+                
+            var withdrawalDataRes = new ResponseDataBase();
+            if (withdrawalResponse.Data != null)
+            {
+                withdrawalDataRes = JsonConvert.DeserializeObject<ResponseDataBase>(withdrawalResponse.Data);
+            }
+            
+            var withdrawResult = new WithdrawResult();
+            
+            if (withdrawalResponse.Status == "SUCCESS")
+            {
+                withdrawResult.Success = true;
+                withdrawResult.Message = withdrawalResponse.Message;
+                withdrawResult.RawContent = withdrawalDataRes.Content;
+            }
+            else
+            {
+                withdrawResult.Success = false;
+                withdrawResult.Message = withdrawalResponse.Message;
+                withdrawResult.RawContent = withdrawalDataRes.Content;
+            }
+            
+            return withdrawResult;
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            // var data = DecryptResponse(payResource["key"].Substring(0,16),payResource["iv"],bodyContent);
-            //
-            // var oNotify = new NotifyWithdrawResult
-            // {
-            //     WithdrawId = data.thirdOrderNumber,
-            //     Message = "success",
-            //     ThirdId = data.fiatOrderId
-            // };
-            //
-            // var response = new CallBackResponse
-            // {
-            //     Code = (int)FoxPayStatus.Success,
-            //     Message = "success",
-            //     Success = true
-            // };
-            //
-            // if (data != null)
-            // {
-            //     _logger.LogInformation($"CallBackCredit Decrypt Data, Message:{JsonConvert.SerializeObject(data)}");
-            //     
-            //     switch (data.status)
-            //     {
-            //         case (int)FoxPayStatus.Success:
-            //             oNotify.TransStatus = TransStatus.Success;
-            //             oNotify.RequestAmount = decimal.Parse(data.amount);
-            //             oNotify.Response = JsonConvert.SerializeObject(response);
-            //             break;
-            //         
-            //         case (int)FoxPayStatus.Fail:
-            //             oNotify.TransStatus = TransStatus.Fail;
-            //             oNotify.Response = JsonConvert.SerializeObject(response);
-            //             break;
-            //         
-            //         default:
-            //             oNotify.TransStatus = TransStatus.Pending;
-            //             response.Code = (int)FoxPayStatus.ResponseError;
-            //             response.Message = "Unknown status";
-            //             response.Success = false;
-            //             oNotify.Response = JsonConvert.SerializeObject(response);
-            //             break;
-            //     }
-            // }
-            // else
-            // {
-            //     response.Code = (int)FoxPayStatus.ResponseError;
-            //     response.Message = "Decrypt Error";
-            //     response.Success = false;
-            //     oNotify.Message = "Decrypt Error";
-            //     oNotify.TransStatus = TransStatus.Pending;
-            //     oNotify.Response = JsonConvert.SerializeObject(response);
-            // }
-            //
-            //
-            // return oNotify;
-            return null;
+            var data = FromJson<CallBackData>(bodyContent);
+            var dataContent = FromJson<CallBackDataContent>(data.Content);
+            
+            var oNotify = new NotifyWithdrawResult
+            {
+                WithdrawId = dataContent.MerchantTradeNo,
+                Message = "success",
+                ThirdId = dataContent.TradeNo
+            };
+            
+            if (dataContent != null)
+            {
+                _logger.LogInformation($"CallBackCredit Data, Message:{JsonConvert.SerializeObject(data)}");
+                
+                switch (dataContent.TradeStatus)
+                {
+                    case "WITHDRAWAL_SUCCESS":
+                        oNotify.TransStatus = TransStatus.Success;
+                        oNotify.RequestAmount = decimal.Parse(dataContent.Amount);
+                        oNotify.Message = "Withdrawal Success";
+                        oNotify.Response = "SUCCESS";
+                        break;
+                    
+                    case "WITHDRAWAL_FAILURE":
+                        oNotify.TransStatus = TransStatus.Fail;
+                        oNotify.Message = "Withdrawal Reject";
+                        oNotify.Response = "SUCCESS";
+                        break;
+                    
+                    case "WAITING_WITHDRAWAL":
+                        oNotify.TransStatus = TransStatus.Pending;
+                        oNotify.Message = "Withdrawal Pending";
+                        oNotify.Response = "SUCCESS";
+                        break;
+                    
+                    default:
+                        oNotify.TransStatus = TransStatus.Pending;
+                        oNotify.Response = "Unknown Status";
+                        break;
+                }
+            }
+            else
+            {
+                oNotify.Message = "Data Error";
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.Response = "Failed";
+            }
+            
+            
+            return oNotify;
         }
 
         #endregion
