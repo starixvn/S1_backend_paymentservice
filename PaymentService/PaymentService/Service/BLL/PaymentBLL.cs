@@ -137,6 +137,22 @@ namespace PaymentService.Service.BLL
         {
             var forStatus = new List<int> { (int)WithdrawalStatus.Process };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
+            SetWithdrawalAccountCounter(withdrawalRequest, WithdrawalStatus.Approved);
+        }
+
+        private void SetWithdrawalAccountCounter(WithdrawalRequest withdrawalRequest, WithdrawalStatus changeToStatus)
+        {
+            var originStatus = withdrawalRequest.Status;
+
+            // 原本不是 Approved 要變成 Approved  +1，其餘狀況不用處理
+            if (originStatus != WithdrawalStatus.Approved && changeToStatus == WithdrawalStatus.Approved)
+            {
+                var _ = _withdrawalService.SetWithdrawalAccountCounter(
+                    custId: withdrawalRequest.CustId,
+                    accountNo: withdrawalRequest.AccountNo,
+                    accountType: withdrawalRequest.AccountType,
+                    counter: 1).Result;
+            }
         }
 
         /// <summary>

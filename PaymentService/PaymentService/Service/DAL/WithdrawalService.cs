@@ -289,5 +289,27 @@ namespace PaymentService.Service.DAL
                     _TransId = transId
                 });
         }
+
+        public async Task<bool> SetWithdrawalAccountCounter(int custId, string accountNo, string accountType, int counter)
+        {
+            var p = new DynamicParameters();
+            p.Add("_CustId", custId);
+            p.Add("_AccountNo", accountNo);
+            p.Add("_AccountType", (int)MapWithdrawalAccountType(accountType));
+            p.Add("_Counter", counter);
+            return await _mainDbClient.ExecuteAsync("Admin_WithdrawalAccountCounter_Set", p) > 0;
+        }
+
+        private WithdrawalAccountTypeEnum MapWithdrawalAccountType(string accountType)
+        {
+            if (string.IsNullOrEmpty(accountType)) return WithdrawalAccountTypeEnum.BankCard;
+
+            return accountType.ToLower() switch
+            {
+                "ewallet" => WithdrawalAccountTypeEnum.EWallet,
+                "crypto" => WithdrawalAccountTypeEnum.Crypto,
+                _ => throw new NotImplementedException("withdrawal accountType not found")
+            };
+        }
     }
 }

@@ -155,4 +155,13 @@ namespace PaymentCore.Model.enums
         Withdrawal = 10,
         Other = 11
     }
+
+    public enum WithdrawalAccountTypeEnum
+    {
+        EWallet = 1,
+
+        BankCard = 2,
+
+        Crypto = 3
+    }
 }
