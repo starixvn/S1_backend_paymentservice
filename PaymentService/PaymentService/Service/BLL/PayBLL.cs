@@ -76,6 +76,12 @@ namespace PaymentService.Service.BLL
                 () => payService.GetCryptoListForPayout(siteId));
         }
 
+        public IEnumerable<BankInfoPay> GetEWalletPayListForPayout(int siteId)
+        {
+            return _redisHelper.TryGetOrCreate($"PaySetting:EWallet:Payout:{siteId}", TimeSpan.FromMinutes(5),
+                () => payService.GetEWalletPayListForPayout(siteId));
+        }
+        
         public IEnumerable<PayLanguage> GetPayLanguage()
         {
             return _redisHelper.TryGetOrCreate("PayLanguage", TimeSpan.FromMinutes(5),
