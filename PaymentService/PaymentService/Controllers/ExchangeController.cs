@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models;
 using PaymentService.Service.BLL;
@@ -90,7 +91,7 @@ public class ExchangeController : ControllerBase
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={payment}, Request={JsonConvert.SerializeObject(exchangeReq)}");
 
-                var result = payHelper.GetExchange(exchangeReq);
+                var result = RetryExtension.Do(payHelper.GetExchange, exchangeReq, 3, TimeSpan.FromMilliseconds(300));
                 
                 if (result.ErrorCode == "0")
                 {

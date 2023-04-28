@@ -19,6 +19,8 @@
         public int Method { get; set; }
         public int PayId { get; set; }
         public string BankCode { get; set; }
+        public string EWalletName { get; set; }
+        public string EWalletCode { get; set; }
         public string BankPayoutCode { get; set; }
         public string BankName { get; set; }
         public int ChannelId { get; set; }

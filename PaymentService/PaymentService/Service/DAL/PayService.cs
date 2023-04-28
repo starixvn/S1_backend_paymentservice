@@ -30,6 +30,11 @@ namespace PaymentService.Service.DAL
             return _reportDbClient.Query<BankInfoPay>("Common_CryptoPayForPayout_Get_V2", new { _SiteId = siteId });
         }
 
+        public IEnumerable<BankInfoPay> GetEWalletPayListForPayout(int siteId)
+        {
+            return _reportDbClient.Query<BankInfoPay>("Common_EWalletPayForPayout_Get", new { _SiteId = siteId });
+        }
+        
         public IEnumerable<PayLanguage> GetPayLanguage()
         {
             return _reportDbClient.Query<PayLanguage>("PayLanguage_Get");
