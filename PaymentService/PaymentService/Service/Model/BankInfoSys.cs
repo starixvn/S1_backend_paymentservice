@@ -107,4 +107,15 @@
         public string Code { get; set; }
         public string Serial { get; set; }
     }
+    
+    public class CryptoExchangeSetting
+    {
+        public int PayId { get; set; }
+        public string PayName { get; set; }
+        public int ChannelId { get; set; }
+        public string ChannelName { get; set; }
+        public string PayCurrencyId { get; set; }
+        public string PayCode { get; set; }
+        public int CurrencyId { get; set; }
+    }
 }
