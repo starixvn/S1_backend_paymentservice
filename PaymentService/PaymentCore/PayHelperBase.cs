@@ -203,6 +203,19 @@ namespace PaymentCore
             }
         }
 
+        protected string ToHMACSHA256(string encodeStr)
+        {
+            var SHA256 = SHA256Managed.Create();
+            var bytes = Encoding.UTF8.GetBytes(encodeStr);
+            var hash = SHA256.ComputeHash(bytes);
+            var result = new StringBuilder();
+            for (var i = 0; i<hash.Length; i++)
+            {
+                result.Append(hash[i].ToString("X2"));
+            }
+            return result.ToString().ToLower();
+        }
+        
         // To Base64
         public static string ToHMACSHA256Base64(string message, string secretKey)
         {
