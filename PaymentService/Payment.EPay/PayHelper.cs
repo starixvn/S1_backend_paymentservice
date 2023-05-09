@@ -288,7 +288,7 @@ namespace Payment.EPay
                 Amount = decimal.Parse(inputs["Amount"]).ToString("0.00"),
                 NotifyUrl = inputs["CallBackUrl"],
                 BankCardNumber = inputs["AccountNo"],
-                BankCode = string.IsNullOrEmpty(inputs["BankCode"]) ? inputs["IFSCCode"] : inputs["BankCode"],
+                BankCode = string.IsNullOrEmpty(inputs["BankCode"]) ? inputs["IFSCCode"] ?? inputs["BankName"] : inputs["BankCode"],
                 BankName = inputs["BankName"],
                 Channel = inputs["PayCode"],
                 Sign = null
