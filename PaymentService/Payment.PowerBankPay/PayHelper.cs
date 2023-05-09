@@ -41,7 +41,7 @@ namespace Payment.PowerBankPay
             {
                 { "MemberCode", "nova88" },
                 { "TransactionID", inputs["TransID"] },
-                { "CustomerName", inputs["UserName"] },
+                { "CustomerName", inputs["AccountName"] },
                 { "Type", inputs["BankCode"] },
                 { "Amount", decimal.Parse(inputs["Amount"]).ToString("#.00") },
                 { "Merchant", inputs["merchantCode"] },

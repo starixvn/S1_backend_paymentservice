@@ -142,6 +142,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("PayLangId", payLangId);
                 DepReq.Add("CustId", reqDeposit.CustId.ToString());
                 DepReq.Add("UserName", custInfo.UserName);
+                DepReq.Add("AccountName", custInfo.AccountName);
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("IsTest", _common.IsTest());
