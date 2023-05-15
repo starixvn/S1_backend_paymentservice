@@ -1,10 +1,6 @@
-﻿using Flurl;
-using Microsoft.VisualBasic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using PaymentCore;
-using PaymentCore.Interface;
 using PaymentCore.Models.Result;
-using static Payment.GlobalPay.PayHelper;
 
 namespace Payment.GlobalPay
 {
