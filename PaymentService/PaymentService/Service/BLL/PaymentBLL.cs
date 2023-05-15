@@ -13,12 +13,14 @@ namespace PaymentService.Service.BLL
         private readonly DepositService _depositService;
         private readonly WithdrawalService _withdrawalService;
         private readonly Common _common;
+        private readonly IRabbitMQProducer _producer;
 
         public PaymentBLL(IServiceProvider provider)
         {
             _depositService = provider.GetRequiredService<DepositService>();
             _withdrawalService = provider.GetRequiredService<WithdrawalService>();
             _common = provider.GetRequiredService<Common>();
+            _producer = provider.GetRequiredService<IRabbitMQProducer>();
         }
 
         public DepositRequest GetDepositRequest(string transId)
@@ -49,7 +51,7 @@ namespace PaymentService.Service.BLL
                     depositRequest.CurrencyId = deposit.CurrencyId;
                 }
 
-                _depositService.SetDepositInfo(depositRequest.TransId,
+                var result = _depositService.SetDepositInfo(depositRequest.TransId, 
                     depositRequest.SiteId,
                     (IPay)depositRequest.depositInfo,
                     iDepositResult.ActualAmount,
@@ -60,6 +62,10 @@ namespace PaymentService.Service.BLL
                     forStatus,
                     DepositStatus.Approved,
                     CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId));
+                if (result > 0) 
+                {
+                    _producer.PublishDepositSuccess(depositRequest.CustId);
+                }
             }
             catch (Exception ex)
             {
