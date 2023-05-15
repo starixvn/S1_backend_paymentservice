@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Model.enums;
 using PaymentCore.Models;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers;

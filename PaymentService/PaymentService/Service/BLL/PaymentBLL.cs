@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore.Extensions;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
 using PaymentCore.Interface;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.BLL
 {
@@ -13,12 +14,14 @@ namespace PaymentService.Service.BLL
         private readonly DepositService _depositService;
         private readonly WithdrawalService _withdrawalService;
         private readonly Common _common;
+        private readonly IRabbitMQProducer _producer;
 
         public PaymentBLL(IServiceProvider provider)
         {
             _depositService = provider.GetRequiredService<DepositService>();
             _withdrawalService = provider.GetRequiredService<WithdrawalService>();
             _common = provider.GetRequiredService<Common>();
+            _producer = provider.GetRequiredService<IRabbitMQProducer>();
         }
 
         public DepositRequest GetDepositRequest(string transId)
@@ -49,7 +52,7 @@ namespace PaymentService.Service.BLL
                     depositRequest.CurrencyId = deposit.CurrencyId;
                 }
 
-                _depositService.SetDepositInfo(depositRequest.TransId,
+                var result = _depositService.SetDepositInfo(depositRequest.TransId, 
                     depositRequest.SiteId,
                     (IPay)depositRequest.depositInfo,
                     iDepositResult.ActualAmount,
@@ -60,6 +63,10 @@ namespace PaymentService.Service.BLL
                     forStatus,
                     DepositStatus.Approved,
                     CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId));
+                if (result > 0) 
+                {
+                    _producer.PublishDepositSuccess(depositRequest.CustId);
+                }
             }
             catch (Exception ex)
             {
@@ -131,7 +138,7 @@ namespace PaymentService.Service.BLL
             var withdrawalId = _common.GetId(transId);
             return _withdrawalService.GetWithdrawalRequest(withdrawalId);
         }
-
+     
         public void WithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
             var forStatus = new List<int> { (int)WithdrawalStatus.Process };

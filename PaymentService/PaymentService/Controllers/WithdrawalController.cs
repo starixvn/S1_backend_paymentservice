@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Model.enums;
 using PaymentCore.Interface;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers
@@ -46,6 +46,7 @@ namespace PaymentService.Controllers
             public string AccountNo { set; get; }
             public string IFSCCode { set; get; }
             //public string ReturnUrl { set; get; }
+            public int? EWalletSysId { get; set; }
         }
         
         [HttpPost]

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace PaymentService.Service.Model.enums
+namespace PaymentCore.Model.enums
 {
     public enum ErrorCode : int
     {

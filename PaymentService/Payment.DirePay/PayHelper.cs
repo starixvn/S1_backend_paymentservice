@@ -148,9 +148,11 @@ namespace Payment.DirePay
 
                     if (depositGetWalletResp != null && depositGetWalletResp.txid != null)
                     {
-                        var ResData = new Dictionary<string, string>();
-                        ResData.Add("DepositAmount", depositGetWalletResp.invoice_amount);
-                        ResData.Add("Rate", depositGetWalletResp.rates);
+                        var ResData = new Dictionary<string, string>
+                        {
+                            { "DepositAmount", depositGetWalletResp.invoice_amount },
+                            { "Rate", depositGetWalletResp.rates }
+                        };
                         var requestAmount = decimal.Parse(depositGetWalletResp.invoice_amount) * decimal.Parse(depositGetWalletResp.rates);
                         ResData.Add("RequestAmount", requestAmount.ToString());
                         ResData.Add("Token", depositGetWalletResp.payment_token);

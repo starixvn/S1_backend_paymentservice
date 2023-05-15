@@ -15,6 +15,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.7" />
     <PackageReference Include="MySql.Data" Version="8.0.27" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.5.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
     <PackageReference Include="Serilog.Exceptions" Version="8.3.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.48" />
@@ -37,6 +38,7 @@
     <ProjectReference Include="..\Payment.FPay\Payment.FPay.csproj" />
     <ProjectReference Include="..\Payment.FuliH5\Payment.FuliH5.csproj" />
     <ProjectReference Include="..\Payment.Fuli\Payment.Fuli.csproj" />
+    <ProjectReference Include="..\Payment.FoxPay\Payment.FoxPay.csproj" />
     <ProjectReference Include="..\Payment.FXBit\Payment.FXBit.csproj" />
     <ProjectReference Include="..\Payment.GlobalPay\Payment.GlobalPay.csproj" />
     <ProjectReference Include="..\Payment.Help2Pay\Payment.Help2Pay.csproj" />

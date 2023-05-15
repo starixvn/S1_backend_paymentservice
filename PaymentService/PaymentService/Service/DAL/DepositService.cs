@@ -1,8 +1,10 @@
 ﻿using Dapper;
 using System.Data;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
+using PaymentService.Extensions;
 using PaymentService.Model;
 using PaymentService.Service.Library;
-using PaymentService.Service.Model.enums;
 using PaymentService.Service.Model;
 
 namespace PaymentService.Service.DAL
@@ -156,7 +158,6 @@ namespace PaymentService.Service.DAL
                 {
                     _logger.LogInformation(logMsg); // 沒有正常Commit，將 Log 送到 ELK，以便查問題
                 }
-                
                 conn.Close();
                 conn.Dispose();
             }
@@ -194,7 +195,7 @@ namespace PaymentService.Service.DAL
             para.Add("_TransId", transId);
             para.Add("_Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            _ = _mainDbClient.Execute("Service_DepositRewardPointQueue_Ins", para ,trans);
+            _ = _mainDbClient.Execute("Service_DepositRewardPointQueue_Ins", para, trans);
             var resultCode = para.Get<int?>("_Result") ?? -9;
 
             return resultCode;

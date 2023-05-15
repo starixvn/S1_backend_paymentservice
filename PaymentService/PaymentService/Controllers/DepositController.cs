@@ -5,13 +5,15 @@ using Microsoft.Extensions.Primitives;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
+using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models;
 using PaymentCore.Models.Result;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers
@@ -82,8 +84,7 @@ namespace PaymentService.Controllers
                     _payBll.GetOnlineBankList(custInfo.SiteId) :
                     _payBll.GetAutoChannelBankInfoList(custInfo.SiteId, depositType);
 
-                var onlineBank = onlineBankList?.OrderByDescending(x => x.CurrencyId)
-                    .FirstOrDefault(x =>
+                var onlineBank = onlineBankList?.FirstOrDefault(x =>
                     x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) &&
                     x.PointLevel <= vipLevel &&
                     x.CurrencyId == custInfo.CurrencyId);
@@ -111,9 +112,6 @@ namespace PaymentService.Controllers
 
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && x.PayId == reqDeposit.PayId)?.PayLangId;
-                
-                _logger.LogInformation($"payLangId: {payLangId}");
-                
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == reqDeposit.PayId);
                 
                 if (pay == null)
