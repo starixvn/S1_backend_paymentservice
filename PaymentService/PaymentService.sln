@@ -86,9 +86,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.EPay", "Payment.EPay\Payment.EPay.csproj", "{8EA62D79-6B86-4B57-9526-785A0BC03C7F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.GlobalPay", "Payment.GlobalPay\Payment.GlobalPay.csproj", "{A0D64F99-9DE1-4773-9E8D-A08F11AE3BD2}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BF5D5D0C-AFF0-4002-958C-CBA755F197AF} = {BF5D5D0C-AFF0-4002-958C-CBA755F197AF}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
