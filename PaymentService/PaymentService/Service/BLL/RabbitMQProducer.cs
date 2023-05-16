@@ -28,10 +28,12 @@ namespace PaymentService.Service.BLL
                 using var channel = connection.CreateModel();
                 
                 var body = Encoding.UTF8.GetBytes(message);
+                var properties = channel.CreateBasicProperties();
+                properties.ContentType = "application/json";
 
                 channel.BasicPublish(exchange: exchange,
                                      routingKey: routingKey,
-                                     basicProperties: null,
+                                     basicProperties: properties,
                                      body: body);
             }
             catch (Exception ex)
