@@ -44,7 +44,7 @@ namespace PaymentService.Service.DAL
             return _mainDbClient.QueryUseCommandDefinition<DepositRequest>("Service_DepositRequesPayEnquiry_Get", new DynamicParameters());
         }
 
-        public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string refThirdId, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status, bool canReward = false)
+        public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string refThirdId, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status, Action<string,string,object> publish, bool canReward = false)
         {
             var type = PayTypePosition + pay.PayId;
             var depositId = _common.GetId(transId);
@@ -147,6 +147,8 @@ namespace PaymentService.Service.DAL
                     {
                         trans.Commit();
                         result = p.Get<int?>("CustId") ?? result;
+                        if (status == DepositStatus.Approved)
+                            publish("MemberExchange", "deposit.payment", new { CustId = result });
                     }
                     else
                     {
