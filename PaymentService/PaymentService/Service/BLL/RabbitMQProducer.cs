@@ -6,35 +6,38 @@ namespace PaymentService.Service.BLL
 {
     public interface IRabbitMQProducer
     {
-        void PublishDepositSuccess(int custId);
+        void Publish(string exchange, string routingKey, object data);
     }
 
     public class RabbitMQProducer : IRabbitMQProducer
     {
         private readonly IConnectionFactory _connectionFactory;
-
-        public RabbitMQProducer(IConnectionFactory connectionFactory)
+        private readonly ILogger<RabbitMQProducer> _logger;
+        public RabbitMQProducer(IConnectionFactory connectionFactory, ILogger<RabbitMQProducer> logger)
         {
             _connectionFactory = connectionFactory;
+            _logger = logger;
         }
 
-        public void PublishDepositSuccess(int custId)
+        public void Publish(string exchange, string routingKey, object data)
         {
-            using var connection = _connectionFactory.CreateConnection();
-            using var channel = connection.CreateModel();
-
-            var data = new
-            {
-                CustId = custId
-            };
-
             var message = JsonConvert.SerializeObject(data);
-            var body = Encoding.UTF8.GetBytes(message);
+            try
+            {
+                using var connection = _connectionFactory.CreateConnection();
+                using var channel = connection.CreateModel();
+                
+                var body = Encoding.UTF8.GetBytes(message);
 
-            channel.BasicPublish(exchange: "MemberExchange",
-                                 routingKey: "deposit",
-                                 basicProperties: null,
-                                 body: body);
+                channel.BasicPublish(exchange: exchange,
+                                     routingKey: routingKey,
+                                     basicProperties: null,
+                                     body: body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"publish fail {exchange}, {routingKey}, {message}");
+            }
         }
     }
 }
