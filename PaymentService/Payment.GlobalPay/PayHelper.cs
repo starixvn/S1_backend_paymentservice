@@ -35,7 +35,7 @@ namespace Payment.GlobalPay
         {
             public string sign { set; get; }
             public string tradeNo { set; get; }
-            public string orderAmount { set; get; }
+            public decimal orderAmount { set; get; }
             public decimal totalAmount { set; get; }
             public string outTradeNo { set; get; }
             public string tradeTime { set; get; }
@@ -107,7 +107,8 @@ namespace Payment.GlobalPay
             if (data.tradeStatus == 1)
             {
                 oNotify.TransStatus = TransStatus.Success;
-                oNotify.RequestAmount = data.totalAmount;
+                oNotify.RequestAmount = data.orderAmount;
+                oNotify.ActualAmount = data.totalAmount;
                 oNotify.ThirdId = data.outTradeNo;
                 oNotify.RefThirdId = data.otherTradeNo;
                 oNotify.Message = "Success";
@@ -142,17 +143,7 @@ namespace Payment.GlobalPay
             string[] payCodes = payCode.Split('-');
             var sUrl = inputs["host"];
             var key = inputs["key"];
-            //var tradeType = payCodes[0];
-            //var productId = payCodes[1];
-            //var alliesNo = inputs["alliesNo"];
-            //var clientId = inputs["clientId"];
-            //var tradeNo = inputs["TransID"];
-            //var totalAmount = inputs["Amount"];
-            //var noticeUrl = inputs["CallBackUrl"];
-            //var bankAccount = inputs["AccountName"];
-            //var bankCard = inputs["AccountNo"];
-            //var bankMark = inputs["BankCode"];
-            //var bankName = inputs["BankName"];
+
             var attach = new attach()
             {
                 bankAccount = inputs["AccountName"],
@@ -203,12 +194,6 @@ namespace Payment.GlobalPay
             var key = inputs["key"];
             var tradeType = payCodes[0];
             var productId = payCodes[1];
-            //var alliesNo = inputs["alliesNo"];
-            //var clientId = inputs["clientId"];
-            //var tradeNo = inputs["TransID"];
-            //var totalAmount = inputs["Amount"];
-            //var noticeUrl = inputs["CallBackUrl"];
-            //var frontNotifyUrl = inputs["ReturnUrl"];
 
             paraidc.Add("alliesNo", inputs["alliesNo"]);
             paraidc.Add("frontNotifyUrl", inputs["ReturnUrl"]);
