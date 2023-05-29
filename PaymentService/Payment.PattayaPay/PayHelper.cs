@@ -42,8 +42,6 @@ public class PayHelper : PayHelperBase
                 {"merchant", merchantCode},
                 {"paytype", payCode},
                 {"outtradeno", transId},
-                // {"remark", ""},
-                // {"bankname", ""},
                 {"notifyurl", notifyUrl},
                 {"returndataformat", "serverjson"}
             };
@@ -211,7 +209,7 @@ public class PayHelper : PayHelperBase
         }
         
         if (result.Code != 0)
-            throw new CustomException($"PattayaPay CreatOrder response error code: {result.Code}");
+            throw new CustomException($"PattayaPay CreatOrder response error: {result.Code} {result.Results}");
 
         return result;
     }
@@ -239,11 +237,11 @@ public class PayHelper : PayHelperBase
     {
         var str = string.Join("&", param
             .OrderBy(x => x.Key)
-            .Select(x => $"{x.Key}={HttpUtility.UrlEncode(x.Value)}")) + $"&secret={key}"
-            .ToLower();
+            .Select(x => $"{x.Key}={HttpUtility.UrlEncode(x.Value)}"))
+                .ToLower() + $"&secret={key}";
         
         _logger.LogInformation(str);
-        var sign = base.ToMD5(str);
+        var sign = base.ToMD5(str).ToLower();
         _logger.LogInformation(sign);
         return sign;
     }
