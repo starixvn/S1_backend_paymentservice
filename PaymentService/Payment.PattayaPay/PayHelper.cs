@@ -125,7 +125,7 @@ public class PayHelper : PayHelperBase
             {
                 {"amount", strAmount},
                 {"merchant", merchantCode},
-                {"bankName", bankCode},
+                {"bankname", bankCode},
                 {"cardname", accountName},
                 {"cardno", accountNo},
                 {"outtransferno", transId},
