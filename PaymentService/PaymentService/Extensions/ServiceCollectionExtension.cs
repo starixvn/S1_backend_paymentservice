@@ -1,5 +1,6 @@
 ﻿using PaymentService.Model;
 using PaymentService.Service.Library;
+using RabbitMQ.Client;
 
 namespace PaymentService.Extensions
 {
@@ -26,6 +27,18 @@ namespace PaymentService.Extensions
                 {
                     DataBase = DataBase.Wager
                 });
+        }
+        public static void AddMessageQueueConnection(this IServiceCollection services, IConfiguration config)
+        {
+            var hostName = config.GetSection("RabbitMQ:HostName");
+            var userName = config.GetSection("RabbitMQ:UserName");
+            var password = config.GetSection("RabbitMQ:Password");
+            services.AddSingleton<IConnectionFactory>(_ => new ConnectionFactory()
+            {
+                HostName = hostName.Value,
+                UserName = userName.Value,
+                Password = password.Value
+            });
         }
     }
 }
