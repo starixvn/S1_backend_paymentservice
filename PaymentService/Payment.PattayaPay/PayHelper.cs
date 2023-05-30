@@ -236,6 +236,7 @@ public class PayHelper : PayHelperBase
     private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
     {
         var str = string.Join("&", param
+            .Where(x => !x.Key.Equals("sign"))
             .OrderBy(x => x.Key)
             .Select(x => $"{x.Key}={HttpUtility.UrlEncode(x.Value)}"))
                 .ToLower() + $"&secret={key}";
