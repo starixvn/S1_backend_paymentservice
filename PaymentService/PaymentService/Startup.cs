@@ -25,6 +25,7 @@ namespace PaymentService
         {
             services.AddMemoryCache();
             services.AddDatabaseConnection(Configuration);
+            services.AddMessageQueueConnection(Configuration);
             services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(Configuration.GetValue<string>("RedisConnection")));
             services.AddSingleton<ICacheHelper, RedisCacheHelper>();
 
@@ -71,6 +72,7 @@ namespace PaymentService
 
 
             /*BLL*/
+            services.AddSingleton<IRabbitMQProducer, RabbitMQProducer>();
             services.AddSingleton<PayBLL>();
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();

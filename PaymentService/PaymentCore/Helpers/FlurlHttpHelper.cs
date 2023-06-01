@@ -216,6 +216,7 @@ namespace PaymentCore.Helpers
                     .GetResult();
 
                 _logger.LogInformation(result);
+                ClearAll();
 
                 return (Result: result, response.ResponseMessage.StatusCode);
             }
@@ -263,7 +264,7 @@ namespace PaymentCore.Helpers
                 _logger.LogInformation(await response.ResponseMessage.Content.ReadAsStringAsync());
 
                 var result = await response.ResponseMessage.Content.ReadAsStreamAsync();
-                _header.Clear();
+                ClearAll();
 
                 return (Result: result, response.ResponseMessage.StatusCode);
             }
@@ -297,7 +298,7 @@ namespace PaymentCore.Helpers
                 LogContext.PushProperty("url", urlWithQuery);
                 _logger.LogInformation(await response.ResponseMessage.Content.ReadAsStringAsync());
                 var stream = response.ResponseMessage.Content.ReadAsStreamAsync();
-
+                ClearAll();
                 return (await stream, response.ResponseMessage.StatusCode);
             }
             catch (Exception ex)
@@ -312,7 +313,7 @@ namespace PaymentCore.Helpers
         }
     }
 
-    internal class ContentType
+    internal static class ContentType
     {
         public const string Text = "text";
 
