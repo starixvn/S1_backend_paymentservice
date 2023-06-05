@@ -76,6 +76,12 @@ namespace PaymentService.Service.BLL
                 () => payService.GetCryptoListForPayout(siteId));
         }
 
+        public IEnumerable<BankInfoPay> GetEWalletPayListForPayout(int siteId)
+        {
+            return _redisHelper.TryGetOrCreate($"PaySetting:EWallet:Payout:{siteId}", TimeSpan.FromMinutes(5),
+                () => payService.GetEWalletPayListForPayout(siteId));
+        }
+        
         public IEnumerable<PayLanguage> GetPayLanguage()
         {
             return _redisHelper.TryGetOrCreate("PayLanguage", TimeSpan.FromMinutes(5),
@@ -118,6 +124,12 @@ namespace PaymentService.Service.BLL
         public void InsertPaymentLog(string url, string input, string output, string refId)
         {
             logger.LogInformation($"Url={url}, Input={input}, Output={output}, RefId={refId}");
+        }
+        
+        public IEnumerable<CryptoExchangeSetting> GetCryptoExchangeSetting(int siteId)
+        {
+            return _redisHelper.TryGetOrCreate($"PaySetting:Crypto:Exchange:{siteId}", TimeSpan.FromMinutes(5),
+                () => payService.GetCryptoExchangeSetting(siteId));
         }
     }
 }

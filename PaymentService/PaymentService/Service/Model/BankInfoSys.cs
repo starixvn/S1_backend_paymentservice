@@ -19,6 +19,8 @@
         public int Method { get; set; }
         public int PayId { get; set; }
         public string BankCode { get; set; }
+        public string EWalletName { get; set; }
+        public string EWalletCode { get; set; }
         public string BankPayoutCode { get; set; }
         public string BankName { get; set; }
         public int ChannelId { get; set; }
@@ -104,5 +106,16 @@
         public long Updated_timestamp { get; set; }
         public string Code { get; set; }
         public string Serial { get; set; }
+    }
+    
+    public class CryptoExchangeSetting
+    {
+        public int PayId { get; set; }
+        public string PayName { get; set; }
+        public int ChannelId { get; set; }
+        public string ChannelName { get; set; }
+        public string PayCurrencyId { get; set; }
+        public string PayCode { get; set; }
+        public int CurrencyId { get; set; }
     }
 }

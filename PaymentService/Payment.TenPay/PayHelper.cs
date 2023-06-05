@@ -11,7 +11,7 @@ namespace Payment.TenPay
             public string Amount { get; set; }
             public string CreatedAt { get; set; }
             public string CurrencyId { get; set; }
-            public string DepositOrderStatusId { get; set; }
+            public string PaymentOrderStatusId { get; set; }
             public string EncryptValue { get; set; }
             public string IsTest { get; set; }
             public string PaidAt { get; set; }
@@ -30,26 +30,26 @@ namespace Payment.TenPay
             var oNotify = new NotifyWithdrawResult();
             oNotify.WithdrawId = data.ShopOrderId;
 
-            if (data.DepositOrderStatusId == "2")
+            if (data.PaymentOrderStatusId == "2")
             {
                 oNotify.TransStatus = TransStatus.Success;
                 oNotify.RequestAmount = decimal.Parse(data.Amount);
                 oNotify.ThirdId = data.TrackingNumber;
-                oNotify.Message = data.DepositOrderStatusId;
+                oNotify.Message = data.PaymentOrderStatusId;
                 oNotify.Response ="ok";
             }
-            else if (data.DepositOrderStatusId == "3")
+            else if (data.PaymentOrderStatusId == "3")
             {
                 oNotify.TransStatus = TransStatus.Fail;
                 oNotify.ThirdId = data.TrackingNumber;
-                oNotify.Message = data.DepositOrderStatusId;
+                oNotify.Message = data.PaymentOrderStatusId;
                 oNotify.Response = "ok";
             }
             else
             {
                 oNotify.TransStatus = TransStatus.Pending;
                 oNotify.ThirdId = data.TrackingNumber;
-                oNotify.Message = data.DepositOrderStatusId;
+                oNotify.Message = data.PaymentOrderStatusId;
                 oNotify.Response = "ok";
             }
 
