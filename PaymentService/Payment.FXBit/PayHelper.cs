@@ -40,12 +40,6 @@ namespace Payment.FXBit
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
                 var rate = type.Equals("0") ? rateInfo.BuyRate : rateInfo.SellRate; // FxBit的匯率買入買出和一般是反過來
                 var exchangeAmount = GetExchangeAmountString(reqAmount, rate , toCurrency);
-                var exchangeRate = new Dictionary<string, string>
-                {
-                    { "To_Amount", exchangeAmount },
-                    { "Rate", rate },
-                    { "Updated_timestamp", rateInfo.UpdatedTimestamp.ToUnixTimeSeconds().ToString() }
-                };
 
                 return new ExchangeResult(ErrorCode.Success, "Success", new CryptoExchangeInfo
                 {
