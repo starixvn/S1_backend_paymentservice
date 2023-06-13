@@ -24,37 +24,6 @@ namespace Payment.DirePay
 
         #region Exchange Rate
 
-        /*ExchangeResult IExchangeHelper.GetExchange(Dictionary<string, string> payResource)
-        {
-            var oExchangeResult = new ExchangeResult
-            {
-                ErrorCode = "9000"
-            };
-
-            var from_currency = GetPayCurrency(payResource["PayCurrencyId"]);
-            var to_currency = payResource["PayCode"];
-            var amount = payResource["Amount"];
-            string message;
-
-            var toAmount = getExchange(amount, from_currency, to_currency, payResource, out message);
-            if (toAmount > 0)
-            {
-                var ResData = new Dictionary<string, string>();
-                ResData.Add("To_Amount", toAmount.ToString());
-                ResData.Add("Rate", (toAmount / decimal.Parse(amount)).ToString());
-                ResData.Add("Updated_timestamp", new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString());
-
-                oExchangeResult.FormData = ResData;
-                oExchangeResult.ErrorCode = "0";
-            }
-            else
-            {
-                oExchangeResult.Message = message;
-            }
-
-            return oExchangeResult;
-        }*/
-
         ExchangeResult IExchangeHelper.GetExchange(Dictionary<string, string> input)
         {
             try
@@ -312,7 +281,8 @@ namespace Payment.DirePay
                     withdrawGetWalletReq.client_reference_id = inputs["TransID"];
                     withdrawGetWalletReq.hashCode = ToMD5("partner_withdraw" + inputs["key"]).ToLower();
                     var message = "";
-                    var toAmount = GetExchangeAmountAsync(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency, withdrawGetWalletReq.withdrawal_token, inputs).Result;
+                    var toAmount = GetExchangeAmountAsync(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency,
+                        withdrawGetWalletReq.withdrawal_token, inputs).Result;
 
                     if (toAmount > 0)
                     {
@@ -510,7 +480,7 @@ namespace Payment.DirePay
             return result.Result.access_token;
         }
 
-        private async Task<decimal> GetExchangeAmountAsync(string amount, string fromCurrency, string toCurrency, Dictionary<string, string> inputs, string type = "1")
+        private async Task<decimal> GetExchangeAmountAsync(string amount, string fromCurrency, string toCurrency, Dictionary<string, string> inputs, string type = "0")
         {
             var baseApiUrl = inputs["host"];
             var getExchangeUrl = baseApiUrl + Path.ExchangeRate;

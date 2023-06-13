@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -74,6 +75,8 @@ namespace Payment.Coin2Pay
             var platformId = input["PlatformID"];
             var transId = input["TransID"];
             var privateKey = input["PrivateKey"];
+            var reqAmount = input["Amount"];
+            var depositInfo = input["DepositInfo"];
 
             try
             {
@@ -98,13 +101,30 @@ namespace Payment.Coin2Pay
                 {
                     throw new CustomException("Address data not exists. network: " + payCode);
                 }
+                
+                var obj = JObject.Parse(depositInfo);
+                
+                if (!obj.TryGetValue("ExchangeRate", StringComparison.OrdinalIgnoreCase, out var jExchangeRate)
+                    || !obj.TryGetValue("ExchangeAmount", StringComparison.OrdinalIgnoreCase, out var jExchangeAmount))
+                {
+                    throw new CustomException("No exchange info.");
+                }
+
+                var formData = new Dictionary<string, string>
+                {
+                    { "DepositAmount", reqAmount },
+                    { "Rate", jExchangeRate.ToObject<string>() },
+                    { "RequestAmount", jExchangeAmount.ToObject<string>() },
+                    { "Token", token }
+                };
 
                 var response = new DepositResult
                 {
                     Success = true,
                     ErrorCode = ErrorCode.Success,
                     Url = addr.Address,
-                    ThirdId = string.Empty
+                    ThirdId = string.Empty,
+                    FormData = formData
                 };
 
                 return response;
