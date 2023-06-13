@@ -310,7 +310,8 @@ namespace Payment.DirePay
                     withdrawGetWalletReq.client_reference_id = inputs["TransID"];
                     withdrawGetWalletReq.hashCode = ToMD5("partner_withdraw" + inputs["key"]).ToLower();
                     var message = "";
-                    var toAmount = GetExchangeAmountAsync(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency, withdrawGetWalletReq.withdrawal_token, inputs).Result;
+                    var toAmount = GetExchangeAmountAsync(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency,
+                        withdrawGetWalletReq.withdrawal_token, inputs, "0").Result;
 
                     if (toAmount > 0)
                     {
