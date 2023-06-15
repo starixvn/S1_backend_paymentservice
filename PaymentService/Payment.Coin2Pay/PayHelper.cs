@@ -169,17 +169,6 @@ namespace Payment.Coin2Pay
             }
 
             var transId = req.TransId;
-            var result = new NotifyDepositResult
-            {
-                DepositId = transId,
-                ThirdId = req.ThirdId,
-                Comment = bodyContent,
-                TransStatus = TransStatus.Success,
-                Response = CallbackResponse.Success,
-                ActualAmount = req.GivenCredit
-            };
-
-            /*
             var depositInfo = input["DepositInfo"];
             var jObj = JObject.Parse(depositInfo);
 
@@ -198,9 +187,17 @@ namespace Payment.Coin2Pay
             var requestCryptoAmount = jExchangeAmount.ToObject<decimal>();
             var exchangeRate = jExchangeRate.ToObject<decimal>();
 
+            var result = new NotifyDepositResult
+            {
+                DepositId = transId,
+                ThirdId = req.ThirdId,
+                Comment = bodyContent,
+                TransStatus = TransStatus.Success,
+                Response = CallbackResponse.Success
+            };
+            
             result.ActualAmount =
-                GetActualAmount(requestAmount, requestCryptoAmount, req.ReceivedAmount, exchangeRate);*/
-    
+                GetActualAmount(requestAmount, requestCryptoAmount, req.Quantity, exchangeRate);
 
             return result;
         }
