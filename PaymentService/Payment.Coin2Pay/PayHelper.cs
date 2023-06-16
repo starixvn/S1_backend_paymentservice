@@ -12,7 +12,7 @@ using PaymentCore.Models.Result;
 
 namespace Payment.Coin2Pay
 {
-    class PayHelper : PayHelperBase, IExchangeHelper
+    class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
     {
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
@@ -124,7 +124,8 @@ namespace Payment.Coin2Pay
                     ErrorCode = ErrorCode.Success,
                     Url = addr.Address,
                     ThirdId = string.Empty,
-                    FormData = formData
+                    FormData = formData,
+                    DepositInfo = depositInfo
                 };
 
                 return response;
@@ -140,8 +141,10 @@ namespace Payment.Coin2Pay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> input)
         {
             var publicKey = input["PublicKey"];
-            var req = FromJson<DepositCallBackReq>(bodyContent);
-            var reqStr = FromJson<Dictionary<string, string>>(bodyContent);
+            var temp = formData.FirstOrDefault().Key; // C2P的ContentType有問題，先做此處理
+            var req = FormJsonHandling<DepositCallBackReq>(formData, bodyContent);
+            var reqStr = FromJson<Dictionary<string, string>>(string.IsNullOrEmpty(temp)
+                ? bodyContent : temp.Replace("\\\"", "\""));
             
             var dic = new Dictionary<string, string>
             {
@@ -294,6 +297,13 @@ namespace Payment.Coin2Pay
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        {
+            var req = FormJsonHandling<DepositCallBackReq>(formData, bodyContent);
+
+            return req.TransId;
         }
 
         #endregion
@@ -608,6 +618,16 @@ namespace Payment.Coin2Pay
             var tokenInfo = payCode.Split('_');
             
             return (tokenInfo[0], tokenInfo[1]);
+        }
+
+        private static T FormJsonHandling<T>(IDictionary<string, string> formData, string bodyContent)
+        {
+            var temp = formData.FirstOrDefault().Key; // C2P的ContentType有問題，先做此處理
+            var req = FromJson<T>(string.IsNullOrEmpty(temp)
+                ? bodyContent : temp.Replace("\\\"", "\""));
+
+            return req;
+            
         }
         
         #endregion
