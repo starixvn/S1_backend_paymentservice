@@ -222,3 +222,12 @@ internal class DepositCallBackReq
     [JsonProperty("sign")]
     public string Sign { get; set; }
 }
+
+internal class VerifyWithdrawalResp
+{
+    [JsonProperty("verifiedmsg")]
+    public string Message { get; set; }
+
+    [JsonProperty("verified")]
+    public bool Verified { get; set; }
+}

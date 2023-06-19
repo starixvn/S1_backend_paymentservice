@@ -436,6 +436,13 @@ namespace PaymentCore
 
             return currencyMapping.ContainsKey(currencyId) ? currencyMapping[currencyId] : "";
         }
+        
+        protected static Dictionary<string, string> QueryStringToDic(string queryString)
+        {
+            var nvc = HttpUtility.ParseQueryString(queryString);
+            
+            return nvc.AllKeys.ToDictionary(k => k, k => nvc[k]);
+        }
 
         private string HttpClientSend(HttpMethod httpMethod,
             string content,

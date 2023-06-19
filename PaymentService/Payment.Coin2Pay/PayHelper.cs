@@ -12,7 +12,7 @@ using PaymentCore.Models.Result;
 
 namespace Payment.Coin2Pay
 {
-    class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
+    class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl, IVerifyTransaction
     {
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
@@ -140,46 +140,37 @@ namespace Payment.Coin2Pay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> input)
         {
-            var publicKey = input["PublicKey"];
-            var temp = formData.FirstOrDefault().Key; // C2P的ContentType有問題，先做此處理
-            var req = FormJsonHandling<DepositCallBackReq>(formData, bodyContent);
-            var reqStr = FromJson<Dictionary<string, string>>(string.IsNullOrEmpty(temp)
-                ? bodyContent : temp.Replace("\\\"", "\""));
-            
-            var dic = new Dictionary<string, string>
-            {
-                { "uid", reqStr["uid"] },
-                { "txid", reqStr["txid"] },
-                { "address", reqStr["address"] },
-                { "token", reqStr["token"] },
-                { "quantity", reqStr["quantity"] },
-                { "amount_in_usdt", reqStr["amount_in_usdt"] },
-                { "deposit_fee", reqStr["deposit_fee"] },
-                { "given_Credit", reqStr["given_Credit"] },
-                { "credit_Rate", reqStr["credit_Rate"] },
-                { "timestamp", reqStr["timestamp"] },
-                { "currency", reqStr["currency"] }
-            };
+            var mPublicKey = input["key"];
+            var dic = FromJson<Dictionary<string, string>>(bodyContent);
+            var transId = dic["uid"];
 
-            if (!VerifySign(dic, req.Sign, publicKey))
+            var str =
+                $"{transId}{dic["txid"]}{dic["address"]}{dic["token"]}{dic["quantity"]}{dic["amount_in_usdt"]}{dic["deposit_fee"]}{dic["given_Credit"]}{dic["credit_Rate"]}{dic["timestamp"]}{dic["currency"]}";
+            
+            if (!VerifySign(str, dic["sign"], mPublicKey))
             {
+                _logger.LogError($"Coin2Pay {transId}, signature verification failed.");
+                
                 return new NotifyDepositResult
                 {
+                    DepositId = transId,
                     TransStatus = TransStatus.Pending,
                     Comment = "Signature verification failed.",
                     Response = CallbackResponse.Failed
                 };
             }
 
-            var transId = req.TransId;
             var depositInfo = input["DepositInfo"];
             var jObj = JObject.Parse(depositInfo);
 
             if (!jObj.TryGetValue("ExchangeRate", StringComparison.OrdinalIgnoreCase, out var jExchangeRate)
                 || !jObj.TryGetValue("ExchangeAmount", StringComparison.OrdinalIgnoreCase, out var jExchangeAmount))
             {
+                _logger.LogError($"Coin2Pay {transId}, depositInfo has no exchange rate data.");
+                
                 return new NotifyDepositResult
                 {
+                    DepositId = transId,
                     TransStatus = TransStatus.Pending,
                     Comment = "DepositInfo has no exchange rate data.",
                     Response = CallbackResponse.Failed
@@ -193,14 +184,13 @@ namespace Payment.Coin2Pay
             var result = new NotifyDepositResult
             {
                 DepositId = transId,
-                ThirdId = req.ThirdId,
-                Comment = bodyContent,
+                ThirdId = dic["txid"],
                 TransStatus = TransStatus.Success,
                 Response = CallbackResponse.Success
             };
             
             result.ActualAmount =
-                GetActualAmount(requestAmount, requestCryptoAmount, req.Quantity, exchangeRate);
+                GetActualAmount(requestAmount, requestCryptoAmount, decimal.Parse(dic["quantity"]), exchangeRate);
 
             return result;
         }
@@ -312,6 +302,57 @@ namespace Payment.Coin2Pay
         {
             throw new NotImplementedException();
         }
+        
+        public (string TransId, IDictionary<string, string> Data) FetchTransIdAndDataBeforeVerify(
+            IDictionary<string, string> formData, string bodyContent)
+        {
+            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+
+            return (dicReq["UID"], dicReq);
+        }
+        
+        public VerifyTransactionResult VerifyTransaction(IDictionary<string, string> data, IDictionary<string, string> input)
+        {
+            var transExists = bool.Parse(input["TransIdExists"]);
+
+            if (!transExists)
+            {
+                return new VerifyTransactionResult
+                {
+                    ContentType = "application/json",
+                    Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
+                    {
+                        Message = $"Transaction UID: {data["UID"]} not exists.",
+                        Verified = false
+                    })
+                };
+            }
+
+            var str = $"{data["UID"]}{data["order_id"]}{data["token"]}{data["network"]}{data["creditamount"]}{data["timestamp"]}";
+            
+            if (!VerifySign(str, data["sign"], input["PublicKey"]))
+            {
+                return new VerifyTransactionResult
+                {
+                    ContentType = "application/json",
+                    Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
+                    {
+                        Message = $"Transaction UID: {data["UID"]} signature verification failed.",
+                        Verified = false
+                    })
+                };
+            }
+            
+            return new VerifyTransactionResult
+            {
+                ContentType = "application/json",
+                Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
+                {
+                    Message = "Success.",
+                    Verified = true
+                })
+            };
+        }
 
         #region Private Methods
         
@@ -413,7 +454,7 @@ namespace Payment.Coin2Pay
             var inputHash = alg.ComputeHash(inputBytes);
 
             var keyBytes = Convert.FromBase64String(privateKey);
-            var rsa = new RSACryptoServiceProvider(2048);
+            using var rsa = new RSACryptoServiceProvider(2048);
             rsa.ImportRSAPrivateKey(keyBytes, out _);
             
             var signHash = rsa.SignHash(inputHash, "SHA256");
@@ -422,15 +463,8 @@ namespace Payment.Coin2Pay
             return sign;
         }
         
-        private static bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string target,
-            string publicKey)
+        private static bool VerifySign(string str, string target, string publicKey)
         {
-            var str = string.Join(string.Empty, param
-                .Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase))
-                .Select(x => x.Value));
-
-            Console.WriteLine("str: " + str);
-            
             var targetBase64Str = RevertBase64(target);
             var targetBytes = Convert.FromBase64String(targetBase64Str);
             var inputBytes = Encoding.UTF8.GetBytes(str);
@@ -443,8 +477,6 @@ namespace Payment.Coin2Pay
             return result;
         }
         
-        
-
         private static decimal GetActualAmount(decimal requestAmount,
             decimal requestCryptoAmount,
             decimal receivedCryptoAmount,
