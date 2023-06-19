@@ -12,7 +12,7 @@ using PaymentCore.Models.Result;
 
 namespace Payment.Coin2Pay
 {
-    class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
+    class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl, IVerifyTransaction
     {
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
@@ -301,6 +301,57 @@ namespace Payment.Coin2Pay
         public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+        
+        public (string TransId, IDictionary<string, string> Data) FetchTransIdAndDataBeforeVerify(
+            IDictionary<string, string> formData, string bodyContent)
+        {
+            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+
+            return (dicReq["UID"], dicReq);
+        }
+        
+        public VerifyTransactionResult VerifyTransaction(IDictionary<string, string> data, IDictionary<string, string> input)
+        {
+            var transExists = bool.Parse(input["TransIdExists"]);
+
+            if (!transExists)
+            {
+                return new VerifyTransactionResult
+                {
+                    ContentType = "application/json",
+                    Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
+                    {
+                        Message = $"Transaction UID: {data["UID"]} not exists.",
+                        Verified = false
+                    })
+                };
+            }
+
+            var str = $"{data["UID"]}{data["order_id"]}{data["token"]}{data["network"]}{data["creditamount"]}{data["timestamp"]}";
+            
+            if (!VerifySign(str, data["sign"], input["PublicKey"]))
+            {
+                return new VerifyTransactionResult
+                {
+                    ContentType = "application/json",
+                    Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
+                    {
+                        Message = $"Transaction UID: {data["UID"]} signature verification failed.",
+                        Verified = false
+                    })
+                };
+            }
+            
+            return new VerifyTransactionResult
+            {
+                ContentType = "application/json",
+                Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
+                {
+                    Message = "Success.",
+                    Verified = true
+                })
+            };
         }
 
         #region Private Methods
@@ -610,8 +661,6 @@ namespace Payment.Coin2Pay
             return req;
             
         }
-        
-        
         
         #endregion
     }
