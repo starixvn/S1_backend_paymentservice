@@ -1,7 +1,8 @@
-﻿using PaymentCore;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Xml.Serialization;
+using PaymentCore;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.Help2Pay
@@ -261,10 +262,7 @@ namespace Payment.Help2Pay
         {
             var transExists = bool.Parse(input["TransIdExists"]);
 
-            return new VerifyTransactionResult
-            {
-                Response = transExists.ToString()
-            };
+            return new VerifyTransactionResult (ContentType.Text, transExists.ToString());
         }
     }
 }
