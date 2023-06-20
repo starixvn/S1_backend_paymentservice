@@ -483,8 +483,9 @@ namespace PaymentService.Controllers
 
                 var formData = new Dictionary<string, string>();
                 
-                if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
-                    Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+                if (Request.ContentType != null &&
+                    (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
+                    Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase)))
                 {
                     formData = Request.Form
                         .ToDictionary(x => x.Key, x => x.Value.ToString());
@@ -499,7 +500,7 @@ namespace PaymentService.Controllers
 
                 var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
                 var input = withdrawalRequest == null ? new Dictionary<string, string>() : withdrawalRequest.ISetting;
-                input.Add("TransIdExists", (withdrawalRequest == null).ToString());
+                input.Add("TransIdExists", (withdrawalRequest != null).ToString());
                 
                 var result = payHelper.VerifyTransaction(data, input);
                 
