@@ -155,7 +155,7 @@ namespace Payment.Coin2Pay
             var baseApiUrl = inputs["host"];
             var currency = inputs["PayCurrencyId"];
             var payCode = inputs["PayCode"];
-            var reqAmount = inputs["Amount"];
+            var reqAmount = decimal.Parse(inputs["Amount"]);
             var transId = inputs["TransID"];
             var platformId = inputs["PlatformID"];
             var privateKey = inputs["PrivateKey"];
@@ -169,7 +169,7 @@ namespace Payment.Coin2Pay
                     {"platformID", platformId},
                     {"currency", currency},
                     {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()},
-                    {"withdrawl_credit", reqAmount}
+                    {"withdrawl_credit", reqAmount.ToString("#")}
                 };
                 
                 req.Add("sign", GetSign(req, privateKey));
@@ -434,12 +434,12 @@ namespace Payment.Coin2Pay
             return result;
         }
 
-        private static string GetSign(IEnumerable<KeyValuePair<string, string>> param, string privateKey)
+        private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string privateKey)
         {
             var str = string.Join(string.Empty, param
                 .Select(x => x.Value));
             
-            Console.WriteLine("str: " + str);
+            _logger.LogInformation("str: " + str);
             
             var inputBytes = Encoding.UTF8.GetBytes(str);
             using var alg = SHA256.Create();
