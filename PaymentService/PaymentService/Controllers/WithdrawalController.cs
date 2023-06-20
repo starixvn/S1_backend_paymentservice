@@ -483,13 +483,6 @@ namespace PaymentService.Controllers
 
                 var formData = new Dictionary<string, string>();
                 
-                if (Request.ContentType == null)
-                {
-                    _logger.LogInformation(
-                        $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, VerifyTransaction Request.ContentType is null");
-                    return Content("Request ContentType is null");
-                }
-
                 if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
                     Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
                 {
