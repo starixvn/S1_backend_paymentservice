@@ -172,6 +172,8 @@ namespace Payment.Coin2Pay
                     {"withdrawl_credit", reqAmount}
                 };
                 
+                req.Add("sign", GetSign(req, privateKey));
+                
                 var withdrawalEstimate = GetWithdrawalEstimate(baseApiUrl, req);
                 var estVal  = withdrawalEstimate.Data.AssetEstimate
                     .FirstOrDefault(x => x.Token.Equals(token, StringComparison.OrdinalIgnoreCase));
