@@ -2,12 +2,12 @@
 using System.Net;
 using System.Xml.Linq;
 using Flurl.Http;
-using Flurl.Http.Content;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentCore.Exceptions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using Serilog.Context;
 using JsonExtension = PaymentCore.Extensions.JsonExtension;
 
@@ -180,30 +180,32 @@ namespace PaymentCore.Helpers
                 _logger.LogInformation(JsonConvert.SerializeObject(data));
 
                 IFlurlResponse response = default(FlurlResponse);
-                if (postType == ContentType.Json)
+                switch (postType)
                 {
-                    response = request
-                        .PostJsonAsync(data)
-                        .ConfigureAwait(false)
-                        .GetAwaiter()
-                        .GetResult();
-                }
-                else if (postType == ContentType.Text)
-                {
-                    var content = data.ToString();
-                    response = request
-                        .PostStringAsync(content)
-                        .ConfigureAwait(false)
-                        .GetAwaiter()
-                        .GetResult();
-                }
-                else if (postType == ContentType.UrlEncoded)
-                {
-                    response = request
-                        .PostUrlEncodedAsync(data)
-                        .ConfigureAwait(false)
-                        .GetAwaiter()
-                        .GetResult();
+                    case ContentType.Json:
+                        response = request
+                            .PostJsonAsync(data)
+                            .ConfigureAwait(false)
+                            .GetAwaiter()
+                            .GetResult();
+                        break;
+                    case ContentType.Text:
+                    {
+                        var content = data.ToString();
+                        response = request
+                            .PostStringAsync(content)
+                            .ConfigureAwait(false)
+                            .GetAwaiter()
+                            .GetResult();
+                        break;
+                    }
+                    case ContentType.UrlEncoded:
+                        response = request
+                            .PostUrlEncodedAsync(data)
+                            .ConfigureAwait(false)
+                            .GetAwaiter()
+                            .GetResult();
+                        break;
                 }
 
 
@@ -244,18 +246,21 @@ namespace PaymentCore.Helpers
                                        + JsonConvert.SerializeObject(request.Headers.ToDictionary(x => x.Name, x => x.Value)));
                 _logger.LogInformation(JsonConvert.SerializeObject(data));
                 IFlurlResponse response = default(FlurlResponse);
-                if (postType == ContentType.Json)
+                
+                switch (postType)
                 {
-                    response = await request.PostJsonAsync(data);
-                }
-                else if (postType == ContentType.Text)
-                {
-                    var content = data.ToString();
-                    response = await request.PostStringAsync(content);
-                }
-                else if (postType == ContentType.UrlEncoded)
-                {
-                    response = await request.PostUrlEncodedAsync(data);
+                    case ContentType.Json:
+                        response = await request.PostJsonAsync(data);
+                        break;
+                    case ContentType.Text:
+                    {
+                        var content = data.ToString();
+                        response = await request.PostStringAsync(content);
+                        break;
+                    }
+                    case ContentType.UrlEncoded:
+                        response = await request.PostUrlEncodedAsync(data);
+                        break;
                 }
             
                 LogContext.PushProperty("Url", url);
@@ -311,16 +316,5 @@ namespace PaymentCore.Helpers
                 ClearAll();
             }
         }
-    }
-
-    internal static class ContentType
-    {
-        public const string Text = "text";
-
-        public const string Json = "json";
-
-        public const string UrlEncoded = "x-www-form-urlencoded";
-
-        public const string FormData = "form-data";
     }
 }

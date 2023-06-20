@@ -8,6 +8,7 @@ using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.Coin2Pay
@@ -31,35 +32,6 @@ namespace Payment.Coin2Pay
         public ExchangeResult GetExchange(Dictionary<string, string> input)
         {
             throw new NotImplementedException();
-            /*var baseApiUrl = input["host"];
-            var currency = input["PayCurrencyId"];
-            var payCode = input["PayCode"];
-            var platformId = input["PlatformID"];
-            var type = input["ExchangeType"]; // 0: 提款, 1: 存款
-            
-            var req = new Dictionary<string, string>
-            {
-                { "platformID", platformId },
-                { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
-            };
-            
-            req.Add("sign", GetSign(req));
-            var resp = GetExchangeRate(baseApiUrl, req);
-            var priceInfo = resp.Data.PriceList.FirstOrDefault(x => $"{x.Token}{x.Network}".Equals(payCode));
-            
-            if (priceInfo == null)
-            {
-                throw new CustomException("Price info data not exists: " + payCode);
-            }
-
-            var rate = type.Equals("0") ? priceInfo.PriceWithdrawal : priceInfo.PriceDeposit;
-
-            return new ExchangeResult(ErrorCode.Success, "Success", new CryptoExchangeInfo
-            {
-                Rate = rate,
-                ExchangeAmount = decimal.Parse(),
-                Timestamp = DateTimeOffset.Now.ToUnixTimeSeconds()
-            });*/
         }
 
         #endregion
@@ -68,40 +40,14 @@ namespace Payment.Coin2Pay
 
         public override DepositResult Debit(Dictionary<string, string> input)
         {
-            var baseApiUrl = input["host"];
-            var currency = input["PayCurrencyId"];
             var payCode = input["PayCode"];
-            var merchant = input["Merchant"];
-            var platformId = input["PlatformID"];
-            var transId = input["TransID"];
-            var privateKey = input["PrivateKey"];
             var reqAmount = input["Amount"];
             var depositInfo = input["DepositInfo"];
 
             try
             {
-                var req = new Dictionary<string, string>
-                {
-                    { "platformID", platformId },
-                    { "UID", transId },
-                    { "UserName", merchant },
-                    { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
-                    { "currency", currency }
-                };
-                
-                req.Add("sign", GetSign(req, privateKey));
-
-                var (token, network) = PayCode2TokenInfo(payCode);
-                var resp = GetAddress(baseApiUrl, req);
-                var addr = resp.Data
-                    .FirstOrDefault(x => x.Token.Equals(token, StringComparison.OrdinalIgnoreCase)
-                        && x.Network.Equals(network, StringComparison.OrdinalIgnoreCase));
-
-                if (addr == null)
-                {
-                    throw new CustomException("Address data not exists. network: " + payCode);
-                }
-                
+                var addr = GetWalletAddress(input);
+                var (token, _) = PayCode2TokenInfo(payCode);
                 var obj = JObject.Parse(depositInfo);
                 
                 if (!obj.TryGetValue("ExchangeRate", StringComparison.OrdinalIgnoreCase, out var jExchangeRate)
@@ -206,40 +152,33 @@ namespace Payment.Coin2Pay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            
             var baseApiUrl = inputs["host"];
-            var apiKey = inputs["key"];
-            var payoutKey = inputs["payoutKey"];
-            var payoutApiUrl = inputs["payoutUrl"];
             var currency = inputs["PayCurrencyId"];
             var payCode = inputs["PayCode"];
             var reqAmount = inputs["Amount"];
             var transId = inputs["TransID"];
-            var withdrawalInfo = inputs["WithdrawalInfo"];
             var platformId = inputs["PlatformID"];
             var privateKey = inputs["PrivateKey"];
-            var merchant = inputs["Merchant"];
 
             try
             {
+                var addr = GetWalletAddress(inputs);
+                var (token, network) = PayCode2TokenInfo(payCode);
                 var req = new Dictionary<string, string>
                 {
-                    { "platformID", platformId },
-                    { "UID", transId },
-                    { "UserName", merchant },
-                    { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
-                    { "currency", currency }
+                    {"platformID", platformId},
+                    {"currency", currency},
+                    {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()},
+                    {"withdrawl_credit", reqAmount}
                 };
-
-                req.Add("sign", GetSign(req, privateKey));
                 
-                var resp = GetAddress(baseApiUrl, req);
-                var addr = resp.Data
-                    .FirstOrDefault(x => x.Network.Equals(payCode, StringComparison.OrdinalIgnoreCase));
-
-                if (addr == null)
+                var withdrawalEstimate = GetWithdrawalEstimate(baseApiUrl, req);
+                var estVal  = withdrawalEstimate.Data.AssetEstimate
+                    .FirstOrDefault(x => x.Token.Equals(token, StringComparison.OrdinalIgnoreCase));
+                
+                if (estVal == null)
                 {
-                    throw new CustomException("Address data not exists. network: " + payCode);
+                    throw new CustomException("Get withdrawal estimation asset data not exists. token: " + token);
                 }
                 
                 req = new Dictionary<string, string>
@@ -248,21 +187,20 @@ namespace Payment.Coin2Pay
                     { "from_address", addr.Address },
                     { "to_address", inputs["AccountNo"] },
                     { "order_id", transId },
-                    { "creditamount", reqAmount },// 這應該是要先getWithdrawalEstimateValue
-                    { "token", transId },
-                    { "network", transId },
+                    { "creditamount", estVal.EstimateValue.ToString("#") },
+                    { "token", token },
+                    { "network", network },
                     { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
                 };
                 
                 req.Add("sign", GetSign(req, privateKey));
 
-                var payoutResp = Payout(payoutApiUrl, req);
+                var withdrawalResp = Withdrawal(baseApiUrl, req);
                 var response = new WithdrawResult
                 {
                     Success = true,
-                    WithdrawId = payoutResp.ResPayoutId,
-                    RawContent = JsonConvert.SerializeObject(payoutResp),
-                    WithdrawalInfo = withdrawalInfo
+                    WithdrawId = transId,
+                    RawContent = JsonConvert.SerializeObject(withdrawalResp)
                 };
 
                 return response;
@@ -281,7 +219,47 @@ namespace Payment.Coin2Pay
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            var mPublicKey = payResource["key"];
+            var dic = FromJson<Dictionary<string, string>>(bodyContent);
+            var transId = dic["uid"];
+
+            var str =
+                $"{dic["txid"]}{dic["order_id"]}{dic["token"]}{dic["amount"]}{dic["withdrawal_amount"]}{dic["withdrawal_fee"]}{dic["is_green"]}{dic["timestamp"]}";
+            
+            if (!VerifySign(str, dic["sign"], mPublicKey))
+            {
+                _logger.LogError($"Coin2Pay {transId}, signature verification failed.");
+                
+                return new NotifyWithdrawResult
+                {
+                    WithdrawId = transId,
+                    TransStatus = TransStatus.Pending,
+                    Message = "Signature verification failed.",
+                    Response = CallbackResponse.Failed
+                };
+            }
+
+            var isGreen = dic["is_green"] == "1"; // 交易已上鏈
+
+            if (isGreen)
+            {
+                return new NotifyWithdrawResult
+                {
+                    WithdrawId = transId,
+                    ThirdId = dic["txid"],
+                    TransStatus = TransStatus.Success,
+                    Message = dic["is_green"],
+                    Response = CallbackResponse.Success
+                };
+            }
+
+            return new NotifyWithdrawResult
+            {
+                WithdrawId = transId,
+                TransStatus = TransStatus.Pending,
+                Message = "Signature verification failed.",
+                Response = CallbackResponse.Success
+            };
         }
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
@@ -319,7 +297,7 @@ namespace Payment.Coin2Pay
             {
                 return new VerifyTransactionResult
                 {
-                    ContentType = "application/json",
+                    ContentType = ContentType.Json,
                     Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
                     {
                         Message = $"Transaction UID: {data["UID"]} not exists.",
@@ -334,7 +312,7 @@ namespace Payment.Coin2Pay
             {
                 return new VerifyTransactionResult
                 {
-                    ContentType = "application/json",
+                    ContentType = ContentType.Json,
                     Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
                     {
                         Message = $"Transaction UID: {data["UID"]} signature verification failed.",
@@ -345,7 +323,7 @@ namespace Payment.Coin2Pay
             
             return new VerifyTransactionResult
             {
-                ContentType = "application/json",
+                ContentType = ContentType.Json,
                 Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
                 {
                     Message = "Success.",
@@ -356,23 +334,39 @@ namespace Payment.Coin2Pay
 
         #region Private Methods
         
-
-        private GetTokenPriceResp GetExchangeRate(string baseApiUrl, IDictionary<string, string> req)
+        private GetAddressData GetWalletAddress(IDictionary<string, string> input)
         {
-            var apiUrl = baseApiUrl + Path.GetExchangeRate;
-
-            var response = _httpHelper
-                .WithHeader("accept", MediaType.Json)
-                .PostJson<IDictionary<string, string>, GetTokenPriceResp>(apiUrl, req);
-
-            if (!response.StatusCode.IsSuccessStatus())
+            var baseApiUrl = input["host"];
+            var currency = input["PayCurrencyId"];
+            var payCode = input["PayCode"];
+            var merchant = input["Merchant"];
+            var platformId = input["PlatformID"];
+            var transId = input["TransID"];
+            var privateKey = input["PrivateKey"];
+            
+            var req = new Dictionary<string, string>
             {
-                throw new CustomException(
-                    $"Coin2Pay GetExchangeRate failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}",
-                    ErrorCode.GetExchangeRateFailed);
+                { "platformID", platformId },
+                { "UID", transId },
+                { "UserName", merchant },
+                { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
+                { "currency", currency }
+            };
+                
+            req.Add("sign", GetSign(req, privateKey));
+
+            var (token, network) = PayCode2TokenInfo(payCode);
+            var resp = GetAddress(baseApiUrl, req);
+            var addr = resp.Data
+                .FirstOrDefault(x => x.Token.Equals(token, StringComparison.OrdinalIgnoreCase)
+                                     && x.Network.Equals(network, StringComparison.OrdinalIgnoreCase));
+
+            if (addr == null)
+            {
+                throw new CustomException("Address data not exists. network: " + payCode);
             }
 
-            return response.Result;
+            return addr;
         }
 
         private GetAddressResp GetAddress(string baseApiUrl, IDictionary<string, string> req)
@@ -380,7 +374,7 @@ namespace Payment.Coin2Pay
             var apiUrl = baseApiUrl + Path.GetAddress;
 
             var (result, statusCode) = _httpHelper
-                .WithHeader("accept", MediaType.Json)
+                .WithHeader("accept", ContentType.Json)
                 .PostJson<IDictionary<string, string>, GetAddressResp>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
@@ -401,7 +395,7 @@ namespace Payment.Coin2Pay
             var apiUrl = baseApiUrl + Path.GetWithdrawalEstimate;
 
             var (result, statusCode) = _httpHelper
-                .WithHeader("accept", MediaType.Json)
+                .WithHeader("accept", ContentType.Json)
                 .PostJsonAsync<IDictionary<string, string>, GetWithdrawalEstimateResp>(apiUrl, req)
                 .Result;
 
@@ -418,28 +412,24 @@ namespace Payment.Coin2Pay
             return result;
         }
 
-        private PayoutResp Payout(string apiUrl,
-            Dictionary<string, string> req)
+        private WithdrawalResp Withdrawal(string apiUrl, Dictionary<string, string> req)
         {
-            var response = _httpHelper
-                .WithHeader("accept", MediaType.Json)
-                .PostJsonAsync<Dictionary<string, string>, PayoutResp>(apiUrl, req)
-                .Result;
+            var (result, statusCode) = _httpHelper
+                .WithHeader("accept", ContentType.Json)
+                .PostJson<Dictionary<string, string>, WithdrawalResp>(apiUrl, req);
 
-            if (!response.StatusCode.IsSuccessStatus())
+            if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"Coin2Pay Payout failed, HttpStatus: {(int)response.StatusCode} {response.StatusCode}" +
-                    $", error code: {response.Result.Error} {Coin2PayDefinition.GetPayoutErrorMessage(response.Result.Error)}",
-                    ErrorCode.PayoutFailed);
+                    $"Coin2Pay Payout failed, HttpStatus: {(int)statusCode} {statusCode}" +
+                    $", error code: {result.Code} {result.Message}");
             }
 
-            if (response.Result.Error != 0)
+            if (!result.Result)
                 throw new CustomException(
-                    $"Coin2Pay Payout response error: {response.Result.Error} {Coin2PayDefinition.GetPayoutErrorMessage(response.Result.Error)}",
-                    ErrorCode.GetWalletAddressFailed);
+                    $"Coin2Pay Payout response error: {result.Code} {result.Message}");
 
-            return response.Result;
+            return result;
         }
 
         private static string GetSign(IEnumerable<KeyValuePair<string, string>> param, string privateKey)
@@ -521,7 +511,7 @@ namespace Payment.Coin2Pay
         {
             // encoded OID sequence for  PKCS #1 rsaEncryption szOID_RSA_RSA = "1.2.840.113549.1.1.1"
             byte[] seqOid = { 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01, 0x05, 0x00 };
-            // ---------  Set up stream to read the asn.1 encoded SubjectPublicKeyInfo blob  ------
+            
             using var mem = new MemoryStream(x509Key);
             using var reader = new BinaryReader(mem);
             try
@@ -576,23 +566,23 @@ namespace Payment.Coin2Pay
                 }
 
                 bytes = reader.ReadUInt16();
-                byte lowbyte = 0x00;
-                byte highbyte = 0x00;
+                byte lowByte;
+                byte highByte = 0x00;
 
                 switch (bytes)
                 {
                     //data read as little endian order (actual data order for Integer is 02 81)
                     case 0x8102:
-                        lowbyte = reader.ReadByte();  // read next bytes which is bytes in modulus
+                        lowByte = reader.ReadByte();  // read next bytes which is bytes in modulus
                         break;
                     case 0x8202:
-                        highbyte = reader.ReadByte(); //advance 2 bytes
-                        lowbyte = reader.ReadByte();
+                        highByte = reader.ReadByte(); //advance 2 bytes
+                        lowByte = reader.ReadByte();
                         break;
                     default:
                         return null;
                 }
-                byte[] modInt = { lowbyte, highbyte, 0x00, 0x00 };   //reverse byte order since asn.1 key uses big endian order
+                byte[] modInt = { lowByte, highByte, 0x00, 0x00 };   //reverse byte order since asn.1 key uses big endian order
                 var modSize = BitConverter.ToInt32(modInt, 0);
 
                 var firstByte = reader.ReadByte();
@@ -608,14 +598,9 @@ namespace Payment.Coin2Pay
 
                 if (reader.ReadByte() != 0x02)            //expect an Integer for the exponent data
                     return null;
-                int expbytes = reader.ReadByte();        // should only need one byte for actual exponent data (for all useful values)
-                var exponent = reader.ReadBytes(expbytes);
-
-                // We don't really need to print anything but if we insist to...
-                //showBytes("\nExponent", exponent);
-                //showBytes("\nModulus", modulus);
-
-                // ------- create RSACryptoServiceProvider instance and initialize with public key -----
+                var expBytes = reader.ReadByte();        // should only need one byte for actual exponent data (for all useful values)
+                var exponent = reader.ReadBytes(expBytes);
+                
                 var rsa = new RSACryptoServiceProvider();
                 var rsaKeyInfo = new RSAParameters
                 {

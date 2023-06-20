@@ -103,17 +103,6 @@ namespace Payment.FXBit
                 depositInfo = depositInfo
                     .AddOrSetExchangeInfo(rateInfo.SellRate, getWalletResp.BilledPrice.ToString());
 
-                // Step 4: 組成 H5 支付頁網址並回傳
-                /*var h5Url = $"{apiUrl}?receipt_token={getTokenResp.ReceiptToken}&wallet_addr={getWalletResp.PublicAddress}";
-                var response = new DepositResult
-                {
-                    Success = true,
-                    ErrorCode = ErrorCode.Success,
-                    ThirdId = getTokenResp.ReceiptToken,
-                    DepositInfo = depositInfo,
-                    Url = h5Url
-                };*/
-
                 // 因為 H5 網頁預設為中文，改為使用 url 以 QRCode 呈現
                 var rate = GetExchangeRateString(rateInfo.SellRate);
                 var formData = new Dictionary<string, string>
@@ -349,7 +338,7 @@ namespace Payment.FXBit
             var apiUrl = baseApiUrl + Path.GetExchangeRate;
 
             var response = _httpHelper
-                .WithHeader("accept", MediaType.Json)
+                .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
                 .GetAsync<Dictionary<string, Dictionary<string, FxBitExchangeRate>>>(apiUrl, string.Empty)
                 .Result;
@@ -371,7 +360,7 @@ namespace Payment.FXBit
             var apiUrl = baseApiUrl + Path.CreateTransaction;
 
             var response = _httpHelper
-                .WithHeader("accept", MediaType.Json)
+                .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
                 .PostJsonAsync<GetReceptionTokenReq, GetReceptionTokenResp>(apiUrl, req)
                 .Result;
@@ -398,7 +387,7 @@ namespace Payment.FXBit
             var apiUrl = baseApiUrl + Path.GetWalletAddress;
 
             var response = _httpHelper
-                .WithHeader("accept", MediaType.Json)
+                .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
                 .PostJsonAsync<GetWalletAddressReq, GetWalletAddressResp>(apiUrl, req)
                 .Result;
@@ -424,7 +413,7 @@ namespace Payment.FXBit
             Dictionary<string, string> req)
         {
             var response = _httpHelper
-                .WithHeader("accept", MediaType.Json)
+                .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
                 .PostJsonAsync<Dictionary<string, string>, PayoutQueryResp>(apiUrl, req)
                 .Result;
@@ -450,7 +439,7 @@ namespace Payment.FXBit
             Dictionary<string, string> req)
         {
             var response = _httpHelper
-                .WithHeader("accept", MediaType.Json)
+                .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
                 .PostJsonAsync<Dictionary<string, string>, PayoutResp>(apiUrl, req)
                 .Result;

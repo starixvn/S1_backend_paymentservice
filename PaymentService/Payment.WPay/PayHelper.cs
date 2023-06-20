@@ -5,6 +5,7 @@ using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.WPay;
@@ -251,7 +252,7 @@ public class PayHelper : PayHelperBase
         var apiUrl = baseApiUrl + Path.CreateOrder;
 
         var (result, statusCode) = _httpHelper
-            .WithHeader("accept", MediaType.Json)
+            .WithHeader("accept", ContentType.Json)
             .PostJson<Dictionary<string, string>, CreatOrderResponse>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
@@ -271,7 +272,7 @@ public class PayHelper : PayHelperBase
     {
         var apiUrl = baseApiUrl + Path.CreatePayout;
         var (result, statusCode) = _httpHelper
-            .WithHeader("accept", MediaType.Json)
+            .WithHeader("accept", ContentType.Json)
             .PostJson<Dictionary<string, string>, CreatPayoutResponse>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())

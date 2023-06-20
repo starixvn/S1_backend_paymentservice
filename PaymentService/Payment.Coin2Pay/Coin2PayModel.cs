@@ -75,22 +75,20 @@ internal class GetWithdrawalEstimateData
     public decimal WithdrawalCreditRate{ get; set; }
 
     [JsonProperty("asset_Estimate_get")]
-    public IEnumerable<AssetEstimateGet> AssetEstimateGet{ get; set; }
+    public IEnumerable<AssetEstimate> AssetEstimate{ get; set; }
 }
 
-internal class AssetEstimateGet
+internal class AssetEstimate
 {
     [JsonProperty("Token")]
     public string Token{ get; set; }
 
     [JsonProperty("Estimate_Get_Value")]
-    public decimal EstimateGetValue{ get; set; }
+    public decimal EstimateValue{ get; set; }
 }
 
-internal class GetWithdrawalEstimateResp : Coin2PayBaseResp<IEnumerable<GetAddressData>>
+internal class GetWithdrawalEstimateResp : Coin2PayBaseResp<GetWithdrawalEstimateData>
 {
-    [JsonProperty("hostedPage")]
-    public HostedPage HostedPage { get; set; }
 }
 
 internal class GetTokenPriceData
@@ -151,22 +149,29 @@ internal class GetReceptionTokenReq
     public string CallbackUrl { get; set; }
 }
 
-internal class PayoutResp
+internal class WithdrawalInfo
 {
-    [JsonProperty("error")]
-    public int Error { get; set; }
+    [JsonProperty("address")]
+    public decimal Address{ get; set; }
 
-    /// <summary>
-    /// 交易編號（商戶自訂 11 位數字）
-    /// </summary>
-    [JsonProperty("req_payout_id")]
-    public int ReqPayoutId { get; set; }
+    [JsonProperty("Token")]
+    public string Token{ get; set; }
 
-    /// <summary>
-    /// 第三方單號
-    /// </summary>
-    [JsonProperty("res_payout_id")]
-    public string ResPayoutId { get; set; }
+    [JsonProperty("amount")]
+    public decimal Amount{ get; set; }
+    
+    [JsonProperty("creditamount")]
+    public decimal CreditAmount{ get; set; }
+    
+    [JsonProperty("txid")]
+    public string ThirdId{ get; set; }
+    
+    [JsonProperty("order_id")]
+    public string TransId{ get; set; }
+}
+
+internal class WithdrawalResp: Coin2PayBaseResp<WithdrawalInfo>
+{
 }
 
 internal class PayoutQueryResp
