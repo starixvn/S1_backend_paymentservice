@@ -169,7 +169,7 @@ namespace Payment.Coin2Pay
                     {"platformID", platformId},
                     {"currency", currency},
                     {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()},
-                    {"withdrawl_credit", reqAmount.ToString("#")}
+                    {"withdrawal_credit", reqAmount.ToString("f8")}
                 };
                 
                 req.Add("sign", GetSign(req, privateKey));
@@ -189,7 +189,7 @@ namespace Payment.Coin2Pay
                     { "from_address", addr.Address },
                     { "to_address", inputs["AccountNo"] },
                     { "order_id", transId },
-                    { "creditamount", estVal.EstimateValue.ToString("#") },
+                    { "creditamount", estVal.EstimateValue.ToString("f8") },
                     { "token", token },
                     { "network", network },
                     { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
