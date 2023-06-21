@@ -414,8 +414,10 @@ namespace Payment.Coin2Pay
             return result;
         }
 
-        private WithdrawalResp Withdrawal(string apiUrl, Dictionary<string, string> req)
+        private WithdrawalResp Withdrawal(string baseApiUrl, Dictionary<string, string> req)
         {
+            var apiUrl = baseApiUrl + Path.RequestWithdrawal;
+            
             var (result, statusCode) = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .PostJson<Dictionary<string, string>, WithdrawalResp>(apiUrl, req);
