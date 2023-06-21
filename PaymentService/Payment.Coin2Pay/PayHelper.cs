@@ -310,7 +310,7 @@ namespace Payment.Coin2Pay
 
             var str = $"{data["UID"]}{data["order_id"]}{data["token"]}{data["network"]}{data["creditamount"]}{data["timestamp"]}";
             
-            if (!VerifySign(str, data["sign"], input["PublicKey"]))
+            if (!VerifySign(str, data["sign"], input["key"]))
             {
                 return new VerifyTransactionResult
                 {
