@@ -159,6 +159,7 @@ namespace Payment.Coin2Pay
             var transId = inputs["TransID"];
             var platformId = inputs["PlatformID"];
             var privateKey = inputs["PrivateKey"];
+            var withdrawalInfo = inputs["WithdrawalInfo"];
 
             try
             {
@@ -183,13 +184,20 @@ namespace Payment.Coin2Pay
                     throw new CustomException("Get withdrawal estimation asset data not exists. token: " + token);
                 }
                 
+                // 將匯率資訊加入 WithdrawalInfo
+                if (withdrawalInfo == null)
+                    throw new CustomException("WithdrawalInfo is empty.");
+
+                var rate = CalculateRate(reqAmount, estVal.EstimateValue);
+                withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rate.ToString(), estVal.EstimateValue.ToString());
+                
                 req = new Dictionary<string, string>
                 {
                     { "platformID", platformId },
                     { "from_address", addr.Address },
                     { "to_address", inputs["AccountNo"] },
                     { "order_id", transId },
-                    { "creditamount", estVal.EstimateValue.ToString("f8") },
+                    { "creditamount", withdrawalEstimate.Data.WithdrawalCredit.ToString("f8") }, // 要用withdrawal_Credit分數點送金額
                     { "token", token },
                     { "network", network },
                     { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
@@ -202,7 +210,8 @@ namespace Payment.Coin2Pay
                 {
                     Success = true,
                     WithdrawId = transId,
-                    RawContent = JsonConvert.SerializeObject(withdrawalResp)
+                    RawContent = JsonConvert.SerializeObject(withdrawalResp),
+                    WithdrawalInfo = withdrawalInfo
                 };
 
                 return response;
@@ -650,7 +659,10 @@ namespace Payment.Coin2Pay
             return req;
             
         }
-        
+
+        private static decimal CalculateRate(decimal amount, decimal cryptoAmount)
+            => cryptoAmount / amount;
+
         #endregion
     }
 }
