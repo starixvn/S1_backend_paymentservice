@@ -152,7 +152,7 @@ internal class GetReceptionTokenReq
 internal class WithdrawalInfo
 {
     [JsonProperty("address")]
-    public decimal Address{ get; set; }
+    public string Address{ get; set; }
 
     [JsonProperty("Token")]
     public string Token{ get; set; }
