@@ -163,6 +163,9 @@ internal class WithdrawalInfo
     [JsonProperty("creditamount")]
     public decimal CreditAmount{ get; set; }
     
+    [JsonProperty("actual_amount_received")]
+    public decimal ActualAmountReceived{ get; set; }
+    
     [JsonProperty("txid")]
     public string ThirdId{ get; set; }
     
