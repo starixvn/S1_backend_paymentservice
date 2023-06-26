@@ -184,13 +184,9 @@ namespace Payment.Coin2Pay
                     throw new CustomException("Get withdrawal estimation asset data not exists. token: " + token);
                 }
                 
-                // 將匯率資訊加入 WithdrawalInfo
                 if (withdrawalInfo == null)
                     throw new CustomException("WithdrawalInfo is empty.");
 
-                var rate = CalculateRate(reqAmount, estVal.EstimateValue);
-                withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rate.ToString(), estVal.EstimateValue.ToString());
-                
                 req = new Dictionary<string, string>
                 {
                     { "platformID", platformId },
@@ -206,6 +202,11 @@ namespace Payment.Coin2Pay
                 req.Add("sign", GetSign(req, privateKey));
 
                 var withdrawalResp = Withdrawal(baseApiUrl, req);
+
+                // 將匯率資訊加入 WithdrawalInfo
+                var rate = CalculateRate(reqAmount, estVal.EstimateValue);
+                withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rate.ToString(), withdrawalResp.Data.ActualAmountReceived.ToString());
+                
                 var response = new WithdrawResult
                 {
                     Success = true,
