@@ -20,6 +20,6 @@
     {
         public const string Login = "/api/login";
         
-        public const string ExchangeRate = "/api/callBack";
+        public const string Action = "/api/callBack";
     }
 }

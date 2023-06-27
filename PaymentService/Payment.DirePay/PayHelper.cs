@@ -23,38 +23,7 @@ namespace Payment.DirePay
         }
 
         #region Exchange Rate
-
-        /*ExchangeResult IExchangeHelper.GetExchange(Dictionary<string, string> payResource)
-        {
-            var oExchangeResult = new ExchangeResult
-            {
-                ErrorCode = "9000"
-            };
-
-            var from_currency = GetPayCurrency(payResource["PayCurrencyId"]);
-            var to_currency = payResource["PayCode"];
-            var amount = payResource["Amount"];
-            string message;
-
-            var toAmount = getExchange(amount, from_currency, to_currency, payResource, out message);
-            if (toAmount > 0)
-            {
-                var ResData = new Dictionary<string, string>();
-                ResData.Add("To_Amount", toAmount.ToString());
-                ResData.Add("Rate", (toAmount / decimal.Parse(amount)).ToString());
-                ResData.Add("Updated_timestamp", new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString());
-
-                oExchangeResult.FormData = ResData;
-                oExchangeResult.ErrorCode = "0";
-            }
-            else
-            {
-                oExchangeResult.Message = message;
-            }
-
-            return oExchangeResult;
-        }*/
-
+        
         ExchangeResult IExchangeHelper.GetExchange(Dictionary<string, string> input)
         {
             try
@@ -63,7 +32,7 @@ namespace Payment.DirePay
                 var toCurrency = input["PayCode"];
                 var amount = input["Amount"];
                 var type = input["ExchangeType"];
-                var toAmount = GetExchangeAmountAsync(amount, fromCurrency, toCurrency, input, type).Result;
+                var toAmount = GetExchangeAmount(amount, fromCurrency, toCurrency, input, type);
         
                 if (toAmount > 0)
                 {
@@ -89,123 +58,22 @@ namespace Payment.DirePay
         #endregion
 
         #region Deposit
-
+        
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            var sUrl = inputs["host"];
-            var getReceptionToken = sUrl + "/api/login";
-            var getWalletAddress = sUrl + "/api/callBack";
-            var depositInfo = inputs["DepositInfo"];
+            var payCode = inputs["PayCode"];
+            var (isFiat, method) = GetMethod(payCode);
 
-            var depositGetH5Req = new Dictionary<string, string>
-            {
-                { "email", inputs["Email"] },
-                { "password", inputs["Password"] }
-            };
-            var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            
-            var oDepositResult = new DepositResult();
-            oDepositResult.Success = false;
-            // 檢查 DepositInfo
-            if (depositInfo == null)
-            {
-                oDepositResult.Message = "DepositInfo is empty.";
-                return oDepositResult;
-            }
             try
             {
-                var sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded",
-                    inputs["TransID"].ToLower(), true);
-
-                var depositResp = new DepositResp();
-                depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
-                var payCode = inputs["PayCode"];
-                var itemId = GetItemId(payCode);
-                var payCurrency = GetPayCurrency(inputs["PayCurrencyId"]);
-                if (depositResp != null && depositResp.access_token != null)
-                {
-                    var depositGetWalletReq = new DepositGetWalletReq();
-                    depositGetWalletReq.command = "payment";
-                    depositGetWalletReq.line_items = new line_items[1];
-                    depositGetWalletReq.line_items[0] = new line_items();
-                    depositGetWalletReq.line_items[0].name = "deposit";
-                    depositGetWalletReq.line_items[0].item_id = itemId;
-                    depositGetWalletReq.line_items[0].description = $"Deposit {payCurrency} via {itemId}";
-                    var amount = decimal.Parse(inputs["Amount"]);
-                    depositGetWalletReq.line_items[0].amount = amount.ToString("#");
-                    depositGetWalletReq.line_items[0].quantity = "1";
-                    depositGetWalletReq.currency = payCurrency;
-                    depositGetWalletReq.token = payCode;
-                    depositGetWalletReq.callback_url = inputs["CallBackUrl"];
-                    depositGetWalletReq.customer_uid = inputs["CustId"];
-                    depositGetWalletReq.client_reference_id = inputs["TransID"];
-                    depositGetWalletReq.hashCode = ToMD5("payment" + inputs["key"]).ToLower();
-                    var sResponse1 = HttpPost(getWalletAddress, ToJson(depositGetWalletReq), "application/json",
-                    depositResp.access_token, inputs["TransID"].ToLower(), true);
-
-                    var depositGetWalletResp = new DepositGetWalletResp();
-                    depositGetWalletResp = JsonConvert.DeserializeObject<DepositGetWalletResp>(sResponse1);
-
-                    if (depositGetWalletResp != null && depositGetWalletResp.txid != null)
-                    {
-                        var ResData = new Dictionary<string, string>();
-                        ResData.Add("DepositAmount", depositGetWalletResp.invoice_amount);
-                        ResData.Add("Rate", depositGetWalletResp.rates);
-                        var requestAmount = decimal.Parse(depositGetWalletResp.invoice_amount) * decimal.Parse(depositGetWalletResp.rates);
-                        ResData.Add("RequestAmount", requestAmount.ToString());
-                        ResData.Add("Token", depositGetWalletResp.payment_token);
-                        
-                        if (depositGetWalletResp.enable_promotion)
-                        {
-                            ResData.Add("Promotion", "1");
-                            ResData.Add("PromotionRate", depositGetWalletResp.promotion_rate);
-                            ResData.Add("PromotionAmount", depositGetWalletResp.promotion_fiat_amount);
-                        }
-                        else
-                        {
-                            ResData.Add("Promotion", "0");
-                        }
-
-                        oDepositResult.Success = true;
-                        oDepositResult.Url = payCode.Equals("XRP")
-                            ? GetPayinXRPAddress(depositGetWalletResp.payment_address)
-                            : depositGetWalletResp.payment_address;
-                        oDepositResult.ThirdId = depositGetWalletResp.txid;
-                        oDepositResult.FormData = ResData;
-                        // 塞入匯率相關資訊
-                        oDepositResult.DepositInfo =
-                            depositInfo.AddOrSetExchangeInfo(depositGetWalletResp.rates, requestAmount.ToString());
-                    }
-                    else
-                    {
-                        oDepositResult.Message = $"{depositGetWalletResp.message}";
-                        oDepositResult.RawContent = sResponse1;
-                    }
-                }
-                else
-                {
-                    oDepositResult.Message = depositResp.message;
-                    oDepositResult.RawContent = sResponse;
-                }
+                return isFiat ? FiatPayin(inputs, method) : CryptoPayin(inputs, method);
             }
-            catch (WebException wEx)
+            catch (CustomException ex)
             {
-                var err = FromJson<Dictionary<string, string>>(new StreamReader(wEx.Response?.GetResponseStream()).ReadToEnd());
-                if (err.ContainsKey("error"))
-                {
-                    oDepositResult.Message = $"{err["error"]}-{err["error_message"]}";
-                    oDepositResult.RawContent = $"{err["error"]}-{err["error_message"]}";
-                }
-                if (err.ContainsKey("err"))
-                {
-                    oDepositResult.Message = $"{err["err"]}";
-                    oDepositResult.RawContent = $"{err["err"]}";
-                }
+                _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
 
-                _logger.LogError(wEx.InnerException, wEx.Message);
+                return new DepositResult(false, ex.Code, ex.Message);
             }
-
-            return oDepositResult;
         }
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
@@ -310,8 +178,8 @@ namespace Payment.DirePay
                     withdrawGetWalletReq.client_reference_id = inputs["TransID"];
                     withdrawGetWalletReq.hashCode = ToMD5("partner_withdraw" + inputs["key"]).ToLower();
                     var message = "";
-                    var toAmount = GetExchangeAmountAsync(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency,
-                        withdrawGetWalletReq.withdrawal_token, inputs, "0").Result;
+                    var toAmount = GetExchangeAmount(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency,
+                        withdrawGetWalletReq.withdrawal_token, inputs, "0");
 
                     if (toAmount > 0)
                     {
@@ -419,65 +287,7 @@ namespace Payment.DirePay
 
         #region Private Methods
 
-        /*private decimal GetExchangeRate(string amount, string from_currency, string to_currency, Dictionary<string, string> inputs, out string message)
-        {
-            message = "";
-            var sUrl = inputs["host"];
-            var getReceptionTokenUrl = sUrl + "/api/login";
-            var getExchangeUrl = sUrl + "/api/callBack";
-
-            var depositGetTokenReq = new Dictionary<string, string>();
-            depositGetTokenReq.Add("email", inputs["Email"]);
-            depositGetTokenReq.Add("password", inputs["Password"]);
-            var sParam = string.Join("&", depositGetTokenReq.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            var oDepositResult = new DepositResult();
-            oDepositResult.Success = false;
-            try
-            {
-                _logger.LogInformation("getExchange > getReceptionToken START");
-                var sResponse = HttpPost(getReceptionTokenUrl, sParam, "application/x-www-form-urlencoded", "", true);
-                var depositResp = new DepositResp();
-                depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
-                _logger.LogInformation("getExchange > getReceptionToken END");
-
-                if (depositResp != null && depositResp.access_token != null)
-                {
-
-                    _logger.LogInformation("getExchange > getExchange START");
-                    var exchangeReq = new ExchangeReq();
-                    exchangeReq.command = "rates";
-                    exchangeReq.amount = amount.ToString();
-                    exchangeReq.from_currency = from_currency;
-                    exchangeReq.to_currency = to_currency;
-                    exchangeReq.type = "SELL";
-                    //_logger.LogInformation("getExchange > getExchange url: " + getExchangeUrl);
-                    //_logger.LogInformation("getExchange > getExchange req: " + base.ToJson(exchangeReq));
-                    //_logger.LogInformation("getExchange > getExchange token: " + depositResp.access_token);
-                    var sResponse1 = HttpPost(getExchangeUrl, ToJson(exchangeReq), "application/json", depositResp.access_token, "", true);
-                    _logger.LogInformation("getExchange > getExchange END");
-                    var exchangeResp = new ExchangeResp();
-                    exchangeResp = JsonConvert.DeserializeObject<ExchangeResp>(sResponse1);
-
-                    if (exchangeResp != null && exchangeResp.amount != null)
-                    {
-                        return decimal.Parse(exchangeResp.amount.ToString());
-                    }
-                    else
-                    {
-                        message = exchangeResp.message;
-                    }
-                }
-            }
-            catch (WebException wex)
-            {
-                message = wex.ToString();
-                _logger.LogError(message);
-            }
-            return 0;
-        }*/
-
-        private async Task<string> GetAccessTokenAsync(Dictionary<string, string> inputs)
+        private string GetAccessToken(IDictionary<string, string> inputs)
         {
             var baseApiUrl = inputs["host"];
             var loginUrl = baseApiUrl + Path.Login;
@@ -488,33 +298,168 @@ namespace Payment.DirePay
                 { "password", inputs["Password"] }
             };
 
-            var result = await _httpHelper
-                .PostUrlEncodedAsync<Dictionary<string, string>, DepositResp>(loginUrl, request);
+            var (result, statusCode) = _httpHelper
+                .PostUrlEncoded<Dictionary<string, string>, DepositResp>(loginUrl, request);
 
-            if (!result.StatusCode.IsSuccessStatus())
+            if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"DirePay login failed, HttpStatus: {(int)result.StatusCode} {result.StatusCode}" +
-                        $", Message: {result.Result.message}",
+                    $"DirePay login failed, HttpStatus: {(int)statusCode} {statusCode}" +
+                        $", Message: {result.message}",
                     ErrorCode.GetExchangeRateFailed);
             }
 
-            if (string.IsNullOrEmpty(result.Result.access_token))
+            if (string.IsNullOrEmpty(result.access_token))
             {
                 throw new CustomException(
                     "DirePay login response access_token is empty",
                     ErrorCode.GetExchangeRateFailed);
             }
 
-            return result.Result.access_token;
+            return result.access_token;
+        }
+        
+        private DepositResult CryptoPayin(IDictionary<string, string> inputs, string method)
+        {
+            var apiUrl = inputs["host"] + Path.Action;
+            var payCode = inputs["PayCode"];
+            var amount = decimal.Parse(inputs["Amount"]);
+            var payCurrency = GetPayCurrency(inputs["PayCurrencyId"]);
+            var depositInfo = inputs["DepositInfo"];
+            
+            // 檢查 DepositInfo
+            if (depositInfo == null)
+            {
+                return new DepositResult("DepositInfo is empty.");
+            }
+            
+            var accessToken = GetAccessToken(inputs);
+            var req = new DepositGetWalletReq
+            {
+                command = "payment",
+                line_items = new[]
+                {
+                    new LineItem
+                    {
+                        name = "deposit",
+                        item_id = method,
+                        description = $"Deposit {payCurrency} via {method}",
+                        amount = amount.ToString("#"),
+                        quantity = "1"
+                    }
+                },
+                currency = payCurrency,
+                token = payCode,
+                callback_url = inputs["CallBackUrl"],
+                customer_uid = inputs["CustId"],
+                client_reference_id = inputs["TransID"],
+                hashCode = ToMD5("payment" + inputs["key"]).ToLower()
+            };
+
+            var resp = CryptoPayinGetWallet(apiUrl, accessToken, req);
+            
+            var requestAmount = decimal.Parse(resp.InvoiceAmount) * decimal.Parse(resp.Rates);
+            var resData = new Dictionary<string, string>
+            {
+                {"DepositAmount", resp.InvoiceAmount},
+                {"Rate", resp.Rates},
+                {"RequestAmount", requestAmount.ToString("#")},
+                {"Token", resp.PaymentToken}
+            };
+            
+            if (resp.EnablePromotion)
+            {
+                resData.Add("Promotion", "1");
+                resData.Add("PromotionRate", resp.PromotionRate);
+                resData.Add("PromotionAmount", resp.PromotionFiatAmount);
+            }
+            else
+            {
+                resData.Add("Promotion", "0");
+            }
+
+            return new DepositResult
+            {
+                Success = true,
+                Url = payCode.Equals("XRP")
+                    ? GetPayinXRPAddress(resp.PaymentAddress)
+                    : resp.PaymentAddress,
+                ThirdId = resp.ThirdId,
+                FormData = resData,
+                DepositInfo = depositInfo.AddOrSetExchangeInfo(resp.Rates, requestAmount.ToString("#"))
+            };
+        }
+        
+        private CryptoPayinResp CryptoPayinGetWallet(string apiUrl, string accessToken, DepositGetWalletReq request)
+        {
+            var (result, statusCode) = _httpHelper
+                .WithOAuthBearerToken(accessToken)
+                .PostUrlEncoded<DepositGetWalletReq, CryptoPayinResp>(apiUrl, request);
+
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"DirePay GetWallet failed, HttpStatus: {(int)statusCode} {statusCode}" +
+                    $", Message: {result.Message}",
+                    ErrorCode.GetExchangeRateFailed);
+            }
+            
+            return result;
+        }
+        
+        
+        private DepositResult FiatPayin(IDictionary<string, string> inputs, string method)
+        {
+            var apiUrl = inputs["host"] + Path.Action;
+            var amount = decimal.Parse(inputs["Amount"]);
+            var payCurrency = inputs["PayCurrencyId"];
+            
+            var accessToken = GetAccessToken(inputs);
+            var req = new Dictionary<string, string>
+            {
+                { "command", "payment" },
+                { "hashCode", ToMD5("fiat_payment" + inputs["key"]).ToLower() },
+                { "callback_url", inputs["CallBackUrl"] },
+                { "redirect_url", inputs["ReturnUrl"] },
+                { "currency", payCurrency },
+                { "method", method },
+                { "customer_uid", inputs["CustId"] },
+                { "depositor_name", inputs["AccountName"] },
+                { "amount", amount.ToString("#") },
+                { "txid", inputs["TransID"] }
+            };
+
+            if (payCurrency is "BDT" or "IDR")
+            {
+                req.Add("bank_code", inputs["BankCode"]);
+            }
+
+            var (resp, statusCode) = _httpHelper
+                .WithOAuthBearerToken(accessToken)
+                .PostUrlEncoded<Dictionary<string, string>, FiatPayinResp>(apiUrl, req);
+
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"DirePay fiat_payment failed, HttpStatus: {(int)statusCode} {statusCode}" +
+                    $", Message: {resp.Message}");
+            }
+           
+            return new DepositResult
+            {
+                Success = true,
+                ErrorCode = ErrorCode.Success,
+                Url = resp.PayUrl,
+                ThirdId = resp.ThirdId
+            };
         }
 
-        private async Task<decimal> GetExchangeAmountAsync(string amount, string fromCurrency, string toCurrency, Dictionary<string, string> inputs, string type = "1")
+        private decimal GetExchangeAmount(string amount, string fromCurrency, string toCurrency, IDictionary<string, string> inputs, string type = "1")
         {
             var baseApiUrl = inputs["host"];
-            var getExchangeUrl = baseApiUrl + Path.ExchangeRate;
+            var getExchangeUrl = baseApiUrl + Path.Action;
 
-            var accessToken = await GetAccessTokenAsync(inputs);
+            var accessToken = GetAccessToken(inputs);
             var request = new Dictionary<string, string>
                 {
                     { "command", "rates" },
@@ -524,38 +469,39 @@ namespace Payment.DirePay
                     { "type", _dicExchangeType[type] }
                 };
 
-            var result = await _httpHelper
+            var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(accessToken)
-                .PostUrlEncodedAsync<Dictionary<string, string>, ExchangeResp>(getExchangeUrl, request);
+                .PostUrlEncoded<Dictionary<string, string>, ExchangeResp>(getExchangeUrl, request);
 
-            if (!result.StatusCode.IsSuccessStatus())
+            if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"DirePay GetExchangeRate failed, HttpStatus: {(int)result.StatusCode} {result.StatusCode}" +
-                        $", Message: {result.Result.message}",
+                    $"DirePay GetExchangeRate failed, HttpStatus: {(int)statusCode} {statusCode}" +
+                        $", Message: {result.message}",
                     ErrorCode.GetExchangeRateFailed);
             }
 
-            var exchangeAmount = decimal.Parse(result.Result.amount);
+            var exchangeAmount = decimal.Parse(result.amount);
 
             return exchangeAmount;
         }
 
-        private string GetItemId(string payCode)
+        private static (bool IsFiat, string Method) GetMethod(string payCode)
         {
             var splitStr = payCode.Split('-');
+            var isFait = splitStr[0].Equals("fait");
 
-            return splitStr.Length > 1 ? splitStr[1] : splitStr[0];
+            return (isFait, splitStr.Length > 1 ? splitStr[1] : splitStr[0]);
         }
 
-        private string GetPayCurrency(string payCurrencyId)
+        private static string GetPayCurrency(string payCurrencyId)
         {
             var splitStr = payCurrencyId.Split('_');
 
             return splitStr[0];
         }
         
-        private string GetPayinXRPAddress(string addr)
+        private static string GetPayinXRPAddress(string addr)
         {
             var splitStr = addr.Split(':');
 
