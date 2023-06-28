@@ -11,6 +11,6 @@ public interface IPayHelper
     event InsertPaymentLogEventHandler InsertPaymentLog;
     EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs);
     EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs);
-    NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
-    NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
+    NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource);
+    NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource);
 }

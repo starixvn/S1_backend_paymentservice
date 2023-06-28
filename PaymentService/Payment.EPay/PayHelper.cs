@@ -192,7 +192,7 @@ namespace Payment.EPay
             return oDepositResult;
         }
         
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackData>(bodyContent);
             var dataContent = FromJson<CallBackDataContent>(data.Content);
@@ -335,7 +335,7 @@ namespace Payment.EPay
             return withdrawResult;
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackData>(bodyContent);
             var dataContent = FromJson<CallBackDataContent>(data.Content);

@@ -6,7 +6,7 @@ namespace Payment.NganLuong
 {
     class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();
         }
@@ -23,7 +23,7 @@ namespace Payment.NganLuong
             public string amount_receiver { set; get; }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(bodyContent);
 

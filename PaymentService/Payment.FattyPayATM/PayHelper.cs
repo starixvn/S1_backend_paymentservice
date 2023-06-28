@@ -6,7 +6,7 @@ namespace Payment.FattyPayATM
 {
     class PayHelper : PayHelperBase
     {
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();
         }
@@ -42,7 +42,7 @@ namespace Payment.FattyPayATM
             public string message { get; set; }
             public List<Fee> fees { get; set; }
         }
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var sUrl = payResource["host"] + "/api/v1/transaction";
             var data = FromJson<CallBackDebitReq>(bodyContent);

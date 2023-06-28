@@ -306,14 +306,16 @@ namespace PaymentService.Controllers
         {
             try
             {
-                var bodyText = "";
+                string bodyText;
+                var headers = Request.Headers
+                    .ToDictionary(x => x.Key, x => x.Value.ToString());
+                
                 using (var reader = new StreamReader(Request.Body))
                 {
                     bodyText = await reader.ReadToEndAsync();
                 }
 
                 var dicParam = new Dictionary<string, string>();
-                var isFormData = false;
                 if (Request.ContentType == null)
                 {
                     _logger.LogInformation(
@@ -329,8 +331,6 @@ namespace PaymentService.Controllers
                     {
                         dicParam.Add(vFormData.Key, vFormData.Value);
                     }
-
-                    isFormData = true;
                 }
 
                 _logger.LogInformation(
@@ -344,7 +344,7 @@ namespace PaymentService.Controllers
                     transId = payHelperNoCallBackUrl.FetchTransId(dicParam, bodyText);
                 }
 
-                var responseToPay = CallBackHandler(transId, dicParam, bodyText, isFormData);
+                var responseToPay = CallBackHandler(transId, dicParam, bodyText, headers);
                 return Content(responseToPay);
             }
             catch (Exception e)
@@ -354,7 +354,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        private string CallBackHandler(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
+        private string CallBackHandler(string transId, Dictionary<string, string> dicParam, string bodyText, Dictionary<string, string> headers)
         {
             //查詢訂單在不在db
             var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
@@ -374,7 +374,7 @@ namespace PaymentService.Controllers
                 //((PayHelperBase)payHelper).AddPaymentLog(InsertPaymentLog);
 
                 //取得每家金流的成果 
-                var rNotifyWithdrawalResult = payHelper.CallBackCredit(dicParam, bodyText, WithReq);
+                var rNotifyWithdrawalResult = payHelper.CallBackCredit(dicParam, bodyText, headers, WithReq);
 
                 var temp = rNotifyWithdrawalResult.WithdrawId;
                 while (temp.Substring(0, 1) == "0")

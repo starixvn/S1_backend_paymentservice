@@ -76,8 +76,9 @@ namespace Payment.DirePay
             }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
+            
             var data = FromJson<CallBackDepositReq>(bodyContent);
 
             var oNotify = new NotifyDepositResult();
@@ -235,7 +236,7 @@ namespace Payment.DirePay
             return withdrawResult;
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackWithdrawReq>(bodyContent);
 

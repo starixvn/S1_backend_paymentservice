@@ -7,7 +7,7 @@ namespace Payment.OneClickPay
 {
     public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();
         }
@@ -23,7 +23,7 @@ namespace Payment.OneClickPay
             public string sign { get; set; }
             public string bank_code { get; set; }
         }
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
             var secret_key = payResource["secret_key"];
