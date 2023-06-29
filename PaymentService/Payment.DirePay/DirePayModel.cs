@@ -136,7 +136,7 @@ namespace Payment.DirePay
     internal class PayinGetWalletReq
     {
         public string command { get; set; }
-        public IEnumerable<LineItem> line_items { get; set; }
+        public LineItem[] line_items { get; set; }
         public string hashCode { get; set; }
         public string currency { get; set; }
         public string token { get; set; }
