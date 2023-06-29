@@ -41,11 +41,10 @@ namespace PaymentService.Controllers
             public int ChannelId { get; set; }
             public int CustId { get; set; }
             public decimal Amount { get; set; }
-            //public string ClientIP { set; get; }
             public string AccountName { set; get; }
             public string AccountNo { set; get; }
             public string IFSCCode { set; get; }
-            //public string ReturnUrl { set; get; }
+            public int WithdrawalType { set; get; }
         }
         
         [HttpPost]
@@ -103,6 +102,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("PhoneNo", custInfo.PhoneNo);
                 WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
                 WithReq.Add("AreaCode", custInfo.AreaCode);
+                WithReq.Add("WithdrawalType", reqWithdrawal.WithdrawalType.ToString());
 
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
@@ -185,6 +185,7 @@ namespace PaymentService.Controllers
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
                 WithReq.Add("WithdrawalInfo", withdrawalInfo);
+                WithReq.Add("WithdrawalType", reqWithdrawal.WithdrawalType.ToString());
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");

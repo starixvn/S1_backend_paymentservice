@@ -1,8 +1,6 @@
-﻿using Newtonsoft.Json;
-using PaymentCore;
-using System.Net;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
@@ -44,8 +42,7 @@ namespace Payment.DirePay
                     });
                 }
 
-                throw new CustomException("Incorrect exchange amount: " + toAmount,
-                    ErrorCode.GetExchangeRateFailed);
+                throw new CustomException("Incorrect exchange amount: " + toAmount);
             }
             catch (CustomException ex)
             {
@@ -76,193 +73,94 @@ namespace Payment.DirePay
             }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
+            Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
+            if (!VerifySign(payResource["key"], bodyContent, headers))
+            {
+                return new NotifyDepositResult
+                {
+                    TransStatus = TransStatus.Pending,
+                    Response = "Signature does not match."
+                };
+            }
+
+            var isCrypto = payResource["DepositType"] == "4";
             
-            var data = FromJson<CallBackDepositReq>(bodyContent);
+            var result = isCrypto
+                ? CryptoPayinCallBack(bodyContent)
+                : FiatPayinCallBack(bodyContent);
 
-            var oNotify = new NotifyDepositResult();
-            oNotify.DepositId = payResource["TransID"];
-            oNotify.Comment = data.status;
-            oNotify.Message = data.status;
-            oNotify.Response = "true";
-
-            if (data.status == "completed")
-            {
-                oNotify.RefThirdId = data.txid;
-                oNotify.ThirdId = data.txid;
-                oNotify.TransStatus = TransStatus.Success;
-                oNotify.RequestAmount = decimal.Parse(data.invoice_amount);
-                if (data.enable_promotion == "false")
-                {
-                    oNotify.ActualAmount = decimal.Parse(data.invoice_amount);
-                }
-                else
-                {
-                    oNotify.ActualAmount = decimal.Parse(data.invoice_amount) + decimal.Parse(data.promotion_fiat_amount);
-                }
-            }
-            else if (data.status == "too_little" || data.status == "too_much")
-            {
-                oNotify.RefThirdId = data.txid;
-                oNotify.ThirdId = data.txid;
-                oNotify.TransStatus = TransStatus.Success;
-                oNotify.RequestAmount = decimal.Parse(data.invoice_amount);
-                if (data.enable_promotion == "false")
-                {
-                    oNotify.ActualAmount = decimal.Parse(data.paid_fiat);
-                }
-                else
-                {
-                    oNotify.ActualAmount = decimal.Parse(data.paid_fiat) + decimal.Parse(data.promotion_fiat_amount);
-                }
-            }
-            else if (data.status == "expired")
-            {
-                oNotify.TransStatus = TransStatus.Fail;
-            }
-            else
-            {
-                oNotify.TransStatus = TransStatus.Pending;
-            }
-
-            return oNotify;
+            result.DepositId = payResource["TransId"];
+            
+            return result;
         }
 
         #endregion
 
         #region Withdrawal
-
+        
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var sUrl = inputs["host"];
-            var getReceptionToken = sUrl + "/api/login";
-            var getWalletAddress = sUrl + "/api/callBack";
-            var withdrawalInfo = inputs["WithdrawalInfo"];
-
-            var depositGetH5Req = new Dictionary<string, string>();
-            depositGetH5Req.Add("email", inputs["Email"]);
-            depositGetH5Req.Add("password", inputs["Password"]);
-            var sParam = string.Join("&", depositGetH5Req.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            string sResponse = null;
-
-            
-            var oDepositResult = new DepositResult();
-            oDepositResult.Success = false;
-
-            var withdrawResult = new WithdrawResult();
-            // 檢查 WithdrawalInfo
-            if (withdrawalInfo == null)
-            {
-                withdrawResult.Success = false;
-                withdrawResult.Message = "WithdrawalInfo is empty.";
-                return withdrawResult;
-            }
             try
             {
-                sResponse = HttpPost(getReceptionToken, sParam, "application/x-www-form-urlencoded", inputs["TransID"].ToLower(), true);
-
-                var depositResp = new DepositResp();
-                depositResp = JsonConvert.DeserializeObject<DepositResp>(sResponse);
-
-                if (depositResp != null && depositResp.access_token != null)
-                {
-                    var withdrawGetWalletReq = new WithdrawGetWalletReq();
-                    withdrawGetWalletReq.command = "partner_withdraw";
-                    var amount = decimal.Parse(inputs["Amount"]);
-                    withdrawGetWalletReq.amount = amount.ToString("#");
-                    withdrawGetWalletReq.currency = GetPayCurrency(inputs["PayCurrencyId"]);
-                    withdrawGetWalletReq.withdrawal_token = inputs["PayCode"];
-                    withdrawGetWalletReq.callback_url = inputs["CallBackUrl"];
-                    withdrawGetWalletReq.address = inputs["AccountNo"];
-                    withdrawGetWalletReq.customer_uid = inputs["CustId"];
-                    withdrawGetWalletReq.client_reference_id = inputs["TransID"];
-                    withdrawGetWalletReq.hashCode = ToMD5("partner_withdraw" + inputs["key"]).ToLower();
-                    var message = "";
-                    var toAmount = GetExchangeAmount(withdrawGetWalletReq.amount, withdrawGetWalletReq.currency,
-                        withdrawGetWalletReq.withdrawal_token, inputs, "0");
-
-                    if (toAmount > 0)
-                    {
-                        withdrawGetWalletReq.withdrawal_amount = toAmount.ToString();
-                        var sResponse1 = HttpPost(getWalletAddress, ToJson(withdrawGetWalletReq), "application/json", depositResp.access_token, inputs["TransID"].ToLower(), true);
-
-                        var withdrawGetWalletResp = new WithdrawGetWalletResp();
-                        withdrawGetWalletResp = JsonConvert.DeserializeObject<WithdrawGetWalletResp>(sResponse1);
-
-                        withdrawResult.Message = withdrawGetWalletResp.message;
-                        withdrawResult.RawContent = withdrawGetWalletResp.message;
-                        if (withdrawGetWalletResp.status == "pending")
-                        {
-                            withdrawResult.Success = true;
-                            withdrawResult.WithdrawalInfo =
-                                withdrawalInfo.AddOrSetExchangeInfo((toAmount / amount).ToString(), toAmount.ToString()); ;
-                        }
-                        else
-                        {
-                            withdrawResult.Success = false;
-                        }
-                    }
-                    else
-                    {
-                        withdrawResult.Success = false;
-                        oDepositResult.Message = message;
-                        oDepositResult.RawContent = message;
-                    }
-                }
-                else
-                {
-                    oDepositResult.Message = depositResp.message;
-                    oDepositResult.RawContent = sResponse;
-                }
+                var isCrypto = inputs["WithdrawalType"] == "4";
+                return isCrypto ? CryptoPayout(inputs) : FiatPayout(inputs);
             }
-            catch (WebException wEx)
+            catch (CustomException ex)
             {
-                var err = FromJson<Dictionary<string, string>>(new StreamReader(wEx.Response?.GetResponseStream()).ReadToEnd());
-                if (err.ContainsKey("error"))
-                {
-                    oDepositResult.Message = $"{err["error"]}-{err["error_message"]}";
-                    oDepositResult.RawContent = $"{err["error"]}-{err["error_message"]}";
-                }
-                if (err.ContainsKey("err"))
-                {
-                    oDepositResult.Message = $"{err["err"]}";
-                    oDepositResult.RawContent = $"{err["err"]}";
-                }
+                _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
 
-                _logger.LogError(wEx.InnerException, wEx.Message);
+                return new WithdrawResult(ex.Message);
             }
-
-            return withdrawResult;
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
+            Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var data = FromJson<CallBackWithdrawReq>(bodyContent);
-
-            var oNotify = new NotifyWithdrawResult();
-            oNotify.WithdrawId = data.client_reference_id;
-            oNotify.Message = data.status;
-            oNotify.ThirdId = data.txid;
-
-            if (data.status == "completed")
+            if (!VerifySign(payResource["key"], bodyContent, headers))
             {
-                oNotify.TransStatus = TransStatus.Success;
-                oNotify.RequestAmount = decimal.Parse(data.amount);
-                oNotify.Response = "true";
+                return new NotifyWithdrawResult
+                {
+                    TransStatus = TransStatus.Pending,
+                    Response = "Signature does not match."
+                };
             }
-            else if (data.status == "rejected")
+
+            NotifyWithdrawResult result;
+            
+            var isCrypto = payResource["WithdrawalType"] == "4";
+            if (isCrypto)
             {
-                oNotify.TransStatus = TransStatus.Fail;
-                oNotify.Response = "true";
+                var data = FromJson<CryptoPayoutCallBackReq>(bodyContent);
+                var transStatus = DirePayDefinition.GetCryptoPayoutTransStatus(data.Status);
+            
+                result = new NotifyWithdrawResult
+                {
+                    TransStatus = transStatus,
+                    ThirdId = data.ThirdId,
+                    Message = data.Status,
+                    RequestAmount = data.Amount
+                };
             }
             else
             {
-                oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Response = "true";
+                var data = FromJson<FiatPaymentCallBackReq>(bodyContent);
+                var transStatus = DirePayDefinition.GetFiatPayoutTransStatus(data.Status);
+            
+                result = new NotifyWithdrawResult
+                {
+                    TransStatus = transStatus,
+                    ThirdId = data.ThirdId,
+                    Message = data.Status,
+                    RequestAmount = data.ActualAmount
+                };
             }
 
-            return oNotify;
+            result.WithdrawId = payResource["TransId"];
+            result.Response = "true";
+            
+            return result;
         }
 
         #endregion
@@ -300,24 +198,20 @@ namespace Payment.DirePay
             };
 
             var (result, statusCode) = _httpHelper
-                .PostUrlEncoded<Dictionary<string, string>, DepositResp>(loginUrl, request);
+                .PostUrlEncoded<Dictionary<string, string>, GetAccessTokenResp>(loginUrl, request);
 
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"DirePay login failed, HttpStatus: {(int)statusCode} {statusCode}" +
-                        $", Message: {result.message}",
-                    ErrorCode.GetExchangeRateFailed);
+                    $"DirePay login failed, HttpStatus: {(int)statusCode} {statusCode} Message: {result.Message}");
             }
 
-            if (string.IsNullOrEmpty(result.access_token))
+            if (string.IsNullOrEmpty(result.AccessToken))
             {
-                throw new CustomException(
-                    "DirePay login response access_token is empty",
-                    ErrorCode.GetExchangeRateFailed);
+                throw new CustomException("DirePay login response access_token is empty");
             }
 
-            return result.access_token;
+            return result.AccessToken;
         }
         
         private DepositResult CryptoPayin(IDictionary<string, string> inputs, string method)
@@ -335,9 +229,9 @@ namespace Payment.DirePay
             }
             
             var accessToken = GetAccessToken(inputs);
-            var req = new DepositGetWalletReq
+            var req = new PayinGetWalletReq
             {
-                command = "payment",
+                command = Command.Payment,
                 line_items = new[]
                 {
                     new LineItem
@@ -354,7 +248,7 @@ namespace Payment.DirePay
                 callback_url = inputs["CallBackUrl"],
                 customer_uid = inputs["CustId"],
                 client_reference_id = inputs["TransID"],
-                hashCode = ToMD5("payment" + inputs["key"]).ToLower()
+                hashCode = ToMD5(Command.Payment + inputs["key"]).ToLower()
             };
 
             var resp = CryptoPayinGetWallet(apiUrl, accessToken, req);
@@ -391,18 +285,16 @@ namespace Payment.DirePay
             };
         }
         
-        private CryptoPayinResp CryptoPayinGetWallet(string apiUrl, string accessToken, DepositGetWalletReq request)
+        private CryptoPayinResp CryptoPayinGetWallet(string apiUrl, string accessToken, PayinGetWalletReq request)
         {
             var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(accessToken)
-                .PostUrlEncoded<DepositGetWalletReq, CryptoPayinResp>(apiUrl, request);
+                .PostUrlEncoded<PayinGetWalletReq, CryptoPayinResp>(apiUrl, request);
 
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"DirePay GetWallet failed, HttpStatus: {(int)statusCode} {statusCode}" +
-                    $", Message: {result.Message}",
-                    ErrorCode.GetExchangeRateFailed);
+                    $"DirePay GetWallet failed, HttpStatus: {(int)statusCode} {statusCode} Message: {result.Message}");
             }
             
             return result;
@@ -418,8 +310,8 @@ namespace Payment.DirePay
             var accessToken = GetAccessToken(inputs);
             var req = new Dictionary<string, string>
             {
-                { "command", "payment" },
-                { "hashCode", ToMD5("fiat_payment" + inputs["key"]).ToLower() },
+                { "command", Command.FiatPayment },
+                { "hashCode", ToMD5(Command.FiatPayment + inputs["key"]).ToLower() },
                 { "callback_url", inputs["CallBackUrl"] },
                 { "redirect_url", inputs["ReturnUrl"] },
                 { "currency", payCurrency },
@@ -442,8 +334,7 @@ namespace Payment.DirePay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"DirePay fiat_payment failed, HttpStatus: {(int)statusCode} {statusCode}" +
-                    $", Message: {resp.Message}");
+                    $"DirePay fiat_payment failed, HttpStatus: {(int)statusCode} {statusCode} Message: {resp.Message}");
             }
            
             return new DepositResult
@@ -463,7 +354,7 @@ namespace Payment.DirePay
             var accessToken = GetAccessToken(inputs);
             var request = new Dictionary<string, string>
                 {
-                    { "command", "rates" },
+                    { "command", Command.Rates },
                     { "amount", amount },
                     { "from_currency", fromCurrency },
                     { "to_currency", toCurrency },
@@ -477,14 +368,187 @@ namespace Payment.DirePay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"DirePay GetExchangeRate failed, HttpStatus: {(int)statusCode} {statusCode}" +
-                        $", Message: {result.message}",
-                    ErrorCode.GetExchangeRateFailed);
+                    $"DirePay GetExchangeRate failed, HttpStatus: {(int)statusCode} {statusCode} Message: {result.Message}");
             }
 
-            var exchangeAmount = decimal.Parse(result.amount);
+            var exchangeAmount = decimal.Parse(result.Amount);
 
             return exchangeAmount;
+        }
+        
+        private bool VerifySign(string key, string content, IDictionary<string, string> headers)
+        {
+            var target = headers.FirstOrDefault(x => x.Key.Equals("Signature")).Value;
+            var sign = ToMD5(key + content).ToLower();
+            
+            return target.Equals(sign);
+        }
+
+        private NotifyDepositResult CryptoPayinCallBack(string json)
+        {
+            var data = FromJson<CryptoPayinCallBackReq>(json);
+            var transStatus = DirePayDefinition.GetCryptoPayinTransStatus(data.Status);
+            var result = new NotifyDepositResult
+            {
+                TransStatus = transStatus,
+                ThirdId = data.ThirdId,
+                Comment = data.Status
+            };
+                
+            if (transStatus == TransStatus.Success)
+            {
+                switch (status: data.Status, data.EnablePromotion)
+                {
+                    case (DirePayCryptoPaymentStatus.Completed, false):
+                        result.ActualAmount = data.InvoiceAmount;
+                        return result;
+                    
+                    case (DirePayCryptoPaymentStatus.Completed, true):
+                        result.ActualAmount = data.InvoiceAmount + data.PromotionFiatAmount;
+                        return result;
+                    
+                    case (DirePayCryptoPaymentStatus.TooLittle, false):
+                    case (DirePayCryptoPaymentStatus.TooMuch, false):
+                        result.ActualAmount = data.PaidFiat;
+                        return result;
+                    
+                    case (DirePayCryptoPaymentStatus.TooLittle, true):
+                    case (DirePayCryptoPaymentStatus.TooMuch, true):
+                        result.ActualAmount = data.PaidFiat + data.PromotionFiatAmount;
+                        return result;
+                }
+            }
+
+            return result;
+        }
+        
+        private NotifyDepositResult FiatPayinCallBack(string json)
+        {
+            var data = FromJson<FiatPaymentCallBackReq>(json);
+            var transStatus = DirePayDefinition.GetFiatPayinTransStatus(data.Status);
+            
+            return new NotifyDepositResult
+            {
+                TransStatus = transStatus,
+                ThirdId = data.ThirdId,
+                Comment = data.Status,
+                ActualAmount = data.ActualAmount
+            };
+        }
+        
+        private WithdrawResult CryptoPayout(IDictionary<string, string> inputs)
+        {
+            var apiUrl = inputs["host"] + Path.Action;
+            var payCode = inputs["PayCode"];
+            var amount = decimal.Parse(inputs["Amount"]);
+            var strAmount = amount.ToString("#");
+            var payCurrency = GetPayCurrency(inputs["PayCurrencyId"]);
+            var withdrawalInfo = inputs["WithdrawalInfo"];
+            var transId = inputs["TransID"];
+            
+            if (withdrawalInfo == null)
+            {
+                return new WithdrawResult("WithdrawalInfo is empty.");
+            }
+
+            var accessToken = GetAccessToken(inputs);
+            var toAmount = GetExchangeAmount(strAmount, payCurrency, payCode, inputs, "0");
+            var req = new Dictionary<string, string>
+            {
+                {"command", Command.PartnerWithdraw},
+                {"amount", strAmount},
+                {"currency", payCurrency},
+                {"withdrawal_token", payCode},
+                {"callback_url", inputs["CallBackUrl"]},
+                {"customer_uid", inputs["CustId"]},
+                {"address", inputs["AccountNo"]},
+                {"client_reference_id", transId},
+                {"withdrawal_amount", toAmount.ToString("#")},
+                {"hashCode", ToMD5(Command.PartnerWithdraw + inputs["key"]).ToLower()}
+            };
+
+            var resp = CryptoPayoutGetWallet(apiUrl, accessToken, req);
+            
+            return new WithdrawResult
+            {
+                Success = true,
+                WithdrawId = transId,
+                Message = resp.Message,
+                WithdrawalInfo = withdrawalInfo
+                    .AddOrSetExchangeInfo((toAmount / amount).ToString("#"), toAmount.ToString("#"))
+            };
+        }
+        
+        private PayoutGetWalletResp CryptoPayoutGetWallet(string apiUrl, string accessToken, Dictionary<string, string> request)
+        {
+            var (result, statusCode) = _httpHelper
+                .WithOAuthBearerToken(accessToken)
+                .PostUrlEncoded<Dictionary<string, string>, PayoutGetWalletResp>(apiUrl, request);
+
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"DirePay GetWallet failed, HttpStatus: {(int)statusCode} {statusCode} Message: {result.Message}");
+            }
+            
+            if (result.Status != DirePayCryptoPaymentStatus.Pending)
+            {
+                throw new CustomException(
+                    $"DirePay GetWallet failed, Status: {result.Status} Message: {result.Message}");
+            }
+            
+            return result;
+        }
+        
+        private WithdrawResult FiatPayout(IDictionary<string, string> inputs)
+        {
+            var apiUrl = inputs["host"] + Path.Action;
+            var payCode = inputs["PayCode"];
+            var amount = decimal.Parse(inputs["Amount"]);
+            var strAmount = amount.ToString("#");
+            var payCurrency = inputs["PayCurrencyId"];
+            var withdrawalInfo = inputs["WithdrawalInfo"];
+            var transId = inputs["TransID"];
+            
+            if (withdrawalInfo == null)
+            {
+                return new WithdrawResult("WithdrawalInfo is empty.");
+            }
+
+            var accessToken = GetAccessToken(inputs);
+            var toAmount = GetExchangeAmount(strAmount, payCurrency, payCode, inputs, "0");
+            var req = new Dictionary<string, string>
+            {
+                {"command", Command.FiatWithdrawal},
+                {"amount", strAmount},
+                {"currency", payCurrency},
+                {"callback_url", inputs["CallBackUrl"]},
+                {"customer_uid", inputs["CustId"]},
+                {"bank_account_number", inputs["AccountNo"]},
+                {"bank_account_name", inputs["AccountName"]},
+                {"bank_name", inputs["BankName"]},
+                {"bank_code", inputs["BankCode"]},
+                {"txid", transId},
+                {"withdrawal_amount", toAmount.ToString("#")},
+                {"hashCode", ToMD5(Command.FiatWithdrawal + inputs["key"]).ToLower()}
+            };
+
+            var (resp, statusCode) = _httpHelper
+                .WithOAuthBearerToken(accessToken)
+                .PostUrlEncoded<Dictionary<string, string>, FiatPayoutResp>(apiUrl, req);
+
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"DirePay fiat_payment failed, HttpStatus: {(int)statusCode} {statusCode} Message: {resp.Message}");
+            }
+            
+            return new WithdrawResult
+            {
+                Success = true,
+                WithdrawId = transId,
+                Message = resp.Message
+            };
         }
 
         private static (bool IsFiat, string Method) GetMethod(string payCode)
