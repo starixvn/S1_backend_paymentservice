@@ -683,7 +683,10 @@ namespace PaymentService.Controllers
         {
             try
             {
-                var bodyText = "";
+                string bodyText;
+                var headers = Request.Headers
+                    .ToDictionary(x => x.Key, x => x.Value.ToString());
+                
                 using (var reader = new StreamReader(Request.Body))
                 {
                     bodyText = await reader.ReadToEndAsync();
@@ -737,7 +740,7 @@ namespace PaymentService.Controllers
                     transId = payHelperNoCallBackUrl.FetchTransId(dicParam, bodyText);
                 }
 
-                var responseToPay = await CallBackHandlerAsync(transId, dicParam, bodyText, isFormData);
+                var responseToPay = await CallBackHandlerAsync(transId, dicParam, bodyText, headers);
                 return Content(responseToPay);
             }
             catch (Exception e)
@@ -747,7 +750,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
+        private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, Dictionary<string, string> headers)
         {
             DepositRequest depositRequest = null;
             //查詢訂單在不在db
@@ -763,6 +766,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("TransID", depositRequest.TransId);
                 DepReq.Add("BankCode", pay.BankCode);
                 DepReq.Add("DepositInfo", depositRequest.DepositInfo);
+                DepReq.Add("DepositType", ((int)depositRequest.DepositType).ToString());
                 DepReq.Add("RequestAmount", depositRequest.Amount.ToString());
 
                 //DepReq.Add("Amount", depositRequest.Amount.ToString());
@@ -783,7 +787,7 @@ namespace PaymentService.Controllers
                 depositRequest.PayName = paySetting.PayName;
 
                 //取得每家金流的成果 
-                var rNotifyDepositResult = payHelper.CallBackDebit(dicParam, bodyText, DepReq);
+                var rNotifyDepositResult = payHelper.CallBackDebit(dicParam, bodyText, headers, DepReq);
 
                 if (!string.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
                 {

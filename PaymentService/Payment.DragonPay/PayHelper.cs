@@ -15,7 +15,7 @@ namespace Payment.DragonPay
             public string bankBranch { get; set; }
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
 
@@ -71,7 +71,7 @@ namespace Payment.DragonPay
             public string sign { get; set; }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(ToJson(formData));

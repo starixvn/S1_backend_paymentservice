@@ -8,7 +8,7 @@ namespace Payment.YPay
     {
         private const string CliNa = "PC";
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
             var parameter = $"amount={data.amount.ToString("#")}completeTime={data.completeTime}order={data.order}remark={data.remark}status={data.status}secret={payResource["key"]}";
@@ -48,7 +48,7 @@ namespace Payment.YPay
             return oNotify;
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(ToJson(formData));

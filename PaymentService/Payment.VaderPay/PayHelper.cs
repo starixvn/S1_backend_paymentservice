@@ -15,7 +15,7 @@ namespace Payment.VaderPay
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
         }
         
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
             var parameter = $"{data.InvoiceNo}{(int)data.Status}{data.Currency}{data.Amount}{data.PaymentDate}";
@@ -64,7 +64,7 @@ namespace Payment.VaderPay
             return oNotify;
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var onlineBank = (formData != null && formData.Count > 0);
             var oNotify = new NotifyDepositResult();

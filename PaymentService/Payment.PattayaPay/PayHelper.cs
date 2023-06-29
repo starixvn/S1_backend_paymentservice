@@ -68,7 +68,8 @@ public class PayHelper : PayHelperBase
         }
     }
 
-    public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> input)
+    public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
+        Dictionary<string, string> headers, Dictionary<string, string> input)
     {
         var apiKey = input["key"];
         var req = FromJson<DepositCallBackRequest>(ToJson(formData));
@@ -155,7 +156,8 @@ public class PayHelper : PayHelperBase
         }
     }
 
-    public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+    public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
+        Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
         var apiKey = payResource["key"];
         var req = FromJson<WithdrawalCallBackRequest>(ToJson(formData));

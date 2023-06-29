@@ -6,7 +6,7 @@ namespace Payment.MangoPay
 {
     class PayHelper : PayHelperBase
     {
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();
         }
@@ -23,7 +23,7 @@ namespace Payment.MangoPay
             public string sign { get; set; }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(bodyContent);
