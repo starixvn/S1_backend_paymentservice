@@ -45,8 +45,6 @@ namespace PaymentService.Controllers
             public string AccountName { set; get; }
             public string AccountNo { set; get; }
             public string IFSCCode { set; get; }
-            public int WithdrawalType { set; get; }
-            public int? EWalletSysId { get; set; }
         }
         
         [HttpPost]
@@ -104,7 +102,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("PhoneNo", custInfo.PhoneNo);
                 WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
                 WithReq.Add("AreaCode", custInfo.AreaCode);
-                WithReq.Add("WithdrawalType", reqWithdrawal.WithdrawalType.ToString());
+                WithReq.Add("WithdrawalType", "1");
 
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
@@ -187,7 +185,7 @@ namespace PaymentService.Controllers
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
                 WithReq.Add("WithdrawalInfo", withdrawalInfo);
-                WithReq.Add("WithdrawalType", reqWithdrawal.WithdrawalType.ToString());
+                WithReq.Add("WithdrawalType", "4");
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
@@ -274,6 +272,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("PhoneNo", custInfo.PhoneNo);
                 WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
                 WithReq.Add("AreaCode", custInfo.AreaCode);
+                WithReq.Add("WithdrawalType", "1");
 
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
