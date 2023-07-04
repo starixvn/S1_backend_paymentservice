@@ -248,6 +248,7 @@ namespace Payment.DirePay
                 callback_url = inputs["CallBackUrl"],
                 customer_uid = inputs["CustId"],
                 client_reference_id = inputs["TransID"],
+                txid = inputs["TransID"],
                 hashCode = ToMD5(Command.Payment + inputs["key"]).ToLower()
             };
 
@@ -289,7 +290,7 @@ namespace Payment.DirePay
         {
             var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(accessToken)
-                .PostUrlEncoded<PayinGetWalletReq, CryptoPayinResp>(apiUrl, request);
+                .PostJson<PayinGetWalletReq, CryptoPayinResp>(apiUrl, request);
 
             if (!statusCode.IsSuccessStatus())
             {
@@ -306,6 +307,7 @@ namespace Payment.DirePay
             var apiUrl = inputs["host"] + Path.Action;
             var amount = decimal.Parse(inputs["Amount"]);
             var payCurrency = inputs["PayCurrencyId"];
+            var splitMethod = method.Split("-");
             
             var accessToken = GetAccessToken(inputs);
             var req = new Dictionary<string, string>
@@ -319,13 +321,9 @@ namespace Payment.DirePay
                 { "customer_uid", inputs["CustId"] },
                 { "depositor_name", inputs["AccountName"] },
                 { "amount", amount.ToString("#") },
-                { "txid", inputs["TransID"] }
+                { "txid", inputs["TransID"] },
+                { "bank_code", splitMethod.Length > 1 ? splitMethod[1] : inputs["BankCode"] }
             };
-
-            if (payCurrency is "BDT" or "IDR")
-            {
-                req.Add("bank_code", inputs["BankCode"]);
-            }
 
             var (resp, statusCode) = _httpHelper
                 .WithOAuthBearerToken(accessToken)
@@ -554,9 +552,9 @@ namespace Payment.DirePay
         private static (bool IsFiat, string Method) GetMethod(string payCode)
         {
             var splitStr = payCode.Split('-');
-            var isFait = splitStr[0].Equals("fait");
+            var isFait = splitStr[0].Equals("fiat");
 
-            return (isFait, splitStr.Length > 1 ? splitStr[1] : splitStr[0]);
+            return (isFait, splitStr.Length > 1 ? splitStr[1] : payCode);
         }
 
         private static string GetPayCurrency(string payCurrencyId)
