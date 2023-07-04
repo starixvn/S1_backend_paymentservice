@@ -90,7 +90,7 @@ namespace Payment.DirePay
     {
         public const string Login = "/api/login";
         
-        public const string Action = "/api/callBack";
+        public const string Action = "/api/callback";
     }
     
     internal class Command

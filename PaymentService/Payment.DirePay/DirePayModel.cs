@@ -142,7 +142,7 @@ namespace Payment.DirePay
         public string token { get; set; }
         public string callback_url { get; set; }
         public string customer_uid { get; set; }
-        public string customer_email { get; set; }
+        public string txid { get; set; }
         public string client_reference_id { get; set; }
     }
     
