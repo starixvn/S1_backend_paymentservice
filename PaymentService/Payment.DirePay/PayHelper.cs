@@ -503,20 +503,13 @@ namespace Payment.DirePay
         private WithdrawResult FiatPayout(IDictionary<string, string> inputs)
         {
             var apiUrl = inputs["host"] + Path.Action;
-            var payCode = inputs["PayCode"];
             var amount = decimal.Parse(inputs["Amount"]);
             var strAmount = amount.ToString("#");
             var payCurrency = inputs["PayCurrencyId"];
-            var withdrawalInfo = inputs["WithdrawalInfo"];
             var transId = inputs["TransID"];
             
-            if (withdrawalInfo == null)
-            {
-                return new WithdrawResult("WithdrawalInfo is empty.");
-            }
 
             var accessToken = GetAccessToken(inputs);
-            var toAmount = GetExchangeAmount(strAmount, payCurrency, payCode, inputs, "0");
             var req = new Dictionary<string, string>
             {
                 {"command", Command.FiatWithdrawal},
@@ -529,7 +522,6 @@ namespace Payment.DirePay
                 {"bank_name", inputs["BankName"]},
                 {"bank_code", inputs["BankCode"]},
                 {"txid", transId},
-                {"withdrawal_amount", toAmount.ToString("#")},
                 {"hashCode", ToMD5(Command.FiatWithdrawal + inputs["key"]).ToLower()}
             };
 
