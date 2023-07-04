@@ -92,6 +92,7 @@ namespace Payment.DirePay
                 : FiatPayinCallBack(bodyContent);
 
             result.DepositId = payResource["TransID"];
+            result.Response = "true";
             
             return result;
         }
