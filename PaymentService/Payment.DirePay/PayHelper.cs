@@ -91,7 +91,7 @@ namespace Payment.DirePay
                 ? CryptoPayinCallBack(bodyContent)
                 : FiatPayinCallBack(bodyContent);
 
-            result.DepositId = payResource["TransId"];
+            result.DepositId = payResource["TransID"];
             
             return result;
         }
@@ -377,6 +377,7 @@ namespace Payment.DirePay
         private bool VerifySign(string key, string content, IDictionary<string, string> headers)
         {
             var target = headers.FirstOrDefault(x => x.Key.Equals("Signature")).Value;
+            _logger.LogInformation("Signature: " + target);
             var sign = ToMD5(key + content).ToLower();
             
             return target.Equals(sign);
