@@ -317,7 +317,7 @@ namespace Payment.DirePay
                 { "callback_url", inputs["CallBackUrl"] },
                 { "redirect_url", inputs["ReturnUrl"] },
                 { "currency", payCurrency },
-                { "method", method },
+                { "method", splitMethod[0] },
                 { "customer_uid", inputs["CustId"] },
                 { "depositor_name", inputs["AccountName"] },
                 { "amount", amount.ToString("#") },
@@ -551,7 +551,7 @@ namespace Payment.DirePay
 
         private static (bool IsFiat, string Method) GetMethod(string payCode)
         {
-            var splitStr = payCode.Split('-');
+            var splitStr = payCode.Split(':');
             var isFait = splitStr[0].Equals("fiat");
 
             return (isFait, splitStr.Length > 1 ? splitStr[1] : payCode);
