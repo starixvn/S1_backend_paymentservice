@@ -38,7 +38,7 @@ namespace PaymentService.Service.DAL
 
         public IEnumerable<BankInfoPay> GetEWalletPayListForPayout(int siteId)
         {
-            return _reportDbClient.Query<BankInfoPay>("Common_EWalletPayForPayout_Get", new { _SiteId = siteId });
+            return _reportDbClient.Query<BankInfoPay>("Common_EWalletPayForPayout_Get_V2", new { _SiteId = siteId });
         }
         
         public IEnumerable<PayLanguage> GetPayLanguage()
