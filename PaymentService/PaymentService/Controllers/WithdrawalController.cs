@@ -363,7 +363,8 @@ namespace PaymentService.Controllers
             if (withdrawalRequest != null)
             {
                 var WithReq = withdrawalRequest.ISetting;
-
+                WithReq.Add("WithdrawalType", withdrawalRequest.WithdrawalType.ToString(""));
+                
                 //檢查namespace是否存在 
                 if (!WithReq.ContainsKey("PayName"))
                 {
