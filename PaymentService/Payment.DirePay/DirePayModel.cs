@@ -4,10 +4,10 @@ namespace Payment.DirePay
 {
     internal class CryptoPayoutCallBackReq
     {
-        [JsonProperty("txid")]
+        [JsonProperty("client_reference_id")]
         public string TransId { get; set; }
         
-        [JsonProperty("direpay_id")]
+        [JsonProperty("txid")]
         public string ThirdId { get; set; }
         
         [JsonProperty("tx_hash")]
