@@ -140,6 +140,7 @@ namespace Payment.DirePay
                 {
                     TransStatus = transStatus,
                     ThirdId = data.ThirdId,
+                    WithdrawId = data.TransId,
                     Message = data.Status,
                     RequestAmount = data.Amount
                 };
@@ -153,12 +154,12 @@ namespace Payment.DirePay
                 {
                     TransStatus = transStatus,
                     ThirdId = data.ThirdId,
+                    WithdrawId = data.ThirdId,
                     Message = data.Status,
                     RequestAmount = data.ActualAmount
                 };
             }
 
-            result.WithdrawId = payResource["TransId"];
             result.Response = "true";
             
             return result;
