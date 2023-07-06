@@ -192,7 +192,7 @@ namespace Payment.DirePay
         public string CustomerUid { get; set; }
         
         [JsonProperty("invoice_amount")]
-        public string InvoiceAmount { get; set; }
+        public decimal InvoiceAmount { get; set; }
         
         [JsonProperty("invoice_currency")]
         public string InvoiceCurrency { get; set; }
@@ -201,7 +201,7 @@ namespace Payment.DirePay
         public string PaymentToken { get; set; }
         
         [JsonProperty("rates")]
-        public string Rates { get; set; }
+        public decimal Rates { get; set; }
         
         [JsonProperty("payment_address")]
         public string PaymentAddress { get; set; }

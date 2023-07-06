@@ -101,15 +101,15 @@ namespace PaymentCore.Helpers
         public (TResult Result, HttpStatusCode StatusCode) PostJson<TBody, TResult>(string url, TBody data)
             where TResult : class
         {
-            var returnObj = PostData(url, data, ContentType.Json);
+            var (json, statusCode) = PostData(url, data, ContentType.Json);
 
-            if (!JsonExtension.IsJson(returnObj.Result))
+            if (!JsonExtension.IsJson(json))
             {
                 throw new CustomException("Invalid JSON string, Cannot DeserializeObject.");
             }
 
-            var result = JsonConvert.DeserializeObject<TResult>(returnObj.Result);
-            return (result, returnObj.StatusCode);
+            var result = JsonConvert.DeserializeObject<TResult>(json);
+            return (result, StatusCode: statusCode);
         }
 
         public async Task<(TResult Result, HttpStatusCode StatusCode)> PostJsonAsync<TBody, TResult>(string url, TBody data)
