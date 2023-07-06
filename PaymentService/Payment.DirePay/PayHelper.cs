@@ -241,7 +241,7 @@ namespace Payment.DirePay
                         name = "deposit",
                         item_id = method,
                         description = $"Deposit {payCurrency} via {method}",
-                        amount = amount.ToString("#"),
+                        amount = amount.ToString("G29"),
                         quantity = "1"
                     }
                 },
@@ -259,9 +259,9 @@ namespace Payment.DirePay
             var requestAmount = resp.InvoiceAmount * resp.Rates;
             var resData = new Dictionary<string, string>
             {
-                {"DepositAmount", resp.InvoiceAmount.ToString("#")},
-                {"Rate", resp.Rates.ToString("#")},
-                {"RequestAmount", requestAmount.ToString("#")},
+                {"DepositAmount", resp.InvoiceAmount.ToString("G29")},
+                {"Rate", resp.Rates.ToString("G29")},
+                {"RequestAmount", requestAmount.ToString("G29")},
                 {"Token", resp.PaymentToken}
             };
             
@@ -284,7 +284,7 @@ namespace Payment.DirePay
                     : resp.PaymentAddress,
                 ThirdId = resp.ThirdId,
                 FormData = resData,
-                DepositInfo = depositInfo.AddOrSetExchangeInfo(resp.Rates.ToString("#"), requestAmount.ToString("#"))
+                DepositInfo = depositInfo.AddOrSetExchangeInfo(resp.Rates.ToString("G29"), requestAmount.ToString("G29"))
             };
         }
         
@@ -322,7 +322,7 @@ namespace Payment.DirePay
                 { "method", splitMethod[0] },
                 { "customer_uid", inputs["CustId"] },
                 { "depositor_name", inputs["AccountName"] },
-                { "amount", amount.ToString("#") },
+                { "amount", amount.ToString("G29") },
                 { "txid", inputs["TransID"] },
                 { "bank_code", splitMethod.Length > 1 ? splitMethod[1] : inputs["BankCode"] }
             };
@@ -442,7 +442,7 @@ namespace Payment.DirePay
             var apiUrl = inputs["host"] + Path.Action;
             var payCode = inputs["PayCode"];
             var amount = decimal.Parse(inputs["Amount"]);
-            var strAmount = amount.ToString("#");
+            var strAmount = amount.ToString("G29");
             var payCurrency = GetPayCurrency(inputs["PayCurrencyId"]);
             var withdrawalInfo = inputs["WithdrawalInfo"];
             var transId = inputs["TransID"];
@@ -464,7 +464,7 @@ namespace Payment.DirePay
                 {"customer_uid", inputs["CustId"]},
                 {"address", inputs["AccountNo"]},
                 {"client_reference_id", transId},
-                {"withdrawal_amount", toAmount.ToString("#")},
+                {"withdrawal_amount", toAmount.ToString("G29")},
                 {"hashCode", ToMD5(Command.PartnerWithdraw + inputs["key"]).ToLower()}
             };
 
@@ -476,7 +476,7 @@ namespace Payment.DirePay
                 WithdrawId = transId,
                 Message = resp.Message,
                 WithdrawalInfo = withdrawalInfo
-                    .AddOrSetExchangeInfo((toAmount / amount).ToString("#"), toAmount.ToString("#"))
+                    .AddOrSetExchangeInfo((toAmount / amount).ToString("G29"), toAmount.ToString("G29"))
             };
         }
         
@@ -505,7 +505,7 @@ namespace Payment.DirePay
         {
             var apiUrl = inputs["host"] + Path.Action;
             var amount = decimal.Parse(inputs["Amount"]);
-            var strAmount = amount.ToString("#");
+            var strAmount = amount.ToString("G29");
             var payCurrency = inputs["PayCurrencyId"];
             var transId = inputs["TransID"];
             
