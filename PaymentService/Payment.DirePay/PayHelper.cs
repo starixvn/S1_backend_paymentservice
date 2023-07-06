@@ -256,11 +256,11 @@ namespace Payment.DirePay
 
             var resp = CryptoPayinGetWallet(apiUrl, accessToken, req);
             
-            var requestAmount = decimal.Parse(resp.InvoiceAmount) * decimal.Parse(resp.Rates);
+            var requestAmount = resp.InvoiceAmount * resp.Rates;
             var resData = new Dictionary<string, string>
             {
-                {"DepositAmount", resp.InvoiceAmount},
-                {"Rate", resp.Rates},
+                {"DepositAmount", resp.InvoiceAmount.ToString("#")},
+                {"Rate", resp.Rates.ToString("#")},
                 {"RequestAmount", requestAmount.ToString("#")},
                 {"Token", resp.PaymentToken}
             };
@@ -284,7 +284,7 @@ namespace Payment.DirePay
                     : resp.PaymentAddress,
                 ThirdId = resp.ThirdId,
                 FormData = resData,
-                DepositInfo = depositInfo.AddOrSetExchangeInfo(resp.Rates, requestAmount.ToString("#"))
+                DepositInfo = depositInfo.AddOrSetExchangeInfo(resp.Rates.ToString("#"), requestAmount.ToString("#"))
             };
         }
         
