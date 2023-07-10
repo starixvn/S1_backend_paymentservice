@@ -76,14 +76,14 @@ namespace Payment.DirePay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            /*if (!VerifySign(payResource["key"], bodyContent, headers))
+            if (!VerifySign(payResource["key"], bodyContent, headers))
             {
                 return new NotifyDepositResult
                 {
                     TransStatus = TransStatus.Pending,
                     Response = "Signature does not match."
                 };
-            }*/
+            }
 
             var isCrypto = payResource["DepositType"] == "4";
             
@@ -119,14 +119,14 @@ namespace Payment.DirePay
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            /*if (!VerifySign(payResource["key"], bodyContent, headers))
+            if (!VerifySign(payResource["key"], bodyContent, headers))
             {
                 return new NotifyWithdrawResult
                 {
                     TransStatus = TransStatus.Pending,
                     Response = "Signature does not match."
                 };
-            }*/
+            }
 
             NotifyWithdrawResult result;
             
@@ -378,7 +378,9 @@ namespace Payment.DirePay
         
         private bool VerifySign(string key, string content, IDictionary<string, string> headers)
         {
-            var target = headers.FirstOrDefault(x => x.Key.Equals("Signature")).Value;
+            var target = headers.FirstOrDefault(x =>
+                x.Key.Equals("Signature", StringComparison.OrdinalIgnoreCase)).Value;
+            
             _logger.LogInformation("Signature: " + target);
             var sign = ToMD5(key + content).ToLower();
             
