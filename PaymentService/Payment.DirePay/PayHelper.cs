@@ -91,7 +91,6 @@ namespace Payment.DirePay
                 ? CryptoPayinCallBack(bodyContent)
                 : FiatPayinCallBack(bodyContent);
 
-            result.DepositId = payResource["TransID"];
             result.Response = "true";
             
             return result;
@@ -395,7 +394,8 @@ namespace Payment.DirePay
             {
                 TransStatus = transStatus,
                 ThirdId = data.ThirdId,
-                Comment = data.Status
+                Comment = data.Status,
+                DepositId = data.ThirdId
             };
                 
             if (transStatus == TransStatus.Success)
@@ -435,7 +435,8 @@ namespace Payment.DirePay
                 TransStatus = transStatus,
                 ThirdId = data.ThirdId,
                 Comment = data.Status,
-                ActualAmount = data.ActualAmount
+                ActualAmount = data.ActualAmount,
+                DepositId = data.ThirdId
             };
         }
         
