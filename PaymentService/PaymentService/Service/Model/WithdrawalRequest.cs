@@ -19,6 +19,7 @@ namespace PaymentService.Service.Model
         public string UserName { get; set; }
         public string AccountNo { get; set; }
         public string AccountType { get; set; }
+        public int WithdrawalType { get; set; }
 
         //public virtual IEnumerable<Comments> Comments { get; set; }
     }

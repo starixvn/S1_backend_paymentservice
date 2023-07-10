@@ -150,7 +150,7 @@ namespace Payment.FXBit
             }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> input)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> input)
         {
             var apiKey = input["key"];
             var req = FromJson<DepositCallBackReq>(bodyContent);
@@ -279,7 +279,7 @@ namespace Payment.FXBit
             }
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();
         }

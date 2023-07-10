@@ -23,7 +23,7 @@ namespace Payment.TenPay
             public string TrackingNumber { get; set; }
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(bodyContent);
 
@@ -77,7 +77,7 @@ namespace Payment.TenPay
             public string TrackingNumber { get; set; }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(bodyContent);
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).Where(f => f.Value.Length > 0).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);

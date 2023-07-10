@@ -1,84 +1,153 @@
-﻿namespace Payment.DirePay
+﻿using Newtonsoft.Json;
+
+namespace Payment.DirePay
 {
-    internal class CallBackWithdrawReq
+    internal class CryptoPayoutCallBackReq
     {
-        public string txid { get; set; }
-        public string tx_hash { get; set; }
-        public string amount { get; set; }
-        public string token { get; set; }
-        public string address { get; set; }
-        public string customer_email { get; set; }
-        public string client_reference_id { get; set; }
-        public string status { get; set; }
-        public string fee { get; set; }
-        public string fee_usd { get; set; }
-        public string hash_code { get; set; }
+        [JsonProperty("client_reference_id")]
+        public string TransId { get; set; }
+        
+        [JsonProperty("txid")]
+        public string ThirdId { get; set; }
+        
+        [JsonProperty("tx_hash")]
+        public string TxHash { get; set; }
+        
+        [JsonProperty("amount")]
+        public decimal Amount { get; set; }
+        
+        [JsonProperty("token")]
+        public string Token { get; set; }
+        
+        [JsonProperty("address")]
+        public string Address { get; set; }
+        
+        [JsonProperty("status")]
+        public string Status { get; set; }
+        
+        [JsonProperty("fee")]
+        public decimal Fee { get; set; }
     }
 
-    internal class CallBackDepositReq
+    internal class FiatPaymentCallBackReq
     {
-        public string txid { get; set; }
-        public line_items[] line_items { get; set; }
-        public string tx_hash { get; set; }
-        public string customer { get; set; }
-        public string customer_email { get; set; }
-        public string invoice_amount { get; set; }
-        public string invoice_currency { get; set; }
-        public string payment_amount { get; set; }
-        public string payment_token { get; set; }
-        public string rates { get; set; }
-        public string client_reference_id { get; set; }
-        public string status { get; set; }
-        public string hash_code { get; set; }
-        public string enable_promotion { get; set; }
-        public string promotion_rate { get; set; }
-        public string promotion_fiat_amount { get; set; }
-        public string paid_fiat { get; set; }
+        [JsonProperty("txid")]
+        public string ThirdId { get; set; }
+        
+        [JsonProperty("type")]
+        public string Type { get; set; }
+        
+        [JsonProperty("customer_uid")]
+        public string CustomerUid { get; set; }
+        
+        [JsonProperty("request_amount")]
+        public decimal RequestAmount { get; set; }
+        
+        [JsonProperty("currency")]
+        public string Currency { get; set; }
+        
+        [JsonProperty("actual_amount")]
+        public decimal ActualAmount { get; set; }
+        
+        [JsonProperty("status")]
+        public string Status { get; set; }
+        
+        [JsonProperty("method")]
+        public string Method { get; set; }
+    }
+    
+    internal class CryptoPayinCallBackReq
+    {
+        [JsonProperty("txid")]
+        public string ThirdId { get; set; }
+        
+        [JsonProperty("line_items")]
+        public IEnumerable<LineItem> LineItems { get; set; }
+        
+        [JsonProperty("tx_hash")]
+        public string TxHash { get; set; } 
+        
+        [JsonProperty("invoice_amount")]
+        public decimal InvoiceAmount { get; set; }
+        
+        [JsonProperty("invoice_currency")]
+        public string InvoiceCurrency { get; set; }
+        
+        [JsonProperty("payment_amount")]
+        public string PaymentAmount { get; set; }
+        
+        [JsonProperty("payment_token")]
+        public string PaymentToken { get; set; }
+        
+        [JsonProperty("rates")]
+        public string Rates { get; set; }
+        
+        [JsonProperty("client_reference_id")]
+        public string ClientReferenceId { get; set; }
+        
+        [JsonProperty("status")]
+        public string Status { get; set; }
+        
+        [JsonProperty("hash_code")]
+        public string HashCode { get; set; }
+        
+        [JsonProperty("enable_promotion")]
+        public bool EnablePromotion { get; set; }
+        
+        [JsonProperty("promotion_rate")]
+        public decimal PromotionRate { get; set; }
+        
+        [JsonProperty("promotion_fiat_amount")]
+        public decimal PromotionFiatAmount { get; set; }
+        
+        [JsonProperty("paid_fiat")]
+        public decimal PaidFiat { get; set; }
+    }
+    
+
+
+    internal class PayoutGetWalletResp
+    {
+        [JsonProperty("message")]
+        public string Message { get; set; }
+        
+        [JsonProperty("txid")]
+        public string ThirdId { get; set; }
+        
+        [JsonProperty("amount")]
+        public string Amount { get; set; }
+        
+        [JsonProperty("token")]
+        public string Token { get; set; }
+        
+        [JsonProperty("status")]
+        public string Status { get; set; }
     }
 
-    internal class WithdrawGetWalletReq
+    internal class GetAccessTokenResp
+    {
+        [JsonProperty("access_token")]
+        public string AccessToken { get; set; }
+        
+        [JsonProperty("message")]
+        public string Message { get; set; }
+    }
+
+    internal class PayinGetWalletReq
     {
         public string command { get; set; }
+        public LineItem[] line_items { get; set; }
         public string hashCode { get; set; }
-        public string amount { get; set; }
         public string currency { get; set; }
-        public string withdrawal_amount { get; set; }
-        public string withdrawal_token { get; set; }
-        public string address { get; set; }
+        public string token { get; set; }
         public string callback_url { get; set; }
         public string customer_uid { get; set; }
-        public string client_reference_id { get; set; }
-    }
-
-    internal class WithdrawGetWalletResp
-    {
-        public string message { get; set; }
         public string txid { get; set; }
-        public string amount { get; set; }
-        public string token { get; set; }
-        public string status { get; set; }
-    }
-
-    internal class DepositResp
-    {
-        public string access_token { get; set; }
-        public string message { get; set; }
-    }
-
-    internal class DepositGetWalletReq
-    {
-        public string command { get; set; }
-        public line_items[] line_items { get; set; }
-        public string hashCode { get; set; }
-        public string currency { get; set; }
-        public string token { get; set; }
-        public string callback_url { get; set; }
-        public string customer_uid { get; set; }
-        public string customer_email { get; set; }
         public string client_reference_id { get; set; }
     }
+    
 
-    internal class line_items
+    internal class LineItem
     {
         public string name { get; set; }
         public string item_id { get; set; }
@@ -87,35 +156,99 @@
         public string quantity { get; set; }
     }
 
-    internal class DepositGetWalletResp
+    internal class FiatPayinResp
     {
-        public string message { get; set; }
-        public string txid { get; set; }
-        public string customer_uid { get; set; }
-        public string invoice_amount { get; set; }
-        public string invoice_currency { get; set; }
-        public string payment_token { get; set; }
-        public string rates { get; set; }
-        public string payment_address { get; set; }
-        public string payment_amount { get; set; }
-        public bool enable_promotion { get; set; }
-        public string promotion_rate { get; set; }
-        public string promotion_fiat_amount { get; set; }
-        public string promotion_crypto_amount { get; set; }
+        [JsonProperty("message")]
+        public string Message { get; set; }
+        
+        [JsonProperty("txid")]
+        public string ThirdId { get; set; }
+        
+        [JsonProperty("amount")]
+        public string Amount { get; set; }
+        
+        [JsonProperty("currency")]
+        public string Currency { get; set; }
+        
+        [JsonProperty("pay_url")]
+        public string PayUrl { get; set; }
+        
+        [JsonProperty("auth_code")]
+        public string AuthCode { get; set; }
+        
+        [JsonProperty("method")]
+        public string Method { get; set; }
+    }
+    
+    internal class CryptoPayinResp
+    {
+        [JsonProperty("message")]
+        public string Message { get; set; }
+        
+        [JsonProperty("txid")]
+        public string ThirdId { get; set; }
+        
+        [JsonProperty("customer_uid")]
+        public string CustomerUid { get; set; }
+        
+        [JsonProperty("invoice_amount")]
+        public decimal InvoiceAmount { get; set; }
+        
+        [JsonProperty("invoice_currency")]
+        public string InvoiceCurrency { get; set; }
+        
+        [JsonProperty("payment_token")]
+        public string PaymentToken { get; set; }
+        
+        [JsonProperty("rates")]
+        public decimal Rates { get; set; }
+        
+        [JsonProperty("payment_address")]
+        public string PaymentAddress { get; set; }
+        
+        [JsonProperty("payment_amount")]
+        public string PaymentAmount { get; set; }
+        
+        [JsonProperty("enable_promotion")]
+        public bool EnablePromotion { get; set; }
+        
+        [JsonProperty("promotion_rate")]
+        public string PromotionRate { get; set; }
+        
+        [JsonProperty("promotion_fiat_amount")]
+        public string PromotionFiatAmount { get; set; }
+        
+        [JsonProperty("promotion_crypto_amount")]
+        public string PromotionCryptoAmount{ get; set; }
     }
 
-    internal class ExchangeReq
+    internal class FiatPayoutResp
     {
-        public string command { get; set; }
-        public string amount { get; set; }
-        public string from_currency { get; set; }
-        public string to_currency { get; set; }
-        public string type { get; set; }
+        [JsonProperty("message")]
+        public string Message { get; set; }
+        
+        [JsonProperty("txid")]
+        public string ThirdId { get; set; }
+        
+        [JsonProperty("amount")]
+        public string Amount { get; set; }
+        
+        [JsonProperty("currency")]
+        public string Currency { get; set; }
+        
+        [JsonProperty("method")]
+        public string Method { get; set; }
     }
+    
     internal class ExchangeResp
     {
-        public string amount { get; set; }
-        public string currency { get; set; }
-        public string message { get; set; }
+        [JsonProperty("amount")]
+        public string Amount { get; set; }
+        
+        [JsonProperty("currency")]
+        public string Currency { get; set; }
+        
+        [JsonProperty("message")]
+        public string Message { get; set; }
     }
 }

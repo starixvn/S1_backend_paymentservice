@@ -22,7 +22,7 @@ namespace Payment.Help2Pay
             public string Message { get; set; }
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
             var merchant_no = payResource["merchant_no"];
@@ -85,7 +85,7 @@ namespace Payment.Help2Pay
             public string StatementDate { get; set; }
             public string DepositFee { get; set; }
         }
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             //new DateTimeOffset()
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
