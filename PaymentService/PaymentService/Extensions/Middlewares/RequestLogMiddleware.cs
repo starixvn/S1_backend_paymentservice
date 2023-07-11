@@ -45,9 +45,10 @@ namespace PaymentService.Extensions.Middlewares
                     ? await requestBody.ReadToEndAsync()
                     : content;
 
+                var headers = JsonConvert.SerializeObject(context.Request.Headers);
                 LogContext.PushProperty("ClientIp", _common.GetClientIP(context));
                 _logger.LogInformation(
-                    $"REQUEST METHOD: {context.Request.Method}, CodePage: {codePage}, ContentType: {context.Request.ContentType}, REQUEST BODY: {content}, REQUEST URL: {url}");
+                    $"REQUEST METHOD: {context.Request.Method}, CodePage: {codePage}, REQUEST HEADERS:{headers}, REQUEST BODY: {content}, REQUEST URL: {url}");
             }
 
             requestBodyStream.Seek(0, SeekOrigin.Begin);
