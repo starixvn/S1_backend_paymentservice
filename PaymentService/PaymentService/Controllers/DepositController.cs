@@ -650,7 +650,7 @@ namespace PaymentService.Controllers
                     return response;
                 }
 
-                depositInfo.ActualDeposit = (request.Amount == 0) ? depositInfo.Amount : request.Amount;
+                depositInfo.ActualDeposit = (request.Amount == 0) ? depositInfo.ActualDeposit : request.Amount;
                 depositInfo.Comment = "Manual Approved";
                 depositInfo.Status = (int)DepositStatus.Approved;
                 depositInfo.RefId = string.IsNullOrEmpty(request.ThirdId) ? null : request.ThirdId;
