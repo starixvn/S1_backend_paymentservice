@@ -66,7 +66,7 @@ namespace Payment.TruePay
             }
             catch (CustomException ex)
             {
-                _logger.LogInformation($"GetExchange failed, Code:{ex.Code}, Message:{ex.Message}");
+                _logger.LogInformation($"TruePay deposit failed, Code:{ex.Code}, Message:{ex.Message}");
 
                 return new DepositResult(ex.Message);
             }
@@ -131,7 +131,7 @@ namespace Payment.TruePay
                 if (!statusCode.IsSuccessStatus())
                 {
                     throw new CustomException(
-                        $"TruePay deposit failed, HttpStatus: {(int)statusCode} {statusCode} Message: {result.Message}");
+                        $"TruePay payout failed, HttpStatus: {(int)statusCode} {statusCode} Message: {result.Message}");
                 }
 
                 return new WithdrawResult
@@ -144,7 +144,7 @@ namespace Payment.TruePay
             }
             catch (CustomException ex)
             {
-                _logger.LogInformation($"GetExchange failed, Code:{ex.Code}, Message:{ex.Message}");
+                _logger.LogInformation($"TruePay payout failed, Code:{ex.Code}, Message:{ex.Message}");
 
                 return new WithdrawResult(ex.Message);
             }
