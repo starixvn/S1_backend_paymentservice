@@ -44,7 +44,7 @@ namespace Payment.TruePay
                 req.Add("token", ToMD5(token).ToLower());
 
                 var (result, statusCode) = _httpHelper
-                    .PostJson<Dictionary<string, string>, DepositResp>(apiUrl, req);
+                    .PostUrlEncoded<Dictionary<string, string>, DepositResp>(apiUrl, req);
 
                 if (!statusCode.IsSuccessStatus())
                 {
@@ -126,7 +126,7 @@ namespace Payment.TruePay
                 req.Add("token", ToMD5(str).ToLower());
             
                 var (result, statusCode) = _httpHelper
-                    .PostJson<Dictionary<string, string>, WithdrawalResp>(apiUrl, req);
+                    .PostUrlEncoded<Dictionary<string, string>, WithdrawalResp>(apiUrl, req);
 
                 if (!statusCode.IsSuccessStatus())
                 {
