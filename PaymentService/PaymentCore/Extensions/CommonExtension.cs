@@ -13,7 +13,8 @@ namespace PaymentCore.Extensions
         {
             (int) CurrencyEnum.MYR,
             (int) CurrencyEnum.THB,
-            (int) CurrencyEnum.IDR
+            (int) CurrencyEnum.IDR,
+            (int) CurrencyEnum.VND
         };
 
 
