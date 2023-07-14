@@ -91,7 +91,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.GlobalPay", "Paymen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.PowerBankPay", "Payment.PowerBankPay\Payment.PowerBankPay.csproj", "{375928A6-D159-4802-AF04-DFCFA0DECAD5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.PattayaPay", "Payment.PattayaPay\Payment.PattayaPay.csproj", "{FF9E60EE-C7BB-4C8F-8757-D4F1C6A615B2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.PattayaPay", "Payment.PattayaPay\Payment.PattayaPay.csproj", "{FF9E60EE-C7BB-4C8F-8757-D4F1C6A615B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.PAPay", "Payment.PAPay\Payment.PAPay.csproj", "{D0786E51-7BBE-43A0-9631-D132FE8D6DF9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.Coin2Pay", "Payment.Coin2Pay\Payment.Coin2Pay.csproj", "{DFA26A8D-8787-444A-A820-D1296EE04216}"
 EndProject
