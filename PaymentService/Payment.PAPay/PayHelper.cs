@@ -102,9 +102,9 @@ namespace Payment.PAPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var apiKey = payResource["key"];
-            var req = FromJson<DepositCallBackRequest>(ToJson(formData));
+            var req = FromJson<DepositCallBackRequest>(bodyContent);
 
-            if (!VerifySign(formData, apiKey, req.sign))
+            if (!VerifySign(FromJson<Dictionary<string, string>>(bodyContent), apiKey, req.sign))
             {
                 return new NotifyDepositResult
                 {
