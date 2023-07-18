@@ -67,4 +67,5 @@ internal class WithdrawalQueryStatus
 internal class PayType
 {
     public const string OnlineBanking = "1";
+    public const string QR = "3";
 }

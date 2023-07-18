@@ -26,7 +26,7 @@ namespace Payment.YuiPay
         {
             var baseApiUrl = input["host"];
             var key = input["key"];
-            var payCode = input["PayCode"];
+            var payCode = input["PayCode"].Split('-');
             var transId = input["TransID"];
             var merchantNo = input["merchantNo"];
             var reqAmount = decimal.Parse(input["Amount"]);
@@ -39,15 +39,20 @@ namespace Payment.YuiPay
                     { "signType", YuiPayDefinition.SingType },
                     { "merchantNo", merchantNo },
                     { "date", DateTimeOffset.UtcNow.ToString("YYYYMMddhhmmss") },
-                    { "channleType", payCode },
+                    { "channleType", payCode[0] },
                     { "noticeUrl", input["CallBackUrl"] },
                     { "orderNo", transId },
                     { "bizAmt", reqAmount.ToString("G29") }
                 };
 
-                if (payCode.Equals(PayType.OnlineBanking))
+                if (payCode[0].Equals(PayType.OnlineBanking))
                 {
                     req.Add("bankCode", input["BankCode"]);
+                }
+                
+                if (payCode[0].Equals(PayType.QR))
+                {
+                    req.Add("bankCode", payCode[1]);
                 }
                 
                 req.Add("sign", GetSign(req, key));
