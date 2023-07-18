@@ -54,6 +54,9 @@ internal class WithdrawalCallbackRequest
 
     [JsonProperty("status")]
     public string Status { get; set; }
+    
+    [JsonProperty("remark")]
+    public string Remark { get; set; }
 
     [JsonProperty("sign")]
     public string Sign { get; set; }
