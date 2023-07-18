@@ -158,7 +158,7 @@ namespace Payment.YuiPay
                 req.Add("sign", GetSign(req, key));
 
                 var (response, statusCode) = _httpHelper
-                    .PostUrlEncoded<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", req);
+                    .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", req);
 
                 if (!statusCode.IsSuccessStatus())
                 {
