@@ -96,6 +96,7 @@ namespace Payment.YuiPay
             {
                 return new NotifyDepositResult
                 {
+                    DepositId = req.TransId,
                     TransStatus = TransStatus.Pending,
                     Response = "Signature does not match."
                 };
@@ -198,6 +199,7 @@ namespace Payment.YuiPay
             {
                 return new NotifyWithdrawResult
                 {
+                    ThirdId = req.TransId,
                     TransStatus = TransStatus.Pending,
                     Response = "Signature does not match."
                 };
@@ -226,7 +228,7 @@ namespace Payment.YuiPay
         private string GetSign(IEnumerable<KeyValuePair<string, string>> input, string key)
         {
             var str = string.Join('&', input
-                .Where(x => !x.Key.Equals("sign"))
+                .Where(x => !x.Key.Equals("sign") && !string.IsNullOrEmpty(x.Value))
                 .OrderBy(x => x.Key)
                 .Select(x => $"{x.Key}={x.Value}")) + key;
             
