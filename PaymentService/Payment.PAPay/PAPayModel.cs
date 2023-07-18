@@ -11,6 +11,7 @@ public class PAPayResponse
     public string Message { get; set; }
 }
 
+
 public class PAPayCreateOrderResponse : PAPayResponse
 {
     [JsonProperty("order_id")]
@@ -54,4 +55,48 @@ internal class CallbackResponse
 {
     public const string Success = "ok";
     public const string Failed = "failed";
+}
+
+public class PAPayPayoutResponse : PAPayResponse
+{
+    [JsonProperty("order_id")]
+    public string OrderId { get; set; }
+
+    [JsonProperty("out_trade_no")]
+    public string OutTradeNo { get; set; }
+
+    [JsonProperty("sign")]
+    public string Sign { get; set; }
+
+}
+
+public class WithdrawalCallBackRequest
+{
+
+    public string mch_id { get; set; }
+
+    public string order_id { get; set; }
+
+    public string out_trade_no { get; set; }
+
+    public string agent_amount { get; set; }
+
+    public string code { get; set; }
+
+    public string code_msg { get; set; }
+
+    public string sign { get; set; }
+}
+
+internal class PayoutExtraModel
+{
+    /// <summary>
+    /// 钱包/银行卡账号
+    /// </summary>
+    public string account_num { get; set; }
+    /// <summary>
+    /// 钱包名称或者路由/银行卡名称
+    /// </summary>
+    public string bank_name { get; set; }
+
 }
