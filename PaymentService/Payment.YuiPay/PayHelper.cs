@@ -149,9 +149,9 @@ namespace Payment.YuiPay
                     { "noticeUrl", inputs["CallBackUrl"] },
                     { "orderNo", transId },
                     { "bizAmt", reqAmount.ToString("G29") },
-                    { "cardNo", inputs["BankCode"] },
+                    { "bankCode", inputs["BankCode"] },
                     { "bankBranchName", inputs["BankName"] },
-                    { "bankNumber", inputs["AccountNo"] },
+                    { "cardNo", inputs["AccountNo"] },
                     { "accName", inputs["AccountName"] }
                 };
                 
