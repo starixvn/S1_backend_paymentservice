@@ -211,6 +211,7 @@ namespace Payment.YuiPay
             {
                 ThirdId = req.TransId,
                 TransStatus = transStatus,
+                Message = req.Remark,
                 Response = YuiPayDefinition.CallbackResponse,
                 WithdrawId = req.TransId
             };
