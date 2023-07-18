@@ -82,29 +82,28 @@ namespace Payment.PAPay
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            //var apiKey = payResource["key"];
-            //var req = FromJson<WithdrawalCallBackRequest>(ToJson(formData));
+            var apiKey = payResource["key"];
+            var req = FromJson<WithdrawalCallBackRequest>(ToJson(formData));
 
-            //if (!VerifySign(formData, apiKey, req.sign))
-            //{
-            //    return new NotifyWithdrawResult
-            //    {
-            //        TransStatus = TransStatus.Pending,
-            //        Response = CallbackResponse.Failed
-            //    };
-            //}
+            if (!VerifySign(formData, apiKey, req.sign))
+            {
+                return new NotifyWithdrawResult
+                {
+                    TransStatus = TransStatus.Pending,
+                    Response = CallbackResponse.Failed
+                };
+            }
 
-            //var transStatus = PattayaPayDefinition.GetPayoutTransStatus(req.status);
-            //var result = new NotifyWithdrawResult
-            //{
-            //    ThirdId = req.transferno,
-            //    TransStatus = transStatus,
-            //    Response = CallbackResponse.Success,
-            //    WithdrawId = req.outtransferno
-            //};
+            var transStatus = PAPayDefinition.GetPayoutTransStatus(req.code);
+            var result = new NotifyWithdrawResult
+            {
+                ThirdId = req.order_id,
+                WithdrawId = req.out_trade_no,
+                TransStatus = transStatus,
+                Response = CallbackResponse.Success
+            };
 
-            //return result;
-            return null;
+            return result;
         }
 
         /// <summary>
