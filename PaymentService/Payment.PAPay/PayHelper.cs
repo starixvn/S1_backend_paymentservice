@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -24,12 +25,86 @@ namespace Payment.PAPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var apiUrl = inputs["host"];
+            var apiKey = inputs["key"];
+            var reqAmount = decimal.Parse(inputs["Amount"]);
+            var strAmount = reqAmount.ToString("#");
+            var currencyId = inputs["PayCurrencyId"];
+            var transId = inputs["TransID"];
+            var accountName = inputs["AccountName"];
+            var bankCode = inputs["BankCode"];
+            var merchantCode = inputs["merchantCode"];
+            var notifyUrl = inputs["CallBackUrl"];
+
+            var extra = JsonConvert.SerializeObject(new PayoutExtraModel()
+            {
+                account_num = inputs["AccountNo"],
+                bank_name = inputs["BankName"],
+            });
+
+            try
+            {
+                var req = new Dictionary<string, string>
+                {
+                    {"mch_id", merchantCode},
+                    {"out_trade_no", transId},
+                    {"account_code", bankCode}, //
+                    {"account_name", accountName},
+                    {"agent_amount", strAmount},
+                    {"currency", currencyId}, //
+                    {"extra", extra}, //
+                    {"notify_url", notifyUrl},
+                    {"nonce_str", Guid.NewGuid().ToString("N")},
+                };
+
+                req.Add("sign", GetSign(req, apiKey));
+
+                var res = Payout(apiUrl, req).Result;
+                var response = new WithdrawResult
+                {
+                    Success = true,
+                    RawContent = JsonConvert.SerializeObject(res)
+                };
+
+                return response;
+            }
+            catch (CustomException ex)
+            {
+                _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
+
+                return new WithdrawResult
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            //var apiKey = payResource["key"];
+            //var req = FromJson<WithdrawalCallBackRequest>(ToJson(formData));
+
+            //if (!VerifySign(formData, apiKey, req.sign))
+            //{
+            //    return new NotifyWithdrawResult
+            //    {
+            //        TransStatus = TransStatus.Pending,
+            //        Response = CallbackResponse.Failed
+            //    };
+            //}
+
+            //var transStatus = PattayaPayDefinition.GetPayoutTransStatus(req.status);
+            //var result = new NotifyWithdrawResult
+            //{
+            //    ThirdId = req.transferno,
+            //    TransStatus = transStatus,
+            //    Response = CallbackResponse.Success,
+            //    WithdrawId = req.outtransferno
+            //};
+
+            //return result;
+            return null;
         }
 
         /// <summary>
@@ -54,7 +129,6 @@ namespace Payment.PAPay
             var reqAmount = decimal.Parse(inputs["Amount"]);
             var strAmount = reqAmount.ToString("#.##");
             var transId = inputs["TransID"];
-            //var bankCode = inputs["BankCode"];
             var merchantCode = inputs["merchantCode"];
             var notifyUrl = inputs["CallBackUrl"];
             var payCode = inputs["PayCode"];
@@ -162,31 +236,29 @@ namespace Payment.PAPay
             }
 
             if (result.Status != "200")
-                throw new CustomException($"PAPay CreatOrder response error: {result.Status} {result.Message}");
-
-            //TODO：驗證sign
+                throw new CustomException($"PAPay CreatOrder response error: {result.Status} {HttpUtility.UrlDecode(result.Message)}");
 
             return result;
         }
 
-        //private PattayaPayResponse<string> Payout(string baseApiUrl, Dictionary<string, string> req)
-        //{
-        //    var apiUrl = baseApiUrl + Path.CreatePayout;
-        //    var (result, statusCode) = _httpHelper
-        //        .PostUrlEncoded<Dictionary<string, string>, PattayaPayResponse<string>>(apiUrl, req);
+        private async Task<PAPayPayoutResponse> Payout(string baseApiUrl, Dictionary<string, string> req)
+        {
+            var apiUrl = baseApiUrl + Path.CreatePayout;
+            var (result, statusCode) = await _httpHelper
+                .PostJsonAsync<Dictionary<string, string>, PAPayPayoutResponse>(apiUrl, req);
 
-        //    if (!statusCode.IsSuccessStatus())
-        //    {
-        //        throw new CustomException(
-        //            $"PattayaPay Payout failed, HttpStatus: {(int)statusCode} {statusCode}");
-        //    }
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"PAPay Payout failed, HttpStatus: {(int)statusCode} {statusCode}");
+            }
 
-        //    if (result.Code != 0)
-        //        throw new CustomException(
-        //            $"PattayaPay Payout response error: {result.Code} {result.Results}");
+            if (result.Status != "200")
+                throw new CustomException(
+                    $"PAPay Payout response error: {result.Status} {HttpUtility.UrlDecode(result.Message)}");
 
-        //    return result;
-        //}
+            return result;
+        }
 
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
         {
