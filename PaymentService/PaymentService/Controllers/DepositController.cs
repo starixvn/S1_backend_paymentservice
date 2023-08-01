@@ -109,6 +109,7 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
+                var depositInfo = _paymentBll.GetDepositInfo(reqDeposit.TransId);
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && x.PayId == reqDeposit.PayId)?.PayLangId;
                 
@@ -148,6 +149,7 @@ namespace PaymentService.Controllers
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("IsTest", _common.IsTest());
+                DepReq.Add("DepositInfo", depositInfo.DepositInfo);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
@@ -237,6 +239,7 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
+                var depositInfo = _paymentBll.GetDepositInfo(reqDeposit.TransId);
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == payInfo.PayId);
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) &&
@@ -273,6 +276,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("IsTest", _common.IsTest());
                 DepReq.Add("PayAccount", reqDeposit.PayAccount);
                 DepReq.Add("UserName", custInfo.UserName);
+                DepReq.Add("DepositInfo", depositInfo.DepositInfo);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
@@ -347,7 +351,6 @@ namespace PaymentService.Controllers
                 var cryptoPayInfo = _payBll.GetCryptoPayInfoList(custInfo.SiteId)?.FirstOrDefault(x =>
                     reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel &&
                     x.CurrencyId == custInfo.CurrencyId);
-                //var PayCurrency = payBLL.GetPayCurrency().;
 
                 if (cryptoPayInfo == null)
                 {
@@ -381,7 +384,6 @@ namespace PaymentService.Controllers
                     return apiResult;
                 }
 
-                //DateTimeOffset
                 var payHelper = _payBll.GetPayHelper(pay.PayName);
                 if (payHelper == null)
                 {
