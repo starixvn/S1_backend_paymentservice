@@ -31,6 +31,19 @@ namespace PaymentCore.Extensions
 
             return obj.ToString();
         }
+        
+        public static string AddOrSetJProperty(this string json, string propName, object propValue)
+        {
+            if (string.IsNullOrEmpty(json))
+            {
+                return json;
+            }
+
+            var obj = JObject.Parse(json);
+            obj.AddOrSet(propName, JToken.FromObject(propValue));
+
+            return obj.ToString();
+        }
 
         public static bool CanRewardPoint(int siteId, int currencyId)
             => _canRewardPointSiteIds.Contains(siteId)
