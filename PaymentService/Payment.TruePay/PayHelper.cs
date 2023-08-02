@@ -22,8 +22,8 @@ namespace Payment.TruePay
         
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs["host"] + Path.Deposit;
             var merchantInfo = GetMerchantInfo(inputs);
+            var apiUrl = merchantInfo.Host + Path.Deposit;
             var ts = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
             
             try
@@ -105,8 +105,8 @@ namespace Payment.TruePay
         
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs["host"] + Path.Payout;
             var merchantInfo = GetMerchantInfo(inputs);
+            var apiUrl = merchantInfo.Host + Path.Payout;
             var transId = inputs["TransID"];
             var ts = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
             try
@@ -223,6 +223,7 @@ namespace Payment.TruePay
         
         private class MerchantInfo
         {
+            public string Host { get; set; }
             public string Merchant { get; set; }
             public string Key { get; set; }
         }
