@@ -85,6 +85,7 @@ namespace PaymentService.Controllers
                 }
 
                 var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                WithReq.Add("CurrencyId", onlineBank.CurrencyId.ToString());
                 WithReq.Add("PayCurrencyId", onlineBank.PayCurrencyId);
                 WithReq.Add("ClientIP", _common.GetClientIP(HttpContext));
                 WithReq.Add("OutgoingIp", _outgoingIp);
@@ -170,6 +171,7 @@ namespace PaymentService.Controllers
 
                 var withdrawalInfo = _paymentBll.GetWithdrawalInfo(reqWithdrawal.TransId);
                 var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                WithReq.Add("CurrencyId", crypto.CurrencyId.ToString());
                 WithReq.Add("PayCurrencyId", crypto.PayCurrencyId);
                 //WithReq.Add("ClientIP", reqWithdrawal.ClientIP);
                 WithReq.Add("OutgoingIp", _outgoingIp);
@@ -255,6 +257,7 @@ namespace PaymentService.Controllers
                 }
 
                 var WithReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                WithReq.Add("CurrencyId", eWalletPay.CurrencyId.ToString());
                 WithReq.Add("PayCurrencyId", eWalletPay.PayCurrencyId);
                 WithReq.Add("ClientIP", _common.GetClientIP(HttpContext));
                 WithReq.Add("OutgoingIp", _outgoingIp);
@@ -364,6 +367,7 @@ namespace PaymentService.Controllers
             {
                 var WithReq = withdrawalRequest.ISetting;
                 WithReq.Add("WithdrawalType", withdrawalRequest.WithdrawalType.ToString(""));
+                WithReq.Add("CurrencyId", withdrawalRequest.CurrencyId.ToString());
                 
                 //檢查namespace是否存在 
                 if (!WithReq.ContainsKey("PayName"))

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -22,14 +23,14 @@ namespace Payment.TruePay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var apiUrl = inputs["host"] + Path.Deposit;
-            var merchant = inputs["Merchant"];
+            var merchantInfo = GetMerchantInfo(inputs);
             var ts = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
             
             try
             {
                 var req = new Dictionary<string, string>
                 {
-                    { "mCode", merchant },
+                    { "mCode", merchantInfo.Merchant },
                     { "ts", ts },
                     { "bCode", !string.IsNullOrEmpty(inputs["PayCode"])
                         ? inputs["PayCode"] : inputs["BankCode"] },
@@ -40,7 +41,7 @@ namespace Payment.TruePay
                     { "webUrl", inputs["ReturnUrl"] }
                 };
 
-                var token = $"{merchant}-{inputs["key"]}-getDPLink-{ts}";
+                var token = $"{merchantInfo.Merchant}-{merchantInfo.Key}-getDPLink-{ts}";
                 req.Add("token", ToMD5(token).ToLower());
 
                 var (result, statusCode) = _httpHelper
@@ -76,8 +77,9 @@ namespace Payment.TruePay
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<DepositCallbackReq>(ToJson(formData));
+            var merchantInfo = GetMerchantInfo(payResource);
 
-            var str = $"{payResource["Merchant"]}-{payResource["key"]}-{data.TransId}-{data.Amount}-{data.Timestamp}";
+            var str = $"{merchantInfo.Merchant}-{merchantInfo.Key}-{data.TransId}-{data.Amount}-{data.Timestamp}";
             var token = ToMD5(str).ToLower();
             
             if (!token.Equals(data.Token))
@@ -104,14 +106,14 @@ namespace Payment.TruePay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var apiUrl = inputs["host"] + Path.Payout;
-            var merchant = inputs["Merchant"];
+            var merchantInfo = GetMerchantInfo(inputs);
             var transId = inputs["TransID"];
             var ts = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
             try
             {
                 var req = new Dictionary<string, string>
                 {
-                    { "mCode", merchant },
+                    { "mCode", merchantInfo.Merchant },
                     { "ts", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
                     { "bCode", inputs["BankCode"] },
                     { "trxid", transId },
@@ -122,7 +124,7 @@ namespace Payment.TruePay
                     { "notifyUrl", inputs["CallBackUrl"] }
                 };
 
-                var str = $"{merchant}-{inputs["key"]}-sPayout-{ts}";
+                var str = $"{merchantInfo.Merchant}-{merchantInfo.Key}-sPayout-{ts}";
                 req.Add("token", ToMD5(str).ToLower());
             
                 var (result, statusCode) = _httpHelper
@@ -154,8 +156,9 @@ namespace Payment.TruePay
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<DepositCallbackReq>(ToJson(formData));
+            var merchantInfo = GetMerchantInfo(payResource);
 
-            var str = $"{payResource["Merchant"]}-{payResource["key"]}-{data.TransId}-{data.Amount}-{data.Timestamp}";
+            var str = $"{merchantInfo.Merchant}-{merchantInfo.Key}-{data.TransId}-{data.Amount}-{data.Timestamp}";
             var token = ToMD5(str).ToLower();
             
             if (!token.Equals(data.Token))
@@ -204,6 +207,24 @@ namespace Payment.TruePay
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+        
+        private MerchantInfo GetMerchantInfo(IDictionary<string, string> setting)
+        {
+            var infos = JsonConvert.DeserializeObject<Dictionary<string, string>>(setting["MerchantInfo"]);
+            var currencyId = setting["CurrencyId"];
+            if (!infos.ContainsKey(currencyId))
+            {
+                _logger.LogError($"No {currencyId} MerchantInfo");
+            }
+
+            return JsonConvert.DeserializeObject<MerchantInfo>(infos[currencyId]);
+        }
+        
+        private class MerchantInfo
+        {
+            public string Merchant { get; set; }
+            public string Key { get; set; }
         }
     }
 }
