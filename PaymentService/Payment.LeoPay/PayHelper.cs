@@ -26,7 +26,7 @@ namespace Payment.LeoPay
 
         public override DepositResult Debit(Dictionary<string, string> input)
         {
-            var apiUrl = input["host"];
+            var apiUrl = input["Host"];
             var payCode = input["PayCode"];
             var (method, code) = GetMethod(payCode);
             var apiToken = input[method];
@@ -138,7 +138,7 @@ namespace Payment.LeoPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs["host"];
+            var apiUrl = inputs["Host"];
             var apiToken = inputs["Card"];
             var callbackToken = inputs["Card_CallbackToken"];
             var reqAmount = decimal.Parse(inputs["Amount"]);
