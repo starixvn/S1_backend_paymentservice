@@ -26,9 +26,10 @@ namespace Payment.LeoPay
 
         public override DepositResult Debit(Dictionary<string, string> input)
         {
-            var apiUrl = input["host"];
+            var apiUrl = input["Host"];
             var payCode = input["PayCode"];
-            var apiToken = input[payCode];
+            var (method, code) = GetMethod(payCode);
+            var apiToken = input[method];
             var reqAmount = decimal.Parse(input["Amount"]);
             var strAmount = reqAmount.ToString("G29");
             var transId = input["TransID"];
@@ -92,7 +93,8 @@ namespace Payment.LeoPay
             }
 
             var payCode = jPayCode.ToObject<string>();
-            var apiToken = input[payCode];
+            var (method, _) = GetMethod(payCode);
+            var apiToken = input[method];
             var callbackToken = input[$"{payCode}_CallbackToken"];
             var req = FromJson<CallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
@@ -136,7 +138,7 @@ namespace Payment.LeoPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs["host"];
+            var apiUrl = inputs["Host"];
             var apiToken = inputs["Card"];
             var callbackToken = inputs["Card_CallbackToken"];
             var reqAmount = decimal.Parse(inputs["Amount"]);
@@ -294,6 +296,13 @@ namespace Payment.LeoPay
             var sign = GetSign(param, apiToken, callbackToken);
 
             return target.Equals(sign, StringComparison.OrdinalIgnoreCase);
+        }
+        
+        private static (string method, string code) GetMethod(string payCode)
+        {
+            var result = payCode.Split('-');
+            
+            return (result[0], result.Length > 1 ? result[1] : string.Empty);
         }
 
         #endregion
