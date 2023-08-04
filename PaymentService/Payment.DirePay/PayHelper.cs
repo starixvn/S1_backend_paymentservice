@@ -155,7 +155,7 @@ namespace Payment.DirePay
                     ThirdId = data.ThirdId,
                     WithdrawId = data.ThirdId,
                     Message = data.Status,
-                    RequestAmount = data.ActualAmount
+                    RequestAmount = data.ActualAmount ?? 0
                 };
             }
 
@@ -435,7 +435,7 @@ namespace Payment.DirePay
                 TransStatus = transStatus,
                 ThirdId = data.ThirdId,
                 Comment = data.Status,
-                ActualAmount = data.ActualAmount,
+                ActualAmount = data.ActualAmount ?? 0,
                 DepositId = data.ThirdId
             };
         }
