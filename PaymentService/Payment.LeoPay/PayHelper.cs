@@ -28,7 +28,8 @@ namespace Payment.LeoPay
         {
             var apiUrl = input["host"];
             var payCode = input["PayCode"];
-            var apiToken = input[payCode];
+            var (method, code) = GetMethod(payCode);
+            var apiToken = input[method];
             var reqAmount = decimal.Parse(input["Amount"]);
             var strAmount = reqAmount.ToString("G29");
             var transId = input["TransID"];
@@ -92,7 +93,8 @@ namespace Payment.LeoPay
             }
 
             var payCode = jPayCode.ToObject<string>();
-            var apiToken = input[payCode];
+            var (method, _) = GetMethod(payCode);
+            var apiToken = input[method];
             var callbackToken = input[$"{payCode}_CallbackToken"];
             var req = FromJson<CallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
@@ -294,6 +296,13 @@ namespace Payment.LeoPay
             var sign = GetSign(param, apiToken, callbackToken);
 
             return target.Equals(sign, StringComparison.OrdinalIgnoreCase);
+        }
+        
+        private static (string method, string code) GetMethod(string payCode)
+        {
+            var result = payCode.Split('-');
+            
+            return (result[0], result.Length > 1 ? result[1] : string.Empty);
         }
 
         #endregion
