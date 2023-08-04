@@ -77,7 +77,7 @@ namespace Payment.LeoPay
             Dictionary<string, string> headers, Dictionary<string, string> input)
         {
             var depositInfo = input["DepositInfo"];
-            var transId = input["TransId"];
+            var transId = input["TransID"];
             
             var jObj = JObject.Parse(depositInfo);
 
@@ -87,6 +87,7 @@ namespace Payment.LeoPay
                 
                 return new NotifyDepositResult
                 {
+                    DepositId = transId,
                     TransStatus = TransStatus.Pending,
                     Response = "Failed."
                 };
@@ -100,15 +101,16 @@ namespace Payment.LeoPay
             var dic = new Dictionary<string, string>
             {
                 {"amount", req.Amount},
-                {"out_trade_no", req.ThirdId},
+                {"out_trade_no", req.TransId},
                 {"state", req.State},
-                {"trade_no", req.TransId}
+                {"trade_no", req.ThirdId}
             };
 
             if (!VerifySign(req.Sign, dic, apiToken, callbackToken))
             {
                 return new NotifyDepositResult
                 {
+                    DepositId = transId,
                     TransStatus = TransStatus.Pending,
                     Response = "Signature verification failed."
                 };
@@ -197,15 +199,16 @@ namespace Payment.LeoPay
             var dic = new Dictionary<string, string>
             {
                 {"amount", req.Amount},
-                {"out_trade_no", req.ThirdId},
+                {"out_trade_no", req.TransId},
                 {"state", req.State},
-                {"trade_no", req.TransId}
+                {"trade_no", req.ThirdId}
             };
 
             if (!VerifySign(req.Sign, dic, apiToken, callbackToken))
             {
                 return new NotifyWithdrawResult
                 {
+                    WithdrawId = req.TransId,
                     TransStatus = TransStatus.Pending,
                     Response = "Signature verification failed."
                 };
@@ -280,9 +283,8 @@ namespace Payment.LeoPay
 
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiToken, string callbackToken)
         {
-            var str = string.Join(string.Empty, param
-                .OrderBy(x => x.Key)
-                .Select(x => x.Value)) + apiToken + callbackToken;
+            var str = string.Join("&", param
+                .Select(x => $"{x.Key}={x.Value}")) + apiToken + callbackToken;
 
             _logger.LogInformation(str);
             var sign = base.ToMD5(str);
