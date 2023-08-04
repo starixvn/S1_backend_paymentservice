@@ -96,7 +96,7 @@ namespace Payment.LeoPay
             var payCode = jPayCode.ToObject<string>();
             var (method, _) = GetMethod(payCode);
             var apiToken = input[method];
-            var callbackToken = input[$"{payCode}_CallbackToken"];
+            var callbackToken = input[$"{method}_CallbackToken"];
             var req = FromJson<CallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
             {
