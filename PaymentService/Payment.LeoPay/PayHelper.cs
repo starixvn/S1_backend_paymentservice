@@ -148,8 +148,6 @@ namespace Payment.LeoPay
             var transId = inputs["TransID"];
             var accountName = inputs["AccountName"];
             var accountNo = inputs["AccountNo"];
-            var ifscCode = inputs["IFSCCode"];
-            var merchantCode = inputs["merchantCode"];
             var notifyUrl = inputs["CallBackUrl"];
             var bankCode = inputs["BankCode"];
 
@@ -287,7 +285,7 @@ namespace Payment.LeoPay
                 .Select(x => $"{x.Key}={x.Value}")) + apiToken + callbackToken;
 
             _logger.LogInformation(str);
-            var sign = base.ToMD5(str);
+            var sign = base.ToMD5(str).ToLower();
             _logger.LogInformation(sign);
 
             return sign;
