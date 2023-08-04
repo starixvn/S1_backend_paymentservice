@@ -192,7 +192,7 @@ namespace Payment.LeoPay
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var apiToken = payResource["Card"];
-            var callbackToken = payResource["Card_Callback"];
+            var callbackToken = payResource["Card_CallbackToken"];
             var req = FromJson<CallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
             {
@@ -218,7 +218,8 @@ namespace Payment.LeoPay
                 ThirdId = req.ThirdId,
                 TransStatus = transStatus,
                 Response = LeoPayDefinition.CallbackResponse,
-                WithdrawId = req.TransId
+                WithdrawId = req.TransId,
+                Message = req.State
             };
 
             return result;
