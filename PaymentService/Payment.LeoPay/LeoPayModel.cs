@@ -31,7 +31,7 @@ public class CreatOrderData
 
 public class CallBackRequest
 {
-    [JsonProperty("trade_no")]
+    [JsonProperty("out_trade_no")]
     public string TransId { get; set; }
     
     [JsonProperty("amount")]
@@ -40,7 +40,7 @@ public class CallBackRequest
     [JsonProperty("request_amount")]
     public string RequestAmount { get; set; }
     
-    [JsonProperty("out_trade_no")]
+    [JsonProperty("trade_no")]
     public string ThirdId { get; set; }
     
     [JsonProperty("state")]
