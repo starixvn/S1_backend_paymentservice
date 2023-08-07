@@ -133,6 +133,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                DepReq.Add("CurrencyId", onlineBank.CurrencyId.ToString());
                 DepReq.Add("PayCurrencyId", onlineBank.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
@@ -258,6 +259,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                DepReq.Add("CurrencyId", payInfo.CurrencyId.ToString());
                 DepReq.Add("PayCurrencyId", payInfo.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
@@ -391,7 +393,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-               
+                DepReq.Add("CurrencyId", cryptoPayInfo.CurrencyId.ToString());
                 DepReq.Add("PayCurrencyId", cryptoPayInfo.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
@@ -522,6 +524,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                DepReq.Add("CurrencyId", loadCardPay.CurrencyId.ToString());
                 DepReq.Add("PayCurrencyId", loadCardPay.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
@@ -650,7 +653,7 @@ namespace PaymentService.Controllers
                     return response;
                 }
 
-                depositInfo.ActualDeposit = (request.Amount == 0) ? depositInfo.Amount : request.Amount;
+                depositInfo.ActualDeposit = (request.Amount == 0) ? depositInfo.ActualDeposit : request.Amount;
                 depositInfo.Comment = "Manual Approved";
                 depositInfo.Status = (int)DepositStatus.Approved;
                 depositInfo.RefId = string.IsNullOrEmpty(request.ThirdId) ? null : request.ThirdId;
@@ -685,7 +688,10 @@ namespace PaymentService.Controllers
         {
             try
             {
-                var bodyText = "";
+                string bodyText;
+                var headers = Request.Headers
+                    .ToDictionary(x => x.Key, x => x.Value.ToString());
+                
                 using (var reader = new StreamReader(Request.Body))
                 {
                     bodyText = await reader.ReadToEndAsync();
@@ -739,7 +745,7 @@ namespace PaymentService.Controllers
                     transId = payHelperNoCallBackUrl.FetchTransId(dicParam, bodyText);
                 }
 
-                var responseToPay = await CallBackHandlerAsync(transId, dicParam, bodyText, isFormData);
+                var responseToPay = await CallBackHandlerAsync(transId, dicParam, bodyText, headers);
                 return Content(responseToPay);
             }
             catch (Exception e)
@@ -749,7 +755,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, bool isFormData)
+        private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, Dictionary<string, string> headers)
         {
             DepositRequest depositRequest = null;
             //查詢訂單在不在db
@@ -765,7 +771,9 @@ namespace PaymentService.Controllers
                 DepReq.Add("TransID", depositRequest.TransId);
                 DepReq.Add("BankCode", pay.BankCode);
                 DepReq.Add("DepositInfo", depositRequest.DepositInfo);
+                DepReq.Add("DepositType", ((int)depositRequest.DepositType).ToString());
                 DepReq.Add("RequestAmount", depositRequest.Amount.ToString());
+                DepReq.Add("CurrencyId", depositRequest.CurrencyId.ToString());
 
                 //DepReq.Add("Amount", depositRequest.Amount.ToString());
                 //檢查namespace是否存在 
@@ -785,7 +793,7 @@ namespace PaymentService.Controllers
                 depositRequest.PayName = paySetting.PayName;
 
                 //取得每家金流的成果 
-                var rNotifyDepositResult = payHelper.CallBackDebit(dicParam, bodyText, DepReq);
+                var rNotifyDepositResult = payHelper.CallBackDebit(dicParam, bodyText, headers, DepReq);
 
                 if (!string.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
                 {

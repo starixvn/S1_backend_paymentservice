@@ -27,7 +27,7 @@ namespace Payment.FuliH5
             public string signature { get; set; }
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackWithdrawalReq>(ToJson(formData));
             var p = $"{data.requestId}{data.result}{data.sum}{data.balance}";
@@ -89,7 +89,7 @@ namespace Payment.FuliH5
             public string endTime { get; set; }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
             var p = $"{data.requestId}{data.tradeId}{data.fiscalDate}{data.description}{data.totalPrice}{data.tradeAmount}{data.tradeFee}";

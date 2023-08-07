@@ -22,7 +22,7 @@ namespace Payment.Help2Pay
             public string Message { get; set; }
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
             var merchant_no = payResource["merchant_no"];
@@ -85,7 +85,7 @@ namespace Payment.Help2Pay
             public string StatementDate { get; set; }
             public string DepositFee { get; set; }
         }
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             //new DateTimeOffset()
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
@@ -215,16 +215,17 @@ namespace Payment.Help2Pay
                 { "Amount", decimal.Parse(inputs["Amount"]).ToString("#.00") }
             };
             var time = new DateTimeOffset(DateTime.Now);
+            var bankCode = inputs["BankCode"];
+            var payCode = inputs["PayCode"];
 
             formData.Add("Datetime", time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyy-MM-dd hh:mm:sstt", CultureInfo.InvariantCulture));
-            formData.Add("FrontURI", inputs["ReturnUrl"]);
+            formData.Add("FrontURI", inputs["CallBackUrl"]);
             formData.Add("BackURI", inputs["CallBackUrl"]);
-            formData.Add("Bank", inputs["BankCode"]);
+            formData.Add("Bank", string.IsNullOrEmpty(bankCode) ? payCode : bankCode);
             formData.Add("Language", inputs["PayLangId"]);
             formData.Add("ClientIP", inputs["ClientIP"]);
             formData.Add("Customer", "");
-            //formData.Add("key", inputs["key"]);
-            //var dicP = FromJson<Dictionary<string, string>>(ToJson(oDebitReq)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
+            
             var p = $"{formData["Merchant"]}{formData["Reference"]}{""}{formData["Amount"]}{formData["Currency"]}{time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss")}{inputs["key"]}{formData["ClientIP"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 

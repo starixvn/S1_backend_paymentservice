@@ -74,7 +74,7 @@ namespace Payment.LionPay
         }
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
-            Dictionary<string, string> input)
+            Dictionary<string, string> headers, Dictionary<string, string> input)
         {
             var apiKey = input["key"];
             var req = FromJson<CallBackRequest>(bodyContent);
@@ -169,7 +169,7 @@ namespace Payment.LionPay
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
-            Dictionary<string, string> payResource)
+            Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var apiKey = payResource["key"];
             var req = FromJson<CallBackRequest>(bodyContent);

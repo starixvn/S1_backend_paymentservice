@@ -27,8 +27,8 @@ namespace PaymentCore
         public abstract Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs);
         public abstract EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs);
         public abstract EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs);
-        public abstract NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
-        public abstract NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource);
+        public abstract NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource);
+        public abstract NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource);
 
         protected string HttpGet(string url, string parameters, string transId, bool ignoreCertificate = false)
         {

@@ -20,7 +20,7 @@ namespace Payment.Xingji
             public string sign { get; set; }
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackWithdrawalReq>(ToJson(formData));
             var p = $"amount={data.amount}&datetime={data.datetime}&memberid={data.memberid}&orderid={data.orderid}&returncode={data.returncode}&" +
@@ -70,7 +70,7 @@ namespace Payment.Xingji
             public string msg { get; set; }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
             var p = $"amount={data.amount}&datetime={data.datetime}&memberid={data.memberid}&orderid={data.orderid}&" +

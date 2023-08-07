@@ -5,6 +5,10 @@ public class DepositResult
     public DepositResult()
     {
     }
+    
+    public DepositResult(string message) : this(false, "", message)
+    {
+    }
 
     public DepositResult(bool success, string errorCode, string message = "")
     {
