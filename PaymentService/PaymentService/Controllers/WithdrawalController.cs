@@ -181,7 +181,6 @@ namespace PaymentService.Controllers
                 WithReq.Add("PayCode", crypto.PayCode);
                 WithReq.Add("AccountName", reqWithdrawal.AccountName);
                 WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
-                WithReq.Add("CurrencyId", custInfo.CurrencyId.ToString());
                 WithReq.Add("IsTest", _common.IsTest());
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
