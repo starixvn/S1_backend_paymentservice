@@ -47,7 +47,7 @@ namespace Payment.DirePay
         public string Currency { get; set; }
         
         [JsonProperty("actual_amount")]
-        public decimal ActualAmount { get; set; }
+        public decimal? ActualAmount { get; set; }
         
         [JsonProperty("status")]
         public string Status { get; set; }

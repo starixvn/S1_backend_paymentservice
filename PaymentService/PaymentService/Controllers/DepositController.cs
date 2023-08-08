@@ -134,6 +134,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                DepReq.Add("CurrencyId", onlineBank.CurrencyId.ToString());
                 DepReq.Add("PayCurrencyId", onlineBank.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
@@ -261,6 +262,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                DepReq.Add("CurrencyId", payInfo.CurrencyId.ToString());
                 DepReq.Add("PayCurrencyId", payInfo.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
@@ -393,7 +395,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-               
+                DepReq.Add("CurrencyId", cryptoPayInfo.CurrencyId.ToString());
                 DepReq.Add("PayCurrencyId", cryptoPayInfo.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
@@ -524,6 +526,7 @@ namespace PaymentService.Controllers
                 }
 
                 var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+                DepReq.Add("CurrencyId", loadCardPay.CurrencyId.ToString());
                 DepReq.Add("PayCurrencyId", loadCardPay.PayCurrencyId);
                 DepReq.Add("ClientIP", reqDeposit.ClientIP);
                 DepReq.Add("TransID", reqDeposit.TransId);
@@ -772,6 +775,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("DepositInfo", depositRequest.DepositInfo);
                 DepReq.Add("DepositType", ((int)depositRequest.DepositType).ToString());
                 DepReq.Add("RequestAmount", depositRequest.Amount.ToString());
+                DepReq.Add("CurrencyId", depositRequest.CurrencyId.ToString());
 
                 //DepReq.Add("Amount", depositRequest.Amount.ToString());
                 //檢查namespace是否存在 
