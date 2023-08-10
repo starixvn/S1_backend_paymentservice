@@ -100,10 +100,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.YuiPay", "Payment.Y
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.LeoPay", "Payment.LeoPay\Payment.LeoPay.csproj", "{5627A41E-4348-479A-BFE1-8940E8B1BB5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.LuckyPay", "Payment.LuckyPay\Payment.LuckyPay.csproj", "{F211FEBD-A339-44B5-A3BA-73746F8E8CC1}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BF5D5D0C-AFF0-4002-958C-CBA755F197AF} = {BF5D5D0C-AFF0-4002-958C-CBA755F197AF}
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.LuckyPay", "Payment.LuckyPay\Payment.LuckyPay.csproj", "{F211FEBD-A339-44B5-A3BA-73746F8E8CC1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
