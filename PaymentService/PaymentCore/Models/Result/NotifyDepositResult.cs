@@ -11,7 +11,7 @@ public class NotifyDepositResult : IDepositResult
     public string ThirdId { get; set; }
     public decimal RequestAmount { get; set; }
     public decimal ActualAmount { get; set; }
-    public decimal Fee { get { return RequestAmount - ActualAmount; } }
+    public decimal Fee => RequestAmount - ActualAmount;
     public string Comment { get; set; }
     public string Response { get; set; }
 }
