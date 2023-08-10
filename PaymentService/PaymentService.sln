@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PaymentService", "PaymentService\PaymentService.csproj", "{B546F49E-BCD5-4D1D-ABDC-C3AC1FBBA721}"
-	ProjectSection(ProjectDependencies) = postProject
-		{F211FEBD-A339-44B5-A3BA-73746F8E8CC1} = {F211FEBD-A339-44B5-A3BA-73746F8E8CC1}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PaymentCore", "PaymentCore\PaymentCore.csproj", "{BF5D5D0C-AFF0-4002-958C-CBA755F197AF}"
 EndProject
