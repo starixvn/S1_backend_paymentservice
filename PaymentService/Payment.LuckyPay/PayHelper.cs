@@ -76,6 +76,11 @@ namespace Payment.LuckyPay
             public string txid { get; set; }
             public string sign { get; set; }
         }
+        public class keyData
+        {
+            public string merchantNo { get; set; }
+            public string key { get; set; }
+        }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
@@ -94,7 +99,12 @@ namespace Payment.LuckyPay
             toMD5Data.Add("status", data.status);
             toMD5Data.Add("txid", data.txid);
             var queryString = string.Join("&", toMD5Data.Select(x => x.Value).ToArray());
-            var sign = ToMD5($"{queryString}{payResource["key"]}").ToLower();
+
+            var keyList = new List<keyData>();
+            keyList.Add(new keyData() { key = payResource["THBkey"], merchantNo = payResource["THBmerchantNo"] });
+            keyList.Add(new keyData() { key = payResource["INRkey"], merchantNo = payResource["INRmerchantNo"] });
+            var key = keyList.Find(x => x.merchantNo == data.clientCode).key;
+            var sign = ToMD5($"{queryString}{key}").ToLower();
 
             if (sign == data.sign)
             {
@@ -149,7 +159,12 @@ namespace Payment.LuckyPay
             toMD5Data.Add("status", data.status);
             toMD5Data.Add("txid", data.txid);
             var queryString = string.Join("&", toMD5Data.Select(x => x.Value).ToArray());
-            var sign = ToMD5($"{queryString}{payResource["key"]}").ToLower();
+
+            var keyList = new List<keyData>();
+            keyList.Add(new keyData() { key = payResource["THBkey"], merchantNo = payResource["THBmerchantNo"] });
+            keyList.Add(new keyData() { key = payResource["INRkey"], merchantNo = payResource["INRmerchantNo"] });
+            var key = keyList.Find(x => x.merchantNo == data.clientCode).key;
+            var sign = ToMD5($"{queryString}{key}").ToLower();
 
             if (sign == data.sign)
             {
@@ -194,21 +209,33 @@ namespace Payment.LuckyPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"] + "/api/bank/agentPay/request";
+
+            var PayCurrencyId = inputs["PayCurrencyId"];
+            var currencyData = PayCurrencyId switch
+            {
+                "THB" => new Dictionary<string, string> {
+                    { "key", inputs["THBkey"] },{ "merchantNo", inputs["THBmerchantNo"]}
+                    },
+                "INR" => new Dictionary<string, string> {
+                    { "key", inputs["INRkey"] },{ "merchantNo", inputs["INRmerchantNo"]}
+                    }
+            };
+
             var currentTime = GetCurrentTime();
             var formData = new Dictionary<string, string>();
-            formData.Add("clientCode", inputs["merchantNo"]);
+            formData.Add("clientCode", currencyData["merchantNo"]);
             formData.Add("chainName", "BANK");
-            formData.Add("coinUnit", inputs["PayCurrencyId"]);
+            formData.Add("coinUnit", PayCurrencyId);
             formData.Add("clientNo", inputs["TransID"]);
             formData.Add("currentTime", currentTime);
 
             var queryString = string.Join("&", formData.Select(x => x.Value).ToArray());
-            var sign = ToMD5($"{queryString}{inputs["key"]}").ToLower();
+            var sign = ToMD5($"{queryString}{currencyData["key"]}").ToLower();
 
             var dicP = new Dictionary<string, string>();
-            dicP.Add("clientCode", inputs["merchantNo"]);
+            dicP.Add("clientCode", currencyData["merchantNo"]);
             dicP.Add("chainName", "BANK");
-            dicP.Add("coinUnit", inputs["PayCurrencyId"]);
+            dicP.Add("coinUnit", PayCurrencyId);
             dicP.Add("clientNo", inputs["TransID"]);
             dicP.Add("bankCardNum", inputs["AccountNo"]);
             dicP.Add("bankUserName", inputs["AccountName"]);
@@ -243,21 +270,33 @@ namespace Payment.LuckyPay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"] + "/api/coin/pay/request";
+
+            var PayCurrencyId = inputs["PayCurrencyId"];
+            var currencyData = PayCurrencyId switch
+            {
+                "THB" => new Dictionary<string, string> {
+                    { "key", inputs["THBkey"] },{ "merchantNo", inputs["THBmerchantNo"]}
+                    },
+                "INR" => new Dictionary<string, string> {
+                    { "key", inputs["INRkey"] },{ "merchantNo", inputs["INRmerchantNo"]}
+                    }
+            };
+
             var currentTime = GetCurrentTime();
             var formData = new Dictionary<string, string>();
-            formData.Add("clientCode", inputs["merchantNo"]);
+            formData.Add("clientCode", currencyData["merchantNo"]);
             formData.Add("chainName", "BANK");
-            formData.Add("coinUnit", inputs["PayCurrencyId"]);
+            formData.Add("coinUnit", PayCurrencyId);
             formData.Add("clientNo", inputs["TransID"]);
             formData.Add("currentTime", currentTime);
 
             var queryString = string.Join("&", formData.Select(x=>x.Value).ToArray());
-            var sign = ToMD5($"{queryString}{inputs["key"]}").ToLower();
+            var sign = ToMD5($"{queryString}{currencyData["key"]}").ToLower();
 
             var dicP = new Dictionary<string, string>();
-            dicP.Add("clientCode", inputs["merchantNo"]);
+            dicP.Add("clientCode", currencyData["merchantNo"]);
             dicP.Add("chainName", "BANK");
-            dicP.Add("coinUnit", inputs["PayCurrencyId"]);
+            dicP.Add("coinUnit", PayCurrencyId);
             dicP.Add("clientNo", inputs["TransID"]);
             dicP.Add("memberFlag", inputs["CustId"]);
             dicP.Add("requestAmount", inputs["Amount"]);
