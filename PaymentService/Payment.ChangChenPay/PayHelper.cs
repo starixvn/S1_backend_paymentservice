@@ -102,7 +102,7 @@ namespace Payment.ChangChenPay
                 DepositId = formData["mchOrderNo"],
                 Comment = formData["status"],
                 TransStatus = transStatus,
-                ActualAmount = decimal.Parse(formData["amount"]),
+                ActualAmount = decimal.Parse(formData["amount"]) / AmountFix,
                 Response = ChangChenPayDefinition.CallbackResponse
             };
 
@@ -125,7 +125,7 @@ namespace Payment.ChangChenPay
             var key = inputs["Key"];
             var payKey = inputs["PayVerifyCode"];
             var appId = inputs["AppId"];
-            var reqAmount = decimal.Parse(inputs["Amount"]);
+            var reqAmount = decimal.Parse(inputs["Amount"]) * AmountFix;
             var strAmount = reqAmount.ToString("G29");
             var transId = inputs["TransID"];
             var payCurrency = inputs["PayCurrencyId"];
