@@ -263,8 +263,6 @@ namespace Payment.ChangChenPay
 
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
         {
-            key =
-                "SnPgcCP5YnXxQ19QYWVDJ2Mjf4ObTBSWMTlLbwMT3jWj9tLErHwJgVORgQC3NUg2htJdLEiENqPbriAACWnd8tiFFurMX7tHP8udylGBF9vOADXbCosCw6XUqnbOATiOEqn7nwxQMSfVw734";
             var str = string.Join("&", param
                 .Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)
                     && !string.IsNullOrEmpty(x.Value))
