@@ -13,6 +13,7 @@ namespace Payment.ChangChenPay
     {
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
+        private const decimal AmountFix = 100;
 
         public PayHelper(IServiceProvider provider)
         {
@@ -30,12 +31,13 @@ namespace Payment.ChangChenPay
             var key = input["Key"];
             var appId = input["AppId"];
             var payCode = input["PayCode"];
-            var payCurrency = input["PayCurrency"];
-            var reqAmount = decimal.Parse(input["Amount"]);
+            var payCurrency = input["PayCurrencyId"];
+            var reqAmount = decimal.Parse(input["Amount"]) * AmountFix;
             var strAmount = reqAmount.ToString("G29");
             var transId = input["TransID"];
             var notifyUrl = input["CallBackUrl"];
             var depositInfo = input["DepositInfo"];
+            var accountName = input["AccountName"];
             
             try
             {
@@ -47,13 +49,15 @@ namespace Payment.ChangChenPay
                     {"mchOrderNo", transId},
                     {"currency", payCurrency},
                     {"amount", strAmount},
-                    {"notifyUrl", notifyUrl}
+                    {"notifyUrl", notifyUrl},
+                    {"subject", "subject"},
+                    {"body", "body"},
+                    {"param1", accountName}
                 };
                 
                 req.Add("sign", GetSign(req, key));
 
                 var res = CreateOrder(apiUrl, req);
-                
 
                 var response = new DepositResult
                 {
@@ -116,7 +120,7 @@ namespace Payment.ChangChenPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs["PayoutUrl"];
+            var apiUrl = inputs["ApiUrl"];
             var merchantId = inputs["MerchantId"];
             var key = inputs["Key"];
             var payKey = inputs["PayVerifyCode"];
@@ -124,7 +128,7 @@ namespace Payment.ChangChenPay
             var reqAmount = decimal.Parse(inputs["Amount"]);
             var strAmount = reqAmount.ToString("G29");
             var transId = inputs["TransID"];
-            var payCurrency = inputs["PayCurrency"];
+            var payCurrency = inputs["PayCurrencyId"];
             var accountName = inputs["AccountName"];
             var accountNo = inputs["AccountNo"];
             var notifyUrl = inputs["CallBackUrl"];
@@ -225,7 +229,7 @@ namespace Payment.ChangChenPay
             var apiUrl = baseApiUrl + ChangChenPayDefinition.Path.CreateOrder;
 
             var (result, statusCode) = _httpHelper
-                .PostUrlEncoded<Dictionary<string, string>, CreatOrderResponse>(apiUrl, req);
+                .PostUrlEncoded<object, CreatOrderResponse>(apiUrl, new { @params = JsonConvert.SerializeObject(req) });
 
             if (!statusCode.IsSuccessStatus())
             {
@@ -243,7 +247,7 @@ namespace Payment.ChangChenPay
         {
             var apiUrl = baseApiUrl + ChangChenPayDefinition.Path.CreatePayout;
             var (result, statusCode) = _httpHelper
-                .PostUrlEncoded<Dictionary<string, string>, CreatPayoutResponse>(apiUrl, req);
+                .PostUrlEncoded<object, CreatPayoutResponse>(apiUrl, new { @params = JsonConvert.SerializeObject(req) });
 
             if (!statusCode.IsSuccessStatus())
             {
@@ -259,10 +263,13 @@ namespace Payment.ChangChenPay
 
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
         {
+            key =
+                "SnPgcCP5YnXxQ19QYWVDJ2Mjf4ObTBSWMTlLbwMT3jWj9tLErHwJgVORgQC3NUg2htJdLEiENqPbriAACWnd8tiFFurMX7tHP8udylGBF9vOADXbCosCw6XUqnbOATiOEqn7nwxQMSfVw734";
             var str = string.Join("&", param
-                .Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase))
+                .Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)
+                    && !string.IsNullOrEmpty(x.Value))
                 .OrderBy(x => x.Key)
-                .Select(x => $"{x.Key}={x.Value}")) + key;
+                .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
 
             _logger.LogInformation(str);
             var sign = base.ToMD5(str).ToUpper();
