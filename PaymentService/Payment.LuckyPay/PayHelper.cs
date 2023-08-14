@@ -3,7 +3,6 @@ using PaymentCore;
 using PaymentCore.Models.Result;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
 
 namespace Payment.LuckyPay
 {
@@ -34,18 +33,6 @@ namespace Payment.LuckyPay
             public string hrefbackurl { get; set; }
             public string sign { get; set; }
         }
-        public class CallBackDebitReq
-        {
-            public string clientCode { get; set; }
-            public string clientNo { get; set; }
-            public string orderNo { get; set; }
-            public string chainName { get; set; }
-            public string coinUnit { get; set; }
-            public string payAmount { get; set; }
-            public string status { get; set; }
-            public string txid { get; set; }
-            public string sign { get; set; }
-        }
 
         public class CreditResp
         {
@@ -64,78 +51,69 @@ namespace Payment.LuckyPay
             public string status { get; set; }
             public string sign { get; set; }
         }
-        public class CallBackCreditReq
-        {
-            public string clientCode { get; set; }
-            public string clientNo { get; set; }
-            public string orderNo { get; set; }
-            public string chainName { get; set; }
-            public string coinUnit { get; set; }
-            public string payAmount { get; set; }
-            public string status { get; set; }
-            public string txid { get; set; }
-            public string sign { get; set; }
-        }
-        public class keyData
-        {
-            public string merchantNo { get; set; }
-            public string key { get; set; }
-        }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             _logger.LogInformation($"CallBackCredit, bodyContent:{bodyContent}");
-            var data = FromJson<CallBackCreditReq>(bodyContent);
+
             var oNotify = new NotifyWithdrawResult()
             {
-                WithdrawId = data.clientNo
+                WithdrawId = formData["clientNo"]
             };
 
             var toMD5Data = new Dictionary<string, string>();
-            toMD5Data.Add("clientCode", data.clientCode);
-            toMD5Data.Add("clientNo", data.clientNo);
-            toMD5Data.Add("orderNo", data.orderNo);
-            toMD5Data.Add("payAmount", data.payAmount);
-            toMD5Data.Add("status", data.status);
-            toMD5Data.Add("txid", data.txid);
+            toMD5Data.Add("clientCode", formData["clientCode"]);
+            toMD5Data.Add("clientNo", formData["clientNo"]);
+            toMD5Data.Add("orderNo", formData["orderNo"]);
+            toMD5Data.Add("payAmount", formData["payAmount"]);
+            toMD5Data.Add("status", formData["status"]);
+            toMD5Data.Add("txid", formData["txid"]);
             var queryString = string.Join("&", toMD5Data.Select(x => x.Value).ToArray());
 
-            var keyList = new List<keyData>();
-            keyList.Add(new keyData() { key = payResource["THBkey"], merchantNo = payResource["THBmerchantNo"] });
-            keyList.Add(new keyData() { key = payResource["INRkey"], merchantNo = payResource["INRmerchantNo"] });
-            var key = keyList.Find(x => x.merchantNo == data.clientCode).key;
-            var sign = ToMD5($"{queryString}{key}").ToLower();
-
-            if (sign == data.sign)
+            var currencyData = formData["coinUnit"] switch
             {
-                if (data.status == "PAID" || data.status == "FINISH")
+                "THB" => new Dictionary<string, string> {
+                    { "key", payResource["THBkey"] },{ "merchantNo", payResource["THBmerchantNo"]}
+                    },
+                "INR" => new Dictionary<string, string> {
+                    { "key", payResource["INRkey"] },{ "merchantNo", payResource["INRmerchantNo"]}
+                    }
+            };
+
+            var sign = ToMD5($"{queryString}{currencyData["key"]}").ToLower();
+
+            if (sign == formData["sign"])
+            {
+                if (formData["status"] == "PAID" || formData["status"] == "FINISH")
                 {
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.payAmount);
-                    oNotify.ThirdId = data.clientNo;
-                    oNotify.Message = data.status;
+                    oNotify.RequestAmount = decimal.Parse(formData["payAmount"]);
+                    oNotify.ThirdId = formData["clientNo"];
+                    oNotify.Message = formData["status"];
                     oNotify.Response = "ok";
                 }
-                else if (data.status == "PAYING")
+                else if (formData["status"] == "PAYING")
                 {
                     oNotify.TransStatus = TransStatus.Pending;
-                    oNotify.ThirdId = data.clientNo;
-                    oNotify.Message = data.status;
+                    oNotify.ThirdId = formData["clientNo"];
+                    oNotify.Message = formData["status"];
                     oNotify.Response = "";
                 }
                 else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.ThirdId = data.clientNo;
-                    oNotify.Message = data.status;
+                    oNotify.ThirdId = formData["clientNo"];
+                    oNotify.Message = formData["status"];
                     oNotify.Response = "";
                 }
             }
             else
             {
+                _logger.LogInformation($"sign error, sign:{sign} data:{formData["sign"]}");
+
                 oNotify.TransStatus = TransStatus.Pending;
-                oNotify.ThirdId = data.clientNo;
-                oNotify.Message = data.status;
+                oNotify.ThirdId = formData["clientNo"];
+                oNotify.Message = formData["status"];
                 oNotify.Response = "";
             }
 
@@ -145,54 +123,60 @@ namespace Payment.LuckyPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             _logger.LogInformation($"CallBackDebit, bodyContent:{bodyContent}");
-            var data = FromJson<CallBackDebitReq>(bodyContent);
+
             var oNotify = new NotifyDepositResult()
             {
-                DepositId = data.clientNo
+                DepositId = formData["clientNo"]
             };
 
             var toMD5Data = new Dictionary<string, string>();
-            toMD5Data.Add("clientCode", data.clientCode);
-            toMD5Data.Add("clientNo", data.clientNo);
-            toMD5Data.Add("orderNo", data.orderNo);
-            toMD5Data.Add("payAmount", data.payAmount);
-            toMD5Data.Add("status", data.status);
-            toMD5Data.Add("txid", data.txid);
+            toMD5Data.Add("clientCode", formData["clientCode"]);
+            toMD5Data.Add("clientNo", formData["clientNo"]);
+            toMD5Data.Add("orderNo", formData["orderNo"]);
+            toMD5Data.Add("payAmount", formData["payAmount"]);
+            toMD5Data.Add("status", formData["status"]);
+            toMD5Data.Add("txid", formData["txid"]);
             var queryString = string.Join("&", toMD5Data.Select(x => x.Value).ToArray());
 
-            var keyList = new List<keyData>();
-            keyList.Add(new keyData() { key = payResource["THBkey"], merchantNo = payResource["THBmerchantNo"] });
-            keyList.Add(new keyData() { key = payResource["INRkey"], merchantNo = payResource["INRmerchantNo"] });
-            var key = keyList.Find(x => x.merchantNo == data.clientCode).key;
-            var sign = ToMD5($"{queryString}{key}").ToLower();
-
-            if (sign == data.sign)
+            var currencyData = formData["coinUnit"] switch
             {
-                if (data.status == "PAID" || data.status == "FINISH")
+                "THB" => new Dictionary<string, string> {
+                    { "key", payResource["THBkey"] },{ "merchantNo", payResource["THBmerchantNo"]}
+                    },
+                "INR" => new Dictionary<string, string> {
+                    { "key", payResource["INRkey"] },{ "merchantNo", payResource["INRmerchantNo"]}
+                    }
+            };
+
+            var sign = ToMD5($"{queryString}{currencyData["key"]}").ToLower();
+
+            if (sign == formData["sign"])
+            {
+                if (formData["status"] == "PAID" || formData["status"] == "FINISH")
                 {
                     oNotify.TransStatus = TransStatus.Success;
-                    oNotify.RequestAmount = decimal.Parse(data.payAmount);
-                    oNotify.ActualAmount = decimal.Parse(data.payAmount);
-                    oNotify.ThirdId = data.orderNo;
-                    oNotify.Comment = data.status;
-                    oNotify.Message = data.status;
+                    oNotify.RequestAmount = decimal.Parse(formData["payAmount"]);
+                    oNotify.ActualAmount = decimal.Parse(formData["payAmount"]);
+                    oNotify.ThirdId = formData["orderNo"];
+                    oNotify.Comment = formData["status"];
+                    oNotify.Message = formData["status"];
                     oNotify.Response = "ok";
                 }
                 else
                 {
                     oNotify.TransStatus = TransStatus.Fail;
-                    oNotify.ThirdId = data.orderNo;
-                    oNotify.Comment = data.status;
-                    oNotify.Message = data.status;
+                    oNotify.ThirdId = formData["orderNo"];
+                    oNotify.Comment = formData["status"];
+                    oNotify.Message = formData["status"];
                     oNotify.Response = "ok";
                 }
             }
             else
             {
-                _logger.LogInformation($"sign error, sign:{sign} data:{data.sign}");
+                _logger.LogInformation($"sign error, sign:{sign} data:{formData["sign"]}");
 
                 oNotify.TransStatus = TransStatus.Pending;
-                oNotify.ThirdId = data.orderNo;
+                oNotify.ThirdId = formData["orderNo"];
                 oNotify.Comment = "sign error";
                 oNotify.Message = "sign error";
                 oNotify.Response = "sign error";
