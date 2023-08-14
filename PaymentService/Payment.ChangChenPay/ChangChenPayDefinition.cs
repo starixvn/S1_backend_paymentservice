@@ -37,12 +37,12 @@ public class ChangChenPayDefinition
         /// <summary>
         /// 創建代收
         /// </summary>
-        public const string CreateOrder = "/pay/create_order";
+        public const string CreateOrder = "/api/pay/create_order";
 
         /// <summary>
         /// 創建代付
         /// </summary>
-        public const string CreatePayout = "/trans/create_order";
+        public const string CreatePayout = "/api/trans/create_order";
     }
 
     internal const string SuccessCode = "SUCCESS";
