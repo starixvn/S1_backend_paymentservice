@@ -3,12 +3,18 @@
 namespace Payment.OnePay;
 
 
+internal enum OrderType
+{
+    Debit = 1,
+    Credit = 2
+}
+
 internal class MediaType
 {
     public const string Json = "application/json";
 }
 /// <summary>
-/// 存款(Credit)、提款(Debit) 共用建單回覆
+/// 存款(Debit)、提款(Credit) 共用建單回覆
 /// </summary>
 /// <typeparam name="T"></typeparam>
 public class OnePayCreateResponse<T>
@@ -24,9 +30,9 @@ public class OnePayCreateResponse<T>
 }
 
 /// <summary>
-/// 存款(Credit) Data 回覆
+/// 存款(Debit)、提款(Credit) Data 回覆
 /// </summary>
-public class OnePayCreateCreditResponse
+public class OnePayCreateData
 {
     /// <summary>
     /// 收银台地址，测试通道没有真实地址，正式通道才有实际地址
@@ -47,7 +53,7 @@ public class OnePayCreateCreditResponse
 }
 
 /// <summary>
-/// 存款(Credit)、提款(Debit) 共用回調請求
+/// 存款(Debit)、提款(Credit) 共用回調請求
 /// </summary>
 public class OnePayCallBackRequest
 {
@@ -62,7 +68,7 @@ public class OnePayCallBackRequest
 }
 
 /// <summary>
-/// 存款(Credit)、提款(Debit) Data 回覆
+/// 存款(Debit)、提款(Credit) Data 回覆
 /// </summary>
 public class PlainCallBackData
 {
