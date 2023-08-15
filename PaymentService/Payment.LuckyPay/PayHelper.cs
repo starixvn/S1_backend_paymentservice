@@ -223,8 +223,9 @@ namespace Payment.LuckyPay
             dicP.Add("clientNo", inputs["TransID"]);
             dicP.Add("bankCardNum", inputs["AccountNo"]);
             dicP.Add("bankUserName", inputs["AccountName"]);
-            dicP.Add("ifsc", inputs["IFSCCode"]);
-            dicP.Add("bankName", inputs["BankName"]);
+            //THB沒有IFSC所以固定代字串IFSC
+            dicP.Add("ifsc", PayCurrencyId == "INR" ? inputs["IFSCCode"] : "IFSC");
+            dicP.Add("bankName", inputs["BankCode"]);
             dicP.Add("amount", inputs["Amount"]);
             dicP.Add("requestTimestamp", currentTime);
             dicP.Add("callbackurl", inputs["CallBackUrl"]);
