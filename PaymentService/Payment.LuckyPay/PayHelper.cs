@@ -192,19 +192,18 @@ namespace Payment.LuckyPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var sUrl = inputs["host"] + "/api/bank/agentPay/request";
-
             var PayCurrencyId = inputs["PayCurrencyId"];
             var currencyData = PayCurrencyId switch
             {
                 "THB" => new Dictionary<string, string> {
-                    { "key", inputs["THBkey"] },{ "merchantNo", inputs["THBmerchantNo"]}
+                    { "key", inputs["THBkey"] },{ "merchantNo", inputs["THBmerchantNo"]}, { "host", inputs["THBhost"]}
                     },
                 "INR" => new Dictionary<string, string> {
-                    { "key", inputs["INRkey"] },{ "merchantNo", inputs["INRmerchantNo"]}
+                    { "key", inputs["INRkey"] },{ "merchantNo", inputs["INRmerchantNo"]}, { "host", inputs["INRhost"]}
                     }
             };
 
+            var sUrl = currencyData["host"] + "/api/bank/agentPay/request";
             var currentTime = GetCurrentTime();
             var formData = new Dictionary<string, string>();
             formData.Add("clientCode", currencyData["merchantNo"]);
@@ -254,19 +253,18 @@ namespace Payment.LuckyPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            var sUrl = inputs["host"] + "/api/coin/pay/request";
-
             var PayCurrencyId = inputs["PayCurrencyId"];
             var currencyData = PayCurrencyId switch
             {
                 "THB" => new Dictionary<string, string> {
-                    { "key", inputs["THBkey"] },{ "merchantNo", inputs["THBmerchantNo"]}
+                    { "key", inputs["THBkey"] },{ "merchantNo", inputs["THBmerchantNo"]}, { "host", inputs["THBhost"]}
                     },
                 "INR" => new Dictionary<string, string> {
-                    { "key", inputs["INRkey"] },{ "merchantNo", inputs["INRmerchantNo"]}
+                    { "key", inputs["INRkey"] },{ "merchantNo", inputs["INRmerchantNo"]}, { "host", inputs["INRhost"]}
                     }
             };
 
+            var sUrl = currencyData["host"] + "/api/coin/pay/request";
             var currentTime = GetCurrentTime();
             var formData = new Dictionary<string, string>();
             formData.Add("clientCode", currencyData["merchantNo"]);
