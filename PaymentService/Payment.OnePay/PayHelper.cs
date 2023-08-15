@@ -94,8 +94,8 @@ public class PayHelper : PayHelperBase
             return new NotifyWithdrawResult
             {
                 TransStatus = TransStatus.Pending,
+                Message = plainData?.remark ?? "",
                 Response = CallbackResponse.Failed
-
             };
         }
 
