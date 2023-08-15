@@ -62,6 +62,8 @@ public class PayHelper : PayHelperBase
 
             var req = new Dictionary<string, string> { { "data", data } };
 
+            _logger.LogInformation($"plainData={JsonConvert.SerializeObject(plainreq)}.");
+
             var res = Payout(apiUrl, apiKey, req).Result;
 
             var response = new WithdrawResult
@@ -153,6 +155,8 @@ public class PayHelper : PayHelperBase
             var data = AesEncrypt(ToJson(plainreq), AesKey);
 
             var req = new Dictionary<string, string> { { "data", data } };
+
+            _logger.LogInformation($"plainData={JsonConvert.SerializeObject(plainreq)}.");
 
             var res = CreateOrder(apiUrl, apiKey, req).Result;
 
