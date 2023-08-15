@@ -184,9 +184,8 @@ namespace Payment.ChangChenPay
             Dictionary<string, string> headers, Dictionary<string, string> input)
         {
             var key = input["Key"];
-            var transId = input["TransID"];
+            var transId = formData["mchTransOrderNo"];
             
-
             if (!VerifySign(formData["sign"], formData, key))
             {
                 return new NotifyWithdrawResult
@@ -200,7 +199,7 @@ namespace Payment.ChangChenPay
             var transStatus = ChangChenPayDefinition.GetPayoutTransStatus(formData["status"]);
             var result = new NotifyWithdrawResult
             {
-                ThirdId = formData["transOrderId"],
+                ThirdId = transId,
                 TransStatus = transStatus,
                 Response = ChangChenPayDefinition.CallbackResponse,
                 WithdrawId = formData["mchTransOrderNo"],
