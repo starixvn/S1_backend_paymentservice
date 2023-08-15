@@ -37,8 +37,8 @@ public class PayHelper : PayHelperBase
         var currencyId = inputs["PayCurrencyId"];
         var transId = inputs["TransID"];
         var notifyUrl = inputs["CallBackUrl"];
-        var merchantPayCode = inputs["MerchantPayCode"];
         var payCode = inputs["PayCode"];
+        var bankCode = inputs["BankCode"];
         var accountName = inputs["AccountName"];
         var accountNo = inputs["AccountNo"];
 
@@ -47,13 +47,13 @@ public class PayHelper : PayHelperBase
             var plainreq = new Dictionary<string, string>
             {
                 {"orderNo", PrefixTransId(currencyId,transId)},
-                {"payCode", merchantPayCode},
+                {"payCode", payCode},
                 {"amount", strAmount},
                 {"notifyUrl", notifyUrl},
-                {"payeeType", payCode},
+                {"payeeType", bankCode},
                 {"payeeName", accountName},
                 {"payeeFirstInfo", accountNo},
-                {"payeeSecondInfo", PayNameDic[payCode]},
+                {"payeeSecondInfo", PayNameDic[bankCode]},
                 {"payeeThirdInfo", ""},
                 {"payeeFourInfo", ""}
             };
@@ -136,7 +136,7 @@ public class PayHelper : PayHelperBase
         var currencyId = inputs["PayCurrencyId"];
         var transId = inputs["TransID"];
         var notifyUrl = inputs["CallBackUrl"];
-        var payCode = inputs["MerchantPayCode"];
+        var payCode = inputs["PayCode"];
         var phoneNo = inputs["PhoneNo"];
 
         try
