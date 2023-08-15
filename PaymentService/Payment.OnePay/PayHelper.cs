@@ -290,7 +290,7 @@ public class PayHelper : PayHelperBase
                     $"plainData={JsonConvert.SerializeObject(plainData)}");
                 return false;
             }
-
+            _logger.LogInformation($"plainData={JsonConvert.SerializeObject(plainData)}.");
             return true;
         }
         catch (Exception ex)
