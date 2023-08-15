@@ -153,8 +153,8 @@ namespace Payment.ChangChenPay
                     {"accountType", payCode},
                     {"accountName", accountName},
                     {"accountNo", accountNo},
-                    {"province", string.Empty},
-                    {"city", string.Empty}
+                    {"province", "province"},
+                    {"city", "city"}
                 };
 
                 req.Add("sign", GetSign(req, key));
@@ -238,7 +238,7 @@ namespace Payment.ChangChenPay
             }
 
             if (result.Code != ChangChenPayDefinition.SuccessCode)
-                throw new CustomException("ChangChenPay creat order failed Failed.");
+                throw new CustomException(result.Message);
 
             return result;
         }
@@ -256,7 +256,7 @@ namespace Payment.ChangChenPay
             }
 
             if (result.Code != ChangChenPayDefinition.SuccessCode)
-                throw new CustomException("ChangChenPay create payout failed.");
+                throw new CustomException(result.Message);
 
             return result;
         }
