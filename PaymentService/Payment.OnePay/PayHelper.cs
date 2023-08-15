@@ -17,6 +17,7 @@ public class PayHelper : PayHelperBase
 {
     private readonly IFlurlHttpHelper _httpHelper;
     private readonly ILogger<PayHelper> _logger;
+    private readonly Dictionary<string, string> PayNameDic = new Dictionary<string, string>() { { "0", "bkash" }, { "2", "nagad" } };
 
     public PayHelper(IServiceProvider provider)
     {
@@ -28,12 +29,86 @@ public class PayHelper : PayHelperBase
 
     public override WithdrawResult Credit(Dictionary<string, string> inputs)
     {
-        throw new NotImplementedException();
+        var apiUrl = inputs["host"];
+        var apiKey = inputs["key"];
+        var AesKey = inputs["AESKey"];
+        var reqAmount = decimal.Parse(inputs["Amount"]) * 100;
+        var strAmount = reqAmount.ToString("#");
+        var currencyId = inputs["PayCurrencyId"];
+        var transId = inputs["TransID"];
+        var notifyUrl = inputs["CallBackUrl"];
+        var merchantPayCode = inputs["MerchantPayCode"];
+        var payCode = inputs["PayCode"];
+        var accountName = inputs["AccountName"];
+        var accountNo = inputs["AccountNo"];
+
+        try
+        {
+            var plainreq = new Dictionary<string, string>
+            {
+                {"orderNo", PrefixTransId(currencyId,transId)},
+                {"payCode", merchantPayCode},
+                {"amount", strAmount},
+                {"notifyUrl", notifyUrl},
+                {"payeeType", payCode},
+                {"payeeName", accountName},
+                {"payeeFirstInfo", accountNo},
+                {"payeeSecondInfo", PayNameDic[payCode]},
+                {"payeeThirdInfo", ""},
+                {"payeeFourInfo", ""}
+            };
+
+            var data = AesEncrypt(ToJson(plainreq), AesKey);
+
+            var req = new Dictionary<string, string> { { "data", data } };
+
+            var res = Payout(apiUrl, apiKey, req).Result;
+
+            var response = new WithdrawResult
+            {
+                Success = true,
+                RawContent = JsonConvert.SerializeObject(res)
+            };
+
+            return response;
+        }
+        catch (CustomException ex)
+        {
+            _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
+
+            return new WithdrawResult
+            {
+                Success = false,
+                Message = ex.Message
+            };
+        }
     }
 
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
-        throw new NotImplementedException();
+        var aesKey = payResource["AESKey"];
+        var req = FromJson<OnePayCallBackRequest>(bodyContent);
+
+        if (!VerifyCallBackData(req.data, aesKey, OrderType.Credit, out PlainCallBackData plainData))
+        {
+            return new NotifyWithdrawResult
+            {
+                TransStatus = TransStatus.Pending,
+                Response = CallbackResponse.Failed
+
+            };
+        }
+
+        var transStatus = OnePayDefinition.GetTransStatus(plainData.status);
+        var result = new NotifyWithdrawResult
+        {
+            ThirdId = plainData.channelNo,
+            WithdrawId = RemovePrefixTransId(plainData.merchantNo),
+            TransStatus = transStatus,
+            Response = CallbackResponse.Success
+        };
+
+        return result;
     }
 
     /// <summary>
@@ -61,7 +136,7 @@ public class PayHelper : PayHelperBase
         var currencyId = inputs["PayCurrencyId"];
         var transId = inputs["TransID"];
         var notifyUrl = inputs["CallBackUrl"];
-        var payCode = inputs["PayCode"];
+        var payCode = inputs["MerchantPayCode"];
         var phoneNo = inputs["PhoneNo"];
 
         try
@@ -104,7 +179,7 @@ public class PayHelper : PayHelperBase
         var aesKey = payResource["AESKey"];
         var req = FromJson<OnePayCallBackRequest>(bodyContent);
 
-        if (!AesDecryptCallBackData(req.data, aesKey, out PlainCallBackData plainData))
+        if (!VerifyCallBackData(req.data, aesKey, OrderType.Debit, out PlainCallBackData plainData))
         {
             return new NotifyDepositResult
             {
@@ -113,13 +188,6 @@ public class PayHelper : PayHelperBase
                 Response = CallbackResponse.Failed
             };
         }
-        if (plainData == null)
-            return new NotifyDepositResult
-            {
-                TransStatus = TransStatus.Pending,
-                Comment = "plainData is null.",
-                Response = CallbackResponse.Failed
-            };
 
         var transStatus = OnePayDefinition.GetTransStatus(plainData.status);
         var result = new NotifyDepositResult
@@ -155,15 +223,13 @@ public class PayHelper : PayHelperBase
 
     #region Private Methods
 
-    private async Task<OnePayCreateResponse<OnePayCreateCreditResponse>> CreateOrder(string baseApiUrl, string key, Dictionary<string, string> req)
+    private async Task<OnePayCreateResponse<OnePayCreateData>> CreateOrder(string baseApiUrl, string key, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePay;
-
-
         var (result, statusCode) = await _httpHelper
             .WithHeader("Authorization", key)
             .WithHeader("Content-Type", MediaType.Json)
-            .PostJsonAsync<Dictionary<string, string>, OnePayCreateResponse<OnePayCreateCreditResponse>>(apiUrl, req);
+            .PostJsonAsync<Dictionary<string, string>, OnePayCreateResponse<OnePayCreateData>>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -177,26 +243,28 @@ public class PayHelper : PayHelperBase
         return result;
     }
 
-    private async Task<OnePayCreateResponse<OnePayCreateCreditResponse>> Payout(string baseApiUrl, Dictionary<string, string> req)
+    private async Task<OnePayCreateResponse<OnePayCreateData>> Payout(string baseApiUrl, string key, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePayout;
         var (result, statusCode) = await _httpHelper
-            .PostJsonAsync<Dictionary<string, string>, OnePayCreateResponse<OnePayCreateCreditResponse>>(apiUrl, req);
+            .WithHeader("Authorization", key)
+            .WithHeader("Content-Type", MediaType.Json)
+            .PostJsonAsync<Dictionary<string, string>, OnePayCreateResponse<OnePayCreateData>>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
             throw new CustomException(
-                $"PAPay Payout failed, HttpStatus: {(int)statusCode} {statusCode}");
+                $"OnePay Payout failed, HttpStatus: {(int)statusCode} {statusCode}");
         }
 
         if (result.Code != "200")
             throw new CustomException(
-                $"PAPay Payout response error: {result.Code} {HttpUtility.UrlDecode(result.Message)}");
+                $"OnePay Payout response error: {result.Code} {HttpUtility.UrlDecode(result.Message)}");
 
         return result;
     }
 
-    private bool AesDecryptCallBackData(string data, string apiKey, out PlainCallBackData plainData)
+    private bool VerifyCallBackData(string data, string apiKey, OrderType orderType, out PlainCallBackData plainData)
     {
         plainData = null;
         try
@@ -209,6 +277,20 @@ public class PayHelper : PayHelperBase
                 return false;
 
             plainData = JsonConvert.DeserializeObject<PlainCallBackData>(plainString);
+
+            if (plainData == null)
+            {
+                _logger.LogInformation($"plainData is null.");
+                return false;
+            }
+
+            if (plainData.orderType != (int)orderType)
+            {
+                _logger.LogInformation($"plainData.orderType is Invaild. orderType={orderType.ToString()}. \n " +
+                    $"plainData={JsonConvert.SerializeObject(plainData)}");
+                return false;
+            }
+
             return true;
         }
         catch (Exception ex)
