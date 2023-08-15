@@ -8,6 +8,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 using Serilog.Context;
+using System.Text.Json.Nodes;
 
 namespace PaymentCore
 {
@@ -211,13 +212,13 @@ namespace PaymentCore
             var bytes = Encoding.UTF8.GetBytes(encodeStr);
             var hash = SHA256.ComputeHash(bytes);
             var result = new StringBuilder();
-            for (var i = 0; i<hash.Length; i++)
+            for (var i = 0; i < hash.Length; i++)
             {
                 result.Append(hash[i].ToString("X2"));
             }
             return result.ToString().ToLower();
         }
-        
+
         // To Base64
         public static string ToHMACSHA256Base64(string message, string secretKey)
         {
@@ -519,10 +520,50 @@ namespace PaymentCore
         }
 
         private void LogInformationProxy(string url, string input, string output, string transId)
-        { 
+        {
             const string logTag = "PayHelperBaseHttpRequestResponse";
             LogContext.PushProperty("LogTag", logTag);
             InsertPaymentLog?.Invoke(url, input, output, transId);
+        }
+
+        protected string AesEncrypt(string str, string key, bool isEncodeUrl = true)
+        {
+            byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
+            byte[] keyBytes = new byte[16];
+            byte[] secretKeyBytes = Encoding.UTF8.GetBytes(key);
+            Array.Copy(secretKeyBytes, keyBytes, Math.Min(keyBytes.Length, secretKeyBytes.Length));
+            RijndaelManaged rm = new RijndaelManaged
+            {
+                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7,
+                KeySize = 128,
+                BlockSize = 128,
+                Key = keyBytes,
+                IV = keyBytes
+
+            };
+            byte[] resultArray = rm.CreateEncryptor().TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+            return Convert.ToHexString(resultArray, 0, resultArray.Length);
+        }
+
+        protected string AesDecrypt(string str, string secretKey)
+        {
+            byte[] toEncryptArray = Convert.FromHexString(str);
+            byte[] keyBytes = new byte[16];
+            byte[] secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
+            Array.Copy(secretKeyBytes, keyBytes, Math.Min(keyBytes.Length, secretKeyBytes.Length));
+            using RijndaelManaged rm = new RijndaelManaged
+            {
+                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7,
+                KeySize = 128,
+                BlockSize = 128,
+                Key = keyBytes,
+                IV = keyBytes
+            };
+
+            byte[] resultArray = rm.CreateDecryptor().TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+            return Encoding.UTF8.GetString(resultArray);
         }
     }
 }
