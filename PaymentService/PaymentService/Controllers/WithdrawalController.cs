@@ -104,7 +104,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("PhoneNo", custInfo.PhoneNo);
                 WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
                 WithReq.Add("AreaCode", custInfo.AreaCode);
-                WithReq.Add("WithdrawalType", "1");
+                WithReq.Add("WithdrawalType", ((int)WithdrawalType.OnlineBanking).ToString());
 
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
@@ -187,7 +187,7 @@ namespace PaymentService.Controllers
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
                 WithReq.Add("WithdrawalInfo", withdrawalInfo);
-                WithReq.Add("WithdrawalType", "4");
+                WithReq.Add("WithdrawalType", ((int)WithdrawalType.CryptoPayment).ToString());
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
@@ -275,7 +275,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("PhoneNo", custInfo.PhoneNo);
                 WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
                 WithReq.Add("AreaCode", custInfo.AreaCode);
-                WithReq.Add("WithdrawalType", "1");
+                WithReq.Add("WithdrawalType", ((int)WithdrawalType.EWalletPayment).ToString());
 
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
