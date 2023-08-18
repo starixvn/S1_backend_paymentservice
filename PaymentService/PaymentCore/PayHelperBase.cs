@@ -8,6 +8,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 using Serilog.Context;
+using System.Xml;
 
 namespace PaymentCore
 {
@@ -209,13 +210,13 @@ namespace PaymentCore
             var bytes = Encoding.UTF8.GetBytes(encodeStr);
             var hash = SHA256.ComputeHash(bytes);
             var result = new StringBuilder();
-            for (var i = 0; i<hash.Length; i++)
+            for (var i = 0; i < hash.Length; i++)
             {
                 result.Append(hash[i].ToString("X2"));
             }
             return result.ToString().ToLower();
         }
-        
+
         // To Base64
         public static string ToHMACSHA256Base64(string message, string secretKey)
         {
@@ -320,7 +321,6 @@ namespace PaymentCore
             return toString;
         }
 
-
         protected string GBKToUTF8(string str)
         {
             var GBK = Encoding.GetEncoding("GB2312"); // GBK 编码
@@ -401,6 +401,199 @@ namespace PaymentCore
             var outBytes = c.DoFinal(DataToEncrypt);//加密
             return Encoding.UTF8.GetString(outBytes);
         }
+
+        #region test
+
+        /// <summary>
+        /// RSA签名
+        /// </summary>
+        /// <param name="content">数据</param>
+        /// <param name="privateKey">RSA密钥</param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        protected static string RsaSign(string content, string privateKey, HashAlgorithmName? name = null)
+        {
+            if (name == null)
+            {
+                name = HashAlgorithmName.MD5;
+            }
+
+            var privateKeyParam = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
+            var xml = string.Format(
+            "<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent><P>{2}</P><Q>{3}</Q><DP>{4}</DP><DQ>{5}</DQ><InverseQ>{6}</InverseQ><D>{7}</D></RSAKeyValue>",
+            Convert.ToBase64String(privateKeyParam.Modulus.ToByteArrayUnsigned()),
+            Convert.ToBase64String(privateKeyParam.PublicExponent.ToByteArrayUnsigned()),
+            Convert.ToBase64String(privateKeyParam.P.ToByteArrayUnsigned()),
+            Convert.ToBase64String(privateKeyParam.Q.ToByteArrayUnsigned()),
+            Convert.ToBase64String(privateKeyParam.DP.ToByteArrayUnsigned()),
+            Convert.ToBase64String(privateKeyParam.DQ.ToByteArrayUnsigned()),
+            Convert.ToBase64String(privateKeyParam.QInv.ToByteArrayUnsigned()),
+            Convert.ToBase64String(privateKeyParam.Exponent.ToByteArrayUnsigned())
+            );
+
+            RSA rsa = RSA.Create();
+            rsa.FromXmlString(xml);
+            byte[] signBytes = rsa.SignData(Encoding.UTF8.GetBytes(content), name.Value, RSASignaturePadding.Pkcs1);
+            return Convert.ToBase64String(signBytes);
+        }
+
+        /// <summary>
+        /// RSA导入key
+        /// </summary>
+        //private static void FromLvccXmlString(this RSA rsa, string xmlString)
+        //{
+        //    RSAParameters parameters = new RSAParameters();
+
+        //    XmlDocument xmlDoc = new XmlDocument();
+        //    xmlDoc.LoadXml(xmlString);
+
+        //    if (xmlDoc.DocumentElement.Name.Equals("RSAKeyValue"))
+        //    {
+        //        foreach (XmlNode node in xmlDoc.DocumentElement.ChildNodes)
+        //        {
+        //            switch (node.Name)
+        //            {
+        //                case "Modulus": parameters.Modulus = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
+        //                case "Exponent": parameters.Exponent = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
+        //                case "P": parameters.P = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
+        //                case "Q": parameters.Q = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
+        //                case "DP": parameters.DP = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
+        //                case "DQ": parameters.DQ = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
+        //                case "InverseQ": parameters.InverseQ = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
+        //                case "D": parameters.D = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        throw new Exception("Invalid XML RSA key.");
+        //    }
+
+        //    rsa.ImportParameters(parameters);
+        //}
+
+        /// <summary>
+        /// 公钥加密
+        /// </summary>
+        /// <param name="dataToEncrypt">待加密文本</param>
+        /// <param name="publicKeyString"></param>
+        //public static string RsaEncryptWithPublic(string dataToEncrypt, string publicKeyString)
+        //{
+
+        //    var rsa = CreateRsaProviderFromPublicKey(publicKeyString);
+
+        //    using (var RSACryptography = rsa)
+        //    {
+        //        Byte[] PlaintextData = Encoding.UTF8.GetBytes(dataToEncrypt);
+        //        int MaxBlockSize = RSACryptography.KeySize / 8 - 11;    //加密块最大长度限制
+
+
+        //        if (PlaintextData.Length <= MaxBlockSize)
+        //            return Convert.ToBase64String(RSACryptography.Encrypt(PlaintextData, RSAEncryptionPadding.Pkcs1));
+
+
+        //        using (MemoryStream PlaiStream = new MemoryStream(PlaintextData))
+        //        using (MemoryStream CrypStream = new MemoryStream())
+        //        {
+        //            Byte[] Buffer = new Byte[MaxBlockSize];
+        //            int BlockSize = PlaiStream.Read(Buffer, 0, MaxBlockSize);
+
+
+        //            while (BlockSize > 0)
+        //            {
+        //                Byte[] ToEncrypt = new Byte[BlockSize];
+        //                Array.Copy(Buffer, 0, ToEncrypt, 0, BlockSize);
+
+
+        //                Byte[] Cryptograph = RSACryptography.Encrypt(ToEncrypt, RSAEncryptionPadding.Pkcs1);
+        //                CrypStream.Write(Cryptograph, 0, Cryptograph.Length);
+
+
+        //                BlockSize = PlaiStream.Read(Buffer, 0, MaxBlockSize);
+        //            }
+
+
+        //            return Convert.ToBase64String(CrypStream.ToArray());
+        //        }
+        //    }
+        //}
+
+        /// <summary>
+        /// 私钥解密
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="privateKey"></param>
+        /// <param name="length">1024位证书解密最大字节为128,2048是256</param>
+        /// <returns></returns>
+        //public static string RsaDecryptWithPrivate(string context, string privateKey, int length = 128)
+        //{
+        //    var rsa = CreateRsaFromPrivateKey(privateKey);
+        //    var cipherBytes = Convert.FromBase64String(context);
+
+        //    byte[] decryptedData;
+        //    using (var plaiStream = new MemoryStream(cipherBytes))
+        //    {
+        //        using (var decrypStream = new MemoryStream())
+        //        {
+        //            var offSet = 0;
+        //            var inputLen = cipherBytes.Length;
+        //            for (var i = 0; inputLen - offSet > 0; offSet = i * length)
+        //            {
+        //                if (inputLen - offSet > length)
+        //                {
+        //                    var buffer = new Byte[length];
+        //                    plaiStream.Read(buffer, 0, length);
+        //                    var decrypData = rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
+        //                    decrypStream.Write(decrypData, 0, decrypData.Length);
+        //                }
+        //                else
+        //                {
+        //                    var buffer = new Byte[inputLen - offSet];
+        //                    plaiStream.Read(buffer, 0, inputLen - offSet);
+        //                    var decrypData = rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
+        //                    decrypStream.Write(decrypData, 0, decrypData.Length);
+        //                }
+        //                ++i;
+        //            }
+        //            decrypStream.Position = 0;
+        //            decryptedData = decrypStream.ToArray();
+        //        }
+        //    }
+
+        //    var plainText = Encoding.UTF8.GetString(decryptedData);
+
+
+        //    return plainText;
+        //}
+
+        /// <summary>
+        /// RSA验签
+        /// </summary>
+        /// <param name="content">内容</param>
+        /// <param name="publicKey">RSA公钥</param>
+        /// <param name="signData">签名字段</param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        //protected static bool VerifySign(string content, string publicKey, string signData, HashAlgorithmName? name = null)
+        //{
+        //    if (name == null)
+        //    {
+        //        name = HashAlgorithmName.MD5;
+        //    }
+
+        //    RsaKeyParameters publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
+        //    var xml = string.Format(
+        //    "<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent></RSAKeyValue>",
+        //    Convert.ToBase64String(publicKeyParam.Modulus.ToByteArrayUnsigned()),
+        //    Convert.ToBase64String(publicKeyParam.Exponent.ToByteArrayUnsigned())
+        //    );
+
+        //    RSA rsa = RSA.Create();
+        //    rsa.FromXmlString(xml);
+        //    return rsa.VerifyData(Encoding.UTF8.GetBytes(content), Convert.FromBase64String(signData), name.Value, RSASignaturePadding.Pkcs1);
+        //}
+
+        #endregion
 
         protected string CurrencyMapping(string currencyId)
         {
@@ -493,7 +686,7 @@ namespace PaymentCore
         }
 
         private void LogInformationProxy(string url, string input, string output, string transId)
-        { 
+        {
             const string logTag = "PayHelperBaseHttpRequestResponse";
             LogContext.PushProperty("LogTag", logTag);
             InsertPaymentLog?.Invoke(url, input, output, transId);
