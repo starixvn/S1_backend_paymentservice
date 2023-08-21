@@ -1,4 +1,10 @@
 //1、加密：
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
+using System.Security.Cryptography;
+using System.Text;
+using System.Xml;
+
 var dictionary = new SortedDictionary<string, string>
 {
 {"merchantCode",SnModel.MerchantCode },

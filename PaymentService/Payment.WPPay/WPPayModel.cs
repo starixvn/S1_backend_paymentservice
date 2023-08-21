@@ -2,6 +2,12 @@
 
 namespace Payment.WPPay;
 
+internal class MediaType
+{
+    public const string Json = "application/json";
+}
+
+
 /// <summary>
 /// 充值(Debit)、代付(Credit) 建單回覆
 /// </summary>

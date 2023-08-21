@@ -9,6 +9,7 @@ using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 using Serilog.Context;
 using System.Xml;
+using Org.BouncyCastle.Crypto;
 
 namespace PaymentCore
 {
@@ -413,28 +414,83 @@ namespace PaymentCore
         /// <returns></returns>
         protected static string RsaSign(string content, string privateKey, HashAlgorithmName? name = null)
         {
-            if (name == null)
-            {
-                name = HashAlgorithmName.MD5;
-            }
-
-            var privateKeyParam = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
-            var xml = string.Format(
-            "<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent><P>{2}</P><Q>{3}</Q><DP>{4}</DP><DQ>{5}</DQ><InverseQ>{6}</InverseQ><D>{7}</D></RSAKeyValue>",
-            Convert.ToBase64String(privateKeyParam.Modulus.ToByteArrayUnsigned()),
-            Convert.ToBase64String(privateKeyParam.PublicExponent.ToByteArrayUnsigned()),
-            Convert.ToBase64String(privateKeyParam.P.ToByteArrayUnsigned()),
-            Convert.ToBase64String(privateKeyParam.Q.ToByteArrayUnsigned()),
-            Convert.ToBase64String(privateKeyParam.DP.ToByteArrayUnsigned()),
-            Convert.ToBase64String(privateKeyParam.DQ.ToByteArrayUnsigned()),
-            Convert.ToBase64String(privateKeyParam.QInv.ToByteArrayUnsigned()),
-            Convert.ToBase64String(privateKeyParam.Exponent.ToByteArrayUnsigned())
-            );
-
             RSA rsa = RSA.Create();
-            rsa.FromXmlString(xml);
+            rsa.FromXmlString(privateKey);
             byte[] signBytes = rsa.SignData(Encoding.UTF8.GetBytes(content), name.Value, RSASignaturePadding.Pkcs1);
             return Convert.ToBase64String(signBytes);
+        }
+
+        /// <summary>
+        /// Pem私钥转成XML私钥
+        /// </summary>
+        /// <param name="pemPrivateKeyStr"></param>
+        /// <returns></returns>
+        protected static string PemPrivateKeyToXml(string pemPrivateKeyStr)
+        {
+            RsaPrivateCrtKeyParameters pemPrivateKey;
+            using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(pemPrivateKeyStr)))
+            {
+                using (var sr = new StreamReader(ms))
+                {
+                    var pemReader = new Org.BouncyCastle.OpenSsl.PemReader(sr);
+                    var keyPair = (AsymmetricCipherKeyPair)pemReader.ReadObject();
+                    pemPrivateKey = (RsaPrivateCrtKeyParameters)keyPair.Private;
+                }
+            }
+
+            var p = new RSAParameters
+            {
+                Modulus = pemPrivateKey.Modulus.ToByteArrayUnsigned(),
+                Exponent = pemPrivateKey.PublicExponent.ToByteArrayUnsigned(),
+                D = pemPrivateKey.Exponent.ToByteArrayUnsigned(),
+                P = pemPrivateKey.P.ToByteArrayUnsigned(),
+                Q = pemPrivateKey.Q.ToByteArrayUnsigned(),
+                DP = pemPrivateKey.DP.ToByteArrayUnsigned(),
+                DQ = pemPrivateKey.DQ.ToByteArrayUnsigned(),
+                InverseQ = pemPrivateKey.QInv.ToByteArrayUnsigned(),
+            };
+
+            string xmlPrivateKeyStr;
+
+            using (var rsa = new RSACryptoServiceProvider())
+            {
+                rsa.ImportParameters(p);
+                xmlPrivateKeyStr = rsa.ToXmlString(true);
+            }
+            return xmlPrivateKeyStr;
+        }
+
+        /// <summary>
+        /// Pem公钥转成XML公钥
+        /// </summary>
+        /// <param name="pemPublicKeyStr"></param>
+        /// <returns></returns>
+        protected static string PemPublicKeyToXml(string pemPublicKeyStr)
+        {
+            RsaKeyParameters pemPublicKey;
+            using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(pemPublicKeyStr)))
+            {
+                using (var sr = new StreamReader(ms))
+                {
+                    var pemReader = new Org.BouncyCastle.OpenSsl.PemReader(sr);
+                    pemPublicKey = (RsaKeyParameters)pemReader.ReadObject();
+                }
+            }
+
+            var p = new RSAParameters
+            {
+                Modulus = pemPublicKey.Modulus.ToByteArrayUnsigned(),
+                Exponent = pemPublicKey.Exponent.ToByteArrayUnsigned()
+            };
+
+            string xmlPublicKeyStr;
+
+            using (var rsa = new RSACryptoServiceProvider())
+            {
+                rsa.ImportParameters(p);
+                xmlPublicKeyStr = rsa.ToXmlString(false);
+            }
+            return xmlPublicKeyStr;
         }
 
         /// <summary>
@@ -477,46 +533,59 @@ namespace PaymentCore
         /// </summary>
         /// <param name="dataToEncrypt">待加密文本</param>
         /// <param name="publicKeyString"></param>
-        //public static string RsaEncryptWithPublic(string dataToEncrypt, string publicKeyString)
-        //{
+        protected static string RsaEncryptWithPublic(string dataToEncrypt, string publicKeyString)
+        {
+            var rsa = CreateRsaProviderFromPublicKey(publicKeyString);
 
-        //    var rsa = CreateRsaProviderFromPublicKey(publicKeyString);
+            using (var RSACryptography = rsa)
+            {
+                Byte[] PlaintextData = Encoding.UTF8.GetBytes(dataToEncrypt);
+                int MaxBlockSize = RSACryptography.KeySize / 8 - 11;    //加密块最大长度限制
 
-        //    using (var RSACryptography = rsa)
-        //    {
-        //        Byte[] PlaintextData = Encoding.UTF8.GetBytes(dataToEncrypt);
-        //        int MaxBlockSize = RSACryptography.KeySize / 8 - 11;    //加密块最大长度限制
+                if (PlaintextData.Length <= MaxBlockSize)
+                    return Convert.ToBase64String(RSACryptography.Encrypt(PlaintextData, RSAEncryptionPadding.Pkcs1));
 
-
-        //        if (PlaintextData.Length <= MaxBlockSize)
-        //            return Convert.ToBase64String(RSACryptography.Encrypt(PlaintextData, RSAEncryptionPadding.Pkcs1));
-
-
-        //        using (MemoryStream PlaiStream = new MemoryStream(PlaintextData))
-        //        using (MemoryStream CrypStream = new MemoryStream())
-        //        {
-        //            Byte[] Buffer = new Byte[MaxBlockSize];
-        //            int BlockSize = PlaiStream.Read(Buffer, 0, MaxBlockSize);
+                using (MemoryStream PlaiStream = new MemoryStream(PlaintextData))
+                using (MemoryStream CrypStream = new MemoryStream())
+                {
+                    Byte[] Buffer = new Byte[MaxBlockSize];
+                    int BlockSize = PlaiStream.Read(Buffer, 0, MaxBlockSize);
 
 
-        //            while (BlockSize > 0)
-        //            {
-        //                Byte[] ToEncrypt = new Byte[BlockSize];
-        //                Array.Copy(Buffer, 0, ToEncrypt, 0, BlockSize);
+                    while (BlockSize > 0)
+                    {
+                        Byte[] ToEncrypt = new Byte[BlockSize];
+                        Array.Copy(Buffer, 0, ToEncrypt, 0, BlockSize);
 
 
-        //                Byte[] Cryptograph = RSACryptography.Encrypt(ToEncrypt, RSAEncryptionPadding.Pkcs1);
-        //                CrypStream.Write(Cryptograph, 0, Cryptograph.Length);
+                        Byte[] Cryptograph = RSACryptography.Encrypt(ToEncrypt, RSAEncryptionPadding.Pkcs1);
+                        CrypStream.Write(Cryptograph, 0, Cryptograph.Length);
 
 
-        //                BlockSize = PlaiStream.Read(Buffer, 0, MaxBlockSize);
-        //            }
+                        BlockSize = PlaiStream.Read(Buffer, 0, MaxBlockSize);
+                    }
 
 
-        //            return Convert.ToBase64String(CrypStream.ToArray());
-        //        }
-        //    }
-        //}
+                    return Convert.ToBase64String(CrypStream.ToArray());
+                }
+            }
+        }
+
+        /// <summary>
+        /// 补全文
+        /// </summary>
+        /// <param name="strCiphertext">密文/param>
+        /// <param name="keySize">秘钥长度</param>
+        /// <returns>补全后的密文/returns>
+        public static string CorrectionCiphertext(string strCiphertext, int keySize = 1024)
+        {
+            int ciphertextLength = keySize / 8;
+            byte[] data = Convert.FromBase64String(strCiphertext);
+            var newData = new List<byte>(data);
+            while (newData.Count < ciphertextLength)
+                newData.Insert(0, 0x00);
+            return Convert.ToBase64String(newData.ToArray());
+        }
 
         /// <summary>
         /// 私钥解密
@@ -525,46 +594,46 @@ namespace PaymentCore
         /// <param name="privateKey"></param>
         /// <param name="length">1024位证书解密最大字节为128,2048是256</param>
         /// <returns></returns>
-        //public static string RsaDecryptWithPrivate(string context, string privateKey, int length = 128)
-        //{
-        //    var rsa = CreateRsaFromPrivateKey(privateKey);
-        //    var cipherBytes = Convert.FromBase64String(context);
+        public static string RsaDecryptWithPrivate(string context, string privateKey, int length = 128)
+        {
+            var rsa = CreateRsaProviderFromPrivateKey(privateKey);
+            var cipherBytes = Convert.FromBase64String(context);
 
-        //    byte[] decryptedData;
-        //    using (var plaiStream = new MemoryStream(cipherBytes))
-        //    {
-        //        using (var decrypStream = new MemoryStream())
-        //        {
-        //            var offSet = 0;
-        //            var inputLen = cipherBytes.Length;
-        //            for (var i = 0; inputLen - offSet > 0; offSet = i * length)
-        //            {
-        //                if (inputLen - offSet > length)
-        //                {
-        //                    var buffer = new Byte[length];
-        //                    plaiStream.Read(buffer, 0, length);
-        //                    var decrypData = rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
-        //                    decrypStream.Write(decrypData, 0, decrypData.Length);
-        //                }
-        //                else
-        //                {
-        //                    var buffer = new Byte[inputLen - offSet];
-        //                    plaiStream.Read(buffer, 0, inputLen - offSet);
-        //                    var decrypData = rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
-        //                    decrypStream.Write(decrypData, 0, decrypData.Length);
-        //                }
-        //                ++i;
-        //            }
-        //            decrypStream.Position = 0;
-        //            decryptedData = decrypStream.ToArray();
-        //        }
-        //    }
+            byte[] decryptedData;
+            using (var plaiStream = new MemoryStream(cipherBytes))
+            {
+                using (var decrypStream = new MemoryStream())
+                {
+                    var offSet = 0;
+                    var inputLen = cipherBytes.Length;
+                    for (var i = 0; inputLen - offSet > 0; offSet = i * length)
+                    {
+                        if (inputLen - offSet > length)
+                        {
+                            var buffer = new Byte[length];
+                            plaiStream.Read(buffer, 0, length);
+                            var decrypData = rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
+                            decrypStream.Write(decrypData, 0, decrypData.Length);
+                        }
+                        else
+                        {
+                            var buffer = new Byte[inputLen - offSet];
+                            plaiStream.Read(buffer, 0, inputLen - offSet);
+                            var decrypData = rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
+                            decrypStream.Write(decrypData, 0, decrypData.Length);
+                        }
+                        ++i;
+                    }
+                    decrypStream.Position = 0;
+                    decryptedData = decrypStream.ToArray();
+                }
+            }
 
-        //    var plainText = Encoding.UTF8.GetString(decryptedData);
+            var plainText = Encoding.UTF8.GetString(decryptedData);
 
 
-        //    return plainText;
-        //}
+            return plainText;
+        }
 
         /// <summary>
         /// RSA验签
@@ -574,24 +643,224 @@ namespace PaymentCore
         /// <param name="signData">签名字段</param>
         /// <param name="name"></param>
         /// <returns></returns>
-        //protected static bool VerifySign(string content, string publicKey, string signData, HashAlgorithmName? name = null)
-        //{
-        //    if (name == null)
-        //    {
-        //        name = HashAlgorithmName.MD5;
-        //    }
+        protected static bool VerifySign(string content, string publicKey, string signData, HashAlgorithmName? name = null)
+        {
+            if (name == null)
+            {
+                name = HashAlgorithmName.MD5;
+            }
 
-        //    RsaKeyParameters publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
-        //    var xml = string.Format(
-        //    "<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent></RSAKeyValue>",
-        //    Convert.ToBase64String(publicKeyParam.Modulus.ToByteArrayUnsigned()),
-        //    Convert.ToBase64String(publicKeyParam.Exponent.ToByteArrayUnsigned())
-        //    );
+            RsaKeyParameters publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
+            var xml = string.Format(
+            "<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent></RSAKeyValue>",
+            Convert.ToBase64String(publicKeyParam.Modulus.ToByteArrayUnsigned()),
+            Convert.ToBase64String(publicKeyParam.Exponent.ToByteArrayUnsigned())
+            );
 
-        //    RSA rsa = RSA.Create();
-        //    rsa.FromXmlString(xml);
-        //    return rsa.VerifyData(Encoding.UTF8.GetBytes(content), Convert.FromBase64String(signData), name.Value, RSASignaturePadding.Pkcs1);
-        //}
+            RSA rsa = RSA.Create();
+            rsa.FromXmlString(xml);
+            return rsa.VerifyData(Encoding.UTF8.GetBytes(content), Convert.FromBase64String(signData), name.Value, RSASignaturePadding.Pkcs1);
+        }
+
+        /// <summary>
+        /// 字节数组转16进制字符串
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        protected static string ByteToHexStr(byte[] bytes)
+        {
+            string returnStr = "";
+            if (bytes != null)
+            {
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    returnStr += bytes[i].ToString("X2");
+                }
+            }
+            return returnStr;
+        }
+
+
+        protected static RSA CreateRsaProviderFromPublicKey(string publicKeyString)
+        {
+            // encoded OID sequence for  PKCS #1 rsaEncryption szOID_RSA_RSA = "1.2.840.113549.1.1.1"
+            byte[] seqOid = { 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01, 0x05, 0x00 };
+            var seq = new byte[15];
+
+            var x509Key = Convert.FromBase64String(publicKeyString);
+
+            // ---------  Set up stream to read the asn.1 encoded SubjectPublicKeyInfo blob  ------
+            using (var mem = new MemoryStream(x509Key))
+            {
+                using (var binr = new BinaryReader(mem))  //wrap Memory Stream with BinaryReader for easy reading
+                {
+                    byte bt = 0;
+                    ushort twobytes = 0;
+
+                    twobytes = binr.ReadUInt16();
+                    if (twobytes == 0x8130) //data read as little endian order (actual data order for Sequence is 30 81)
+                        binr.ReadByte();    //advance 1 byte
+                    else if (twobytes == 0x8230)
+                        binr.ReadInt16();   //advance 2 bytes
+                    else
+                        return null;
+
+                    seq = binr.ReadBytes(15);       //read the Sequence OID
+                    if (!CompareBytearrays(seq, seqOid))    //make sure Sequence for OID is correct
+                        return null;
+
+                    twobytes = binr.ReadUInt16();
+                    if (twobytes == 0x8103) //data read as little endian order (actual data order for Bit String is 03 81)
+                        binr.ReadByte();    //advance 1 byte
+                    else if (twobytes == 0x8203)
+                        binr.ReadInt16();   //advance 2 bytes
+                    else
+                        return null;
+
+                    bt = binr.ReadByte();
+                    if (bt != 0x00)     //expect null byte next
+                        return null;
+
+                    twobytes = binr.ReadUInt16();
+                    if (twobytes == 0x8130) //data read as little endian order (actual data order for Sequence is 30 81)
+                        binr.ReadByte();    //advance 1 byte
+                    else if (twobytes == 0x8230)
+                        binr.ReadInt16();   //advance 2 bytes
+                    else
+                        return null;
+
+                    twobytes = binr.ReadUInt16();
+                    byte lowbyte = 0x00;
+                    byte highbyte = 0x00;
+
+                    if (twobytes == 0x8102) //data read as little endian order (actual data order for Integer is 02 81)
+                        lowbyte = binr.ReadByte();  // read next bytes which is bytes in modulus
+                    else if (twobytes == 0x8202)
+                    {
+                        highbyte = binr.ReadByte(); //advance 2 bytes
+                        lowbyte = binr.ReadByte();
+                    }
+                    else
+                        return null;
+                    byte[] modint = { lowbyte, highbyte, 0x00, 0x00 };   //reverse byte order since asn.1 key uses big endian order
+                    var modsize = BitConverter.ToInt32(modint, 0);
+
+                    var firstbyte = binr.PeekChar();
+                    if (firstbyte == 0x00)
+                    {   //if first byte (highest order) of modulus is zero, don't include it
+                        binr.ReadByte();    //skip this null byte
+                        modsize -= 1;   //reduce modulus buffer size by 1
+                    }
+
+                    var modulus = binr.ReadBytes(modsize);   //read the modulus bytes
+
+                    if (binr.ReadByte() != 0x02)            //expect an Integer for the exponent data
+                        return null;
+                    var expbytes = (int)binr.ReadByte();        // should only need one byte for actual exponent data (for all useful values)
+                    var exponent = binr.ReadBytes(expbytes);
+
+                    // ------- create RSACryptoServiceProvider instance and initialize with public key -----
+                    var rsa = RSA.Create();
+                    var rsaKeyInfo = new RSAParameters
+                    {
+                        Modulus = modulus,
+                        Exponent = exponent
+                    };
+                    rsa.ImportParameters(rsaKeyInfo);
+
+                    return rsa;
+                }
+
+            }
+        }
+
+        protected static RSA CreateRsaProviderFromPrivateKey(string privateKey)
+        {
+            var privateKeyBits = Convert.FromBase64String(privateKey);
+
+            var rsa = RSA.Create();
+            var rsaParameters = new RSAParameters();
+
+            using (var binr = new BinaryReader(new MemoryStream(privateKeyBits)))
+            {
+                byte bt = 0;
+                ushort twobytes = 0;
+                twobytes = binr.ReadUInt16();
+                if (twobytes == 0x8130)
+                    binr.ReadByte();
+                else if (twobytes == 0x8230)
+                    binr.ReadInt16();
+                else
+                    throw new Exception("Unexpected value read binr.ReadUInt16()");
+
+                twobytes = binr.ReadUInt16();
+                if (twobytes != 0x0102)
+                    throw new Exception("Unexpected version");
+
+                bt = binr.ReadByte();
+                if (bt != 0x00)
+                    throw new Exception("Unexpected value read binr.ReadByte()");
+
+                rsaParameters.Modulus = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.Exponent = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.D = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.P = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.Q = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.DP = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.DQ = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.InverseQ = binr.ReadBytes(GetIntegerSize(binr));
+            }
+
+            rsa.ImportParameters(rsaParameters);
+            return rsa;
+        }
+
+
+        protected static bool CompareBytearrays(byte[] a, byte[] b)
+        {
+            if (a.Length != b.Length)
+                return false;
+            var i = 0;
+            foreach (var c in a)
+            {
+                if (c != b[i])
+                    return false;
+                i++;
+            }
+            return true;
+        }
+
+        protected static int GetIntegerSize(BinaryReader binr)
+        {
+            byte bt = 0;
+            var count = 0;
+            bt = binr.ReadByte();
+            if (bt != 0x02)
+                return 0;
+            bt = binr.ReadByte();
+
+            if (bt == 0x81)
+                count = binr.ReadByte();
+            else
+            if (bt == 0x82)
+            {
+                var highbyte = binr.ReadByte();
+                var lowbyte = binr.ReadByte();
+                byte[] modint = { lowbyte, highbyte, 0x00, 0x00 };
+                count = BitConverter.ToInt32(modint, 0);
+            }
+            else
+            {
+                count = bt;
+            }
+
+            while (binr.ReadByte() == 0x00)
+            {
+                count -= 1;
+            }
+            binr.BaseStream.Seek(-1, SeekOrigin.Current);
+            return count;
+        }
 
         #endregion
 
