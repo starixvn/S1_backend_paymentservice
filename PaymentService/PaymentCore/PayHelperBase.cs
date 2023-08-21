@@ -10,6 +10,8 @@ using PaymentCore.Models.Result;
 using Serilog.Context;
 using System.Xml;
 using Org.BouncyCastle.Crypto;
+using System.Security.Cryptography.X509Certificates;
+using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
 
 namespace PaymentCore
 {
@@ -405,6 +407,44 @@ namespace PaymentCore
 
         #region test
 
+        public static string Sign(string signStr, string privateKey)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(signStr))
+                {
+                    return null;
+                }
+
+                privateKey = privateKey.Replace("\n", "").Replace("\r", "").Replace("\t", "");
+                byte[] keyBytes = Convert.FromBase64String(privateKey);
+                RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+                rsa.ImportPkcs8PrivateKey(keyBytes, out _);
+
+                byte[] data = Encoding.UTF8.GetBytes(signStr);
+                byte[] signatureBytes = rsa.SignData(data, new SHA1CryptoServiceProvider());
+                return BitConverter.ToString(signatureBytes).Replace("-", "").ToLower();
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        ///RSA公钥格式转换,java-.net
+        /// </summary>
+        /// <param name="publickey">java生成的公银/param>
+        /// <returns></returns>
+        public static string RSAPublicKeyJava2DotNet(string publickey)
+        {
+            RsaKeyParameters publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publickey));
+            return string.Format("<RSAKeyValue><Modulus>[o]</Modulus><Exponent>[1]</Exponent></RSAKeyValue>",
+                Convert.ToBase64String(publicKeyParam.Modulus.ToByteArrayUnsigned()),
+                Convert.ToBase64String(publicKeyParam.Exponent.ToByteArrayUnsigned()));
+        }
+
         /// <summary>
         /// RSA签名
         /// </summary>
@@ -660,6 +700,55 @@ namespace PaymentCore
             RSA rsa = RSA.Create();
             rsa.FromXmlString(xml);
             return rsa.VerifyData(Encoding.UTF8.GetBytes(content), Convert.FromBase64String(signData), name.Value, RSASignaturePadding.Pkcs1);
+        }
+
+        public static bool Verify(string signData, string signStr, string publicKey)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(signStr) || string.IsNullOrWhiteSpace(signData))
+                {
+                    return false;
+                }
+
+                publicKey = publicKey.Replace("\n", "").Replace("\r", "").Replace("\t", "").Replace(" ", "");
+                byte[] keyBytes = Convert.FromBase64String(publicKey);
+
+                using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+                {
+                    rsa.ImportCspBlob(keyBytes);
+
+                    using (SHA1 sha1 = SHA1.Create())
+                    {
+                        byte[] signDataBytes = Encoding.UTF8.GetBytes(signData);
+                        byte[] signStrBytes = HexStringToByteArray(signStr);
+
+                        if (rsa.VerifyData(signDataBytes, sha1, signStrBytes))
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
+
+        private static byte[] HexStringToByteArray(string hex)
+        {
+            int length = hex.Length / 2;
+            byte[] bytes = new byte[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                bytes[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
+            }
+
+            return bytes;
         }
 
         /// <summary>

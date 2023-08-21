@@ -108,9 +108,28 @@ internal class PayHelper : PayHelperBase
         var notifyUrl = inputs["CallBackUrl"];
         var payCode = inputs["PayCode"];
         //var privKey = inputs["PrivateKey"];
-        var privKey = "MIICXAIBAAKBgQCC56IcQidwXVpflei0CINes+yJM/d7y19eNcaE+TGn4vIlUtlAVDuR6jouv6JCQeluB8VMiHdo4PMvrRwe8iMWBfFr2ejIzTjP5GguOfzVxhK6Ev3VyeX0Pj0DD9Emd/ZsuUXL36w2sUZxs7ELFy7xWkS2k5dy4GwKGM+TQOq+pQIDAQABAoGAB3B7jYiS7jdX9fuyhFzBfoXSKP/7jh0CN/vtYsw4rrZelZFuSFIhKos5sENyyLovNnIZm95bjunN2EVJxlZzeOyxnKab0na2LdJqhCM0zl+ltpl3A2vU8YkWX8mnyP5axm5WFdpiNoF1BlR2l+lld8qsMLw9C+UsaXUX8PNtcfECQQCHuEgrS0k/Km2iAS5b04tPVxSSSA33B3uUAq4hGomww8PSeGW5h564latmRArhcAEg4HFwdpbQgHPemY+hl3VJAkEA9uruQrRhuNVVDlAkSBWX08Ixkg7DvqLaikXRpfzZL41VsPuBrdqTHS+sHZeXFPfNiccDS32BAkFkbd8hmXSqfQJASv/TIdmgyH8xxmzQqX3lZhrBC3U2AmToLYqtny2DGWOVOyG9VSFU3LwY05KWUK4McZaWGYfvH5lcbo59iNahwQJBAMj3y/b00/jZgcIFjpIxKQMMssX7SGy4JgGW9B0SoD7o3Q8QlarIFScTLxZi1HAXhO4X0eG2g7MvQCuBCdrZrw0CQCaG8lGGxHBC7DI4tYfQhYjMYtc4vnB/ZqLie/m/upN1940iaq7Oq3KhGC2x1xEV4Ohfo7FFrsqxGugsrif7iK4=";
+        var privKey = @"MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBANbQHyaUCJn2nW2E
+O4KVQ3GCHZZWp8GRLYF6y1Uk4Cr7g4e+gJSIL+JtgHxFoWwwuSjiwoZ40dH4MYxI
+UqfdrAAn4L6T2IYZ1RLJTRlwGmItRgYMMEK9r4dGChHj0kQepBCZOMJvNtUQkADY
+h3NVhmTQjVhG5wrsAAHqx+U3eyLHAgMBAAECgYEA1se7DcCfpQmOuGypb9Q8XebC
+HIpCK2kz/a1AVr6LII7gIT6Zo2lTr2rbN+YLE3jX+YhZBUkSSYWGTQQXGN6sVJqM
+UfFKcvs/wuGnvbww2a2CAvME7dQNl5YwAKpJCX7Ztts3QlK19fU0qpX1LlOOahub
+lu7nv/bcqS9Q0KUU5rkCQQDt9lLswIHGPoTnU4pm5nLX/SOrS4w1y2yOTuCScds0
+mGBBT2D9NBzqZ+4xV/fDJajbfVX2qjFJUzW7877c7zALAkEA5xiVyPbQ4xTbMUa5
+W8JAd8doXpLAzUUffR6K9T13569lZFiz0e/O0MlyiO6nAirsZr5O5m9yi3BbAt+a
+y75htQJAT6cBMPBrQCGTOR90l2cSEAxS0TazkxoplyT99OcZmexbY+EfNQIpn6j0
+SR4J+A92CypUCQIFB2dL+ELpo2iI6wJAQ3lDKpUd8l+BjEapEiiKaC6Zw5s3nfeD
+tSV4zxfubYAhq4XWowJQsVdQELkVnCVqNql0IgYCPMJGYHVnHfvtTQJBAMGVHihP
+ngJjpaCHQXOiyDtKYiWwQkefq4Ak188eIYX1POwcz0LfIc++QQPvKP5wyxnEq0dm
+LhNE3bFc3zehnHY=";
         //var publicKey = inputs["PublicKey"];
-        var publicKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCC56IcQidwXVpflei0CINes+yJM/d7y19eNcaE+TGn4vIlUtlAVDuR6jouv6JCQeluB8VMiHdo4PMvrRwe8iMWBfFr2ejIzTjP5GguOfzVxhK6Ev3VyeX0Pj0DD9Emd/ZsuUXL36w2sUZxs7ELFy7xWkS2k5dy4GwKGM+TQOq+pQIDAQAB";
+        var publicKey = @"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDW0B8mlAiZ9p1thDuClUNxgh2W
+VqfBkS2BestVJOAq+4OHvoCUiC/ibYB8RaFsMLko4sKGeNHR+DGMSFKn3awAJ+C+
+k9iGGdUSyU0ZcBpiLUYGDDBCva+HRgoR49JEHqQQmTjCbzbVEJAA2IdzVYZk0I1Y
+RucK7AAB6sflN3sixwIDAQAB";
+
+        privKey = privKey.Replace("\n", "").Replace("\r", "").Replace("\t", "");
+        publicKey = publicKey.Replace("\n", "").Replace("\r", "").Replace("\t", "");
         try
         {
             var plainreq = new Dictionary<string, string>
@@ -123,36 +142,25 @@ internal class PayHelper : PayHelperBase
             };
 
             plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
-            var plainSign = string.Join("", plainreq.Select(kp => kp.Value).ToArray()).ToLower();
+            var plainSign = string.Join("", plainreq.Select(kp => kp.Value).ToArray());
 
+            #region sign test
 
-            //var prikeyXml = RSAPrivateKeyJava2DotNet(privateKeyContent);
-            //var sign = RsaSign(plainSign, prikeyXml, HashAlgorithmName.SHA1);
-            //var bytesign = Convert.FromBase64String(sign);
-            //var hex = ByteToHexStr(bytesign);
-            //hex = CorrectionCiphertext(hex);
-            //plainreq.Add("sign", hex);
-
-            var sign = string.Empty;
-            using (RSA rsa = new RSACng())
-            {
-                rsa.ImportRSAPrivateKey(Convert.FromBase64String(privKey), out _);
-
-                var data = Encoding.UTF8.GetBytes(plainSign);
-
-                var signatureBytes = rsa.SignData(data, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
-
-                sign = Convert.ToBase64String(signatureBytes);
-            }
-            sign = CorrectionCiphertext(sign);
+            var sign = RsaSign(plainSign, RSAPrivateKeyJava2DotNet(privKey), HashAlgorithmName.SHA1);
+            //sign = sign.ToLower();
             var bytesign = Convert.FromBase64String(sign);
             var hex = ByteToHexStr(bytesign);
-            plainreq.Add("sign", hex);
 
-            if (VerifySign(plainreq, publicKey, sign, HashAlgorithmName.SHA1))
+            plainreq.Add("sign", hex.ToLower());
+
+            if (Verify(plainSign, sign, publicKey)) //驗簽
             {
-                _logger.LogInformation($"wrong!");
+                _logger.LogInformation($"sign wrong!");
             }
+
+            #endregion
+
+            // content加密沒有問題
             var content = RsaEncryptWithPublic(ToJson(plainreq), publicKey);
 
             var req = new Dictionary<string, string>
@@ -219,7 +227,6 @@ internal class PayHelper : PayHelperBase
         var apiUrl = baseApiUrl + Path.CreatePay;
 
         var (result, statusCode) = await _httpHelper
-            .WithHeader("Content-Type", MediaType.Json)
             .PostJsonAsync<Dictionary<string, string>, WPPayCreateResponse>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
