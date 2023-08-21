@@ -221,11 +221,11 @@ namespace PaymentService.Service.BLL
                 forStatus, WithdrawalStatus.Rejected, withdrawalRequest);
         }
 
-
         public void WithdrawalFail(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
             var forStatus = new List<int> { (int)WithdrawalStatus.Process };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Verify);
+            _withdrawalService.SetWithdrawalInfoProcessWay(withdrawalRequest.TransId, WithdrawalInfoProcessWayEnum.AutoFailBackManual);
         }
 
         public void WithdrawalPending(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)

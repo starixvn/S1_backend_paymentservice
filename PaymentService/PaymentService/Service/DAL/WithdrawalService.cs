@@ -311,5 +311,16 @@ namespace PaymentService.Service.DAL
                 _ => throw new NotImplementedException("withdrawal accountType not found")
             };
         }
+
+        public int SetWithdrawalInfoProcessWay(string transId, WithdrawalInfoProcessWayEnum processWay)
+        {
+            var withdrawalId = _common.GetId(transId);
+
+            return _mainDbClient.Execute("Service_WithdrawalInfoProcessWay_Set", new
+            {
+                _WithdrawalId = withdrawalId,
+                _ProcessWay = (int)processWay,
+            });
+        }
     }
 }
