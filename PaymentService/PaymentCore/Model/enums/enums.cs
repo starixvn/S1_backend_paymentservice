@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace PaymentService.Service.Model.enums
+namespace PaymentCore.Model.enums
 {
     public enum ErrorCode : int
     {
@@ -181,5 +181,12 @@ namespace PaymentService.Service.Model.enums
         /// 自動出款失敗後轉回手動出款
         /// </summary>
         AutoFailBackManual = 2
+    }
+    
+    public enum WithdrawalType
+    {
+        OnlineBanking = 1,
+        EWalletPayment = 3,
+        CryptoPayment = 4
     }
 }
