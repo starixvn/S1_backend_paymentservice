@@ -31,6 +31,7 @@
     <ProjectReference Include="..\Payment.AllInOnePayLocal\Payment.AllInOnePayLocal.csproj" />
     <ProjectReference Include="..\Payment.AllInOnePay\Payment.AllInOnePay.csproj" />
     <ProjectReference Include="..\Payment.AllpassPay\Payment.AllpassPay.csproj" />
+    <ProjectReference Include="..\Payment.ChangChenPay\Payment.ChangChenPay.csproj" />
     <ProjectReference Include="..\Payment.CirclePay\Payment.CirclePay.csproj" />
     <ProjectReference Include="..\Payment.ComitPay\Payment.ComitPay.csproj" />
     <ProjectReference Include="..\Payment.CoPay\Payment.CoPay.csproj" />
