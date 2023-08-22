@@ -416,8 +416,9 @@ namespace PaymentCore
             {
                 name = HashAlgorithmName.MD5;
             }
+
             var privateKeyBytes = Convert.FromBase64String(privateKey);
-            using (RSA rsa = new RSACng())
+            using (RSA rsa = RSA.Create())
             {
                 rsa.ImportRSAPrivateKey(privateKeyBytes, out _);
 
