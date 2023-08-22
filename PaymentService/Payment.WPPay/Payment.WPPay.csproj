@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="C#Demo2.cs" />
+    <Compile Remove="c#domo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="C#Demo2.cs" />
+    <None Include="c#domo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PaymentCore\PaymentCore.csproj" />
+  </ItemGroup>
+
+</Project>

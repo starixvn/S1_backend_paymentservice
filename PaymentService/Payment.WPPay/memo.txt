@@ -1,0 +1,13 @@
+﻿* 获取RSA公私钥 地址：http://web.chacuo.net/netrsakeypair 
+* Java 版本 填写 （ 生成密钥位数：1024  密钥格式： PKCS#8   证书密码：不用填 ） 
+* 非Java 版本 填写 （ 生成密钥位数：1024  密钥格式： PKCS#1   证书密码：不用填 ）
+
+輸出格式 默認
+
+WPPay提供的範例檔案
+c#demo.cs
+C#Demo2.cs
+
+我們自己產的private & public key
+pri.key
+pub.key
