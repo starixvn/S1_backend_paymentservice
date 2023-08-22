@@ -305,7 +305,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        [Route("WithdrawalCallBack/{TransId}")]
+        [Route("Payment/WithdrawalCallBack/{TransId}")]
         public async Task<IActionResult> WithdrawalCallBackAsync(string transId)
         {
             try
