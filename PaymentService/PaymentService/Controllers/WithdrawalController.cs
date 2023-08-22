@@ -365,6 +365,7 @@ namespace PaymentService.Controllers
             if (withdrawalRequest != null)
             {
                 var WithReq = withdrawalRequest.ISetting;
+                WithReq.Add("TransId", transId);
                 WithReq.Add("WithdrawalType", withdrawalRequest.WithdrawalType.ToString(""));
                 WithReq.Add("CurrencyId", withdrawalRequest.CurrencyId.ToString());
                 
