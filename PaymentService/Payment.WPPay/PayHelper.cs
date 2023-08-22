@@ -32,33 +32,56 @@ internal class PayHelper : PayHelperBase
     public override WithdrawResult Credit(Dictionary<string, string> inputs)
     {
         var apiUrl = inputs["host"];
-        var apiKey = inputs["key"];
+        var merchantCode = inputs["MerchantCode"];
         var reqAmount = decimal.Parse(inputs["Amount"]);
-        var strAmount = reqAmount.ToString("#");
-        var currencyId = inputs["PayCurrencyId"];
+        var strAmount = reqAmount.ToString("#.00");
         var transId = inputs["TransID"];
-        var accountName = inputs["AccountName"];
-        var bankCode = inputs["BankCode"];
-        var merchantCode = inputs["merchantCode"];
         var notifyUrl = inputs["CallBackUrl"];
+        var payCode = inputs["PayCode"];
+        var privateKey = inputs["PrivateKey"];
+        var publicKey = inputs["PublicKey"];
 
         try
         {
-            var req = new Dictionary<string, string>
-                {
-                    {"merchantCode", merchantCode},
-                    {"out_trade_no", transId},
-                    {"account_code", bankCode}, //
-                    {"account_name", accountName},
-                    {"agent_amount", strAmount},
-                    {"currency", currencyId}, //
-                    {"notify_url", notifyUrl},
-                    {"nonce_str", Guid.NewGuid().ToString("N")},
-                };
+            var plainreq = new Dictionary<string, string>
+            {
+                {"merchantCode", merchantCode},
+                {"merchantTradeNo", transId},
+                {"amount", strAmount},
+                {"notifyUrl", notifyUrl},
+                {"channel", payCode}
+            };
 
-            req.Add("sign", GetSign(req, apiKey));
+            plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
+            var plainSign = string.Join("", plainreq.Select(kp => kp.Value).ToArray());
+            _logger.LogInformation($"{transId} Sign plaintext={plainSign}.");
+
+            #region sign test
+
+            var sign = RsaSign(plainSign, privateKey, HashAlgorithmName.SHA1);
+            var bytesign = Convert.FromBase64String(sign);
+            var hex = ByteToHexStr(bytesign).ToLower();
+
+            plainreq.Add("sign", hex);
+
+            #endregion
+
+            var content = RsaEncryptWithPublic(ToJson(plainreq), publicKey);
+            _logger.LogInformation($"{transId} plain Content={ToJson(plainreq)}.");
+
+            var req = new Dictionary<string, string>
+            {
+                {"merchantCode", merchantCode},
+                {"content",  content }
+            };
 
             var res = Payout(apiUrl, req).Result;
+
+            if (!VerifyCreateData(res.Content, privateKey, out WPPayCreateDataContent decryptDataResult))
+            {
+                throw new CustomException($"WPPay Payout response error: VerifyCreateData Fail.");
+            }
+
             var response = new WithdrawResult
             {
                 Success = true,
@@ -81,7 +104,29 @@ internal class PayHelper : PayHelperBase
 
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
-        throw new NotImplementedException();
+        var privateKey = payResource["PrivateKey"];
+        var req = FromJson<WPPayCallBackRequest>(bodyContent);
+
+        if (!VerifyCallBackData(req.Content, privateKey, out WPPayCallBackDataContent plainData))
+        {
+            return new NotifyWithdrawResult
+            {
+                TransStatus = TransStatus.Pending,
+                Message = plainData.TradeStatus,
+                Response = CallbackResponse.Failed
+            };
+        }
+
+        var transStatus = WPPayDefinition.GetTransStatus(plainData.TradeStatus);
+        var result = new NotifyWithdrawResult
+        {
+            ThirdId = plainData.TradeNo,
+            WithdrawId = plainData.MerchantTradeNo,
+            TransStatus = transStatus,
+            Response = CallbackResponse.Success
+        };
+
+        return result;
     }
 
     /// <summary>
@@ -109,9 +154,7 @@ internal class PayHelper : PayHelperBase
         var notifyUrl = inputs["CallBackUrl"];
         var payCode = inputs["PayCode"];
         var privateKey = inputs["PrivateKey"];
-        //var privKey = @"MIICXAIBAAKBgQCC56IcQidwXVpflei0CINes+yJM/d7y19eNcaE+TGn4vIlUtlAVDuR6jouv6JCQeluB8VMiHdo4PMvrRwe8iMWBfFr2ejIzTjP5GguOfzVxhK6Ev3VyeX0Pj0DD9Emd/ZsuUXL36w2sUZxs7ELFy7xWkS2k5dy4GwKGM+TQOq+pQIDAQABAoGAB3B7jYiS7jdX9fuyhFzBfoXSKP/7jh0CN/vtYsw4rrZelZFuSFIhKos5sENyyLovNnIZm95bjunN2EVJxlZzeOyxnKab0na2LdJqhCM0zl+ltpl3A2vU8YkWX8mnyP5axm5WFdpiNoF1BlR2l+lld8qsMLw9C+UsaXUX8PNtcfECQQCHuEgrS0k/Km2iAS5b04tPVxSSSA33B3uUAq4hGomww8PSeGW5h564latmRArhcAEg4HFwdpbQgHPemY+hl3VJAkEA9uruQrRhuNVVDlAkSBWX08Ixkg7DvqLaikXRpfzZL41VsPuBrdqTHS+sHZeXFPfNiccDS32BAkFkbd8hmXSqfQJASv/TIdmgyH8xxmzQqX3lZhrBC3U2AmToLYqtny2DGWOVOyG9VSFU3LwY05KWUK4McZaWGYfvH5lcbo59iNahwQJBAMj3y/b00/jZgcIFjpIxKQMMssX7SGy4JgGW9B0SoD7o3Q8QlarIFScTLxZi1HAXhO4X0eG2g7MvQCuBCdrZrw0CQCaG8lGGxHBC7DI4tYfQhYjMYtc4vnB/ZqLie/m/upN1940iaq7Oq3KhGC2x1xEV4Ohfo7FFrsqxGugsrif7iK4=";
         var publicKey = inputs["PublicKey"];
-        //var publicKey = @"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCCrCl3eQxzjVfZT144Zgl8jHerSFyWrXOMvcbzvWbVWCp1zovFW5knBY7SYnBBlDpI5HmulCHZZXgQjxiisApf03R9arFBF0YRPEErcmMVkQPBBmFMl0vdWpfd11wyPbjm3Fvin5XyzSwu7SYn/DXH8yTEtpdfCEBhD3Ig+aV9tQIDAQAB";
 
         try
         {
@@ -149,9 +192,9 @@ internal class PayHelper : PayHelperBase
 
             var res = CreateOrder(apiUrl, req).Result;
 
-            if (!DecryptData(res.Content, privateKey, out WPPayCreateDataContent decryptDataResult))
+            if (!VerifyCreateData(res.Content, privateKey, out WPPayCreateDataContent decryptDataResult))
             {
-                throw new CustomException($"WPPay CreatOrder response error: DecryptData Fail.");
+                throw new CustomException($"WPPay CreatOrder response error: VerifyCreateData Fail.");
             }
 
             var response = new DepositResult
@@ -174,7 +217,31 @@ internal class PayHelper : PayHelperBase
 
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
-        throw new NotImplementedException();
+        var privateKey = payResource["PrivateKey"];
+        var req = FromJson<WPPayCallBackRequest>(bodyContent);
+
+        if (!VerifyCallBackData(req.Content, privateKey, out WPPayCallBackDataContent plainData))
+        {
+            return new NotifyDepositResult
+            {
+                TransStatus = TransStatus.Pending,
+                Comment = "Decrypt callback request failed.",
+                Response = CallbackResponse.Failed
+            };
+        }
+
+        var transStatus = WPPayDefinition.GetTransStatus(plainData.TradeStatus);
+        var result = new NotifyDepositResult
+        {
+            ThirdId = plainData.TradeNo,
+            DepositId = plainData.MerchantTradeNo,
+            Comment = plainData.TradeStatus,
+            TransStatus = transStatus,
+            ActualAmount = decimal.Parse(plainData.PayAmount),
+            Response = CallbackResponse.Success
+        };
+
+        return result;
     }
 
     /// <summary>
@@ -227,9 +294,10 @@ internal class PayHelper : PayHelperBase
         return data;
     }
 
-    private async Task<WPPayCreateResponse> Payout(string baseApiUrl, Dictionary<string, string> req)
+    private async Task<WPPayCreateDataResponse> Payout(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePayout;
+
         var (result, statusCode) = await _httpHelper
             .PostJsonAsync<Dictionary<string, string>, WPPayCreateResponse>(apiUrl, req);
 
@@ -243,7 +311,15 @@ internal class PayHelper : PayHelperBase
             throw new CustomException(
                 $"WPPay Payout response error: {result.ErrorCode} {HttpUtility.UrlDecode(result.Msg)}");
 
-        return result;
+        if (string.IsNullOrWhiteSpace(result.Data))
+        {
+            throw new CustomException(
+                $"WPPay CreatOrder response error: result is null. {result.ErrorCode} {HttpUtility.UrlDecode(result.Msg)}");
+        }
+
+        var data = JsonConvert.DeserializeObject<WPPayCreateDataResponse>(result.Data);
+        
+        return data;
     }
 
 
@@ -260,18 +336,12 @@ internal class PayHelper : PayHelperBase
         return sign;
     }
 
-    private bool DecryptData(string content, string privateKey, out WPPayCreateDataContent dataContent)
+    private bool VerifyCreateData(string content, string privateKey, out WPPayCreateDataContent dataContent)
     {
         dataContent = null;
         try
         {
             var plainString = RsaDecryptWithPrivate(content, privateKey);
-            var obj = JObject.Parse(plainString);
-            if (!obj.ContainsKey("merchantCode") || !obj.ContainsKey("merchantTradeNo")
-                || !obj.ContainsKey("tradeNo") || !obj.ContainsKey("payUrl")
-                || !obj.ContainsKey("sign"))
-                return false;
-
             dataContent = JsonConvert.DeserializeObject<WPPayCreateDataContent>(plainString);
 
             if (dataContent == null)
@@ -281,6 +351,30 @@ internal class PayHelper : PayHelperBase
             }
 
             _logger.LogInformation($"plainData={JsonConvert.SerializeObject(dataContent)}.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogInformation($"Decrypt callback request failed, Message:{ex.Message}");
+            return false;
+        }
+    }
+
+    private bool VerifyCallBackData(string data, string privateKey, out WPPayCallBackDataContent plainData)
+    {
+        plainData = null;
+        try
+        {
+            var plainString = RsaDecryptWithPrivate(data, privateKey);
+            plainData = JsonConvert.DeserializeObject<WPPayCallBackDataContent>(plainString);
+
+            if (plainData == null)
+            {
+                _logger.LogInformation($"plainData is null.");
+                return false;
+            }
+
+            _logger.LogInformation($"plainData={JsonConvert.SerializeObject(plainData)}.");
             return true;
         }
         catch (Exception ex)
