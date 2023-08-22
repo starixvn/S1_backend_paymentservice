@@ -2,11 +2,6 @@
 
 namespace Payment.WPPay;
 
-internal class MediaType
-{
-    public const string Json = "application/json";
-}
-
 
 /// <summary>
 /// 充值(Debit)、代付(Credit) 建單回覆
@@ -84,6 +79,33 @@ public class WPPayCallBackRequest
 
     [JsonProperty("content")]
     public string? Content { get; set; }
+}
+
+public class WPPayCallBackDataContent
+{
+    [JsonProperty("merchantCode")]
+    public string? MerchantCode { get; set; }
+
+    [JsonProperty("merchantTradeNo")]
+    public string? MerchantTradeNo { get; set; }
+
+    [JsonProperty("tradeNo")]
+    public string? TradeNo { get; set; }
+
+    [JsonProperty("payAmount")]
+    public string? PayAmount { get; set; }
+
+    [JsonProperty("amount")]
+    public string? Amount { get; set; }
+
+    [JsonProperty("tradeStatus")]
+    public string? TradeStatus { get; set; }
+
+    [JsonProperty("notifyTime")]
+    public string? NotifyTime { get; set; }
+
+    [JsonProperty("sign")]
+    public string? Sign { get; set; }
 }
 
 internal class CallbackResponse
