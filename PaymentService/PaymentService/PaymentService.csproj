@@ -31,6 +31,7 @@
     <ProjectReference Include="..\Payment.AllInOnePayLocal\Payment.AllInOnePayLocal.csproj" />
     <ProjectReference Include="..\Payment.AllInOnePay\Payment.AllInOnePay.csproj" />
     <ProjectReference Include="..\Payment.AllpassPay\Payment.AllpassPay.csproj" />
+    <ProjectReference Include="..\Payment.ChangChenPay\Payment.ChangChenPay.csproj" />
     <ProjectReference Include="..\Payment.CirclePay\Payment.CirclePay.csproj" />
     <ProjectReference Include="..\Payment.ComitPay\Payment.ComitPay.csproj" />
     <ProjectReference Include="..\Payment.CoPay\Payment.CoPay.csproj" />
@@ -50,9 +51,11 @@
     <ProjectReference Include="..\Payment.HonorPay\Payment.HonorPay.csproj" />
     <ProjectReference Include="..\Payment.LionPay\Payment.LionPay.csproj" />
     <ProjectReference Include="..\Payment.LeoPay\Payment.LeoPay.csproj" />
+    <ProjectReference Include="..\Payment.LuckyPay\Payment.LuckyPay.csproj" />
     <ProjectReference Include="..\Payment.MangoPay\Payment.MangoPay.csproj" />
     <ProjectReference Include="..\Payment.NAP3SPay\Payment.NAP3SPay.csproj" />
     <ProjectReference Include="..\Payment.OneClickPay\Payment.OneClickPay.csproj" />
+    <ProjectReference Include="..\Payment.OnePay\Payment.OnePay.csproj" />
     <ProjectReference Include="..\Payment.PAPay\Payment.PAPay.csproj" />
     <ProjectReference Include="..\Payment.PatekPay\Payment.PatekPay.csproj" />
     <ProjectReference Include="..\Payment.PattayaPay\Payment.PattayaPay.csproj" />

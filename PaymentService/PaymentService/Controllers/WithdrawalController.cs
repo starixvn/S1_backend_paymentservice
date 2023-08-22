@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Flurl.Util;
 using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
@@ -304,7 +305,6 @@ namespace PaymentService.Controllers
         }
 
         [Route("Payment/WithdrawalCallBack/{TransId}")]
-        [HttpPost]
         public async Task<IActionResult> WithdrawalCallBackAsync(string transId)
         {
             try
@@ -319,23 +319,38 @@ namespace PaymentService.Controllers
                 }
 
                 var dicParam = new Dictionary<string, string>();
-                if (Request.ContentType == null)
+                if (Request.Method.Equals("GET"))
                 {
-                    _logger.LogInformation(
-                        $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
-                    return Content("Request data is null");
-                }
-
-                if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
-                    Request.ContentType.StartsWith("application/x-www-form-urlencoded",
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    foreach (var vFormData in Request.Form)
+                    if (!Request.QueryString.HasValue || Request.QueryString.Value == null)
                     {
-                        dicParam.Add(vFormData.Key, vFormData.Value);
+                        _logger.LogInformation(
+                            $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, DepositCallBack_GET Request.QueryString is null");
+                        return Content("Request data is null");
+                    }
+
+                    dicParam = Request.QueryString.Value.TrimStart('?').ToKeyValuePairs()
+                        .ToDictionary(x => x.Key, x => x.Value.ToString());
+                }
+                else
+                {
+                    if (Request.ContentType == null)
+                    {
+                        _logger.LogInformation(
+                            $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
+                        return Content("Request data is null");
+                    }
+
+                    if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
+                        Request.ContentType.StartsWith("application/x-www-form-urlencoded",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        foreach (var vFormData in Request.Form)
+                        {
+                            dicParam.Add(vFormData.Key, vFormData.Value);
+                        }
                     }
                 }
-
+                
                 _logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
 

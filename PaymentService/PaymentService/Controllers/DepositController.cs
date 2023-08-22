@@ -151,6 +151,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("IsTest", _common.IsTest());
                 DepReq.Add("DepositInfo", depositInfo.DepositInfo);
+                DepReq.Add("PhoneNo", custInfo.PhoneNo);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
@@ -279,6 +280,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("PayAccount", reqDeposit.PayAccount);
                 DepReq.Add("UserName", custInfo.UserName);
                 DepReq.Add("DepositInfo", depositInfo.DepositInfo);
+                DepReq.Add("PhoneNo", custInfo.PhoneNo);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
@@ -408,6 +410,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("IsTest", _common.IsTest());
                 DepReq.Add("DepositInfo", reqDeposit.DepositInfo);
+                DepReq.Add("PhoneNo", custInfo.PhoneNo);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
@@ -541,6 +544,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("Lang", custInfo.UserLang);
                 DepReq.Add("IsTest", _common.IsTest());
+                DepReq.Add("PhoneNo", custInfo.PhoneNo);
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(DepReq)}");
