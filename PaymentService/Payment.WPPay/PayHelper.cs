@@ -12,6 +12,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 using System.Text;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace Payment.WPPay;
 
@@ -107,29 +108,11 @@ internal class PayHelper : PayHelperBase
         var transId = inputs["TransID"];
         var notifyUrl = inputs["CallBackUrl"];
         var payCode = inputs["PayCode"];
-        //var privKey = inputs["PrivateKey"];
-        var privKey = @"MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBANbQHyaUCJn2nW2E
-O4KVQ3GCHZZWp8GRLYF6y1Uk4Cr7g4e+gJSIL+JtgHxFoWwwuSjiwoZ40dH4MYxI
-UqfdrAAn4L6T2IYZ1RLJTRlwGmItRgYMMEK9r4dGChHj0kQepBCZOMJvNtUQkADY
-h3NVhmTQjVhG5wrsAAHqx+U3eyLHAgMBAAECgYEA1se7DcCfpQmOuGypb9Q8XebC
-HIpCK2kz/a1AVr6LII7gIT6Zo2lTr2rbN+YLE3jX+YhZBUkSSYWGTQQXGN6sVJqM
-UfFKcvs/wuGnvbww2a2CAvME7dQNl5YwAKpJCX7Ztts3QlK19fU0qpX1LlOOahub
-lu7nv/bcqS9Q0KUU5rkCQQDt9lLswIHGPoTnU4pm5nLX/SOrS4w1y2yOTuCScds0
-mGBBT2D9NBzqZ+4xV/fDJajbfVX2qjFJUzW7877c7zALAkEA5xiVyPbQ4xTbMUa5
-W8JAd8doXpLAzUUffR6K9T13569lZFiz0e/O0MlyiO6nAirsZr5O5m9yi3BbAt+a
-y75htQJAT6cBMPBrQCGTOR90l2cSEAxS0TazkxoplyT99OcZmexbY+EfNQIpn6j0
-SR4J+A92CypUCQIFB2dL+ELpo2iI6wJAQ3lDKpUd8l+BjEapEiiKaC6Zw5s3nfeD
-tSV4zxfubYAhq4XWowJQsVdQELkVnCVqNql0IgYCPMJGYHVnHfvtTQJBAMGVHihP
-ngJjpaCHQXOiyDtKYiWwQkefq4Ak188eIYX1POwcz0LfIc++QQPvKP5wyxnEq0dm
-LhNE3bFc3zehnHY=";
-        //var publicKey = inputs["PublicKey"];
-        var publicKey = @"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDW0B8mlAiZ9p1thDuClUNxgh2W
-VqfBkS2BestVJOAq+4OHvoCUiC/ibYB8RaFsMLko4sKGeNHR+DGMSFKn3awAJ+C+
-k9iGGdUSyU0ZcBpiLUYGDDBCva+HRgoR49JEHqQQmTjCbzbVEJAA2IdzVYZk0I1Y
-RucK7AAB6sflN3sixwIDAQAB";
+        var privateKey = inputs["PrivateKey"];
+        //var privKey = @"MIICXAIBAAKBgQCC56IcQidwXVpflei0CINes+yJM/d7y19eNcaE+TGn4vIlUtlAVDuR6jouv6JCQeluB8VMiHdo4PMvrRwe8iMWBfFr2ejIzTjP5GguOfzVxhK6Ev3VyeX0Pj0DD9Emd/ZsuUXL36w2sUZxs7ELFy7xWkS2k5dy4GwKGM+TQOq+pQIDAQABAoGAB3B7jYiS7jdX9fuyhFzBfoXSKP/7jh0CN/vtYsw4rrZelZFuSFIhKos5sENyyLovNnIZm95bjunN2EVJxlZzeOyxnKab0na2LdJqhCM0zl+ltpl3A2vU8YkWX8mnyP5axm5WFdpiNoF1BlR2l+lld8qsMLw9C+UsaXUX8PNtcfECQQCHuEgrS0k/Km2iAS5b04tPVxSSSA33B3uUAq4hGomww8PSeGW5h564latmRArhcAEg4HFwdpbQgHPemY+hl3VJAkEA9uruQrRhuNVVDlAkSBWX08Ixkg7DvqLaikXRpfzZL41VsPuBrdqTHS+sHZeXFPfNiccDS32BAkFkbd8hmXSqfQJASv/TIdmgyH8xxmzQqX3lZhrBC3U2AmToLYqtny2DGWOVOyG9VSFU3LwY05KWUK4McZaWGYfvH5lcbo59iNahwQJBAMj3y/b00/jZgcIFjpIxKQMMssX7SGy4JgGW9B0SoD7o3Q8QlarIFScTLxZi1HAXhO4X0eG2g7MvQCuBCdrZrw0CQCaG8lGGxHBC7DI4tYfQhYjMYtc4vnB/ZqLie/m/upN1940iaq7Oq3KhGC2x1xEV4Ohfo7FFrsqxGugsrif7iK4=";
+        var publicKey = inputs["PublicKey"];
+        //var publicKey = @"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCCrCl3eQxzjVfZT144Zgl8jHerSFyWrXOMvcbzvWbVWCp1zovFW5knBY7SYnBBlDpI5HmulCHZZXgQjxiisApf03R9arFBF0YRPEErcmMVkQPBBmFMl0vdWpfd11wyPbjm3Fvin5XyzSwu7SYn/DXH8yTEtpdfCEBhD3Ig+aV9tQIDAQAB";
 
-        privKey = privKey.Replace("\n", "").Replace("\r", "").Replace("\t", "");
-        publicKey = publicKey.Replace("\n", "").Replace("\r", "").Replace("\t", "");
         try
         {
             var plainreq = new Dictionary<string, string>
@@ -143,40 +126,32 @@ RucK7AAB6sflN3sixwIDAQAB";
 
             plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
             var plainSign = string.Join("", plainreq.Select(kp => kp.Value).ToArray());
+            _logger.LogInformation($"{transId} Sign plaintext={plainSign}.");
 
             #region sign test
 
-            var sign = RsaSign(plainSign, RSAPrivateKeyJava2DotNet(privKey), HashAlgorithmName.SHA1);
-            //sign = sign.ToLower();
+            var sign = RsaSign(plainSign, privateKey, HashAlgorithmName.SHA1);
             var bytesign = Convert.FromBase64String(sign);
-            var hex = ByteToHexStr(bytesign);
+            var hex = ByteToHexStr(bytesign).ToLower();
 
-            plainreq.Add("sign", hex.ToLower());
-
-            if (Verify(plainSign, sign, publicKey)) //驗簽
-            {
-                _logger.LogInformation($"sign wrong!");
-            }
+            plainreq.Add("sign", hex);
 
             #endregion
 
-            // content加密沒有問題
             var content = RsaEncryptWithPublic(ToJson(plainreq), publicKey);
+            _logger.LogInformation($"{transId} plain Content={ToJson(plainreq)}.");
 
             var req = new Dictionary<string, string>
             {
                 {"merchantCode", merchantCode},
-                {"content",  ByteToHexStr(Convert.FromBase64String(content)) }
+                {"content",  content }
             };
-
-            _logger.LogInformation($"plainData={JsonConvert.SerializeObject(plainreq)}.");
 
             var res = CreateOrder(apiUrl, req).Result;
 
-            if (!DecryptData(res.Content, privKey, publicKey, out WPPayCreateDataContent decryptDataResult))
+            if (!DecryptData(res.Content, privateKey, out WPPayCreateDataContent decryptDataResult))
             {
-                throw new CustomException(
-                $"WPPay CreatOrder response error: ");
+                throw new CustomException($"WPPay CreatOrder response error: DecryptData Fail.");
             }
 
             var response = new DepositResult
@@ -244,7 +219,7 @@ RucK7AAB6sflN3sixwIDAQAB";
         if (string.IsNullOrWhiteSpace(result.Data))
         {
             throw new CustomException(
-                $"WPPay CreatOrder response error: {result.ErrorCode} {HttpUtility.UrlDecode(result.Msg)}");
+                $"WPPay CreatOrder response error: result is null. {result.ErrorCode} {HttpUtility.UrlDecode(result.Msg)}");
         }
 
         var data = JsonConvert.DeserializeObject<WPPayCreateDataResponse>(result.Data);
@@ -285,12 +260,12 @@ RucK7AAB6sflN3sixwIDAQAB";
         return sign;
     }
 
-    private bool DecryptData(string content, string privateKey, string publicKey, out WPPayCreateDataContent dataContent)
+    private bool DecryptData(string content, string privateKey, out WPPayCreateDataContent dataContent)
     {
         dataContent = null;
         try
         {
-            var plainString = UrlEncode(RSADecryptWithPrivateKey(RSAPrivateKeyJava2DotNet(privateKey), content));
+            var plainString = RsaDecryptWithPrivate(content, privateKey);
             var obj = JObject.Parse(plainString);
             if (!obj.ContainsKey("merchantCode") || !obj.ContainsKey("merchantTradeNo")
                 || !obj.ContainsKey("tradeNo") || !obj.ContainsKey("payUrl")

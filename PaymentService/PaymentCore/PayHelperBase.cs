@@ -8,10 +8,6 @@ using Org.BouncyCastle.Crypto.Parameters;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 using Serilog.Context;
-using System.Xml;
-using Org.BouncyCastle.Crypto;
-using System.Security.Cryptography.X509Certificates;
-using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
 
 namespace PaymentCore
 {
@@ -405,45 +401,7 @@ namespace PaymentCore
             return Encoding.UTF8.GetString(outBytes);
         }
 
-        #region test
-
-        public static string Sign(string signStr, string privateKey)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(signStr))
-                {
-                    return null;
-                }
-
-                privateKey = privateKey.Replace("\n", "").Replace("\r", "").Replace("\t", "");
-                byte[] keyBytes = Convert.FromBase64String(privateKey);
-                RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
-                rsa.ImportPkcs8PrivateKey(keyBytes, out _);
-
-                byte[] data = Encoding.UTF8.GetBytes(signStr);
-                byte[] signatureBytes = rsa.SignData(data, new SHA1CryptoServiceProvider());
-                return BitConverter.ToString(signatureBytes).Replace("-", "").ToLower();
-            }
-            catch (Exception e)
-            {
-                return null;
-            }
-        }
-
-
-        /// <summary>
-        ///RSA公钥格式转换,java-.net
-        /// </summary>
-        /// <param name="publickey">java生成的公银/param>
-        /// <returns></returns>
-        public static string RSAPublicKeyJava2DotNet(string publickey)
-        {
-            RsaKeyParameters publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publickey));
-            return string.Format("<RSAKeyValue><Modulus>[o]</Modulus><Exponent>[1]</Exponent></RSAKeyValue>",
-                Convert.ToBase64String(publicKeyParam.Modulus.ToByteArrayUnsigned()),
-                Convert.ToBase64String(publicKeyParam.Exponent.ToByteArrayUnsigned()));
-        }
+        #region rsa
 
         /// <summary>
         /// RSA签名
@@ -452,121 +410,24 @@ namespace PaymentCore
         /// <param name="privateKey">RSA密钥</param>
         /// <param name="name"></param>
         /// <returns></returns>
-        protected static string RsaSign(string content, string privateKey, HashAlgorithmName? name = null)
+        public static string RsaSign(string content, string privateKey, HashAlgorithmName? name = null)
         {
-            RSA rsa = RSA.Create();
-            rsa.FromXmlString(privateKey);
-            byte[] signBytes = rsa.SignData(Encoding.UTF8.GetBytes(content), name.Value, RSASignaturePadding.Pkcs1);
-            return Convert.ToBase64String(signBytes);
+            if (name == null)
+            {
+                name = HashAlgorithmName.MD5;
+            }
+            var privateKeyBytes = Convert.FromBase64String(privateKey);
+            using (RSA rsa = new RSACng())
+            {
+                rsa.ImportRSAPrivateKey(privateKeyBytes, out _);
+
+                var data = Encoding.UTF8.GetBytes(content);
+
+                var signatureBytes = rsa.SignData(data, (HashAlgorithmName)name, RSASignaturePadding.Pkcs1);
+
+                return Convert.ToBase64String(signatureBytes);
+            }
         }
-
-        /// <summary>
-        /// Pem私钥转成XML私钥
-        /// </summary>
-        /// <param name="pemPrivateKeyStr"></param>
-        /// <returns></returns>
-        protected static string PemPrivateKeyToXml(string pemPrivateKeyStr)
-        {
-            RsaPrivateCrtKeyParameters pemPrivateKey;
-            using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(pemPrivateKeyStr)))
-            {
-                using (var sr = new StreamReader(ms))
-                {
-                    var pemReader = new Org.BouncyCastle.OpenSsl.PemReader(sr);
-                    var keyPair = (AsymmetricCipherKeyPair)pemReader.ReadObject();
-                    pemPrivateKey = (RsaPrivateCrtKeyParameters)keyPair.Private;
-                }
-            }
-
-            var p = new RSAParameters
-            {
-                Modulus = pemPrivateKey.Modulus.ToByteArrayUnsigned(),
-                Exponent = pemPrivateKey.PublicExponent.ToByteArrayUnsigned(),
-                D = pemPrivateKey.Exponent.ToByteArrayUnsigned(),
-                P = pemPrivateKey.P.ToByteArrayUnsigned(),
-                Q = pemPrivateKey.Q.ToByteArrayUnsigned(),
-                DP = pemPrivateKey.DP.ToByteArrayUnsigned(),
-                DQ = pemPrivateKey.DQ.ToByteArrayUnsigned(),
-                InverseQ = pemPrivateKey.QInv.ToByteArrayUnsigned(),
-            };
-
-            string xmlPrivateKeyStr;
-
-            using (var rsa = new RSACryptoServiceProvider())
-            {
-                rsa.ImportParameters(p);
-                xmlPrivateKeyStr = rsa.ToXmlString(true);
-            }
-            return xmlPrivateKeyStr;
-        }
-
-        /// <summary>
-        /// Pem公钥转成XML公钥
-        /// </summary>
-        /// <param name="pemPublicKeyStr"></param>
-        /// <returns></returns>
-        protected static string PemPublicKeyToXml(string pemPublicKeyStr)
-        {
-            RsaKeyParameters pemPublicKey;
-            using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(pemPublicKeyStr)))
-            {
-                using (var sr = new StreamReader(ms))
-                {
-                    var pemReader = new Org.BouncyCastle.OpenSsl.PemReader(sr);
-                    pemPublicKey = (RsaKeyParameters)pemReader.ReadObject();
-                }
-            }
-
-            var p = new RSAParameters
-            {
-                Modulus = pemPublicKey.Modulus.ToByteArrayUnsigned(),
-                Exponent = pemPublicKey.Exponent.ToByteArrayUnsigned()
-            };
-
-            string xmlPublicKeyStr;
-
-            using (var rsa = new RSACryptoServiceProvider())
-            {
-                rsa.ImportParameters(p);
-                xmlPublicKeyStr = rsa.ToXmlString(false);
-            }
-            return xmlPublicKeyStr;
-        }
-
-        /// <summary>
-        /// RSA导入key
-        /// </summary>
-        //private static void FromLvccXmlString(this RSA rsa, string xmlString)
-        //{
-        //    RSAParameters parameters = new RSAParameters();
-
-        //    XmlDocument xmlDoc = new XmlDocument();
-        //    xmlDoc.LoadXml(xmlString);
-
-        //    if (xmlDoc.DocumentElement.Name.Equals("RSAKeyValue"))
-        //    {
-        //        foreach (XmlNode node in xmlDoc.DocumentElement.ChildNodes)
-        //        {
-        //            switch (node.Name)
-        //            {
-        //                case "Modulus": parameters.Modulus = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
-        //                case "Exponent": parameters.Exponent = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
-        //                case "P": parameters.P = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
-        //                case "Q": parameters.Q = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
-        //                case "DP": parameters.DP = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
-        //                case "DQ": parameters.DQ = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
-        //                case "InverseQ": parameters.InverseQ = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
-        //                case "D": parameters.D = (string.IsNullOrEmpty(node.InnerText) ? null : Convert.FromBase64String(node.InnerText)); break;
-        //            }
-        //        }
-        //    }
-        //    else
-        //    {
-        //        throw new Exception("Invalid XML RSA key.");
-        //    }
-
-        //    rsa.ImportParameters(parameters);
-        //}
 
         /// <summary>
         /// 公钥加密
@@ -609,22 +470,6 @@ namespace PaymentCore
                     return Convert.ToBase64String(CrypStream.ToArray());
                 }
             }
-        }
-
-        /// <summary>
-        /// 补全文
-        /// </summary>
-        /// <param name="strCiphertext">密文/param>
-        /// <param name="keySize">秘钥长度</param>
-        /// <returns>补全后的密文/returns>
-        public static string CorrectionCiphertext(string strCiphertext, int keySize = 1024)
-        {
-            int ciphertextLength = keySize / 8;
-            byte[] data = Convert.FromBase64String(strCiphertext);
-            var newData = new List<byte>(data);
-            while (newData.Count < ciphertextLength)
-                newData.Insert(0, 0x00);
-            return Convert.ToBase64String(newData.ToArray());
         }
 
         /// <summary>
@@ -676,82 +521,6 @@ namespace PaymentCore
         }
 
         /// <summary>
-        /// RSA验签
-        /// </summary>
-        /// <param name="content">内容</param>
-        /// <param name="publicKey">RSA公钥</param>
-        /// <param name="signData">签名字段</param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        protected static bool VerifySign(string content, string publicKey, string signData, HashAlgorithmName? name = null)
-        {
-            if (name == null)
-            {
-                name = HashAlgorithmName.MD5;
-            }
-
-            RsaKeyParameters publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
-            var xml = string.Format(
-            "<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent></RSAKeyValue>",
-            Convert.ToBase64String(publicKeyParam.Modulus.ToByteArrayUnsigned()),
-            Convert.ToBase64String(publicKeyParam.Exponent.ToByteArrayUnsigned())
-            );
-
-            RSA rsa = RSA.Create();
-            rsa.FromXmlString(xml);
-            return rsa.VerifyData(Encoding.UTF8.GetBytes(content), Convert.FromBase64String(signData), name.Value, RSASignaturePadding.Pkcs1);
-        }
-
-        public static bool Verify(string signData, string signStr, string publicKey)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(signStr) || string.IsNullOrWhiteSpace(signData))
-                {
-                    return false;
-                }
-
-                publicKey = publicKey.Replace("\n", "").Replace("\r", "").Replace("\t", "").Replace(" ", "");
-                byte[] keyBytes = Convert.FromBase64String(publicKey);
-
-                using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
-                {
-                    rsa.ImportCspBlob(keyBytes);
-
-                    using (SHA1 sha1 = SHA1.Create())
-                    {
-                        byte[] signDataBytes = Encoding.UTF8.GetBytes(signData);
-                        byte[] signStrBytes = HexStringToByteArray(signStr);
-
-                        if (rsa.VerifyData(signDataBytes, sha1, signStrBytes))
-                        {
-                            return true;
-                        }
-                    }
-                }
-
-                return false;
-            }
-            catch (Exception e)
-            {
-                return false;
-            }
-        }
-
-        private static byte[] HexStringToByteArray(string hex)
-        {
-            int length = hex.Length / 2;
-            byte[] bytes = new byte[length];
-
-            for (int i = 0; i < length; i++)
-            {
-                bytes[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
-            }
-
-            return bytes;
-        }
-
-        /// <summary>
         /// 字节数组转16进制字符串
         /// </summary>
         /// <param name="bytes"></param>
@@ -768,7 +537,6 @@ namespace PaymentCore
             }
             return returnStr;
         }
-
 
         protected static RSA CreateRsaProviderFromPublicKey(string publicKeyString)
         {
@@ -903,7 +671,6 @@ namespace PaymentCore
             rsa.ImportParameters(rsaParameters);
             return rsa;
         }
-
 
         protected static bool CompareBytearrays(byte[] a, byte[] b)
         {
