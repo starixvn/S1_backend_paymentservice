@@ -34,6 +34,12 @@ namespace Payment.SpeedPay
             {
                 var req = new Dictionary<string, string>
                 {
+                    { "version", SpeedPayDefinition.Version },
+                    { "merchantNo", setting.MerchantId }
+                };
+                
+                var content = new Dictionary<string, string>
+                {
                     { "amount", reqAmount.ToString("F2") },
                     { "paymentCode", payCode },
                     { "orderNo", transId },
@@ -42,29 +48,19 @@ namespace Payment.SpeedPay
                     { "notifyUrl", input["CallBackUrl"] },
                     { "memberCode", userName }
                 };
-
-                req.Add("sign", GetSign(req, setting.Key));
                 
-                var (response, statusCode) = _httpHelper
-                    .PostUrlEncoded<Dictionary<string, string>, DepositResponse>(
-                        $"{setting.ApiUrl}{SpeedPayDefinition.Path.Deposit}", req);
+                req.Add("request", EncodeContent(content));
+                req.Add("signMsg", GetSign(req, setting.Key));
 
-                if (!statusCode.IsSuccessStatus())
-                {
-                    throw new CustomException($"HttpStatus: {(int)statusCode} {statusCode}");
-                }
-
-                if (!response.Code.Equals(SpeedPayDefinition.SuccessCode))
-                {
-                    throw new CustomException(response.Message, response.Code);
-                }
+                var apiUrl = $"{setting.ApiUrl}{SpeedPayDefinition.Path.Deposit}";
+                var respData = CreateTrans<DepositResp>(req, apiUrl, setting.Key);
                 
                 return new DepositResult
                 {
                     Success = true,
                     ErrorCode = "0",
-                    Url = response.ResultUrl,
-                    ThirdId = response.ThirdId
+                    Url = respData.ResultUrl,
+                    ThirdId = respData.ThirdId
                 };
             }
             catch (CustomException ex)
@@ -79,10 +75,10 @@ namespace Payment.SpeedPay
             Dictionary<string, string> headers, Dictionary<string, string> input)
         {
             var payCurrency = SpeedPayDefinition.GetPayCurrency(input["CurrencyId"]);
-            input.Add("PayCurrency", payCurrency);
+            input.Add("PayCurrencyId", payCurrency);
             
             var setting = GetSetting(input);
-            var req = FromJson<CallbackRequest>(bodyContent);
+            var req = FromJson<CallbackReq>(bodyContent);
             var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
 
             if (!VerifySign(dicReq, setting.Key, req.signMsg))
@@ -94,12 +90,8 @@ namespace Payment.SpeedPay
                     Response = "Signature does not match."
                 };
             }
-            
-            var json = ToBase64Decode(req.content);
-            
-            _logger.LogInformation(json);
 
-            var content = JsonConvert.DeserializeObject<CallbackContent>(json);
+            var content = DecodeContent<CallbackContent>(req.content, setting.Key);
 
             if (content == null)
             {
@@ -140,7 +132,6 @@ namespace Payment.SpeedPay
 
         public override WithdrawResult Credit(Dictionary<string, string> input)
         {
-            var merchantNo = input["merchantNo"];
             var reqAmount = decimal.Parse(input["Amount"]);
             var transId = input["TransID"];
             var setting = GetSetting(input);
@@ -149,35 +140,33 @@ namespace Payment.SpeedPay
             {
                 var req = new Dictionary<string, string>
                 {
+                    { "version", SpeedPayDefinition.Version },
+                    { "merchantNo", setting.MerchantId }
+                };
+                
+                var content = new Dictionary<string, string>
+                {
                     { "amount", reqAmount.ToString("F2") },
                     { "bankCode", input["BankCode"] },
                     { "bankAccountNo", input["AccountNo"] },
                     { "bankAccountName", input["AccountName"] },
+                    { "orderNo", transId },
                     { "orderTime", DateTimeOffset.Now.ToString("yyyyMMddHHmmss") },
                     { "notifyUrl", input["CallBackUrl"] },
                     { "memberCode", input["UserName"] }
                 };
+                
+                req.Add("request", EncodeContent(content));
+                req.Add("signMsg", GetSign(req, setting.Key));
 
-                req.Add("sign", GetSign(req, setting.Key));
-
-                var (response, statusCode) = _httpHelper
-                    .PostJson<Dictionary<string, string>, PayoutResponse>(
-                        $"{setting.ApiUrl}{SpeedPayDefinition.Path.Payout}", req);
-
-                if (!statusCode.IsSuccessStatus())
-                {
-                    throw new CustomException($"HttpStatus: {(int)statusCode} {statusCode}");
-                }
-
-                if (!response.Code.Equals(SpeedPayDefinition.SuccessCode))
-                {
-                    throw new CustomException(response.Message, response.Code);
-                }
-
+                var apiUrl = $"{setting.ApiUrl}{SpeedPayDefinition.Path.Payout}";
+                var respData = CreateTrans<PayoutResp>(req, apiUrl, setting.Key);
+                
                 return new WithdrawResult
                 {
+                    WithdrawId = transId,
                     Success = true,
-                    RawContent = JsonConvert.SerializeObject(response)
+                    RawContent = JsonConvert.SerializeObject(respData)
                 };
             }
             catch (CustomException ex)
@@ -196,10 +185,10 @@ namespace Payment.SpeedPay
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var payCurrency = SpeedPayDefinition.GetPayCurrency(payResource["CurrencyId"]);
-            payResource.Add("PayCurrency", payCurrency);
+            payResource.Add("PayCurrencyId", payCurrency);
             
             var setting = GetSetting(payResource);
-            var req = FromJson<CallbackRequest>(bodyContent);
+            var req = FromJson<CallbackReq>(bodyContent);
             var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
 
             if (!VerifySign(dicReq, setting.Key, req.signMsg))
@@ -211,12 +200,8 @@ namespace Payment.SpeedPay
                     Response = "Signature does not match."
                 };
             }
-
-            var json = ToBase64Decode(req.content);
             
-            _logger.LogInformation(json);
-
-            var content = JsonConvert.DeserializeObject<CallbackContent>(json);
+            var content = DecodeContent<CallbackContent>(req.content, setting.Key);
 
             if (content == null)
             {
@@ -257,7 +242,7 @@ namespace Payment.SpeedPay
                 .Select(x => $"{x.Key}:{x.Value}")) + $"&key:{key}";
             
             _logger.LogInformation(str);
-            var sign = ToMD5(str).ToLower();
+            var sign = ToMD5(str);
 
             return sign;
         }
@@ -271,7 +256,7 @@ namespace Payment.SpeedPay
 
         private static SpeedPaySetting GetSetting(IDictionary<string, string> input)
         {
-            var payCurrency = input["PayCurrency"];
+            var payCurrency = input["PayCurrencyId"];
 
             if (!input.ContainsKey(payCurrency))
             {
@@ -286,6 +271,53 @@ namespace Payment.SpeedPay
             }
 
             return setting;
+        }
+        
+        private string EncodeContent<T>(T input)
+        {
+            var json = JsonConvert.SerializeObject(input);
+            var result = ToBase64Encode(json);
+
+            _logger.LogInformation("orig content: " + json);
+            
+            return result;
+        }
+        
+        private T DecodeContent<T>(string str, string key)
+        {
+            var json = ToBase64Decode(str);
+            
+            _logger.LogInformation("decoded content: " + json);
+
+            var content = JsonConvert.DeserializeObject<T>(json);
+
+            return content;
+        }
+
+        private T CreateTrans<T> (IDictionary<string, string> req, string apiUrl, string key)
+            where T : ICreateTransResp
+        {
+            var (response, statusCode) = _httpHelper
+                .PostUrlEncoded<IDictionary<string, string>, IDictionary<string, string>>(apiUrl, req);
+
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException($"HttpStatus: {(int)statusCode} {statusCode}");
+            }
+                
+            if (!response["resCode"].Equals(SpeedPayDefinition.SuccessCode))
+            {
+                throw new CustomException(response["resCode"], response["resCode"]);
+            }
+
+            var respData = DecodeContent<T>(response["response"], key);
+                
+            if (!respData.Code.Equals(SpeedPayDefinition.TransSuccessCode))
+            {
+                throw new CustomException(respData.Message, respData.Code);
+            }
+
+            return respData;
         }
 
         #endregion
