@@ -43,7 +43,7 @@ namespace Payment.SpeedPay
                     { "amount", reqAmount.ToString("F2") },
                     { "paymentCode", payCode },
                     { "orderNo", transId },
-                    { "orderTime", DateTimeOffset.Now.ToString("yyyyMMddHHmmss") },
+                    { "orderTime", GetOrderTime() },
                     { "returnUrl", input["ReturnUrl"] },
                     { "notifyUrl", input["CallBackUrl"] },
                     { "memberCode", userName }
@@ -151,7 +151,7 @@ namespace Payment.SpeedPay
                     { "bankAccountNo", input["AccountNo"] },
                     { "bankAccountName", input["AccountName"] },
                     { "orderNo", transId },
-                    { "orderTime", DateTimeOffset.Now.ToString("yyyyMMddHHmmss") },
+                    { "orderTime", GetOrderTime() },
                     { "notifyUrl", input["CallBackUrl"] },
                     { "memberCode", input["UserName"] }
                 };
@@ -319,6 +319,9 @@ namespace Payment.SpeedPay
 
             return respData;
         }
+
+        private static string GetOrderTime()
+            => DateTimeOffset.UtcNow.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
 
         #endregion
     }
