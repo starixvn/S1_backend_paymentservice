@@ -96,6 +96,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("BankCode", onlineBank.BankCode);
                 WithReq.Add("BankName", onlineBank.BankName);
                 WithReq.Add("AccountName", reqWithdrawal.AccountName);
+                WithReq.Add("UserName", custInfo.UserName);
                 WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
                 WithReq.Add("IsTest", _common.IsTest());
                 WithReq.Add("IFSCCode", reqWithdrawal.IFSCCode);
@@ -179,6 +180,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("TransID", reqWithdrawal.TransId);
                 WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
                 WithReq.Add("PayCode", crypto.PayCode);
+                WithReq.Add("UserName", custInfo.UserName);
                 WithReq.Add("AccountName", reqWithdrawal.AccountName);
                 WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
                 WithReq.Add("IsTest", _common.IsTest());
@@ -266,6 +268,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("PayCode", eWalletPay.PayCode);
                 WithReq.Add("BankCode", eWalletPay.EWalletCode);
                 WithReq.Add("BankName", eWalletPay.EWalletName);
+                WithReq.Add("UserName", custInfo.UserName);
                 WithReq.Add("AccountName", reqWithdrawal.AccountName);
                 WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
                 WithReq.Add("IsTest", _common.IsTest());
