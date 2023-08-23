@@ -29,8 +29,8 @@ namespace PaymentService.Controllers
         private readonly int _mainWalletType;
         private readonly string _apiUrl;
         private readonly CourierAdapter _courierAdapter;
-        private readonly Common _common;
-        private static Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>> ExchangeRateList = new Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>>();
+        private readonly Common _common;        
+        private readonly ICacheHelper _redisHelper;
 
         public DepositController(IServiceProvider provider)
         {
@@ -43,6 +43,7 @@ namespace PaymentService.Controllers
             _apiUrl = _configuration.GetValue<string>("TpService");
             _courierAdapter = provider.GetRequiredService<CourierAdapter>();
             _common = provider.GetRequiredService<Common>();
+            _redisHelper = provider.GetRequiredService<ICacheHelper>();
         }
 
         public class ReqDeposit
@@ -761,12 +762,20 @@ namespace PaymentService.Controllers
 
         private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, Dictionary<string, string> headers)
         {
-            DepositRequest depositRequest = null;
             //查詢訂單在不在db
-            depositRequest = _paymentBll.GetDepositRequest(transId);
+            var depositRequest = _paymentBll.GetDepositRequest(transId);
             //根據訂單的廠商決定要用那家金流去解讀回傳的資料
             if (depositRequest != null && depositRequest.depositInfo is IPay)
-            {
+            {          
+                var key = $"DepositCallBackLock:{transId}";
+                if (_redisHelper.KeyExists(key))
+                {
+                    return $"SerialId={transId} is processing";
+                }
+                
+                //key lock 5 sec
+                _redisHelper.StringSet(key, transId, TimeSpan.FromSeconds(5));           
+
                 var custId = depositRequest.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var pay = (IPay)depositRequest.depositInfo;
@@ -901,6 +910,9 @@ namespace PaymentService.Controllers
                         return "Update DepositPending error";
                     }
                 }
+
+                //key unlock
+                _redisHelper.KeyDelete(key);
 
                 return rNotifyDepositResult.Response;
             }
