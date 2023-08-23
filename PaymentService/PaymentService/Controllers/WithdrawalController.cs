@@ -15,7 +15,6 @@ using static PaymentService.Extensions.MethodExtension;
 namespace PaymentService.Controllers
 {
     [ApiController]
-    [Route("Payment")]
     public class WithdrawalController : ControllerBase
     {
         private readonly CustInfoBLL _custInfoBll;
@@ -52,7 +51,7 @@ namespace PaymentService.Controllers
         }
         
         [HttpPost]
-        [Route("Withdrawal")]
+        [Route("Payment/Withdrawal")]
         public ApiResult Withdrawal(ReqWithdrawal reqWithdrawal)
         {
             var apiResult = new ApiResult();
@@ -138,7 +137,7 @@ namespace PaymentService.Controllers
         }
 
         [HttpPost]
-        [Route("CryptoWithdrawal")]
+        [Route("Payment/CryptoWithdrawal")]
         public ApiResult CryptoWithdrawal(ReqWithdrawal reqWithdrawal)
         {
             var apiResult = new ApiResult();
@@ -223,7 +222,7 @@ namespace PaymentService.Controllers
         }
         
         [HttpPost]
-        [Route("EWalletWithdrawal")]
+        [Route("Payment/EWalletWithdrawal")]
         public ApiResult EWalletWithdrawal(ReqWithdrawal reqWithdrawal)
         {
             var apiResult = new ApiResult();
@@ -506,7 +505,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        [Route("VerifyTransaction/{PayName}")]
+        [Route("Payment/VerifyTransaction/{PayName}")]
         [HttpPost]
         public async Task<IActionResult> VerifyTransactionAsync(string payName)
         {
@@ -555,7 +554,7 @@ namespace PaymentService.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        [Route("WithdrawalManualApprove")]
+        [Route("Payment/WithdrawalManualApprove")]
         public  ApiResult WithdrawalManualApprove(WithdrawalManualApproveRequest request)
         {
             var apiResult = new ApiResult();
@@ -617,7 +616,7 @@ namespace PaymentService.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        [Route("WithdrawalManualReject")]
+        [Route("Payment/WithdrawalManualReject")]
         public  ApiResult WithdrawalManualReject(WithdrawalManualRejectRequest request)
         {
             var apiResult = new ApiResult();
