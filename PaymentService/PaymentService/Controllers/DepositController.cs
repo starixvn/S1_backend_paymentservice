@@ -23,12 +23,11 @@ namespace PaymentService.Controllers
         private readonly CustInfoBLL _custInfoBll;
         private readonly IConfiguration _configuration;
         private readonly ILogger<DepositController> _logger;
-        private readonly PaymentBLL _paymentBll;
-        private readonly int _mainWalletType;
+        private readonly PaymentBLL _paymentBll;  
         private readonly string _apiUrl;
         private readonly CourierAdapter _courierAdapter;
-        private readonly Common _common;
-        private static Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>> ExchangeRateList = new Dictionary<int, Dictionary<string, Dictionary<int, ExchangeRate>>>();
+        private readonly Common _common;        
+        private readonly ICacheHelper _redisHelper;
 
         public DepositController(IServiceProvider provider)
         {
@@ -37,10 +36,10 @@ namespace PaymentService.Controllers
             _configuration = provider.GetRequiredService<IConfiguration>();
             _logger = provider.GetRequiredService<ILogger<DepositController>>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
-            _mainWalletType = _configuration.GetValue<int>("MainWalletType");
             _apiUrl = _configuration.GetValue<string>("TpService");
             _courierAdapter = provider.GetRequiredService<CourierAdapter>();
             _common = provider.GetRequiredService<Common>();
+            _redisHelper = provider.GetRequiredService<ICacheHelper>();
         }
 
         public class ReqDeposit
@@ -763,12 +762,20 @@ namespace PaymentService.Controllers
 
         private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, Dictionary<string, string> headers)
         {
-            DepositRequest depositRequest = null;
             //查詢訂單在不在db
-            depositRequest = _paymentBll.GetDepositRequest(transId);
+            var depositRequest = _paymentBll.GetDepositRequest(transId);
             //根據訂單的廠商決定要用那家金流去解讀回傳的資料
             if (depositRequest != null && depositRequest.depositInfo is IPay)
-            {
+            {          
+                var key = $"DepositCallBackLock:{transId}";
+                if (_redisHelper.KeyExists(key))
+                {
+                    return $"SerialId={transId} is processing";
+                }
+                
+                //key lock 5 sec
+                _redisHelper.StringSet(key, transId, TimeSpan.FromSeconds(5));           
+
                 var custId = depositRequest.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var pay = (IPay)depositRequest.depositInfo;
@@ -867,17 +874,6 @@ namespace PaymentService.Controllers
                         return "Update UserMoney error(Other)";
                     }
                     #endregion
-                    /*Temp will be Removed*/
-                    if (_mainWalletType == 2)
-                    {
-                        var input = new TpTransfer();
-                        input.Amount = _custInfoBll.GetBalance(depositRequest.CustId);
-                        input.CustId = depositRequest.CustId;
-                        input.direction = TpDirection.ToTp;
-                        input.TpId = 1;
-                        var transferToSabaResult = await TransferToSabaAsync(input);
-                    }
-                    /*Temp*/
                 }
                 else if (rNotifyDepositResult.TransStatus == TransStatus.Fail)
                 {
@@ -904,6 +900,9 @@ namespace PaymentService.Controllers
                     }
                 }
 
+                //key unlock
+                _redisHelper.KeyDelete(key);
+
                 return rNotifyDepositResult.Response;
             }
             else
@@ -911,55 +910,6 @@ namespace PaymentService.Controllers
                 _logger.LogError($"Method={GetCurrentAsyncMethod()}, SerialId={transId} is not exist");
                 return $"SerialId={transId} is not exist";
             }
-        }
-        public class TpTransfer
-        {
-            public int TpId { set; get; }
-            public int CustId { set; get; }
-            public decimal Amount { set; get; }
-            public TpDirection direction { set; get; }
-            public Dictionary<string, string> inputs { set; get; }
-        }
-
-        public enum TpDirection
-        {
-            ToTp = 1,
-            ToMain = 2
-        }
-        private async Task<ApiResult<TransferResult>> TransferToSabaAsync(TpTransfer inTpTransfer)
-        {
-            var amount = inTpTransfer.Amount;
-            if (amount.ToString().IndexOf(".") > -1)
-            {
-                decimal.TryParse(amount.ToString("#.##"), out amount);
-            }
-
-            var tpTransfer = new TpTransfer
-            {
-                TpId = inTpTransfer.TpId,
-                CustId = inTpTransfer.CustId,
-                Amount = amount,
-                direction = inTpTransfer.direction,
-                inputs = null
-            };
-            var myUrl = $"{_apiUrl}Transfer";
-            var data = await _courierAdapter.MyPostAsync<TransferResult, TpTransfer>(myUrl, tpTransfer);
-
-            return data;
-        }
-        public class TransferResult
-        {
-            public TransferResult()
-            {
-                Status = TransferStatus.Pending;
-            }
-            public TransferStatus Status { get; set; }
-            public string ThirdId { get; set; }
-            public decimal Difference { get; set; }
-        }
-        public enum TransferStatus
-        {
-            Success = 0, Fail = 1, Pending = 2, PendingD = 3
         }
     }
 }
