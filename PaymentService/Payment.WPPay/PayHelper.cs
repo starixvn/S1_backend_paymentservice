@@ -20,6 +20,8 @@ internal class PayHelper : PayHelperBase
 {
     private readonly IFlurlHttpHelper _httpHelper;
     private readonly ILogger<PayHelper> _logger;
+    private readonly List<string> DepositNoSign = new List<string> { "sign" };
+    private readonly List<string> WithdrawalNoSign = new List<string> { "bankCardNumber", "bankName", "sign" };
 
     public PayHelper(IServiceProvider provider)
     {
@@ -59,7 +61,7 @@ internal class PayHelper : PayHelperBase
             };
 
             plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
-            var plainSign = string.Join("", plainreq.Select(kp => kp.Value).ToArray());
+            var plainSign = string.Join("", plainreq.Where(x => !WithdrawalNoSign.Contains(x.Key)).Select(kp => kp.Value).ToArray());
             _logger.LogInformation($"{transId} Sign plaintext={plainSign}.");
 
             #region sign test
@@ -174,7 +176,7 @@ internal class PayHelper : PayHelperBase
             };
 
             plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
-            var plainSign = string.Join("", plainreq.Select(kp => kp.Value).ToArray());
+            var plainSign = string.Join("", plainreq.Where(x => !DepositNoSign.Contains(x.Key)).Select(kp => kp.Value).ToArray());
             _logger.LogInformation($"{transId} Sign plaintext={plainSign}.");
 
             #region sign test
