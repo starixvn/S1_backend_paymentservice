@@ -43,7 +43,6 @@ internal class PayHelper : PayHelperBase
         var privateKey = inputs["PrivateKey"];
         var publicKey = inputs["PublicKey"];
         var bankCode = inputs["BankCode"];
-        var accountName = inputs["AccountName"];
         var accountNo = inputs["AccountNo"];
 
         try
@@ -56,8 +55,8 @@ internal class PayHelper : PayHelperBase
                 {"channel", payCode},
                 {"notifyUrl", notifyUrl},
                 {"bankCardNumber", accountNo},
-                {"bankCode", accountName},
-                {"bankName", accountName}
+                {"bankCode", bankCode},
+                {"bankName", bankCode}
             };
 
             plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
