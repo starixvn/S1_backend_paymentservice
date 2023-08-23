@@ -54,7 +54,8 @@ internal class PayHelper : PayHelperBase
                 {"channel", payCode},
                 {"notifyUrl", notifyUrl},
                 {"bankCardNumber", accountNo},
-                {"bankCode", accountName}
+                {"bankCode", accountName},
+                {"bankName", accountName}
             };
 
             plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
