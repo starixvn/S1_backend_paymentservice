@@ -315,12 +315,10 @@ namespace PaymentService.Controllers
                 string bodyText;
                 var headers = Request.Headers
                     .ToDictionary(x => x.Key, x => x.Value.ToString());
-                _logger.LogInformation($"Get Header Success!"); //Add log
                 using (var reader = new StreamReader(Request.Body))
                 {
                     bodyText = await reader.ReadToEndAsync();
                 }
-                _logger.LogInformation($"Get bodyText Success!"); //Add log
                 var dicParam = new Dictionary<string, string>();
                 if (Request.Method.Equals("GET"))
                 {
@@ -347,12 +345,10 @@ namespace PaymentService.Controllers
                         Request.ContentType.StartsWith("application/x-www-form-urlencoded",
                             StringComparison.OrdinalIgnoreCase))
                     {
-                        _logger.LogInformation($"Get ContentType Success!"); //Add log
                         foreach (var vFormData in Request.Form)
                         {
                             dicParam.Add(vFormData.Key, vFormData.Value);
                         }
-                        _logger.LogInformation($"Get dicParam Success!"); //Add log
                     }
                 }
                 
