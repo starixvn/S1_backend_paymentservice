@@ -78,10 +78,9 @@ namespace Payment.SpeedPay
             input.Add("PayCurrencyId", payCurrency);
             
             var setting = GetSetting(input);
-            var req = FromJson<CallbackReq>(bodyContent);
-            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+            var req = FromJson<CallbackReq>(JsonConvert.SerializeObject(formData));
 
-            if (!VerifySign(dicReq, setting.Key, req.signMsg))
+            if (!VerifySign(formData, setting.Key, req.signMsg))
             {
                 return new NotifyDepositResult
                 {
@@ -188,10 +187,9 @@ namespace Payment.SpeedPay
             payResource.Add("PayCurrencyId", payCurrency);
             
             var setting = GetSetting(payResource);
-            var req = FromJson<CallbackReq>(bodyContent);
-            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+            var req = FromJson<CallbackReq>(JsonConvert.SerializeObject(formData));
 
-            if (!VerifySign(dicReq, setting.Key, req.signMsg))
+            if (!VerifySign(formData, setting.Key, req.signMsg))
             {
                 return new NotifyWithdrawResult
                 {
