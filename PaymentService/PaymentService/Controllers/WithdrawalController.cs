@@ -25,6 +25,7 @@ namespace PaymentService.Controllers
         private readonly ILogger<WithdrawalController> _logger;
         private readonly Common _common;
         private readonly PaymentBLL _paymentBll;
+        private readonly ICacheHelper _redisHelper;
 
         public WithdrawalController(IServiceProvider provider)
         {
@@ -35,6 +36,7 @@ namespace PaymentService.Controllers
             _logger = provider.GetRequiredService<ILogger<WithdrawalController>>();
             _common = provider.GetRequiredService<Common>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
+            _redisHelper = provider.GetRequiredService<ICacheHelper>();
         }
         public class ReqWithdrawal
         {
@@ -378,7 +380,16 @@ namespace PaymentService.Controllers
             var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
             //根據訂單的廠商決定要用那家金流去解讀回傳的資料
             if (withdrawalRequest != null)
-            {
+            {           
+                var key = $"WithdrawalCallBackLock:{transId}";
+                if (_redisHelper.KeyExists(key))
+                {
+                    return $"SerialId={transId} is processing";
+                }
+
+                //key lock 5 sec
+                _redisHelper.StringSet(key, transId, TimeSpan.FromSeconds(5));
+                
                 var WithReq = withdrawalRequest.ISetting;
                 WithReq.Add("TransId", transId);
                 WithReq.Add("WithdrawalType", withdrawalRequest.WithdrawalType.ToString(""));
@@ -478,6 +489,9 @@ namespace PaymentService.Controllers
                         return "Update WithdrawalPending error";
                     }
                 }
+
+                //key unlock
+                _redisHelper.KeyDelete(key);
 
                 return rNotifyWithdrawalResult.Response;
             }
