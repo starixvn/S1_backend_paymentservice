@@ -18,8 +18,10 @@ internal class SpeedPayDefinition
             { "4", "THB" }
         };
     
+    public const string Version = "1.0";
     public const string CallbackResponse = "OK";
     public const string SuccessCode = "000";
+    public const string TransSuccessCode = "0000";
     
     public static TransStatus GetTransStatus(string status)
         => SpeedPayStatusMap.TryGetValue(status, out var result)

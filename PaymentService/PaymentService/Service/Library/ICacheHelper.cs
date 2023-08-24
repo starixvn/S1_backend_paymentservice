@@ -18,4 +18,6 @@ public interface ICacheHelper
     List<TItem> GetListByRange<TItem>(string key, long startIndex, long endIndex, RedisDataBase redisDataBase = RedisDataBase.Payment);
     long GetListLength(string key, RedisDataBase redisDataBase = RedisDataBase.Payment);
     bool KeyDelete(string key, RedisDataBase redisDataBase = RedisDataBase.Payment);
+    bool TryCreateLock(RedisKey lockKey, RedisValue lockValue, TimeSpan? expiry, RedisDataBase redisDataBase = RedisDataBase.Payment);
+    bool UnLock(RedisKey lockKey, RedisValue lockValue, RedisDataBase redisDataBase = RedisDataBase.Payment);
 }

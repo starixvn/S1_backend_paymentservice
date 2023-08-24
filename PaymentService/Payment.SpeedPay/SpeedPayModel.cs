@@ -9,7 +9,15 @@ public class SpeedPaySetting
     public string ApiUrl { get; set; }
 }
 
-public class DepositResponse
+public interface ICreateTransResp
+{
+    public string Code { get; set; }
+    public string Message { get; set; }
+    public string ThirdId { get; set; }
+    public string TransId { get; set; }
+}
+
+public class DepositResp : ICreateTransResp
 {
     [JsonProperty("code")]
     public string Code { get; set; }
@@ -20,6 +28,9 @@ public class DepositResponse
     [JsonProperty("gbpOrderNo")]
     public string ThirdId { get; set; }
     
+    [JsonProperty("orderNo")]
+    public string TransId { get; set; }
+    
     [JsonProperty("resultUrl")]
     public string ResultUrl { get; set; }
     
@@ -27,7 +38,7 @@ public class DepositResponse
     public string ResultQrImage { get; set; }
 }
 
-public class PayoutResponse
+public class PayoutResp : ICreateTransResp
 {
     [JsonProperty("code")]
     public string Code { get; set; }
@@ -44,11 +55,14 @@ public class PayoutResponse
     [JsonProperty("gbpOrderNo")]
     public string ThirdId { get; set; }
     
+    [JsonProperty("orderNo")]
+    public string TransId { get; set; }
+    
     [JsonProperty("createTime")]
     public string CreateTime { get; set; }
 }
 
-public class CallbackRequest
+public class CallbackReq
 {
     public string signMsg { get; set; }
     public string version { get; set; }
