@@ -7,12 +7,12 @@ using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 using System.Web;
 using PaymentCore.Extensions;
-using Newtonsoft.Json.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
+using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
 using System.Text;
-using System.Collections.Generic;
-using System.Collections;
+using System.Xml.Linq;
 
 namespace Payment.WPPay;
 
@@ -20,8 +20,7 @@ internal class PayHelper : PayHelperBase
 {
     private readonly IFlurlHttpHelper _httpHelper;
     private readonly ILogger<PayHelper> _logger;
-    private readonly List<string> DepositNoSign = new List<string> { "sign" };
-    private readonly List<string> WithdrawalNoSign = new List<string> { "bankCardNumber", "bankName", "sign" };
+    private readonly List<string> NoSignField = new List<string> { "bankCardNumber", "bankName", "payAmount", "sign" };
 
     public PayHelper(IServiceProvider provider)
     {
@@ -59,19 +58,24 @@ internal class PayHelper : PayHelperBase
                 {"bankName", bankCode}
             };
 
-            plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
-            var plainSign = string.Join("", plainreq.Where(x => !WithdrawalNoSign.Contains(x.Key)).Select(kp => kp.Value).ToArray());
-            _logger.LogInformation($"{transId} Sign plaintext={plainSign}.");
+            //plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
+            //var plainSign = string.Join("", plainreq.Where(x => !WithdrawalNoSign.Contains(x.Key)).Select(kp => kp.Value).ToArray());
+            //_logger.LogInformation($"{transId} Sign plaintext={plainSign}.");
 
-            #region sign test
+            //#region sign test
 
-            var sign = RsaSign(plainSign, privateKey, HashAlgorithmName.SHA1);
-            var bytesign = Convert.FromBase64String(sign);
-            var hex = ByteToHexStr(bytesign).ToLower();
+            //var sign = RsaSign(plainSign, privateKey, HashAlgorithmName.SHA1);
+            //var bytesign = Convert.FromBase64String(sign);
+            //var hex = ByteToHexStr(bytesign).ToLower();
 
-            plainreq.Add("sign", hex);
+            //plainreq.Add("sign", hex);
 
-            #endregion
+            //#endregion
+
+            var plainSign = GetPlainSign(plainreq);
+            _logger.LogInformation($"Sign plaintext={plainSign}.");
+
+            plainreq.Add("sign", GetSign(plainSign, privateKey));
 
             var content = RsaEncryptWithPublic(ToJson(plainreq), publicKey);
             _logger.LogInformation($"{transId} plain Content={ToJson(plainreq)}.");
@@ -84,7 +88,7 @@ internal class PayHelper : PayHelperBase
 
             var res = Payout(apiUrl, req).Result;
 
-            if (!VerifyCreateData(res.Content, privateKey, out WPPayCreateDataContent decryptDataResult))
+            if (!VerifyCreateData(res.Content, privateKey, publicKey, out WPPayCreateDataContent decryptDataResult))
             {
                 throw new CustomException($"WPPay Payout response error: VerifyCreateData Fail.");
             }
@@ -174,19 +178,24 @@ internal class PayHelper : PayHelperBase
                 {"channel", payCode}
             };
 
-            plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
-            var plainSign = string.Join("", plainreq.Where(x => !DepositNoSign.Contains(x.Key)).Select(kp => kp.Value).ToArray());
-            _logger.LogInformation($"{transId} Sign plaintext={plainSign}.");
+            //plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
+            //var plainSign = string.Join("", plainreq.Where(x => !DepositNoSign.Contains(x.Key)).Select(kp => kp.Value).ToArray());
+            //_logger.LogInformation($"{transId} Sign plaintext={plainSign}.");
 
-            #region sign test
+            //#region sign test
 
-            var sign = RsaSign(plainSign, privateKey, HashAlgorithmName.SHA1);
-            var bytesign = Convert.FromBase64String(sign);
-            var hex = ByteToHexStr(bytesign).ToLower();
+            //var sign = RsaSign(plainSign, privateKey, HashAlgorithmName.SHA1);
+            //var bytesign = Convert.FromBase64String(sign);
+            //var hex = ByteToHexStr(bytesign).ToLower();
 
-            plainreq.Add("sign", hex);
+            //plainreq.Add("sign", hex);
 
-            #endregion
+            //#endregion
+
+            var plainSign = GetPlainSign(plainreq);
+            _logger.LogInformation($"Sign plaintext={plainSign}.");
+
+            plainreq.Add("sign", GetSign(plainSign, privateKey));
 
             var content = RsaEncryptWithPublic(ToJson(plainreq), publicKey);
             _logger.LogInformation($"{transId} plain Content={ToJson(plainreq)}.");
@@ -199,7 +208,7 @@ internal class PayHelper : PayHelperBase
 
             var res = CreateOrder(apiUrl, req).Result;
 
-            if (!VerifyCreateData(res.Content, privateKey, out WPPayCreateDataContent decryptDataResult))
+            if (!VerifyCreateData(res.Content, privateKey, publicKey, out WPPayCreateDataContent decryptDataResult))
             {
                 throw new CustomException($"WPPay CreatOrder response error: VerifyCreateData Fail.");
             }
@@ -271,7 +280,7 @@ internal class PayHelper : PayHelperBase
 
     #region Private Methods
 
-    private async Task<WPPayCreateDataResponse> CreateOrder(string baseApiUrl, Dictionary<string, string> req)
+    private async Task<WPPayCreateData> CreateOrder(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePay;
 
@@ -296,12 +305,12 @@ internal class PayHelper : PayHelperBase
                 $"WPPay CreatOrder response error: result is null. {result.ErrorCode} {HttpUtility.UrlDecode(result.Msg)}");
         }
 
-        var data = JsonConvert.DeserializeObject<WPPayCreateDataResponse>(result.Data);
+        var data = JsonConvert.DeserializeObject<WPPayCreateData>(result.Data);
 
         return data;
     }
 
-    private async Task<WPPayCreateDataResponse> Payout(string baseApiUrl, Dictionary<string, string> req)
+    private async Task<WPPayCreateData> Payout(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePayout;
 
@@ -324,26 +333,25 @@ internal class PayHelper : PayHelperBase
                 $"WPPay CreatOrder response error: result is null. {result.ErrorCode} {HttpUtility.UrlDecode(result.Msg)}");
         }
 
-        var data = JsonConvert.DeserializeObject<WPPayCreateDataResponse>(result.Data);
+        var data = JsonConvert.DeserializeObject<WPPayCreateData>(result.Data);
 
         return data;
     }
 
-
-    private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
+    private string GetPlainSign(IEnumerable<KeyValuePair<string, string>> param)
     {
-        var str = string.Join("&", param
-            .Where(x => !x.Key.Equals("sign"))
-            .OrderBy(x => x.Key)
-            .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
-
-        _logger.LogInformation(str);
-        var sign = ToMD5(str).ToUpper();
-        _logger.LogInformation(sign);
-        return sign;
+        param = param.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
+        return string.Join("", param.Where(x => !NoSignField.Contains(x.Key)).Select(kp => kp.Value).ToArray());
     }
 
-    private bool VerifyCreateData(string content, string privateKey, out WPPayCreateDataContent dataContent)
+    private string GetSign(string plainSign, string privateKey)
+    {
+        var sign = RsaSign(plainSign, privateKey, HashAlgorithmName.SHA1);
+        var bytesign = Convert.FromBase64String(sign);
+        return ByteToHexStr(bytesign).ToLower();
+    }
+
+    private bool VerifyCreateData(string content, string privateKey, string publicKey, out WPPayCreateDataContent dataContent)
     {
         dataContent = null;
         try
@@ -389,12 +397,6 @@ internal class PayHelper : PayHelperBase
             _logger.LogInformation($"Decrypt callback request failed, Message:{ex.Message}");
             return false;
         }
-    }
-
-    private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target, HashAlgorithmName sHA1)
-    {
-        var sign = GetSign(param, apiKey);
-        return sign.Equals(target);
     }
 
     #endregion
