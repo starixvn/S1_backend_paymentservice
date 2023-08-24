@@ -3,7 +3,7 @@
 using Flurl.Util;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+
 using MySql.Data.MySqlClient;
 
 using Newtonsoft.Json;
@@ -323,6 +323,7 @@ namespace PaymentService.Controllers
                 string bodyText;
                 var headers = Request.Headers
                     .ToDictionary(x => x.Key, x => x.Value.ToString());
+
                 using (var reader = new StreamReader(Request.Body))
                 {
                     bodyText = await reader.ReadToEndAsync();
