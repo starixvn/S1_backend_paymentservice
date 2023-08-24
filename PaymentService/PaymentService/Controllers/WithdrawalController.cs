@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Flurl.Util;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
@@ -314,12 +315,10 @@ namespace PaymentService.Controllers
                 string bodyText;
                 var headers = Request.Headers
                     .ToDictionary(x => x.Key, x => x.Value.ToString());
-                
                 using (var reader = new StreamReader(Request.Body))
                 {
                     bodyText = await reader.ReadToEndAsync();
                 }
-
                 var dicParam = new Dictionary<string, string>();
                 if (Request.Method.Equals("GET"))
                 {
