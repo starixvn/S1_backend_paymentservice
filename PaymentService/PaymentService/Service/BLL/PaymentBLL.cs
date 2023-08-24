@@ -29,7 +29,7 @@ namespace PaymentService.Service.BLL
             return _depositService.GetDepositRequest(depositId);
         }
 
-        public DepositInfoData GetDepositInfo(string transId)
+        public DepositInfoModel GetDepositInfo(string transId)
         {
             var depositId = _common.GetId(transId);
             return _depositService.GetDepositInfo(depositId);
@@ -70,7 +70,7 @@ namespace PaymentService.Service.BLL
             }
         }
 
-        public int DepositManualSuccess(DepositInfoData depositInfoData)
+        public int DepositManualSuccess(DepositInfoModel depositInfoData)
         {
             var forStatus = new List<int>
             {

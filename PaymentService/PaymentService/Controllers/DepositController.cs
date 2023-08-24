@@ -78,9 +78,7 @@ namespace PaymentService.Controllers
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
 
-                var onlineBankList = depositType == DepositType.OnlineBanking ?
-                    _payBll.GetOnlineBankList(custInfo.SiteId) :
-                    _payBll.GetAutoChannelBankInfoList(custInfo.SiteId, depositType);
+                var onlineBankList = _payBll.GetOnlineBankList(custInfo.SiteId, depositType);
 
                 var onlineBank = onlineBankList?.OrderByDescending(x => x.CurrencyId)
                     .FirstOrDefault(x =>
@@ -212,7 +210,7 @@ namespace PaymentService.Controllers
             try
             {
                 var depositType = Request.Path.Value.IndexOf("QR", StringComparison.OrdinalIgnoreCase) > 1
-                    ? DepositType.QRPayPayment : DepositType.MobilePayment;
+                    ? DepositType.QrPay : DepositType.MobilePay;
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
@@ -436,7 +434,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = DepositType.CryptoPayPayment;
+                    depositRequest.DepositType = DepositType.CryptoPay;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;
@@ -564,7 +562,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = DepositType.LoadCardPayment;
+                    depositRequest.DepositType = DepositType.LoadCard;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;

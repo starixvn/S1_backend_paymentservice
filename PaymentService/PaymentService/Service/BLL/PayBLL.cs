@@ -25,21 +25,15 @@ namespace PaymentService.Service.BLL
             _provider = provider;
         }
 
-        public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
-        {
-            var key = $"PaySetting:OnlineBanking:{siteId}";
-            return _redisHelper.TryGetOrCreate<IEnumerable<BankInfoPay>>(key, TimeSpan.FromMinutes(5),
-                () => payService.GetBankInfoPayList(siteId, DepositType.OnlineBanking).OrderBy(x => x.MSort).ThenBy(x => x.SSort),
-                RedisDataBase.Shared);
-        }
-
-        public IEnumerable<BankInfoPay> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
+        public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId, DepositType depositType)
         {
             var key = $"PaySetting:OnlineBanking:{siteId}:{depositType}";
-            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromMinutes(5),
-                () => payService.GetBankInfoPayList(siteId, depositType), RedisDataBase.Shared);
+            return _redisHelper.TryGetOrCreate<IEnumerable<BankInfoPay>>(key, TimeSpan.FromMinutes(5),
+                () => payService.GetBankInfoPayList(siteId, depositType)
+                    .OrderBy(x => x.MSort).ThenBy(x => x.SSort),
+                RedisDataBase.Shared);
         }
-
+        
         public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
         {
             var key = $"PaySetting:{siteId}:{depositType}";

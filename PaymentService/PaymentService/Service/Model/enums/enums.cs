@@ -67,14 +67,15 @@ namespace PaymentService.Service.Model.enums
     public enum DepositType
     {
         OnlineBanking = 1,
-        MobilePayment = 2,
+        MobilePay = 2,
         LocalBank = 3,
-        CryptoPayPayment = 4,
-        LoadCardPayment = 5,
-        QRPayPayment = 6,
+        CryptoPay = 4,
+        LoadCard = 5,
+        QrPay = 6,
         BankAutoChannel = 7,
+        CryptoWallet = 8
     }
-
+    
     /// <summary>
     /// 
     /// </summary>

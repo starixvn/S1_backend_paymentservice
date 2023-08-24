@@ -47,13 +47,13 @@ namespace PaymentService.Service.DAL
         public IEnumerable<CryptoPayInfo> GetCryptoPayInfo(int siteId)
         {
             return _reportDbClient.Query<CryptoPayInfo>("Service_PayInfo_Get_V2",
-                new { _SiteId = siteId, _DepositType = DepositType.CryptoPayPayment });
+                new { _SiteId = siteId, _DepositType = DepositType.CryptoPay });
         }
 
         public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfo(int siteId)
         {
             return _reportDbClient.Query<LoadCardPayInfo>("Service_PayInfo_Get_V2",
-                new { _SiteId = siteId, _DepositType = DepositType.LoadCardPayment });
+                new { _SiteId = siteId, _DepositType = DepositType.LoadCard });
         }
 
         public IEnumerable<PayInfo> GetPayInfo(int siteId, DepositType depositType)

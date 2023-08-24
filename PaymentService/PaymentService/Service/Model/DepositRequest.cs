@@ -25,7 +25,7 @@ namespace PaymentService.Service.Model
                 return DepositType switch
                 {
                     DepositType.OnlineBanking => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo1_1>(DepositInfo),
-                    DepositType.MobilePayment => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo2_1>(DepositInfo),
+                    DepositType.MobilePay => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo2_1>(DepositInfo),
                     DepositType.LocalBank => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo3_1>(DepositInfo),
                     _ => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfoGeneral_1>(DepositInfo)
                 };
