@@ -13,6 +13,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using System.Text;
 using System.Xml.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Payment.WPPay;
 
@@ -58,24 +59,7 @@ internal class PayHelper : PayHelperBase
                 {"bankName", bankCode}
             };
 
-            //plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
-            //var plainSign = string.Join("", plainreq.Where(x => !WithdrawalNoSign.Contains(x.Key)).Select(kp => kp.Value).ToArray());
-            //_logger.LogInformation($"{transId} Sign plaintext={plainSign}.");
-
-            //#region sign test
-
-            //var sign = RsaSign(plainSign, privateKey, HashAlgorithmName.SHA1);
-            //var bytesign = Convert.FromBase64String(sign);
-            //var hex = ByteToHexStr(bytesign).ToLower();
-
-            //plainreq.Add("sign", hex);
-
-            //#endregion
-
-            var plainSign = GetPlainSign(plainreq);
-            _logger.LogInformation($"Sign plaintext={plainSign}.");
-
-            plainreq.Add("sign", GetSign(plainSign, privateKey));
+            plainreq.Add("sign", GetSign(plainreq, privateKey));
 
             var content = RsaEncryptWithPublic(ToJson(plainreq), publicKey);
             _logger.LogInformation($"{transId} plain Content={ToJson(plainreq)}.");
@@ -116,9 +100,10 @@ internal class PayHelper : PayHelperBase
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
         var privateKey = payResource["PrivateKey"];
+        var publicKey = payResource["PublicKey"];
         var req = FromJson<WPPayCallBackRequest>(bodyContent);
 
-        if (!VerifyCallBackData(req.Content, privateKey, out WPPayCallBackDataContent plainData))
+        if (!VerifyCallBackData(req.Content, privateKey, publicKey, out WPPayCallBackDataContent plainData))
         {
             return new NotifyWithdrawResult
             {
@@ -178,24 +163,7 @@ internal class PayHelper : PayHelperBase
                 {"channel", payCode}
             };
 
-            //plainreq = plainreq.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
-            //var plainSign = string.Join("", plainreq.Where(x => !DepositNoSign.Contains(x.Key)).Select(kp => kp.Value).ToArray());
-            //_logger.LogInformation($"{transId} Sign plaintext={plainSign}.");
-
-            //#region sign test
-
-            //var sign = RsaSign(plainSign, privateKey, HashAlgorithmName.SHA1);
-            //var bytesign = Convert.FromBase64String(sign);
-            //var hex = ByteToHexStr(bytesign).ToLower();
-
-            //plainreq.Add("sign", hex);
-
-            //#endregion
-
-            var plainSign = GetPlainSign(plainreq);
-            _logger.LogInformation($"Sign plaintext={plainSign}.");
-
-            plainreq.Add("sign", GetSign(plainSign, privateKey));
+            plainreq.Add("sign", GetSign(plainreq, privateKey));
 
             var content = RsaEncryptWithPublic(ToJson(plainreq), publicKey);
             _logger.LogInformation($"{transId} plain Content={ToJson(plainreq)}.");
@@ -234,9 +202,10 @@ internal class PayHelper : PayHelperBase
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
         var privateKey = payResource["PrivateKey"];
+        var publicKey = payResource["PublicKey"];
         var req = FromJson<WPPayCallBackRequest>(bodyContent);
 
-        if (!VerifyCallBackData(req.Content, privateKey, out WPPayCallBackDataContent plainData))
+        if (!VerifyCallBackData(req.Content, privateKey, publicKey, out WPPayCallBackDataContent plainData))
         {
             return new NotifyDepositResult
             {
@@ -338,34 +307,38 @@ internal class PayHelper : PayHelperBase
         return data;
     }
 
-    private string GetPlainSign(IEnumerable<KeyValuePair<string, string>> param)
+    private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string privateKey)
     {
         param = param.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
-        return string.Join("", param.Where(x => !NoSignField.Contains(x.Key)).Select(kp => kp.Value).ToArray());
-    }
+        var plainSign = string.Join("", param.Where(x => !NoSignField.Contains(x.Key)).Select(kp => kp.Value).ToArray());
+        _logger.LogInformation($"Sign plaintext={plainSign}.");
 
-    private string GetSign(string plainSign, string privateKey)
-    {
         var sign = RsaSign(plainSign, privateKey, HashAlgorithmName.SHA1);
         var bytesign = Convert.FromBase64String(sign);
         return ByteToHexStr(bytesign).ToLower();
     }
 
-    private bool VerifyCreateData(string content, string privateKey, string publicKey, out WPPayCreateDataContent dataContent)
+    private bool VerifyCreateData(string content, string privateKey, string publicKey, out WPPayCreateDataContent plainData)
     {
-        dataContent = null;
+        plainData = null;
         try
         {
             var plainString = RsaDecryptWithPrivate(content, privateKey);
-            dataContent = JsonConvert.DeserializeObject<WPPayCreateDataContent>(plainString);
+            plainData = JsonConvert.DeserializeObject<WPPayCreateDataContent>(plainString);
 
-            if (dataContent == null)
+            if (plainData == null)
             {
                 _logger.LogInformation($"plainData is null.");
                 return false;
             }
 
-            _logger.LogInformation($"plainData={JsonConvert.SerializeObject(dataContent)}.");
+            if (VerifySign(plainString, publicKey, plainData.Sign))
+            {
+                _logger.LogInformation($"VerifySign is null.");
+                return false;
+            }
+
+            _logger.LogInformation($"dataContent={JsonConvert.SerializeObject(plainData)}.");
             return true;
         }
         catch (Exception ex)
@@ -375,7 +348,7 @@ internal class PayHelper : PayHelperBase
         }
     }
 
-    private bool VerifyCallBackData(string data, string privateKey, out WPPayCallBackDataContent plainData)
+    private bool VerifyCallBackData(string data, string privateKey, string publicKey, out WPPayCallBackDataContent plainData)
     {
         plainData = null;
         try
@@ -389,7 +362,13 @@ internal class PayHelper : PayHelperBase
                 return false;
             }
 
-            _logger.LogInformation($"plainData={JsonConvert.SerializeObject(plainData)}.");
+            if (VerifySign(plainString, publicKey, plainData.Sign))
+            {
+                _logger.LogInformation($"VerifySign is null.");
+                return false;
+            }
+
+            _logger.LogInformation($"dataContent={JsonConvert.SerializeObject(plainData)}.");
             return true;
         }
         catch (Exception ex)
@@ -397,6 +376,27 @@ internal class PayHelper : PayHelperBase
             _logger.LogInformation($"Decrypt callback request failed, Message:{ex.Message}");
             return false;
         }
+    }
+
+    private bool VerifySign(string plainData, string publicKey, string target)
+    {
+        target = HexStringToString(target);
+
+        var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(plainData);
+        if (dic == null || !dic.Any()) return false;
+
+        dic = dic.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
+
+        RsaKeyParameters publicKeyParam = (RsaKeyParameters)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
+        var xml = string.Format(
+        "<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent></RSAKeyValue>",
+        Convert.ToBase64String(publicKeyParam.Modulus.ToByteArrayUnsigned()),
+        Convert.ToBase64String(publicKeyParam.Exponent.ToByteArrayUnsigned())
+        );
+
+        RSA rsa = RSA.Create();
+        rsa.FromXmlString(xml);
+        return rsa.VerifyData(Encoding.UTF8.GetBytes(ToJson(dic)), Convert.FromBase64String(target), HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
     }
 
     #endregion
