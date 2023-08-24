@@ -720,6 +720,23 @@ namespace PaymentCore
             return count;
         }
 
+        /// <summary>
+        /// 转字符串
+        /// </summary>
+        /// <param name="hexString"></param>
+        /// <returns></returns>
+        protected static string HexStringToString(string hexString)
+        {
+            hexString = hexString.Replace(" ", "");
+            if ((hexString.Length % 2) != 0)
+                hexString += " ";
+            byte[] returnBytes = new byte[hexString.Length / 2];
+            for (int i = 0; i < returnBytes.Length; i++)
+                returnBytes[i] = Convert.ToByte(hexString.Substring(i * 2, 2).Trim(), 16);
+
+            return Convert.ToBase64String(returnBytes);
+        }
+
         #endregion
 
         protected string CurrencyMapping(string currencyId)
