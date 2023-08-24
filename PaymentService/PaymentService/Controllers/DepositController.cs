@@ -1,9 +1,13 @@
 ﻿using System.Text;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
+
 using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Model;
 using PaymentCore.Model.enums;
@@ -11,6 +15,7 @@ using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models;
 using PaymentCore.Models.Result;
+
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -25,10 +30,10 @@ namespace PaymentService.Controllers
         private readonly CustInfoBLL _custInfoBll;
         private readonly IConfiguration _configuration;
         private readonly ILogger<DepositController> _logger;
-        private readonly PaymentBLL _paymentBll;  
+        private readonly PaymentBLL _paymentBll;
         private readonly string _apiUrl;
         private readonly CourierAdapter _courierAdapter;
-        private readonly Common _common;        
+        private readonly Common _common;
         private readonly ICacheHelper _redisHelper;
 
         public DepositController(IServiceProvider provider)
@@ -113,7 +118,7 @@ namespace PaymentService.Controllers
                 var payLangId = _payBll.GetPayLanguage()?.FirstOrDefault(x =>
                     string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) && x.PayId == reqDeposit.PayId)?.PayLangId;
                 var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == reqDeposit.PayId);
-                
+
                 if (pay == null)
                 {
                     _logger.LogError($"Method={GetCurrentMethod()}, {reqDeposit.TransId} pay Setting Not Found");
@@ -599,7 +604,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        
+
         [Route("Payment/GetClientIp")]
         [HttpGet, HttpPost]
         public string GetClientIp()
@@ -630,7 +635,7 @@ namespace PaymentService.Controllers
                 };
                 const string payName = "Manual";
                 var clientIp = _common.GetClientIP(HttpContext);
-                if (! _common.IsWhiteList(clientIp, payName, request.TransId, GetCurrentMethod()))
+                if (!_common.IsWhiteList(clientIp, payName, request.TransId, GetCurrentMethod()))
                 {
                     _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
                     response.ErrorCode = (int)ErrorCode.Fail;
@@ -638,7 +643,7 @@ namespace PaymentService.Controllers
                     response.Amount = 0;
                     return response;
                 }
-                
+
                 var depositInfo = _paymentBll.GetDepositInfo(request.TransId);
                 if (depositInfo == null)
                 {
@@ -661,7 +666,7 @@ namespace PaymentService.Controllers
                 depositInfo.Status = (int)DepositStatus.Approved;
                 depositInfo.RefId = string.IsNullOrEmpty(request.ThirdId) ? null : request.ThirdId;
                 depositInfo.Operator = string.IsNullOrEmpty(request.Operator) ? "Manual" : request.Operator;
-                
+
                 var result = _paymentBll.DepositManualSuccess(depositInfo);
                 if (result > 0)
                 {
@@ -694,7 +699,7 @@ namespace PaymentService.Controllers
                 string bodyText;
                 var headers = Request.Headers
                     .ToDictionary(x => x.Key, x => x.Value.ToString());
-                
+
                 using (var reader = new StreamReader(Request.Body))
                 {
                     bodyText = await reader.ReadToEndAsync();
@@ -759,154 +764,159 @@ namespace PaymentService.Controllers
         }
 
         private async Task<string> CallBackHandlerAsync(string transId, Dictionary<string, string> dicParam, string bodyText, Dictionary<string, string> headers)
-        {
-            //查詢訂單在不在db
-            var depositRequest = _paymentBll.GetDepositRequest(transId);
-            //根據訂單的廠商決定要用那家金流去解讀回傳的資料
-            if (depositRequest != null && depositRequest.depositInfo is IPay)
-            {          
-                var key = $"DepositCallBackLock:{transId}";
-                if (_redisHelper.KeyExists(key))
+        {           
+            var lockKey = $"DepositCallBackLock:{transId}";
+            var lockValue = Guid.NewGuid().ToString(); // 每次取鎖使用唯一值，確保為同一個執行序所執行
+            var lockExpiry = TimeSpan.FromSeconds(30); //lock 30 sec
+            if (_redisHelper.TryCreateLock(lockKey, lockValue, lockExpiry))
+            {
+                try
                 {
-                    return $"SerialId={transId} is processing";
-                }
-                
-                //key lock 5 sec
-                _redisHelper.StringSet(key, transId, TimeSpan.FromSeconds(5));           
-
-                var custId = depositRequest.CustId;
-                var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                var pay = (IPay)depositRequest.depositInfo;
-                var paySetting = _payBll.GetPaymentAllList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == pay.PayId);
-                var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
-                DepReq.Add("TransID", depositRequest.TransId);
-                DepReq.Add("BankCode", pay.BankCode);
-                DepReq.Add("DepositInfo", depositRequest.DepositInfo);
-                DepReq.Add("DepositType", ((int)depositRequest.DepositType).ToString());
-                DepReq.Add("RequestAmount", depositRequest.Amount.ToString());
-                DepReq.Add("CurrencyId", depositRequest.CurrencyId.ToString());
-
-                //DepReq.Add("Amount", depositRequest.Amount.ToString());
-                //檢查namespace是否存在 
-                if (!DepReq.ContainsKey("PayName"))
-                {
-                    _logger.LogError($"Method={GetCurrentAsyncMethod()}, {paySetting.PayName} of TransId={transId} is not exist");
-                    return $"PayName of TransId={transId} is not exist";
-                }
-
-                if (!_common.IsWhiteList(_common.GetClientIP(HttpContext), paySetting.PayName, transId, GetCurrentMethod()))
-                {
-                    _logger.LogError($"Method={GetCurrentAsyncMethod()}, {paySetting.PayName} requested of {transId} from {_common.GetClientIP(HttpContext)} is Invalid IP!");
-                    return "Invalid IP!";
-                }
-
-                var payHelper = _payBll.GetPayHelper(paySetting.PayName);
-                depositRequest.PayName = paySetting.PayName;
-
-                //取得每家金流的成果 
-                var rNotifyDepositResult = payHelper.CallBackDebit(dicParam, bodyText, headers, DepReq);
-
-                if (!string.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
-                {
-                    _logger.LogError($"Method={GetCurrentAsyncMethod()}, {transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
-                    return $"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}";
-                }
-
-                if (rNotifyDepositResult.RequestAmount == 0)
-                    rNotifyDepositResult.RequestAmount = depositRequest.Amount;
-
-                if (rNotifyDepositResult.RequestAmount != depositRequest.Amount)
-                {
-                    _logger.LogInformation($"Method={GetCurrentAsyncMethod()},Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}");
-                    rNotifyDepositResult.Comment = $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
-                }
-
-                if ((rNotifyDepositResult.TransStatus == TransStatus.Success &&
-                     (depositRequest.Status != DepositStatus.Pending &&
-                      depositRequest.Status != DepositStatus.Rejected)) ||
-                    (rNotifyDepositResult.TransStatus != TransStatus.Success &&
-                     depositRequest.Status != DepositStatus.Pending))
-                {
-                    var status = rNotifyDepositResult.TransStatus switch 
+                    //查詢訂單在不在db
+                    var depositRequest = _paymentBll.GetDepositRequest(transId);
+                    //根據訂單的廠商決定要用那家金流去解讀回傳的資料
+                    if (depositRequest != null && depositRequest.depositInfo is IPay)
                     {
-                        TransStatus.Success => DepositStatus.Approved,
-                        TransStatus.Fail => DepositStatus.Rejected,
-                        _ => DepositStatus.Pending
-                    };
-                    var message = $"{transId} status is currently {depositRequest.Status.ToString()}, cannot change status to {status.ToString()}";
-                    _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {message}");
-                    
-                    _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
-                        message,
-                        (int)depositRequest.Status, rNotifyDepositResult.ActualAmount, depositRequest.PayName);
+                        var custId = depositRequest.CustId;
+                        var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
+                        var pay = (IPay)depositRequest.depositInfo;
+                        var paySetting = _payBll.GetPaymentAllList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == pay.PayId);
+                        var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
+                        DepReq.Add("TransID", depositRequest.TransId);
+                        DepReq.Add("BankCode", pay.BankCode);
+                        DepReq.Add("DepositInfo", depositRequest.DepositInfo);
+                        DepReq.Add("DepositType", ((int)depositRequest.DepositType).ToString());
+                        DepReq.Add("RequestAmount", depositRequest.Amount.ToString());
+                        DepReq.Add("CurrencyId", depositRequest.CurrencyId.ToString());
 
-                    return rNotifyDepositResult.Response;
-                }
+                        //DepReq.Add("Amount", depositRequest.Amount.ToString());
+                        //檢查namespace是否存在 
+                        if (!DepReq.ContainsKey("PayName"))
+                        {
+                            _logger.LogError($"Method={GetCurrentAsyncMethod()}, {paySetting.PayName} of TransId={transId} is not exist");
+                            return $"PayName of TransId={transId} is not exist";
+                        }
 
-                if (rNotifyDepositResult.TransStatus == TransStatus.Success && depositRequest.Amount > 0)
-                {
-                    #region Transaction is Success
-                    try
-                    {
-                        _paymentBll.DepositSuccess(depositRequest, rNotifyDepositResult);
+                        if (!_common.IsWhiteList(_common.GetClientIP(HttpContext), paySetting.PayName, transId, GetCurrentMethod()))
+                        {
+                            _logger.LogError($"Method={GetCurrentAsyncMethod()}, {paySetting.PayName} requested of {transId} from {_common.GetClientIP(HttpContext)} is Invalid IP!");
+                            return "Invalid IP!";
+                        }
+
+                        var payHelper = _payBll.GetPayHelper(paySetting.PayName);
+                        depositRequest.PayName = paySetting.PayName;
+
+                        //取得每家金流的成果 
+                        var rNotifyDepositResult = payHelper.CallBackDebit(dicParam, bodyText, headers, DepReq);
+
+                        if (!string.Equals(transId, rNotifyDepositResult.DepositId, StringComparison.OrdinalIgnoreCase))
+                        {
+                            _logger.LogError($"Method={GetCurrentAsyncMethod()}, {transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
+                            return $"{transId} is not equal {rNotifyDepositResult.DepositId} with PayName={paySetting.PayName}";
+                        }
+
+                        if (rNotifyDepositResult.RequestAmount == 0)
+                            rNotifyDepositResult.RequestAmount = depositRequest.Amount;
+
+                        if (rNotifyDepositResult.RequestAmount != depositRequest.Amount)
+                        {
+                            _logger.LogInformation($"Method={GetCurrentAsyncMethod()},Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}, PayName={paySetting.PayName}, DepositId={depositRequest.TransId}");
+                            rNotifyDepositResult.Comment = $"Request Amount {rNotifyDepositResult.RequestAmount} is not equal {depositRequest.Amount}";
+                        }
+
+                        if ((rNotifyDepositResult.TransStatus == TransStatus.Success &&
+                             (depositRequest.Status != DepositStatus.Pending &&
+                              depositRequest.Status != DepositStatus.Rejected)) ||
+                            (rNotifyDepositResult.TransStatus != TransStatus.Success &&
+                             depositRequest.Status != DepositStatus.Pending))
+                        {
+                            var status = rNotifyDepositResult.TransStatus switch
+                            {
+                                TransStatus.Success => DepositStatus.Approved,
+                                TransStatus.Fail => DepositStatus.Rejected,
+                                _ => DepositStatus.Pending
+                            };
+                            var message = $"{transId} status is currently {depositRequest.Status.ToString()}, cannot change status to {status.ToString()}";
+                            _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {message}");
+
+                            _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
+                                message,
+                                (int)depositRequest.Status, rNotifyDepositResult.ActualAmount, depositRequest.PayName);
+
+                            return rNotifyDepositResult.Response;
+                        }
+
+                        if (rNotifyDepositResult.TransStatus == TransStatus.Success && depositRequest.Amount > 0)
+                        {
+                            #region Transaction is Success
+                            try
+                            {
+                                _paymentBll.DepositSuccess(depositRequest, rNotifyDepositResult);
+                            }
+                            catch (MySqlException SqlEx)
+                            {
+                                /*Need Check Transaction Status*/
+                                var errorMessages = new StringBuilder();
+                                //errorMessages.AppendLine(Newtonsoft.Json.JsonConvert.SerializeObject(dataParam));
+
+                                errorMessages.AppendLine($"Message: {SqlEx.Message}");
+                                errorMessages.AppendLine($"Error Number: {SqlEx.Number}");
+                                errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
+                                errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
+                                errorMessages.AppendLine($"Source: {SqlEx.Source}");
+                                _logger.LogError(SqlEx, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
+                                //dblogger.Write(SerialId, errorMessages.ToString());
+                                return "Update UserMoney error(SQL)";
+                            }
+                            catch (Exception exForEachTransaction)
+                            {
+                                _logger.LogError(exForEachTransaction, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
+                                //dblogger.Write(SerialId, exForEachTransaction.Message);
+                                return "Update UserMoney error(Other)";
+                            }
+                            #endregion
+                        }
+                        else if (rNotifyDepositResult.TransStatus == TransStatus.Fail)
+                        {
+                            try
+                            {
+                                _paymentBll.DepositFail(depositRequest, rNotifyDepositResult);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
+                                return "Update DepositFail error";
+                            }
+                        }
+                        else
+                        {
+                            try
+                            {
+                                _paymentBll.DepositPending(depositRequest, rNotifyDepositResult);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
+                                return "Update DepositPending error";
+                            }
+                        }
+                        return rNotifyDepositResult.Response;
                     }
-                    catch (MySqlException SqlEx)
+                    else
                     {
-                        /*Need Check Transaction Status*/
-                        var errorMessages = new StringBuilder();
-                        //errorMessages.AppendLine(Newtonsoft.Json.JsonConvert.SerializeObject(dataParam));
-
-                        errorMessages.AppendLine($"Message: {SqlEx.Message}");
-                        errorMessages.AppendLine($"Error Number: {SqlEx.Number}");
-                        errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
-                        errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
-                        errorMessages.AppendLine($"Source: {SqlEx.Source}");
-                        _logger.LogError(SqlEx, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
-                        //dblogger.Write(SerialId, errorMessages.ToString());
-                        return "Update UserMoney error(SQL)";
+                        _logger.LogError($"Method={GetCurrentAsyncMethod()}, SerialId={transId} is not exist");
+                        return $"SerialId={transId} is not exist";
                     }
-                    catch (Exception exForEachTransaction)
-                    {
-                        _logger.LogError(exForEachTransaction, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
-                        //dblogger.Write(SerialId, exForEachTransaction.Message);
-                        return "Update UserMoney error(Other)";
-                    }
-                    #endregion
                 }
-                else if (rNotifyDepositResult.TransStatus == TransStatus.Fail)
+                finally
                 {
-                    try
-                    {
-                        _paymentBll.DepositFail(depositRequest, rNotifyDepositResult);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
-                        return "Update DepositFail error";
-                    }
+                    //key unlock
+                    _redisHelper.UnLock(lockKey, lockValue);
                 }
-                else
-                {
-                    try
-                    {
-                        _paymentBll.DepositPending(depositRequest, rNotifyDepositResult);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"Method={GetCurrentAsyncMethod()}, transid={transId}");
-                        return "Update DepositPending error";
-                    }
-                }
-
-                //key unlock
-                _redisHelper.KeyDelete(key);
-
-                return rNotifyDepositResult.Response;
             }
             else
             {
-                _logger.LogError($"Method={GetCurrentAsyncMethod()}, SerialId={transId} is not exist");
-                return $"SerialId={transId} is not exist";
+                return $"SerialId = {transId} is processing";
             }
         }
     }
