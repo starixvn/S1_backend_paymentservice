@@ -29,9 +29,7 @@ namespace PaymentService.Controllers
         private readonly CustInfoBLL _custInfoBll;
         private readonly IConfiguration _configuration;
         private readonly ILogger<DepositController> _logger;
-        private readonly PaymentBLL _paymentBll;
-        private readonly string _apiUrl;
-        private readonly CourierAdapter _courierAdapter;
+        private readonly PaymentBLL _paymentBll;     
         private readonly Common _common;
         private readonly ICacheHelper _redisHelper;
 
@@ -42,8 +40,6 @@ namespace PaymentService.Controllers
             _configuration = provider.GetRequiredService<IConfiguration>();
             _logger = provider.GetRequiredService<ILogger<DepositController>>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
-            _apiUrl = _configuration.GetValue<string>("TpService");
-            _courierAdapter = provider.GetRequiredService<CourierAdapter>();
             _common = provider.GetRequiredService<Common>();
             _redisHelper = provider.GetRequiredService<ICacheHelper>();
         }
