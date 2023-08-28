@@ -2,10 +2,11 @@
 using System.Reflection;
 using PaymentService.Model;
 using PaymentCore.Interface;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.BLL
 {
@@ -68,6 +69,12 @@ namespace PaymentService.Service.BLL
         {
             return _redisHelper.TryGetOrCreate($"PaySetting:OnlineBank:Payout:{siteId}", TimeSpan.FromMinutes(5),
                 () => payService.GetOnlineBankListForPayout(siteId));
+        }
+        
+        public IEnumerable<EWalletInfoSys> GetEWalletPayList()
+        {
+            return _redisHelper.TryGetOrCreate("EWalletPayList", TimeSpan.FromSeconds(10),
+                () => payService.GetEWalletPayList());
         }
 
         public IEnumerable<BankInfoPay> GetCryptoListForPayout(int siteId)

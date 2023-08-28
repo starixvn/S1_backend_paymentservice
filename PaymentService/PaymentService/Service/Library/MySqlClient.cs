@@ -11,7 +11,6 @@ namespace PaymentService.Service.Library
     {
         public DataBase DataBase { get; set; }
         private readonly string _connectionString;
-
         private readonly ILogger<MySqlClient> _logger;
 
         public MySqlClient(string connectionString, ILogger<MySqlClient> logger)
@@ -24,7 +23,7 @@ namespace PaymentService.Service.Library
         {
             return new MySqlConnection(_connectionString);
         }
-
+        
         #region Query
 
         public async Task<T> QueryFirstAsync<T>(string name, object parameters)
@@ -151,15 +150,14 @@ namespace PaymentService.Service.Library
             return result.ToList();
         }
 
-        public T Query<T>(string name, object parameters,
-            Func<SqlMapper.GridReader, T> func)
+        public T Query<T>(string name, object parameters, Func<SqlMapper.GridReader, T> func)
         {
             T result;
             var sw = Stopwatch.StartNew();
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name, parameters, // 使用 CommandDefinition 不讓 Dapper 用預設值建立
+                var command = new CommandDefinition(name,parameters,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 var multiple = connection.QueryMultiple(command);
@@ -200,8 +198,7 @@ namespace PaymentService.Service.Library
             return result.ToList();
         }
 
-        public async Task<T> QueryAsync<T>(string name, object parameters,
-            Func<SqlMapper.GridReader, T> func)
+        public async Task<T> QueryAsync<T>(string name, object parameters, Func<SqlMapper.GridReader, T> func)
         {
             T result;
             var sw = Stopwatch.StartNew();
@@ -255,7 +252,7 @@ namespace PaymentService.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
+            return result.ToList();
         }
         
         #endregion

@@ -9,13 +9,12 @@ using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 
 using PaymentCore;
+using PaymentCore.Model.enums;
 using PaymentCore.Interface;
 
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
-
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers
@@ -106,13 +105,14 @@ namespace PaymentService.Controllers
                 WithReq.Add("BankCode", onlineBank.BankCode);
                 WithReq.Add("BankName", onlineBank.BankName);
                 WithReq.Add("AccountName", reqWithdrawal.AccountName);
+                WithReq.Add("UserName", custInfo.UserName);
                 WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
                 WithReq.Add("IsTest", _common.IsTest());
                 WithReq.Add("IFSCCode", reqWithdrawal.IFSCCode);
                 WithReq.Add("PhoneNo", custInfo.PhoneNo);
                 WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
                 WithReq.Add("AreaCode", custInfo.AreaCode);
-                WithReq.Add("WithdrawalType", "1");
+                WithReq.Add("WithdrawalType", ((int)WithdrawalType.OnlineBanking).ToString());
 
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
@@ -189,13 +189,14 @@ namespace PaymentService.Controllers
                 WithReq.Add("TransID", reqWithdrawal.TransId);
                 WithReq.Add("Amount", reqWithdrawal.Amount.ToString());
                 WithReq.Add("PayCode", crypto.PayCode);
+                WithReq.Add("UserName", custInfo.UserName);
                 WithReq.Add("AccountName", reqWithdrawal.AccountName);
                 WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
                 WithReq.Add("IsTest", _common.IsTest());
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
                 WithReq.Add("WithdrawalInfo", withdrawalInfo);
-                WithReq.Add("WithdrawalType", "4");
+                WithReq.Add("WithdrawalType", ((int)WithdrawalType.CryptoPayment).ToString());
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
@@ -276,6 +277,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("PayCode", eWalletPay.PayCode);
                 WithReq.Add("BankCode", eWalletPay.EWalletCode);
                 WithReq.Add("BankName", eWalletPay.EWalletName);
+                WithReq.Add("UserName", custInfo.UserName);
                 WithReq.Add("AccountName", reqWithdrawal.AccountName);
                 WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
                 WithReq.Add("IsTest", _common.IsTest());
@@ -283,7 +285,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("PhoneNo", custInfo.PhoneNo);
                 WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
                 WithReq.Add("AreaCode", custInfo.AreaCode);
-                WithReq.Add("WithdrawalType", "1");
+                WithReq.Add("WithdrawalType", ((int)WithdrawalType.EWalletPayment).ToString());
 
                 var callBackUrl = _configuration.GetValue<string>("CallBack");
                 WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
@@ -512,28 +514,42 @@ namespace PaymentService.Controllers
             }
         }
 
-        [Route("Payment/verifytransaction")]
+        [Route("Payment/VerifyTransaction/{PayName}")]
         [HttpPost]
-        public IActionResult verifytransaction(string transId, string key)
+        public async Task<IActionResult> VerifyTransactionAsync(string payName)
         {
             try
             {
-                _logger.LogInformation($"Method={GetCurrentMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, transId={transId}, key={key}");
+                string bodyContent;
+                using (var reader = new StreamReader(Request.Body))
+                {
+                    bodyContent = await reader.ReadToEndAsync();
+                }
+
+                var formData = new Dictionary<string, string>();
+                
+                if (Request.ContentType != null &&
+                    (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
+                    Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase)))
+                {
+                    formData = Request.Form
+                        .ToDictionary(x => x.Key, x => x.Value.ToString());
+                }
+
+                _logger.LogInformation(
+                    $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(formData)}, bodyText={bodyContent}");
+                var payHelper = (IVerifyTransaction)_payBll.GetPayHelper(payName);
+                
+                
+                var (transId, data) = payHelper.FetchTransIdAndDataBeforeVerify(formData, bodyContent);
+
                 var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
-                if (withdrawalRequest != null)
-                {
-
-                    //var payHelper = payBLL.GetPayHelper(withdrawalRequest.PayName);
-                    //payHelper.
-                    //lib.ToMD5(transId,)
-                    //withdrawalRequest.ISetting["key"];
-
-                    return Content(true.ToString());
-                }
-                else
-                {
-                    return Content(false.ToString());
-                }
+                var input = withdrawalRequest == null ? new Dictionary<string, string>() : withdrawalRequest.ISetting;
+                input.Add("TransIdExists", (withdrawalRequest != null).ToString());
+                
+                var result = payHelper.VerifyTransaction(data, input);
+                
+                return Content(result.Response, result.ContentType);
             }
             catch (Exception e)
             {

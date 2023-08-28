@@ -5,6 +5,7 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.SqlClient;
 using Elastic.Apm.StackExchange.Redis;
 using Flurl.Http;
+using PaymentCore;
 using PaymentCore.Helpers;
 using PaymentCore.Interface;
 using PaymentService.Extensions;
@@ -63,6 +64,7 @@ namespace PaymentService
             services.AddSingleton<CourierAdapter>();
             services.AddSingleton<IPayHttpHelper, HttpHelper>();
             services.AddSingleton<CacheHelper>();
+            services.AddSingleton<PaymentHelper>();
             services.AddSingleton<IFlurlHttpHelper, FlurlHttpHelper>();
             services.AddTransient<JsonNetSerializer, JsonNetSerializer>();
             //services.AddSingleton<IBCDBLibrary>();
@@ -108,6 +110,8 @@ namespace PaymentService
             app.UseRequestLogMiddleware();
             app.UseResponseLogMiddleware();
             //app.UseAuthorization();
+
+            PayHelperBase.PaymentHelper = app.ApplicationServices.GetRequiredService<PaymentHelper>();
 
             app.UseEndpoints(endpoints =>
             {

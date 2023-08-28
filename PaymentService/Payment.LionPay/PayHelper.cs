@@ -1,11 +1,11 @@
-﻿using System.Text;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.LionPay
@@ -216,7 +216,7 @@ namespace Payment.LionPay
             var apiUrl = baseApiUrl + Path.CreateOrder;
 
             var (result, statusCode) = _httpHelper
-                .WithHeader("accept", MediaType.Json)
+                .WithHeader("accept", ContentType.Json)
                 .PostUrlEncoded<Dictionary<string, string>, CreatOrderResponse>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
@@ -236,7 +236,7 @@ namespace Payment.LionPay
         {
             var apiUrl = baseApiUrl + Path.CreatePayout;
             var (result, statusCode) = _httpHelper
-                .WithHeader("accept", MediaType.Json)
+                .WithHeader("accept", ContentType.Json)
                 .PostUrlEncoded<Dictionary<string, string>, CreatPayoutResponse>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())

@@ -8,10 +8,6 @@ public enum OrderTypeEnum
     Payout = 1
 }
 
-internal class MediaType
-{
-    public const string Json = "application/json";
-}
 public class CreatOrderRequest
 {
     [JsonProperty("merchantNo")]

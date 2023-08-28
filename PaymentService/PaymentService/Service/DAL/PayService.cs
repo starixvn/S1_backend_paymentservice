@@ -1,7 +1,8 @@
 ﻿using PaymentService.Service.Model;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
 using PaymentService.Model;
 using PaymentService.Service.Library;
-using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.DAL
 {
@@ -25,6 +26,11 @@ namespace PaymentService.Service.DAL
             return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPayForPayout_Get_V4", new { _SiteId = siteId });
         }
 
+        public IEnumerable<EWalletInfoSys> GetEWalletPayList()
+        {
+            return _reportDbClient.Query<EWalletInfoSys>("Service_EWalletInfoSys_Get");
+        }
+        
         public IEnumerable<BankInfoPay> GetCryptoListForPayout(int siteId)
         {
             return _reportDbClient.Query<BankInfoPay>("Common_CryptoPayForPayout_Get_V2", new { _SiteId = siteId });

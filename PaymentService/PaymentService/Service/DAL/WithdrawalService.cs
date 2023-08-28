@@ -1,7 +1,9 @@
 ﻿using Dapper;
 using PaymentService.Service.Model;
-using PaymentService.Service.Model.enums;
 using System.Data;
+using PaymentCore.Model;
+using PaymentCore.Model.enums;
+using PaymentService.Extensions;
 using PaymentService.Model;
 using PaymentService.Service.Library;
 
@@ -72,7 +74,7 @@ namespace PaymentService.Service.DAL
                     if (result > 0 && (status == WithdrawalStatus.Approved || status == WithdrawalStatus.Rejected))
                     {
                         result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",
-                            new { _WithdrawalId = withdrawalId } ,trans);
+                            new { _WithdrawalId = withdrawalId }, trans);
                     }
 
                     SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, trans);
@@ -140,8 +142,7 @@ namespace PaymentService.Service.DAL
 
                     if (result > 0)
                     {
-                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set" ,
-                            new { _WithdrawalId = withdrawalId }, trans);
+                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set", new { _WithdrawalId = withdrawalId }, trans);
                     }
 
                     // 如果是從 Reject 到 Approved 要再扣玩家一次錢，因為狀態變更成 Reject 的時候有把錢還給玩家
@@ -221,8 +222,7 @@ namespace PaymentService.Service.DAL
 
                     if (result > 0)
                     {
-                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",
-                            new { _WithdrawalId = withdrawalId }, trans);
+                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set", new { _WithdrawalId = withdrawalId }, trans);
                     }
 
                     // 提款單狀態變成 Reject 都要退玩家錢
