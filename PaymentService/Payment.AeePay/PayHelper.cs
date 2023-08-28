@@ -153,7 +153,6 @@ namespace Payment.AeePay
 
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"], false);
             var depositRes = JsonConvert.DeserializeObject<DebitRes>(sResponse);
-            var depositResult = new DepositResult();
 
             if (depositRes.success)
             {
@@ -167,7 +166,7 @@ namespace Payment.AeePay
                 oDepositResult.Message = depositRes.resultMsg;
             }
 
-            return depositResult;
+            return oDepositResult;
         }
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
