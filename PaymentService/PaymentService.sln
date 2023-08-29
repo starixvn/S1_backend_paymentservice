@@ -109,6 +109,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.WPPay", "Payment.WP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.SpeedPay", "Payment.SpeedPay\Payment.SpeedPay.csproj", "{19F9D764-6A06-43DB-9742-4B5069634E2D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.RolexPay", "Payment.RolexPay\Payment.RolexPay.csproj", "{1E5CF7AE-9225-4259-9944-13FD98BE37D2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -323,6 +325,10 @@ Global
 		{19F9D764-6A06-43DB-9742-4B5069634E2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19F9D764-6A06-43DB-9742-4B5069634E2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19F9D764-6A06-43DB-9742-4B5069634E2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E5CF7AE-9225-4259-9944-13FD98BE37D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E5CF7AE-9225-4259-9944-13FD98BE37D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E5CF7AE-9225-4259-9944-13FD98BE37D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E5CF7AE-9225-4259-9944-13FD98BE37D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -377,6 +383,7 @@ Global
 		{D7CA2BD6-90F9-4C71-82A4-EE70C2E07FED} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{446A7572-36FC-4C49-B855-9B01E623D83E} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{19F9D764-6A06-43DB-9742-4B5069634E2D} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{1E5CF7AE-9225-4259-9944-13FD98BE37D2} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
