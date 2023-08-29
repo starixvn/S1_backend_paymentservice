@@ -1,13 +1,21 @@
 ﻿using System.Text;
+
+using Flurl.Util;
+
 using Microsoft.AspNetCore.Mvc;
+
 using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Interface;
+
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
+
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers
@@ -22,6 +30,7 @@ namespace PaymentService.Controllers
         private readonly ILogger<WithdrawalController> _logger;
         private readonly Common _common;
         private readonly PaymentBLL _paymentBll;
+        private readonly ICacheHelper _redisHelper;
 
         public WithdrawalController(IServiceProvider provider)
         {
@@ -32,6 +41,7 @@ namespace PaymentService.Controllers
             _logger = provider.GetRequiredService<ILogger<WithdrawalController>>();
             _common = provider.GetRequiredService<Common>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
+            _redisHelper = provider.GetRequiredService<ICacheHelper>();
         }
         public class ReqWithdrawal
         {
@@ -45,7 +55,7 @@ namespace PaymentService.Controllers
             public string AccountNo { set; get; }
             public string IFSCCode { set; get; }
         }
-        
+
         [HttpPost]
         [Route("Payment/Withdrawal")]
         public ApiResult Withdrawal(ReqWithdrawal reqWithdrawal)
@@ -218,7 +228,7 @@ namespace PaymentService.Controllers
                 return apiResult;
             }
         }
-        
+
         [HttpPost]
         [Route("Payment/EWalletWithdrawal")]
         public ApiResult EWalletWithdrawal(ReqWithdrawal reqWithdrawal)
@@ -307,7 +317,6 @@ namespace PaymentService.Controllers
         }
 
         [Route("Payment/WithdrawalCallBack/{TransId}")]
-        [HttpPost]
         public async Task<IActionResult> WithdrawalCallBackAsync(string transId)
         {
             try
@@ -315,27 +324,41 @@ namespace PaymentService.Controllers
                 string bodyText;
                 var headers = Request.Headers
                     .ToDictionary(x => x.Key, x => x.Value.ToString());
-                
+
                 using (var reader = new StreamReader(Request.Body))
                 {
                     bodyText = await reader.ReadToEndAsync();
                 }
-
                 var dicParam = new Dictionary<string, string>();
-                if (Request.ContentType == null)
+                if (Request.Method.Equals("GET"))
                 {
-                    _logger.LogInformation(
-                        $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
-                    return Content("Request data is null");
-                }
-
-                if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
-                    Request.ContentType.StartsWith("application/x-www-form-urlencoded",
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    foreach (var vFormData in Request.Form)
+                    if (!Request.QueryString.HasValue || Request.QueryString.Value == null)
                     {
-                        dicParam.Add(vFormData.Key, vFormData.Value);
+                        _logger.LogInformation(
+                            $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, DepositCallBack_GET Request.QueryString is null");
+                        return Content("Request data is null");
+                    }
+
+                    dicParam = Request.QueryString.Value.TrimStart('?').ToKeyValuePairs()
+                        .ToDictionary(x => x.Key, x => x.Value.ToString());
+                }
+                else
+                {
+                    if (Request.ContentType == null)
+                    {
+                        _logger.LogInformation(
+                            $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, DepositCallBack_POST Request.ContentType is null");
+                        return Content("Request data is null");
+                    }
+
+                    if (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
+                        Request.ContentType.StartsWith("application/x-www-form-urlencoded",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        foreach (var vFormData in Request.Form)
+                        {
+                            dicParam.Add(vFormData.Key, vFormData.Value);
+                        }
                     }
                 }
 
@@ -362,117 +385,134 @@ namespace PaymentService.Controllers
 
         private string CallBackHandler(string transId, Dictionary<string, string> dicParam, string bodyText, Dictionary<string, string> headers)
         {
-            //查詢訂單在不在db
-            var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
-            //根據訂單的廠商決定要用那家金流去解讀回傳的資料
-            if (withdrawalRequest != null)
+            var lockKey = $"WithdrawalCallBackLock:{transId}";
+            var lockValue = Guid.NewGuid().ToString(); // 每次取鎖使用唯一值，確保為同一個執行序所執行
+            var lockExpiry = TimeSpan.FromSeconds(30); //lock 30 sec
+            if (_redisHelper.TryCreateLock(lockKey, lockValue, lockExpiry))
             {
-                var WithReq = withdrawalRequest.ISetting;
-                WithReq.Add("TransId", transId);
-                WithReq.Add("WithdrawalType", withdrawalRequest.WithdrawalType.ToString(""));
-                WithReq.Add("CurrencyId", withdrawalRequest.CurrencyId.ToString());
-                
-                //檢查namespace是否存在 
-                if (!WithReq.ContainsKey("PayName"))
+                try
                 {
-                    _logger.LogError($"Method={GetCurrentMethod()}, PayName of TransId={transId} is not exist");
-                    return $"PayName of TransId={transId} is not exist";
+                    //查詢訂單在不在db
+                    var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
+                    //根據訂單的廠商決定要用那家金流去解讀回傳的資料
+                    if (withdrawalRequest != null)
+                    {
+                        var WithReq = withdrawalRequest.ISetting;
+                        WithReq.Add("TransId", transId);
+                        WithReq.Add("WithdrawalType", withdrawalRequest.WithdrawalType.ToString(""));
+                        WithReq.Add("CurrencyId", withdrawalRequest.CurrencyId.ToString());
+
+                        //檢查namespace是否存在 
+                        if (!WithReq.ContainsKey("PayName"))
+                        {
+                            _logger.LogError($"Method={GetCurrentMethod()}, PayName of TransId={transId} is not exist");
+                            return $"PayName of TransId={transId} is not exist";
+                        }
+
+                        var payHelper = _payBll.GetPayHelper(withdrawalRequest.PayName);
+                        //((PayHelperBase)payHelper).AddPaymentLog(InsertPaymentLog);
+
+                        //取得每家金流的成果 
+                        var rNotifyWithdrawalResult = payHelper.CallBackCredit(dicParam, bodyText, headers, WithReq);
+
+                        var temp = rNotifyWithdrawalResult.WithdrawId;
+                        while (temp.Substring(0, 1) == "0")
+                        {
+                            temp = temp.Remove(0, 1);
+                        }
+                        if (!string.Equals(transId, temp, StringComparison.OrdinalIgnoreCase))
+                        {
+                            _logger.LogError($"Method={GetCurrentMethod()}, {transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
+                            return $"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}";
+                        }
+
+                        if (withdrawalRequest.Status == WithdrawalStatus.Approved ||
+                            withdrawalRequest.Status == WithdrawalStatus.Rejected)
+                        {
+                            var status = rNotifyWithdrawalResult.TransStatus switch
+                            {
+                                TransStatus.Success => WithdrawalStatus.Approved,
+                                TransStatus.Fail => WithdrawalStatus.Verify,
+                                _ => WithdrawalStatus.Process
+                            };
+                            var message = $"{transId} status is currently {withdrawalRequest.Status.ToString()}, cannot change status to {status.ToString()}";
+                            _logger.LogInformation($"Method={GetCurrentMethod()}, {message}");
+
+                            _paymentBll.SetWithdrawalLog(transId, withdrawalRequest.SiteId,
+                                message,
+                                (int)withdrawalRequest.Status,
+                                withdrawalRequest.PayName);
+                            return rNotifyWithdrawalResult.Response;
+                        }
+
+                        if (rNotifyWithdrawalResult.TransStatus == TransStatus.Success)
+                        {
+                            #region Transaction is Success
+                            try
+                            {
+                                _paymentBll.WithdrawalSuccess(withdrawalRequest, rNotifyWithdrawalResult);
+                            }
+                            catch (MySqlException SqlEx)
+                            {
+                                /*Need Check Transaction Status*/
+                                var errorMessages = new StringBuilder();
+                                errorMessages.AppendLine($"Message: {SqlEx.Message}");
+                                errorMessages.AppendLine($"Error Number: {SqlEx.Number}");
+                                errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
+                                errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
+                                errorMessages.AppendLine($"Source: {SqlEx.Source}");
+                                _logger.LogError(SqlEx, $"Method={GetCurrentMethod()}, transId={transId}");
+                                return "Update UserMoney error(SQL)";
+                            }
+                            catch (Exception exForEachTransaction)
+                            {
+                                _logger.LogError(exForEachTransaction, $"Method={GetCurrentMethod()}, transId={transId}");
+                                return "Update UserMoney error(Other)";
+                            }
+                            #endregion
+                        }
+                        else if (rNotifyWithdrawalResult.TransStatus == TransStatus.Fail)
+                        {
+                            try
+                            {
+                                _paymentBll.WithdrawalFail(withdrawalRequest, rNotifyWithdrawalResult);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, $"Method={GetCurrentMethod()}, transId={transId}");
+                                return "Update WithdrawalFail error";
+                            }
+                        }
+                        else
+                        {
+
+                            try
+                            {
+                                _paymentBll.WithdrawalPending(withdrawalRequest, rNotifyWithdrawalResult);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, $"Method={GetCurrentMethod()}, transId={transId}");
+                                return "Update WithdrawalPending error";
+                            }
+                        }
+                        return rNotifyWithdrawalResult.Response;
+                    }
+                    else
+                    {
+                        _logger.LogError($"Method={GetCurrentMethod()}, SerialId ={transId} is not exist");
+                        return $"SerialId={transId} is not exist";
+                    }
                 }
-
-                var payHelper = _payBll.GetPayHelper(withdrawalRequest.PayName);
-                //((PayHelperBase)payHelper).AddPaymentLog(InsertPaymentLog);
-
-                //取得每家金流的成果 
-                var rNotifyWithdrawalResult = payHelper.CallBackCredit(dicParam, bodyText, headers, WithReq);
-
-                var temp = rNotifyWithdrawalResult.WithdrawId;
-                while (temp.Substring(0, 1) == "0")
+                finally
                 {
-                    temp = temp.Remove(0, 1);
+                    //key unlock
+                    _redisHelper.UnLock(lockKey, lockValue);
                 }
-                if (!string.Equals(transId, temp, StringComparison.OrdinalIgnoreCase))
-                {
-                    _logger.LogError($"Method={GetCurrentMethod()}, {transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}, form={JsonConvert.SerializeObject(dicParam)}, bodyText={bodyText}");
-                    return $"{transId} is not equal {rNotifyWithdrawalResult.WithdrawId} with PayName={withdrawalRequest.PayName}";
-                }
-
-                if (withdrawalRequest.Status == WithdrawalStatus.Approved ||
-                    withdrawalRequest.Status == WithdrawalStatus.Rejected)
-                {
-                    var status = rNotifyWithdrawalResult.TransStatus switch
-                    {
-                        TransStatus.Success => WithdrawalStatus.Approved,
-                        TransStatus.Fail => WithdrawalStatus.Verify,
-                        _ => WithdrawalStatus.Process
-                    };
-                    var message = $"{transId} status is currently {withdrawalRequest.Status.ToString()}, cannot change status to {status.ToString()}";
-                    _logger.LogInformation($"Method={GetCurrentMethod()}, {message}");
-
-                    _paymentBll.SetWithdrawalLog(transId, withdrawalRequest.SiteId,
-                        message,
-                        (int)withdrawalRequest.Status,
-                        withdrawalRequest.PayName);
-                    return rNotifyWithdrawalResult.Response;
-                }
-
-                if (rNotifyWithdrawalResult.TransStatus == TransStatus.Success)
-                {
-                    #region Transaction is Success
-                    try
-                    {
-                        _paymentBll.WithdrawalSuccess(withdrawalRequest, rNotifyWithdrawalResult);
-                    }
-                    catch (MySqlException SqlEx)
-                    {
-                        /*Need Check Transaction Status*/
-                        var errorMessages = new StringBuilder();
-                        errorMessages.AppendLine($"Message: {SqlEx.Message}");
-                        errorMessages.AppendLine($"Error Number: {SqlEx.Number}");
-                        errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
-                        errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
-                        errorMessages.AppendLine($"Source: {SqlEx.Source}");
-                        _logger.LogError(SqlEx, $"Method={GetCurrentMethod()}, transId={transId}");
-                        return "Update UserMoney error(SQL)";
-                    }
-                    catch (Exception exForEachTransaction)
-                    {
-                        _logger.LogError(exForEachTransaction, $"Method={GetCurrentMethod()}, transId={transId}");
-                        return "Update UserMoney error(Other)";
-                    }
-                    #endregion
-                }
-                else if (rNotifyWithdrawalResult.TransStatus == TransStatus.Fail)
-                {
-                    try
-                    {
-                        _paymentBll.WithdrawalFail(withdrawalRequest, rNotifyWithdrawalResult);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"Method={GetCurrentMethod()}, transId={transId}");
-                        return "Update WithdrawalFail error";
-                    }
-                }
-                else
-                {
-
-                    try
-                    {
-                        _paymentBll.WithdrawalPending(withdrawalRequest, rNotifyWithdrawalResult);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"Method={GetCurrentMethod()}, transId={transId}");
-                        return "Update WithdrawalPending error";
-                    }
-                }
-
-                return rNotifyWithdrawalResult.Response;
             }
             else
             {
-                _logger.LogError($"Method={GetCurrentMethod()}, SerialId ={transId} is not exist");
-                return $"SerialId={transId} is not exist";
+                return $"SerialId = {transId} is processing";
             }
         }
 
@@ -512,10 +552,10 @@ namespace PaymentService.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("Payment/WithdrawalManualApprove")]
-        public  ApiResult WithdrawalManualApprove(WithdrawalManualApproveRequest request)
+        public ApiResult WithdrawalManualApprove(WithdrawalManualApproveRequest request)
         {
             var apiResult = new ApiResult();
-           
+
             #region Check
 
             // 檢查 IP 是否在白名單內
@@ -553,7 +593,7 @@ namespace PaymentService.Controllers
 
             try
             {
-                _paymentBll.WithdrawalManualApprove(withdrawalRequest, "Manual Approve",request.ThirdId, request.Operator);
+                _paymentBll.WithdrawalManualApprove(withdrawalRequest, "Manual Approve", request.ThirdId, request.Operator);
             }
             catch (Exception ex)
             {
@@ -574,7 +614,7 @@ namespace PaymentService.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("Payment/WithdrawalManualReject")]
-        public  ApiResult WithdrawalManualReject(WithdrawalManualRejectRequest request)
+        public ApiResult WithdrawalManualReject(WithdrawalManualRejectRequest request)
         {
             var apiResult = new ApiResult();
 
