@@ -1,8 +1,8 @@
 using PaymentCore;
 
-namespace Payment.RolexPay;
+namespace Payment.CindaPay;
 
-public class RolexPayDefinition
+public class CindaPayDefinition
 {
     public const string SuccessCode = "0";
     
@@ -25,10 +25,10 @@ public class RolexPayDefinition
     private static Dictionary<string, TransStatus> TransStatusMap =>
         new ()
         {
-            { RolexPayStatus.Success, TransStatus.Success },
-            { RolexPayStatus.Processing, TransStatus.Pending },
-            { RolexPayStatus.Failed, TransStatus.Fail },
-            { RolexPayStatus.Cancel, TransStatus.Fail }
+            { CindaPayStatus.Success, TransStatus.Success },
+            { CindaPayStatus.Processing, TransStatus.Pending },
+            { CindaPayStatus.Failed, TransStatus.Fail },
+            { CindaPayStatus.Cancel, TransStatus.Fail }
         };
 
 
@@ -36,7 +36,7 @@ public class RolexPayDefinition
         => TransStatusMap.TryGetValue(status, out var result)
             ? result : TransStatus.Pending;
 
-    private class RolexPayStatus
+    private class CindaPayStatus
     {
         public const string Success = "1";
 

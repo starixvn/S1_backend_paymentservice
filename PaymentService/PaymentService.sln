@@ -115,7 +115,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.SpeedPay", "Payment
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.AeePay", "Payment.AeePay\Payment.AeePay.csproj", "{73074144-7DEB-4B5C-831C-75AD89A2B32A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.RolexPay", "Payment.RolexPay\Payment.RolexPay.csproj", "{1E5CF7AE-9225-4259-9944-13FD98BE37D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.CindaPay", "Payment.CindaPay\Payment.CindaPay.csproj", "{1E5CF7AE-9225-4259-9944-13FD98BE37D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

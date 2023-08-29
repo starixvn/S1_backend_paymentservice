@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Payment.RolexPay;
+namespace Payment.CindaPay;
 
 public class CreatOrderResponse
 {
