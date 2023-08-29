@@ -34,6 +34,7 @@ namespace Payment.RolexPay
                     { "tradeNo", transId },
                     { "amount", reqAmount.ToString("G29") },
                     { "payType", inputs["PayCode"] },
+                    { "acctName", inputs["AccountName"] },
                     { "requestTime", GetRequestTime() },
                     { "notifyUrl", inputs["CallBackUrl"] },
                     { "returnType", "0" }
