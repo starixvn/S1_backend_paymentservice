@@ -109,7 +109,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.WPPay", "Payment.WP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.SpeedPay", "Payment.SpeedPay\Payment.SpeedPay.csproj", "{19F9D764-6A06-43DB-9742-4B5069634E2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.RolexPay", "Payment.RolexPay\Payment.RolexPay.csproj", "{1E5CF7AE-9225-4259-9944-13FD98BE37D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.CindaPay", "Payment.CindaPay\Payment.CindaPay.csproj", "{1E5CF7AE-9225-4259-9944-13FD98BE37D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

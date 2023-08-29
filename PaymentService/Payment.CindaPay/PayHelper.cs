@@ -6,7 +6,7 @@ using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
-namespace Payment.RolexPay
+namespace Payment.CindaPay
 {
     class PayHelper : PayHelperBase
     {
@@ -29,7 +29,7 @@ namespace Payment.RolexPay
             {
                 var req = new Dictionary<string, string>
                 {
-                    { "version", RolexPayDefinition.Version.Deposit },
+                    { "version", CindaPayDefinition.Version.Deposit },
                     { "cid", inputs["MerchantId"] },
                     { "tradeNo", transId },
                     { "amount", reqAmount.ToString("G29") },
@@ -69,7 +69,7 @@ namespace Payment.RolexPay
             {
                 var req = new Dictionary<string, string>
                 {
-                    { "version", RolexPayDefinition.Version.Payout },
+                    { "version", CindaPayDefinition.Version.Payout },
                     { "cid", inputs["MerchantId"] },
                     { "tradeNo", transId },
                     { "amount", reqAmount.ToString("G29") },
@@ -114,7 +114,7 @@ namespace Payment.RolexPay
                 };
             }
 
-            var transStatus = RolexPayDefinition.GetTransStatus(dic["status"]);
+            var transStatus = CindaPayDefinition.GetTransStatus(dic["status"]);
             var amount = decimal.Parse(dic["amount"]) / AmountFix;
             
             return new NotifyDepositResult
@@ -124,7 +124,7 @@ namespace Payment.RolexPay
                 ThirdId = dic["rockTradeNo"],
                 ActualAmount = amount,
                 Comment = $"({dic["status"]}){transStatus}",
-                Response = RolexPayDefinition.CallbackResponse
+                Response = CindaPayDefinition.CallbackResponse
             };
         }
 
@@ -142,7 +142,7 @@ namespace Payment.RolexPay
                 };
             }
 
-            var transStatus = RolexPayDefinition.GetTransStatus(dic["status"]);
+            var transStatus = CindaPayDefinition.GetTransStatus(dic["status"]);
             
             return new NotifyWithdrawResult
             {
@@ -150,7 +150,7 @@ namespace Payment.RolexPay
                 TransStatus = transStatus,
                 ThirdId = dic["rockTradeNo"],
                 Message = $"({dic["status"]}){transStatus}",
-                Response = RolexPayDefinition.CallbackResponse
+                Response = CindaPayDefinition.CallbackResponse
             };
         }
         
@@ -173,7 +173,7 @@ namespace Payment.RolexPay
 
         private CreatOrderResponse CreateOrder(string baseApiUrl, Dictionary<string, string> req)
         {
-            var apiUrl = $"{baseApiUrl}{RolexPayDefinition.Path.Deposit}";
+            var apiUrl = $"{baseApiUrl}{CindaPayDefinition.Path.Deposit}";
 
             var (result, statusCode) = _httpHelper
                 .PostJson<object, CreatOrderResponse>(apiUrl, req);
@@ -181,10 +181,10 @@ namespace Payment.RolexPay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"RolexPay creat order failed, HttpStatus: {(int) statusCode} {statusCode}");
+                    $"CindaPay creat order failed, HttpStatus: {(int) statusCode} {statusCode}");
             }
 
-            if (result.Code != RolexPayDefinition.SuccessCode)
+            if (result.Code != CindaPayDefinition.SuccessCode)
                 throw new CustomException(result.Message);
 
             return result;
@@ -192,7 +192,7 @@ namespace Payment.RolexPay
         
         private CreatPayoutResponse CreatePayout(string baseApiUrl, Dictionary<string, string> req)
         {
-            var apiUrl = $"{baseApiUrl}{RolexPayDefinition.Path.Payout}";
+            var apiUrl = $"{baseApiUrl}{CindaPayDefinition.Path.Payout}";
 
             var (result, statusCode) = _httpHelper
                 .PostJson<object, CreatPayoutResponse>(apiUrl, req);
@@ -200,10 +200,10 @@ namespace Payment.RolexPay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"RolexPay creat payout failed, HttpStatus: {(int) statusCode} {statusCode}");
+                    $"CindaPay creat payout failed, HttpStatus: {(int) statusCode} {statusCode}");
             }
 
-            if (result.Code != RolexPayDefinition.SuccessCode)
+            if (result.Code != CindaPayDefinition.SuccessCode)
                 throw new CustomException(result.Message);
 
             return result;
