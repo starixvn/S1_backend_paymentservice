@@ -109,6 +109,7 @@ namespace Payment.CindaPay
             {
                 return new NotifyDepositResult
                 {
+                    DepositId = dic["tradeNo"],
                     TransStatus = TransStatus.Pending,
                     Response = "Signature does not match."
                 };
@@ -137,6 +138,7 @@ namespace Payment.CindaPay
             {
                 return new NotifyWithdrawResult
                 {
+                    WithdrawId = dic["tradeNo"],
                     TransStatus = TransStatus.Pending,
                     Response = "Signature does not match."
                 };
@@ -217,8 +219,9 @@ namespace Payment.CindaPay
                 .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
             
             _logger.LogInformation(str);
-            var sign = ToMD5(str);
-
+            var sign = ToMD5(str).ToLower();
+            _logger.LogInformation(sign);
+            
             return sign;
         }
         
