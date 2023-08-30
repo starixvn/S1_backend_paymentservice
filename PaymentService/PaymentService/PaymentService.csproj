@@ -28,6 +28,7 @@
     <PackageReference Include="system.text.encoding.codepages" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Payment.AeePay\Payment.AeePay.csproj" />
     <ProjectReference Include="..\Payment.AllInOnePayLocal\Payment.AllInOnePayLocal.csproj" />
     <ProjectReference Include="..\Payment.AllInOnePay\Payment.AllInOnePay.csproj" />
     <ProjectReference Include="..\Payment.AllpassPay\Payment.AllpassPay.csproj" />
