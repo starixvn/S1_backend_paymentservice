@@ -13,7 +13,8 @@ namespace PaymentCore.Extensions
         {
             (int) CurrencyEnum.MYR,
             (int) CurrencyEnum.THB,
-            (int) CurrencyEnum.IDR
+            (int) CurrencyEnum.IDR,
+            (int) CurrencyEnum.VND
         };
 
 
@@ -27,6 +28,19 @@ namespace PaymentCore.Extensions
             var obj = JObject.Parse(json);
             obj.AddOrSet("ExchangeRate", strExchangeRate);
             obj.AddOrSet("ExchangeAmount", strExchangeAmount);
+
+            return obj.ToString();
+        }
+        
+        public static string AddOrSetJProperty(this string json, string propName, object propValue)
+        {
+            if (string.IsNullOrEmpty(json))
+            {
+                return json;
+            }
+
+            var obj = JObject.Parse(json);
+            obj.AddOrSet(propName, JToken.FromObject(propValue));
 
             return obj.ToString();
         }

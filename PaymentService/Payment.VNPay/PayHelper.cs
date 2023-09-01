@@ -6,7 +6,7 @@ namespace Payment.VNPay
 {
     public class PayHelper : PayHelperBase
     {
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();
         }
@@ -24,7 +24,7 @@ namespace Payment.VNPay
             public string user_amount { set; get; }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
             var merchant_no = payResource["merchant_no"];

@@ -18,7 +18,7 @@ namespace Payment.PatekPay
             public string sign { get; set; }
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackWithdrawalReq>(ToJson(formData));
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
@@ -71,7 +71,7 @@ namespace Payment.PatekPay
             public string sign { get; set; }
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(ToJson(formData));

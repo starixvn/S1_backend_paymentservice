@@ -65,7 +65,7 @@ namespace Payment.NAP3SPay
             };
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var amount = decimal.Parse(formData["amount"]);
             var realAmount = decimal.Parse(formData["real_amount"]);
@@ -90,7 +90,7 @@ namespace Payment.NAP3SPay
             };
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();
         }
