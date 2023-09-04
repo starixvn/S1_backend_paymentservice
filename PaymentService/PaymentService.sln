@@ -111,6 +111,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.SpeedPay", "Payment
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.AeePay", "Payment.AeePay\Payment.AeePay.csproj", "{73074144-7DEB-4B5C-831C-75AD89A2B32A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.CindaPay", "Payment.CindaPay\Payment.CindaPay.csproj", "{1E5CF7AE-9225-4259-9944-13FD98BE37D2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -329,6 +331,10 @@ Global
 		{73074144-7DEB-4B5C-831C-75AD89A2B32A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73074144-7DEB-4B5C-831C-75AD89A2B32A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73074144-7DEB-4B5C-831C-75AD89A2B32A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E5CF7AE-9225-4259-9944-13FD98BE37D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E5CF7AE-9225-4259-9944-13FD98BE37D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E5CF7AE-9225-4259-9944-13FD98BE37D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E5CF7AE-9225-4259-9944-13FD98BE37D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -383,6 +389,7 @@ Global
 		{446A7572-36FC-4C49-B855-9B01E623D83E} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{19F9D764-6A06-43DB-9742-4B5069634E2D} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{73074144-7DEB-4B5C-831C-75AD89A2B32A} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{1E5CF7AE-9225-4259-9944-13FD98BE37D2} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
