@@ -50,7 +50,7 @@ namespace PaymentService.Controllers
         }
 
         [HttpPost]
-        [Route("Withdrawal")]
+        [Route("Payment/Withdrawal")]
         public ApiResult Withdrawal(ReqWithdrawal reqWithdrawal)
         {
             var apiResult = new ApiResult();
@@ -137,7 +137,7 @@ namespace PaymentService.Controllers
         }
 
         [HttpPost]
-        [Route("CryptoWithdrawal")]
+        [Route("Payment/CryptoWithdrawal")]
         public ApiResult CryptoWithdrawal(ReqWithdrawal reqWithdrawal)
         {
             var apiResult = new ApiResult();
@@ -223,7 +223,7 @@ namespace PaymentService.Controllers
         }
 
         [HttpPost]
-        [Route("EWalletWithdrawal")]
+        [Route("Payment/EWalletWithdrawal")]
         public ApiResult EWalletWithdrawal(ReqWithdrawal reqWithdrawal)
         {
             var apiResult = new ApiResult();
@@ -509,7 +509,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        [Route("VerifyTransaction/{PayName}")]
+        [Route("Payment/VerifyTransaction/{PayName}")]
         [HttpPost]
         public async Task<IActionResult> VerifyTransactionAsync(string payName)
         {

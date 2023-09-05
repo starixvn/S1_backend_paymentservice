@@ -682,7 +682,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        [Route("Payment/WithdrawalCallBack/{TransId}")]
+        [Route("Payment/DepositCallBack/{TransId}")]
         [HttpPost]
         [HttpGet]
         public async Task<IActionResult> DepositCallBackAsync(string transId)
