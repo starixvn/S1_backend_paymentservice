@@ -277,16 +277,11 @@ namespace PaymentCore
             return builder.ToString();
         }
 
-        protected T FromJson<T>(string jsonString)
+        protected static T FromJson<T>(string jsonString)
         {
-            if (!string.IsNullOrEmpty(jsonString))
-            {
-                return JsonConvert.DeserializeObject<T>(jsonString);
-            }
-            else
-            {
-                return default(T);
-            }
+            return !string.IsNullOrEmpty(jsonString)
+                ? JsonConvert.DeserializeObject<T>(jsonString)
+                : default;
         }
 
         protected string ToJson(object t)
@@ -753,6 +748,13 @@ namespace PaymentCore
             };
 
             return currencyMapping.ContainsKey(currencyId) ? currencyMapping[currencyId] : "";
+        }
+        
+        protected static Dictionary<string, string> QueryStringToDic(string queryString)
+        {
+            var nvc = HttpUtility.ParseQueryString(queryString);
+            
+            return nvc.AllKeys.ToDictionary(k => k, k => nvc[k]);
         }
 
         private string HttpClientSend(HttpMethod httpMethod,

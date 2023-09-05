@@ -1,11 +1,13 @@
-﻿using PaymentCore;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Xml.Serialization;
+using PaymentCore;
+using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.Help2Pay
 {
-    public class PayHelper : PayHelperBase
+    public class PayHelper : PayHelperBase, IVerifyTransaction
     {
         public class CallBackCreditReq
         {
@@ -245,6 +247,22 @@ namespace Payment.Help2Pay
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+        
+        public (string TransId, IDictionary<string, string> Data) FetchTransIdAndDataBeforeVerify(
+            IDictionary<string, string> formData, string bodyContent)
+        {
+            var dic = QueryStringToDic(bodyContent);
+
+            return (dic["transId"], dic);
+        }
+        
+        public VerifyTransactionResult VerifyTransaction(IDictionary<string, string> data,
+            IDictionary<string, string> input)
+        {
+            var transExists = bool.Parse(input["TransIdExists"]);
+
+            return new VerifyTransactionResult (ContentType.Text, transExists.ToString());
         }
     }
 }

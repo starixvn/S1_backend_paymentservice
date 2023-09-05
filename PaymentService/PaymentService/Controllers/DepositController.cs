@@ -1,18 +1,12 @@
 ﻿using System.Text;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
-
 using MySql.Data.MySqlClient;
-
 using Newtonsoft.Json;
-
 using PaymentCore;
 using PaymentCore.Interface;
-using PaymentCore.Models;
 using PaymentCore.Models.Result;
-
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -688,7 +682,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        [Route("Payment/DepositCallBack/{TransId}")]
+        [Route("Payment/WithdrawalCallBack/{TransId}")]
         [HttpPost]
         [HttpGet]
         public async Task<IActionResult> DepositCallBackAsync(string transId)

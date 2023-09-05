@@ -20,7 +20,7 @@ public class ExchangeController : ControllerBase
     public ExchangeController(IServiceProvider provider)
     {
         _payBll = provider.GetRequiredService<PayBLL>();
-        _cryptoPayment = new[] {CryptoPaymentEnum.DirePay, CryptoPaymentEnum.FXBit}; // 市場要求優先使用 DirePay
+        _cryptoPayment = new[] {CryptoPaymentEnum.DirePay, CryptoPaymentEnum.FXBit}; // 市場要求優先使用 DirePay, Coin2Pay沒有匯率API
         _logger = provider.GetRequiredService<ILogger<ExchangeController>>();
     }
     
