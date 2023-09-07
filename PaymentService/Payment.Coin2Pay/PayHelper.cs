@@ -85,7 +85,7 @@ namespace Payment.Coin2Pay
         }
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
-            Dictionary<string, string> input, Dictionary<string, string> payResource)
+            Dictionary<string, string> headers, Dictionary<string, string> input)
         {
             var mPublicKey = input["key"];
             var dic = FromJson<Dictionary<string, string>>(bodyContent);
@@ -231,7 +231,7 @@ namespace Payment.Coin2Pay
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
-            Dictionary<string, string> payResource, Dictionary<string, string> dictionary)
+            Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var mPublicKey = payResource["key"];
             var dic = FromJson<Dictionary<string, string>>(bodyContent);
