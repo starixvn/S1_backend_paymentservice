@@ -44,18 +44,7 @@ namespace PaymentService.Service.DAL
         {
             return _reportDbClient.Query<Pay>("Service_PaySetting_Get", new { _SiteId = siteId });
         }
-        public IEnumerable<CryptoPayInfo> GetCryptoPayInfo(int siteId)
-        {
-            return _reportDbClient.Query<CryptoPayInfo>("Service_PayInfo_Get_V2",
-                new { _SiteId = siteId, _DepositType = DepositType.CryptoPay });
-        }
-
-        public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfo(int siteId)
-        {
-            return _reportDbClient.Query<LoadCardPayInfo>("Service_PayInfo_Get_V2",
-                new { _SiteId = siteId, _DepositType = DepositType.LoadCard });
-        }
-
+        
         public IEnumerable<PayInfo> GetPayInfo(int siteId, DepositType depositType)
         {
             return _reportDbClient.Query<PayInfo>("Service_PayInfo_Get_V2", new { _SiteId = siteId, _DepositType = (int)depositType });

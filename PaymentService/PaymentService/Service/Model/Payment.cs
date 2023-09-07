@@ -7,7 +7,6 @@ namespace PaymentService.Service.Model
         int PayId { get; set; }
         int ChannelId { get; set; }
         int CurrencyId { get; set; }
-        string BankCode { get; set; }
     }
     public class PayResult
     {
@@ -16,17 +15,6 @@ namespace PaymentService.Service.Model
         public int Mode { get; set; }
         public string ThirdId { get; set; }
         public string Message { get; set; }
-    }
-
-    public class PayCurrency
-    {
-        public int ChannelId { get; set; }
-        public int CurrencyId { get; set; }
-        public string PayCurrencyId { get; set; }
-        public decimal MinAmount { get; set; }
-        public decimal MaxAmount { get; set; }
-        public int AmountRule { get; set; }
-        public string AmountShow { get; set; }
     }
 
     public class PayLanguage
@@ -43,10 +31,5 @@ namespace PaymentService.Service.Model
         public string Setting { get; set; }
         public PayStatusEnum PayStatus { get; set; }
         public PayStatusEnum SitePayStatus { get; set; }
-    }
-
-    public class ExchangeResult
-    {
-        public Dictionary<string, string> FormData { get; set; }
     }
 }

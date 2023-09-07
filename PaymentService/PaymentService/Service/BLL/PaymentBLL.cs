@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentService.Exceptions;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -70,47 +71,61 @@ namespace PaymentService.Service.BLL
             }
         }
 
-        public int DepositManualSuccess(DepositInfoModel depositInfoData)
+        public bool DepositManualSuccess(DepositInfoModel depositInfo)
         {
-            var forStatus = new List<int>
+            var forStatus = new []
             {
-                (int)DepositStatus.Draft,
-                (int)DepositStatus.Pending,
-                (int)DepositStatus.Rejected,
-                (int)DepositStatus.Canceled,
-                (int)DepositStatus.Expired,
-                (int)DepositStatus.OnHold,
-                (int)DepositStatus.Error
+                DepositStatus.Draft,
+                DepositStatus.Pending,
+                DepositStatus.Rejected,
+                DepositStatus.Canceled,
+                DepositStatus.Expired,
+                DepositStatus.OnHold,
+                DepositStatus.Error
             };
 
-            try
-            {
-                var result = _depositService.SetDepositInfo(
-                    depositInfoData.TransId,
-                    depositInfoData.SiteId,
-                    (IPay)depositInfoData.depositInfo,
-                    depositInfoData.ActualDeposit,
-                    depositInfoData.Comment,
-                    null,
-                    depositInfoData.RefId,
-                    depositInfoData.Operator,
-                    forStatus,
-                    DepositStatus.Approved,
-                    _producer.Publish,
-                    CommonExtension.CanRewardPoint(depositInfoData.SiteId, depositInfoData.CurrencyId));
+            var di = JsonConvert.DeserializeObject<IPay>(depositInfo.DepositInfo);
 
-                return result;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            if (di == null)
+                throw new PaymentException("DepositInfo is empty.");
+            
+            var result = _depositService.SetDepositInfoV2(
+                new SetDepositInfoParams
+                {
+                    TransId = depositInfo.TransId,
+                    SiteId = depositInfo.SiteId,
+                    ActualDeposit = depositInfo.ActualDeposit,
+                    ThirdId = depositInfo.RefId,
+                    PayId = di.PayId,
+                    Operator = depositInfo.Operator,
+                    ForStatus = forStatus,
+                    Status = DepositStatus.Approved
+                },
+                _producer.Publish,
+                CommonExtension.CanRewardPoint(depositInfo.SiteId, depositInfo.CurrencyId));
+
+            return result;
         }
 
         public void DepositFail(DepositRequest depositRequest, IDepositResult iDepositResult)
         {
             var forStatus = new List<int> { (int)DepositStatus.Pending };
             _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Rejected, _producer.Publish);
+        }
+        
+        public void DepositFailV2(string transId, int siteId, IPayInfo payInfo, string comment)
+        {
+            var forStatus = new List<int> { (int)DepositStatus.Pending };
+            _depositService.SetDepositInfoV2(new SetDepositInfoParams
+            {
+                TransId = transId,
+                Comment = comment,
+                SiteId = siteId,
+                PayId = payInfo.PayId,
+                Operator = payInfo.PayName,
+                ForStatus = new [] { DepositStatus.Pending },
+                Status =  DepositStatus.Rejected
+            }, _producer.Publish);
         }
 
         public void DepositPending(DepositRequest depositRequest, IDepositResult iDepositResult)

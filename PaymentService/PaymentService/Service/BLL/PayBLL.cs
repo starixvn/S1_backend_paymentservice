@@ -42,22 +42,6 @@ namespace PaymentService.Service.BLL
                 RedisDataBase.Shared);
         }
 
-        public IEnumerable<CryptoPayInfo> GetCryptoPayInfoList(int siteId)
-        {
-            var key = $"PaySetting:Crypto:{siteId}";
-            return _redisHelper.TryGetOrCreate<IEnumerable<CryptoPayInfo>>(key, TimeSpan.FromMinutes(5),
-                () => payService.GetCryptoPayInfo(siteId).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
-            RedisDataBase.Shared);
-        }
-
-        public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfoList(int siteId)
-        {
-            var key = $"PaySetting:LoadCard:{siteId}";
-            return _redisHelper.TryGetOrCreate<IEnumerable<LoadCardPayInfo>>(key, TimeSpan.FromMinutes(5),
-                () => payService.GetLoadCardPayInfo(siteId).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
-                RedisDataBase.Shared);
-        }
-
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout(int siteId)
         {
             return _redisHelper.TryGetOrCreate($"PaySetting:OnlineBank:Payout:{siteId}", TimeSpan.FromMinutes(5),
