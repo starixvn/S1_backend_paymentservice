@@ -1,7 +1,5 @@
-using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Extensions;
@@ -44,14 +42,13 @@ public class DepositV2Controller : ControllerBase
         {
             {DepositType.OnlineBanking, GetOnlineBankDepositInput},
             {DepositType.BankAutoChannel, GetOnlineBankDepositInput},
-            {DepositType.MobilePay, GetGenericDepositInput},
+            {DepositType.MobilePay, GetMobilePayDepositInput},
             {DepositType.CryptoPay, GetGenericDepositInput},
-            {DepositType.LoadCard, GetGenericDepositInput},
+            {DepositType.LoadCard, GetLoadCardDepositInput},
             {DepositType.QrPay, GetGenericDepositInput}
         };
 
         #endregion
-        
     }
 
     public class DepositReq
@@ -60,7 +57,6 @@ public class DepositV2Controller : ControllerBase
         public string ClientIP { get; set; }
         public string ReturnUrl { get; set; }
     }
-
     
     [Route("Payment/Deposit/Create")]
     [HttpPost]
@@ -239,11 +235,24 @@ public class DepositV2Controller : ControllerBase
         return (payInfo, input);
     }
     
-    private (IPayInfo, Dictionary<string, string>) GetGenericDepositInput(DepositInfoModel depositInfo, Customer custInfo)
+    private (IPayInfo, Dictionary<string, string>) GetGenericDepositInput(DepositInfoModel depositInfo,
+        Customer custInfo)
+        => GenericDepositInput(depositInfo, custInfo, Array.Empty<string>());
+    
+    private (IPayInfo, Dictionary<string, string>) GetMobilePayDepositInput(DepositInfoModel depositInfo,
+        Customer custInfo)
+        => GenericDepositInput(depositInfo, custInfo, new []{ "PayAccount" });
+    
+    private (IPayInfo, Dictionary<string, string>) GetLoadCardDepositInput(DepositInfoModel depositInfo,
+        Customer custInfo)
+        => GenericDepositInput(depositInfo, custInfo, new []{ "Serial", "Code" });
+    
+    private (IPayInfo, Dictionary<string, string>) GenericDepositInput(DepositInfoModel depositInfo, Customer custInfo, string[] extraKeys)
     {
         var payInfoList = _payBll.GetPayInfoList(custInfo.SiteId, depositInfo.DepositType);
         var vipLevel = _custInfoBll.GetPointLevelWithCache(custInfo.CustId);
         var keys = new[] {"ChannelId"};
+        keys.AddRange(extraKeys);
         var dicDepositInfo = GetDicDepositInfo(depositInfo.DepositInfo, keys);
         var channelId = int.Parse(dicDepositInfo["ChannelId"]);
 
@@ -259,11 +268,11 @@ public class DepositV2Controller : ControllerBase
                 ErrorCode.ChannelNotFound);
         }
 
-        var input = new Dictionary<string, string>();
+        var input = extraKeys
+            .ToDictionary(key => key, key => dicDepositInfo[key]);
 
         return (payInfo, input);
     }
-    
 
     #endregion
 

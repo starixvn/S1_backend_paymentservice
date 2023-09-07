@@ -59,5 +59,11 @@ namespace PaymentCore.Extensions
                 source.Add(key, value);
             } 
         }
+        
+        public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T> items)
+        {
+            foreach (var obj in items)
+                collection.Add(obj);
+        }
     }
 }
