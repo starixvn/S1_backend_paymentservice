@@ -15,6 +15,7 @@ namespace PaymentService.Service.BLL
         private readonly WithdrawalService _withdrawalService;
         private readonly Common _common;
         private readonly IRabbitMQProducer _producer;
+        private readonly ILogger<PaymentBLL> _logger;
 
         public PaymentBLL(IServiceProvider provider)
         {
@@ -22,6 +23,7 @@ namespace PaymentService.Service.BLL
             _withdrawalService = provider.GetRequiredService<WithdrawalService>();
             _common = provider.GetRequiredService<Common>();
             _producer = provider.GetRequiredService<IRabbitMQProducer>();
+            _logger = provider.GetRequiredService<ILogger<PaymentBLL>>();
         }
 
         public DepositRequest GetDepositRequest(string transId)
@@ -36,39 +38,23 @@ namespace PaymentService.Service.BLL
             return _depositService.GetDepositInfo(depositId);
         }
 
-        public void DepositSuccess(DepositRequest depositRequest, IDepositResult iDepositResult)
+        public void DepositSuccess(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new List<int>
+            var forStatus = new []
             {
-                (int)DepositStatus.Pending,
-                (int)DepositStatus.Rejected
+                DepositStatus.Pending,
+                DepositStatus.Rejected
             };
-            try
+            
+            if (depositRequest.SiteId == 0 || depositRequest.CurrencyId == 0)
             {
-                if (depositRequest.SiteId == 0 || depositRequest.CurrencyId == 0)
-                {
-                    var deposit = GetDepositInfo(depositRequest.TransId);
-                    depositRequest.SiteId = deposit.SiteId;
-                    depositRequest.CurrencyId = deposit.CurrencyId;
-                }
+                var deposit = GetDepositInfo(depositRequest.TransId);
+                depositRequest.SiteId = deposit.SiteId;
+                depositRequest.CurrencyId = deposit.CurrencyId;
+            }
 
-                _depositService.SetDepositInfo(depositRequest.TransId, 
-                    depositRequest.SiteId,
-                    (IPay)depositRequest.depositInfo,
-                    iDepositResult.ActualAmount,
-                    iDepositResult.Comment,
-                    iDepositResult.RefThirdId,
-                    iDepositResult.ThirdId,
-                    depositRequest.PayName,
-                    forStatus,
-                    DepositStatus.Approved,
-                    _producer.Publish,
-                    CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId));
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            var canReward = CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId);
+            SetDepositInfo(depositRequest, depositResult, DepositStatus.Approved, forStatus, canReward);
         }
 
         public bool DepositManualSuccess(DepositInfoModel depositInfo)
@@ -84,11 +70,7 @@ namespace PaymentService.Service.BLL
                 DepositStatus.Error
             };
 
-            var di = JsonConvert.DeserializeObject<IPay>(depositInfo.DepositInfo);
-
-            if (di == null)
-                throw new PaymentException("DepositInfo is empty.");
-            
+            var di = GetPayInfoByDepositInfo(depositInfo.DepositInfo);
             var result = _depositService.SetDepositInfoV2(
                 new SetDepositInfoParams
                 {
@@ -106,16 +88,15 @@ namespace PaymentService.Service.BLL
 
             return result;
         }
-
-        public void DepositFail(DepositRequest depositRequest, IDepositResult iDepositResult)
+        
+        public void DepositFail(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new List<int> { (int)DepositStatus.Pending };
-            _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Rejected, _producer.Publish);
+            var forStatus = new [] { DepositStatus.Pending };
+            SetDepositInfo(depositRequest, depositResult, DepositStatus.Rejected, forStatus);
         }
         
-        public void DepositFailV2(string transId, int siteId, IPayInfo payInfo, string comment)
+        public void SimpleDepositFail(string transId, int siteId, IPay payInfo, string comment)
         {
-            var forStatus = new List<int> { (int)DepositStatus.Pending };
             _depositService.SetDepositInfoV2(new SetDepositInfoParams
             {
                 TransId = transId,
@@ -128,11 +109,11 @@ namespace PaymentService.Service.BLL
             }, _producer.Publish);
         }
 
-        public void DepositPending(DepositRequest depositRequest, IDepositResult iDepositResult)
+        public void DepositPending(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new List<int> { (int)DepositStatus.Pending };
-            _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Pending, _producer.Publish);
-        }
+            var forStatus = new [] { DepositStatus.Pending };
+            SetDepositInfo(depositRequest, depositResult, DepositStatus.Pending, forStatus);
+       }
 
         public void SetDepositLog(string transId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
         {
@@ -290,5 +271,40 @@ namespace PaymentService.Service.BLL
         {
             return _depositService.DepositAutoCancel(depositId, Operator);
         }
+
+        #region private
+
+        private static IPay GetPayInfoByDepositInfo(string depositInfo)
+        {
+            var pay = JsonConvert.DeserializeObject<IPay>(depositInfo);
+
+            if (pay == null)
+                throw new PaymentException("DepositInfo is empty.");
+
+            return pay;
+        }
+
+        private void SetDepositInfo(DepositRequest depositRequest, IDepositResult depositResult, DepositStatus status,
+            IEnumerable<DepositStatus> forStatus, bool canReward = false)
+        {
+            var di = GetPayInfoByDepositInfo(depositRequest.DepositInfo);
+            var p = new SetDepositInfoParams
+            {
+                TransId = depositRequest.TransId,
+                SiteId = depositRequest.SiteId,
+                ActualDeposit = depositResult.ActualAmount,
+                ThirdId = depositResult.ThirdId,
+                PayId = di.PayId,
+                Operator = di.PayName,
+                ForStatus = forStatus,
+                Status = status
+            };
+            var result = _depositService.SetDepositInfoV2(p, _producer.Publish, canReward);
+
+            if (!result)
+                _logger.LogError("Update DepositInfo failed. SetDepositInfoParams=" + JsonConvert.SerializeObject(p));
+        }
+
+        #endregion
     }
 }

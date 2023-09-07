@@ -2,15 +2,12 @@
 
 namespace PaymentService.Service.Model
 {
-    public interface IPayInfo
+    public interface IPayInfo : IPay
     {
         public int CurrencyId { get; set; }
-        public int PayId { get; set; }
-        public int ChannelId { get; set; }
         public string ChannelName { get; set; }
         public int Mode { get; set; }
         public int PointLevel { get; set; }
-        public string PayName { get; set; }
         public string PayCode { get; set; }
         public string PayCurrencyId { get; set; }
         public decimal MinAmount { get; set; }

@@ -52,5 +52,12 @@ namespace PaymentCore.Extensions
         public static bool StartsWithIgnoreCase(this string str, string target)
             => str.StartsWith(target, StringComparison.OrdinalIgnoreCase);
 
+        public static void AddRange<T, S>(this IDictionary<T, S> source, IDictionary<T, S> collection)
+        {
+            foreach (var (key, value) in collection)
+            {
+                source.Add(key, value);
+            } 
+        }
     }
 }

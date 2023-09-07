@@ -98,7 +98,7 @@ public class DepositV2Controller : ControllerBase
             input.Add("DepositInfo", depositInfo.DepositInfo);
             
             var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
-            input.Append<>(setting);
+            input.AddRange(setting);
             
             var result = payHelper.Debit(input);
             
@@ -121,7 +121,7 @@ public class DepositV2Controller : ControllerBase
                 return new ApiResult<PayResult>(payResult);
             }
             
-            _paymentBll.DepositFailV2(depositInfo.TransId, depositInfo.SiteId, payInfo, result.Message);
+            _paymentBll.SimpleDepositFail(depositInfo.TransId, depositInfo.SiteId, payInfo, result.Message);
             
             return new ApiResult<PayResult>(ErrorCode.Fail)
             {
@@ -150,7 +150,6 @@ public class DepositV2Controller : ControllerBase
     {
         try
         {
-            
             var headers = Request.Headers
                 .ToDictionary(x => x.Key, x => x.Value.ToString());
             
@@ -274,47 +273,15 @@ public class DepositV2Controller : ControllerBase
         string transId, Dictionary<string, string> dicParams, string bodyContent, Dictionary<string, string> headers)
     {
         var depositRequest = _paymentBll.GetDepositRequest(transId);
-
+        
         if (depositRequest == null)
         {
             throw new PaymentException($"TransId={transId} is not exist.");
         }
-        
-        var custId = depositRequest.CustId;
-        var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-        var pay = JsonConvert.DeserializeObject<IPay>(depositRequest.DepositInfo);
-        
-        if (pay == null)
-        {
-            throw new PaymentException($"TransId={transId} pay info is null.");
-        }
-        
-        var paySetting = _payBll.GetPaymentAllList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == pay.PayId);
-        
-        if (paySetting == null || string.IsNullOrEmpty(paySetting.Setting))
-        {
-            throw new PaymentException($"TransId={transId} pay setting is null.");
-        }
-        
-        var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
-        dic.Add("TransID", depositRequest.TransId);
-        dic.Add("DepositInfo", depositRequest.DepositInfo);
-        dic.Add("DepositType", ((int)depositRequest.DepositType).ToString());
-        dic.Add("RequestAmount", depositRequest.Amount.ToString("G29"));
-        dic.Add("CurrencyId", depositRequest.CurrencyId.ToString());
 
-        if (!dic.ContainsKey("PayName"))
-        {
-            throw new PaymentException($"TransId={transId} PayName is not exist.");
-        }
-
-        if (!_common.IsWhiteList(_common.GetClientIP(HttpContext), paySetting.PayName, transId, GetCurrentMethod()))
-        {
-            throw new PaymentException($"{paySetting.PayName} requested of {transId} from {_common.GetClientIP(HttpContext)} is Invalid IP!");
-        }
-
-        var payHelper = _payBll.GetPayHelper(paySetting.PayName);
-        depositRequest.PayName = paySetting.PayName;
+        var (payName, dic) = GetPayResource(depositRequest);
+        var payHelper = _payBll.GetPayHelper(payName);
+        depositRequest.PayName = payName;
 
         var result = payHelper.CallBackDebit(dicParams, bodyContent, headers, dic);
         _logger.LogInformation($"CallBackDebit result={JsonConvert.SerializeObject(result)}");
@@ -327,12 +294,7 @@ public class DepositV2Controller : ControllerBase
         if (result.RequestAmount == 0)
             result.RequestAmount = depositRequest.Amount;
 
-        // TODO: 操機掰爛code
-        if ((result.TransStatus == TransStatus.Success &&
-             (depositRequest.Status != DepositStatus.Pending &&
-              depositRequest.Status != DepositStatus.Rejected)) ||
-            (result.TransStatus != TransStatus.Success &&
-             depositRequest.Status != DepositStatus.Pending))
+        if (!CanChangeStatus(result.TransStatus, depositRequest.Status))
         {
             var status = result.TransStatus switch 
             {
@@ -340,12 +302,12 @@ public class DepositV2Controller : ControllerBase
                 TransStatus.Fail => DepositStatus.Rejected,
                 _ => DepositStatus.Pending
             };
-            var message = $"{transId} status is currently {depositRequest.Status.ToString()}, cannot change status to {status.ToString()}";
-            _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {message}");
             
+            var message = $"{transId} status is currently {depositRequest.Status.ToString()}, cannot change status to {status.ToString()}";
+            
+            _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {message}");
             _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
-                message,
-                (int)depositRequest.Status, result.ActualAmount, depositRequest.PayName);
+                message, (int)depositRequest.Status, result.ActualAmount, depositRequest.PayName);
 
             return result.Response;
         }
@@ -416,6 +378,55 @@ public class DepositV2Controller : ControllerBase
         }
 
         return depositInfo;
+    }
+    
+    private static bool CanChangeStatus(TransStatus transStatus, DepositStatus depositStatus)
+    {
+        if (transStatus == TransStatus.Success)
+        {
+            return depositStatus is DepositStatus.Pending or DepositStatus.Rejected;
+        }
+        
+        return depositStatus == DepositStatus.Pending;
+    }
+
+    private (string PayName, Dictionary<string, string> DicParams) GetPayResource(DepositRequest depositRequest)
+    {
+        var transId = depositRequest.TransId;
+        var custId = depositRequest.CustId;
+        var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
+        var pay = JsonConvert.DeserializeObject<IPay>(depositRequest.DepositInfo);
+        
+        if (pay == null)
+        {
+            throw new PaymentException($"TransId={transId} pay info is null.");
+        }
+        
+        var paySetting = _payBll.GetPaymentAllList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == pay.PayId);
+        
+        if (paySetting == null || string.IsNullOrEmpty(paySetting.Setting))
+        {
+            throw new PaymentException($"TransId={transId} pay setting is null.");
+        }
+        
+        var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
+        dic.Add("TransID", depositRequest.TransId);
+        dic.Add("DepositInfo", depositRequest.DepositInfo);
+        dic.Add("DepositType", ((int)depositRequest.DepositType).ToString());
+        dic.Add("RequestAmount", depositRequest.Amount.ToString("G29"));
+        dic.Add("CurrencyId", depositRequest.CurrencyId.ToString());
+
+        if (!dic.ContainsKey("PayName"))
+        {
+            throw new PaymentException($"TransId={transId} PayName is not exist.");
+        }
+
+        if (!_common.IsWhiteList(_common.GetClientIP(HttpContext), paySetting.PayName, transId, GetCurrentMethod()))
+        {
+            throw new PaymentException($"{paySetting.PayName} requested of {transId} from {_common.GetClientIP(HttpContext)} is Invalid IP!");
+        }
+
+        return (paySetting.PayName, dic);
     }
 
     #endregion
