@@ -1,6 +1,6 @@
 using PaymentCore;
 
-namespace Payment.LeoPay;
+namespace Payment.SBPay;
 
 public class SBPayDefinition
 {
