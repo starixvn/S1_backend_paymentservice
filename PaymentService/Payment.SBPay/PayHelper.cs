@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Payment.SBPay;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
