@@ -1,21 +1,15 @@
 ﻿using System.Text;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
-
 using MySql.Data.MySqlClient;
-
 using Newtonsoft.Json;
-
 using PaymentCore;
 using PaymentCore.Model;
 using PaymentCore.Model.enums;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
-using PaymentCore.Models;
 using PaymentCore.Models.Result;
-
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;

@@ -80,6 +80,7 @@
     <ProjectReference Include="..\Payment.YPay\Payment.YPay.csproj" />
     <ProjectReference Include="..\Payment.YuiPay\Payment.YuiPay.csproj" />
     <ProjectReference Include="..\Payment.YRPay\Payment.YRPay.csproj" />
+    <ProjectReference Include="..\Payment.SBPay\Payment.SBPay.csproj" />
     <ProjectReference Include="..\PaymentCore\PaymentCore.csproj" />
   </ItemGroup>
 </Project>

@@ -214,7 +214,8 @@ namespace Payment.CindaPay
         private string GetSign(IEnumerable<KeyValuePair<string, string>> input, string key)
         {
             var str = string.Join('&', input
-                .Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase))
+                .Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)
+                    && !string.IsNullOrEmpty(x.Value))
                 .OrderBy(x => x.Key)
                 .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
             

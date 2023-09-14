@@ -1,17 +1,11 @@
 ﻿using System.Text;
-
 using Flurl.Util;
-
 using Microsoft.AspNetCore.Mvc;
-
 using MySql.Data.MySqlClient;
-
 using Newtonsoft.Json;
-
 using PaymentCore;
 using PaymentCore.Model.enums;
 using PaymentCore.Interface;
-
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
