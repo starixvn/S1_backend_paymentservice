@@ -87,6 +87,7 @@ public class DepositV2Controller : ControllerBase
             input.Add("CustId", custInfo.CustId.ToString());
             input.Add("UserName", custInfo.UserName);
             input.Add("AccountName", custInfo.AccountName);
+            input.Add("Lang", custInfo.UserLang);
             input.Add("ClientIP", req.ClientIP);
             input.Add("ReturnUrl", req.ReturnUrl);
             input.Add("CallBackUrl", $"{_callBackUrl}/Payment/Deposit/CallBack/{req.TransId}");

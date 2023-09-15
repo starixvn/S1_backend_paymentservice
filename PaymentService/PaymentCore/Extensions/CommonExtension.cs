@@ -60,10 +60,9 @@ namespace PaymentCore.Extensions
             } 
         }
         
-        public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T> items)
+        public static void AddRange<T>(this IEnumerable<T> collection, IEnumerable<T> items)
         {
-            foreach (var obj in items)
-                collection.Add(obj);
+            items?.Aggregate(collection, (current, obj) => current.Append(obj));
         }
     }
 }
