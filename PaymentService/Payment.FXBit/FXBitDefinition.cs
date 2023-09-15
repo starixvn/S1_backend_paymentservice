@@ -152,11 +152,6 @@ namespace Payment.FXBit
         public const string PayoutFailed = "9903";
     }
 
-    internal class MediaType
-    {
-        public const string Json = "application/json";
-    }
-
     internal class Path
     {
         /// <summary>
