@@ -21,6 +21,7 @@ public class DepositV2Controller : ControllerBase
     private readonly ILogger<DepositController> _logger;
     private readonly PaymentBLL _paymentBll;
     private readonly Common _common;
+    private readonly ICacheHelper _redisHelper;
     private readonly string _callBackUrl;
 
     private readonly IDictionary<DepositType, Func<DepositInfoModel, Customer, (IPayInfo, Dictionary<string, string>)>>
@@ -34,6 +35,7 @@ public class DepositV2Controller : ControllerBase
         _logger = provider.GetRequiredService<ILogger<DepositController>>();
         _paymentBll = provider.GetRequiredService<PaymentBLL>();
         _common = provider.GetRequiredService<Common>();
+        _redisHelper = provider.GetRequiredService<ICacheHelper>();
         _callBackUrl = configuration.GetValue<string>("CallBack");
 
         #region ActionMapper
@@ -282,63 +284,76 @@ public class DepositV2Controller : ControllerBase
     private string CallBackHandler(
         string transId, Dictionary<string, string> dicParams, string bodyContent, Dictionary<string, string> headers)
     {
-        var depositRequest = _paymentBll.GetDepositRequest(transId);
-        
-        if (depositRequest == null)
+        var lockKey = $"DepositCallBackLock:{transId}";
+        var lockValue = Guid.NewGuid().ToString(); // 每次取鎖使用唯一值，確保為同一個執行序所執行
+        var lockExpiry = TimeSpan.FromSeconds(30); //lock 30 sec
+        if (!_redisHelper.TryCreateLock(lockKey, lockValue, lockExpiry))
+            return $"TransId={transId} is processing";
+        try
         {
-            throw new PaymentException($"TransId={transId} is not exist.");
-        }
-
-        var (payName, dic) = GetPayResource(depositRequest);
-        var payHelper = _payBll.GetPayHelper(payName);
-        depositRequest.PayName = payName;
-
-        var result = payHelper.CallBackDebit(dicParams, bodyContent, headers, dic);
-        _logger.LogInformation($"CallBackDebit result={JsonConvert.SerializeObject(result)}");
-
-        if (!string.Equals(transId, result.DepositId, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new PaymentException ($"{transId} is not equal DepositId={result.DepositId}");
-        }
-
-        if (result.RequestAmount == 0)
-            result.RequestAmount = depositRequest.Amount;
-
-        if (!CanChangeStatus(result.TransStatus, depositRequest.Status))
-        {
-            var status = result.TransStatus switch 
+            var depositRequest = _paymentBll.GetDepositRequest(transId);
+            
+            if (depositRequest == null)
             {
-                TransStatus.Success => DepositStatus.Approved,
-                TransStatus.Fail => DepositStatus.Rejected,
-                _ => DepositStatus.Pending
-            };
-            
-            var message = $"{transId} status is currently {depositRequest.Status.ToString()}, cannot change status to {status.ToString()}";
-            
-            _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {message}");
-            _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
-                message, (int)depositRequest.Status, result.ActualAmount, depositRequest.PayName);
+                throw new PaymentException($"TransId={transId} is not exist.");
+            }
 
+            var (payName, dic) = GetPayResource(depositRequest);
+            var payHelper = _payBll.GetPayHelper(payName);
+            depositRequest.PayName = payName;
+
+            var result = payHelper.CallBackDebit(dicParams, bodyContent, headers, dic);
+            _logger.LogInformation($"CallBackDebit result={JsonConvert.SerializeObject(result)}");
+
+            if (!string.Equals(transId, result.DepositId, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new PaymentException ($"{transId} is not equal DepositId={result.DepositId}");
+            }
+
+            if (result.RequestAmount == 0)
+                result.RequestAmount = depositRequest.Amount;
+
+            if (!CanChangeStatus(result.TransStatus, depositRequest.Status))
+            {
+                var status = result.TransStatus switch 
+                {
+                    TransStatus.Success => DepositStatus.Approved,
+                    TransStatus.Fail => DepositStatus.Rejected,
+                    _ => DepositStatus.Pending
+                };
+                
+                var message = $"{transId} status is currently {depositRequest.Status.ToString()}, cannot change status to {status.ToString()}";
+                
+                _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {message}");
+                _paymentBll.SetDepositLog(transId, depositRequest.SiteId,
+                    message, (int)depositRequest.Status, result.ActualAmount, depositRequest.PayName);
+
+                return result.Response;
+            }
+
+            switch (result.TransStatus)
+            {
+                case TransStatus.Success when depositRequest.Amount > 0:
+                    _paymentBll.DepositSuccess(depositRequest, result);
+                    break;
+                
+                case TransStatus.Fail:
+                    _paymentBll.DepositFail(depositRequest, result);
+                    break;
+
+                case TransStatus.Pending:
+                default:
+                    _paymentBll.DepositPending(depositRequest, result);
+                    break;
+            }
+            
             return result.Response;
         }
-
-        switch (result.TransStatus)
+        finally
         {
-            case TransStatus.Success when depositRequest.Amount > 0:
-                _paymentBll.DepositSuccess(depositRequest, result);
-                break;
-            
-            case TransStatus.Fail:
-                _paymentBll.DepositFail(depositRequest, result);
-                break;
-
-            case TransStatus.Pending:
-            default:
-                _paymentBll.DepositPending(depositRequest, result);
-                break;
+            //key unlock
+            _redisHelper.UnLock(lockKey, lockValue);
         }
-
-        return result.Response;
     }
 
     private (Pay, IPayHelper) GetPayHelper(IPayInfo payInfo, Customer custInfo)
