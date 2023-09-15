@@ -74,9 +74,7 @@ namespace PaymentService.Controllers
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
 
-                var onlineBankList = depositType == DepositType.OnlineBanking ?
-                    _payBll.GetOnlineBankList(custInfo.SiteId) :
-                    _payBll.GetAutoChannelBankInfoList(custInfo.SiteId, depositType);
+                var onlineBankList = _payBll.GetOnlineBankList(custInfo.SiteId, depositType);
 
                 var onlineBank = onlineBankList?.FirstOrDefault(x =>
                     x.PayId == reqDeposit.PayId && (reqDeposit.SysId == x.SysId || !x.SelBank) &&
@@ -205,7 +203,7 @@ namespace PaymentService.Controllers
             try
             {
                 var depositType = Request.Path.Value.IndexOf("QR", StringComparison.OrdinalIgnoreCase) > 1
-                    ? DepositType.QRPayPayment : DepositType.MobilePayment;
+                    ? DepositType.QrPay : DepositType.MobilePay;
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
@@ -344,7 +342,7 @@ namespace PaymentService.Controllers
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
-                var cryptoPayInfo = _payBll.GetCryptoPayInfoList(custInfo.SiteId)?.FirstOrDefault(x =>
+                var cryptoPayInfo = _payBll.GetPayInfoList(custInfo.SiteId, DepositType.CryptoPay)?.FirstOrDefault(x =>
                     reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel &&
                     x.CurrencyId == custInfo.CurrencyId);
 
@@ -431,7 +429,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = DepositType.CryptoPayPayment;
+                    depositRequest.DepositType = DepositType.CryptoPay;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;
@@ -476,7 +474,7 @@ namespace PaymentService.Controllers
                 var custId = reqDeposit.CustId;
                 var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
                 var vipLevel = _custInfoBll.GetPointLevelWithCache(custId);
-                var loadCardPay = _payBll.GetLoadCardPayInfoList(custInfo.SiteId)?
+                var loadCardPay = _payBll.GetPayInfoList(custInfo.SiteId, DepositType.LoadCard)?
                     .FirstOrDefault(x => reqDeposit.ChannelId == x.ChannelId && x.PointLevel <= vipLevel);
 
                 if (loadCardPay == null)
@@ -560,7 +558,7 @@ namespace PaymentService.Controllers
                 else
                 {
                     var depositRequest = new DepositRequest();
-                    depositRequest.DepositType = DepositType.LoadCardPayment;
+                    depositRequest.DepositType = DepositType.LoadCard;
                     depositRequest.TransId = reqDeposit.TransId;
                     depositRequest.ActualDeposit = reqDeposit.Amount;
                     depositRequest.Amount = reqDeposit.Amount;
@@ -657,8 +655,8 @@ namespace PaymentService.Controllers
                 depositInfo.RefId = string.IsNullOrEmpty(request.ThirdId) ? null : request.ThirdId;
                 depositInfo.Operator = string.IsNullOrEmpty(request.Operator) ? "Manual" : request.Operator;
 
-                var result = _paymentBll.DepositManualSuccess(depositInfo);
-                if (result > 0)
+                var success = _paymentBll.DepositManualSuccess(depositInfo);
+                if (success)
                 {
                     response.ErrorCode = (int)ErrorCode.Success;
                     response.Message = ErrorCode.Success.ToString();
@@ -679,7 +677,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        [Route("Payment/DepositCallBack/{TransId}")]
+        [Route("Payment/old/DepositCallBack/{TransId}")]
         [HttpPost]
         [HttpGet]
         public async Task<IActionResult> DepositCallBackAsync(string transId)
@@ -695,16 +693,7 @@ namespace PaymentService.Controllers
                     bodyText = await reader.ReadToEndAsync();
                 }
 
-                var absoluteUri = string.Concat(
-                    Request.Scheme,
-                    "://",
-                    Request.Host.ToUriComponent(),
-                    Request.PathBase.ToUriComponent(),
-                    Request.Path.ToUriComponent(),
-                    Request.QueryString.ToUriComponent());
-
                 var dicParam = new Dictionary<string, string>();
-                var isFormData = false;
 
                 if (Request.ContentType != null)
                 {
@@ -716,8 +705,6 @@ namespace PaymentService.Controllers
                         {
                             dicParam.Add(vFormData.Key, vFormData.Value);
                         }
-
-                        isFormData = true;
                     }
                 }
                 else
@@ -728,8 +715,6 @@ namespace PaymentService.Controllers
                     {
                         dicParam.Add(vFormData.Key, vFormData.Value);
                     }
-
-                    isFormData = true;
                 }
 
                 _logger.LogInformation(
@@ -762,18 +747,18 @@ namespace PaymentService.Controllers
             {
                 try
                 {
+                    DepositRequest depositRequest = null;
                     //查詢訂單在不在db
-                    var depositRequest = _paymentBll.GetDepositRequest(transId);
+                    depositRequest = _paymentBll.GetDepositRequest(transId);
                     //根據訂單的廠商決定要用那家金流去解讀回傳的資料
-                    if (depositRequest != null && depositRequest.depositInfo is IPay)
+                    if (depositRequest != null)
                     {
                         var custId = depositRequest.CustId;
                         var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                        var pay = (IPay)depositRequest.depositInfo;
+                        var pay = JsonConvert.DeserializeObject<IPay>(depositRequest.DepositInfo);
                         var paySetting = _payBll.GetPaymentAllList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == pay.PayId);
                         var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
                         DepReq.Add("TransID", depositRequest.TransId);
-                        DepReq.Add("BankCode", pay.BankCode);
                         DepReq.Add("DepositInfo", depositRequest.DepositInfo);
                         DepReq.Add("DepositType", ((int)depositRequest.DepositType).ToString());
                         DepReq.Add("RequestAmount", depositRequest.Amount.ToString());

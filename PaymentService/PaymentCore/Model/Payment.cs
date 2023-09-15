@@ -5,9 +5,9 @@ namespace PaymentCore.Model;
 public interface IPay
 {
     int PayId { get; set; }
+    string PayName { get; set; }
     int ChannelId { get; set; }
     int CurrencyId { get; set; }
-    string BankCode { get; set; }
 }
 
 public class Pay

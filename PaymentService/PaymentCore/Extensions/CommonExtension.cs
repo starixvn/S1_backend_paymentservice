@@ -48,5 +48,21 @@ namespace PaymentCore.Extensions
         public static bool CanRewardPoint(int siteId, int currencyId)
             => _canRewardPointSiteIds.Contains(siteId)
                && _canRewardPointCurrencyIds.Contains(currencyId);
+
+        public static bool StartsWithIgnoreCase(this string str, string target)
+            => str.StartsWith(target, StringComparison.OrdinalIgnoreCase);
+
+        public static void AddRange<T, S>(this IDictionary<T, S> source, IDictionary<T, S> collection)
+        {
+            foreach (var (key, value) in collection)
+            {
+                source.Add(key, value);
+            } 
+        }
+        
+        public static void AddRange<T>(this IEnumerable<T> collection, IEnumerable<T> items)
+        {
+            items?.Aggregate(collection, (current, obj) => current.Append(obj));
+        }
     }
 }

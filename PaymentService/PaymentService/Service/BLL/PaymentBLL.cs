@@ -3,6 +3,7 @@ using PaymentCore.Extensions;
 using PaymentCore.Model;
 using PaymentCore.Model.enums;
 using PaymentCore.Interface;
+using PaymentService.Exceptions;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -15,6 +16,7 @@ namespace PaymentService.Service.BLL
         private readonly WithdrawalService _withdrawalService;
         private readonly Common _common;
         private readonly IRabbitMQProducer _producer;
+        private readonly ILogger<PaymentBLL> _logger;
 
         public PaymentBLL(IServiceProvider provider)
         {
@@ -22,6 +24,7 @@ namespace PaymentService.Service.BLL
             _withdrawalService = provider.GetRequiredService<WithdrawalService>();
             _common = provider.GetRequiredService<Common>();
             _producer = provider.GetRequiredService<IRabbitMQProducer>();
+            _logger = provider.GetRequiredService<ILogger<PaymentBLL>>();
         }
 
         public DepositRequest GetDepositRequest(string transId)
@@ -30,95 +33,88 @@ namespace PaymentService.Service.BLL
             return _depositService.GetDepositRequest(depositId);
         }
 
-        public DepositInfoData GetDepositInfo(string transId)
+        public DepositInfoModel GetDepositInfo(string transId)
         {
             var depositId = _common.GetId(transId);
             return _depositService.GetDepositInfo(depositId);
         }
 
-        public void DepositSuccess(DepositRequest depositRequest, IDepositResult iDepositResult)
+        public void DepositSuccess(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new List<int>
+            var forStatus = new []
             {
-                (int)DepositStatus.Pending,
-                (int)DepositStatus.Rejected
+                DepositStatus.Pending,
+                DepositStatus.Rejected
             };
-            try
+            
+            if (depositRequest.SiteId == 0 || depositRequest.CurrencyId == 0)
             {
-                if (depositRequest.SiteId == 0 || depositRequest.CurrencyId == 0)
+                var deposit = GetDepositInfo(depositRequest.TransId);
+                depositRequest.SiteId = deposit.SiteId;
+                depositRequest.CurrencyId = deposit.CurrencyId;
+            }
+
+            var canReward = CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId);
+            SetDepositInfo(depositRequest, depositResult, DepositStatus.Approved, forStatus, canReward);
+        }
+
+        public bool DepositManualSuccess(DepositInfoModel depositInfo)
+        {
+            var forStatus = new []
+            {
+                DepositStatus.Draft,
+                DepositStatus.Pending,
+                DepositStatus.Rejected,
+                DepositStatus.Canceled,
+                DepositStatus.Expired,
+                DepositStatus.OnHold,
+                DepositStatus.Error
+            };
+
+            var di = GetPayInfoByDepositInfo(depositInfo.DepositInfo);
+            var result = _depositService.SetDepositInfoV2(
+                new SetDepositInfoParams
                 {
-                    var deposit = GetDepositInfo(depositRequest.TransId);
-                    depositRequest.SiteId = deposit.SiteId;
-                    depositRequest.CurrencyId = deposit.CurrencyId;
-                }
+                    TransId = depositInfo.TransId,
+                    SiteId = depositInfo.SiteId,
+                    ActualDeposit = depositInfo.ActualDeposit,
+                    ThirdId = depositInfo.RefId,
+                    PayId = di.PayId,
+                    Operator = depositInfo.Operator,
+                    ForStatus = forStatus,
+                    Status = DepositStatus.Approved
+                },
+                _producer.Publish,
+                CommonExtension.CanRewardPoint(depositInfo.SiteId, depositInfo.CurrencyId));
 
-                _depositService.SetDepositInfo(depositRequest.TransId, 
-                    depositRequest.SiteId,
-                    (IPay)depositRequest.depositInfo,
-                    iDepositResult.ActualAmount,
-                    iDepositResult.Comment,
-                    iDepositResult.RefThirdId,
-                    iDepositResult.ThirdId,
-                    depositRequest.PayName,
-                    forStatus,
-                    DepositStatus.Approved,
-                    _producer.Publish,
-                    CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId));
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            return result;
         }
-
-        public int DepositManualSuccess(DepositInfoData depositInfoData)
+        
+        public void DepositFail(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new List<int>
-            {
-                (int)DepositStatus.Draft,
-                (int)DepositStatus.Pending,
-                (int)DepositStatus.Rejected,
-                (int)DepositStatus.Canceled,
-                (int)DepositStatus.Expired,
-                (int)DepositStatus.OnHold,
-                (int)DepositStatus.Error
-            };
-
-            try
-            {
-                var result = _depositService.SetDepositInfo(
-                    depositInfoData.TransId,
-                    depositInfoData.SiteId,
-                    (IPay)depositInfoData.depositInfo,
-                    depositInfoData.ActualDeposit,
-                    depositInfoData.Comment,
-                    null,
-                    depositInfoData.RefId,
-                    depositInfoData.Operator,
-                    forStatus,
-                    DepositStatus.Approved,
-                    _producer.Publish,
-                    CommonExtension.CanRewardPoint(depositInfoData.SiteId, depositInfoData.CurrencyId));
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            var forStatus = new [] { DepositStatus.Pending };
+            SetDepositInfo(depositRequest, depositResult, DepositStatus.Rejected, forStatus);
         }
-
-        public void DepositFail(DepositRequest depositRequest, IDepositResult iDepositResult)
+        
+        public void SimpleDepositFail(string transId, int siteId, IPay payInfo, string comment)
         {
-            var forStatus = new List<int> { (int)DepositStatus.Pending };
-            _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Rejected, _producer.Publish);
+            _depositService.SetDepositInfoV2(new SetDepositInfoParams
+            {
+                TransId = transId,
+                Comment = comment,
+                SiteId = siteId,
+                PayId = payInfo.PayId,
+                Operator = payInfo.PayName,
+                ForStatus = new [] { DepositStatus.Pending },
+                Status =  DepositStatus.Rejected
+            }, _producer.Publish);
         }
 
-        public void DepositPending(DepositRequest depositRequest, IDepositResult iDepositResult)
+        public void DepositPending(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new List<int> { (int)DepositStatus.Pending };
-            _depositService.SetDepositInfo(depositRequest.TransId, depositRequest.SiteId, (IPay)depositRequest.depositInfo, depositRequest.Amount, iDepositResult.Comment, iDepositResult.RefThirdId, iDepositResult.ThirdId, depositRequest.PayName, forStatus, DepositStatus.Pending, _producer.Publish);
-        }
+            var forStatus = new [] { DepositStatus.Pending };
+            SetDepositInfo(depositRequest, depositResult, DepositStatus.Pending, forStatus);
+       }
 
         public void SetDepositLog(string transId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
         {
@@ -276,5 +272,40 @@ namespace PaymentService.Service.BLL
         {
             return _depositService.DepositAutoCancel(depositId, Operator);
         }
+
+        #region private
+
+        private static IPay GetPayInfoByDepositInfo(string depositInfo)
+        {
+            var pay = JsonConvert.DeserializeObject<IPay>(depositInfo);
+
+            if (pay == null)
+                throw new PaymentException("DepositInfo is empty.");
+
+            return pay;
+        }
+
+        private void SetDepositInfo(DepositRequest depositRequest, IDepositResult depositResult, DepositStatus status,
+            IEnumerable<DepositStatus> forStatus, bool canReward = false)
+        {
+            var di = GetPayInfoByDepositInfo(depositRequest.DepositInfo);
+            var p = new SetDepositInfoParams
+            {
+                TransId = depositRequest.TransId,
+                SiteId = depositRequest.SiteId,
+                ActualDeposit = depositResult.ActualAmount,
+                ThirdId = depositResult.ThirdId,
+                PayId = di.PayId,
+                Operator = di.PayName,
+                ForStatus = forStatus,
+                Status = status
+            };
+            var result = _depositService.SetDepositInfoV2(p, _producer.Publish, canReward);
+
+            if (!result)
+                _logger.LogError("Update DepositInfo failed. SetDepositInfoParams=" + JsonConvert.SerializeObject(p));
+        }
+
+        #endregion
     }
 }

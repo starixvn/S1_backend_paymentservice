@@ -3,7 +3,6 @@ using PaymentService.Service.Model;
 using System.Data;
 using PaymentCore.Model;
 using PaymentCore.Model.enums;
-using PaymentService.Extensions;
 using PaymentService.Model;
 using PaymentService.Service.Library;
 

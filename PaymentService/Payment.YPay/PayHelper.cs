@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Models.Result;
 
@@ -48,12 +49,20 @@ namespace Payment.YPay
             return oNotify;
         }
 
+        public class DepositInfo
+        {
+            public string BankCode { get; set; }
+        }
+        
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var oNotify = new NotifyDepositResult();
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
             var key = payResource["transfer_key"];
-            if (string.IsNullOrEmpty(payResource["BankCode"]))
+            var depositInfo = payResource["DepositInfo"];
+            var di = JsonConvert.DeserializeObject<DepositInfo>(depositInfo);
+            
+            if (di == null || string.IsNullOrEmpty(di.BankCode))
             {
                 key = payResource["scan_Key"];
             }
