@@ -420,7 +420,7 @@ public class DepositV2Controller : ControllerBase
         var transId = depositRequest.TransId;
         var custId = depositRequest.CustId;
         var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-        var pay = JsonConvert.DeserializeObject<IPay>(depositRequest.DepositInfo);
+        var pay = JsonConvert.DeserializeObject<DepositPayInfo>(depositRequest.DepositInfo);
         
         if (pay == null)
         {
