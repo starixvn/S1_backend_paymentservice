@@ -277,7 +277,7 @@ namespace PaymentService.Service.BLL
 
         private static IPay GetPayInfoByDepositInfo(string depositInfo)
         {
-            var pay = JsonConvert.DeserializeObject<IPay>(depositInfo);
+            var pay = JsonConvert.DeserializeObject<DepositPayInfo>(depositInfo);
 
             if (pay == null)
                 throw new PaymentException("DepositInfo is empty.");

@@ -10,6 +10,14 @@ public interface IPay
     int CurrencyId { get; set; }
 }
 
+public class DepositPayInfo : IPay
+{
+    public int PayId { get; set; }
+    public string PayName { get; set; }
+    public int ChannelId { get; set; }
+    public int CurrencyId { get; set; }
+}
+
 public class Pay
 {
     public int PayId { get; set; }
