@@ -492,7 +492,7 @@ namespace Payment.Coin2Pay
                 return requestAmount;
 
             // 使用匯率回推平台金額，保留小數 2 位
-            var actualAmount = decimal.Round(receivedCryptoAmount * exchangeRate, 2);
+            var actualAmount = decimal.Round(receivedCryptoAmount / exchangeRate, 2);
             return actualAmount;
         }
         

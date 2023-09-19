@@ -274,10 +274,13 @@ namespace Payment.LeoPay
                     $"LeoPay create payout failed, HttpStatus: {(int) statusCode} {statusCode}");
             }
 
-            if (!result.Success)
-                throw new CustomException("LeoPay create payout failed.");
-
-            return result;
+            if (result.Success)
+                return result;
+            
+            var str = JsonConvert.SerializeObject(result.Errors);
+            var msg = System.Text.RegularExpressions.Regex.Unescape(str);
+            
+            throw new CustomException(msg);
         }
 
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiToken, string callbackToken)
