@@ -60,6 +60,9 @@ public class CreatPayoutResponse
     
     [JsonProperty("data")]
     public CreatPayoutData Data { get; set; }
+    
+    [JsonProperty("errors")]
+    public object Errors { get; set; }
 }
 
 public class CreatPayoutData
