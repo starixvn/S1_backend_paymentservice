@@ -28,7 +28,7 @@ namespace Payment.PomPay
         {
             try
             {
-                var sUrl = input["host"];
+                var sUrl = input["host"] + PomPayDefinition.Path.CreateOrder;
                 var amount = decimal.Parse(input["Amount"]);
                 var formData = new Dictionary<string, string>()
                 {
@@ -84,7 +84,7 @@ namespace Payment.PomPay
             }
             
             var hashVal = formData["hashVal"];
-            var actual = Hash(dict, input["clientSecret"]);
+            var actual = Hash(dict, input["ClientSecret"]);
             if (string.Equals(hashVal, actual))
             {
                 
