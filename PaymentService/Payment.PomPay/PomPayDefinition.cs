@@ -42,15 +42,15 @@ public class PomPayDefinition
 
     private class PayoutStatus
     {
-        public const string New = "new";
+        public const string New = "New";
         
-        public const string Processing = "processing";
+        public const string Processing = "Processing";
 
-        public const string Success = "success";
+        public const string Success = "Success";
 
-        public const string Rejected = "rejected";
+        public const string Rejected = "Rejected";
 
-        public const string Cancelled = "cancelled";
+        public const string Cancelled = "Cancelled";
     }
 }
 
