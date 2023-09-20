@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -28,7 +28,7 @@ namespace Payment.PomPay
         {
             try
             {
-                var sUrl = input["host"] + PomPayDefinition.Path.CreateOrder;
+                var sUrl = input["Host"] + PomPayDefinition.Path.CreateOrder;
                 var amount = decimal.Parse(input["Amount"]);
                 var formData = new Dictionary<string, string>()
                 {
