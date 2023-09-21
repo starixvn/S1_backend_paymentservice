@@ -10,7 +10,7 @@ namespace PaymentService.Service.Model
         int CurrencyId { get; set; }
     }
     
-    public class DepositPayInfo : IPay
+    public class TpPayInfo : IPay
     {
         public int PayId { get; set; }
         public string PayName { get; set; }

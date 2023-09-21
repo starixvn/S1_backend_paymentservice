@@ -77,8 +77,8 @@ public class DepositV2Controller : ControllerBase
             var (payInfo, input) =
                 _getDepositInputMapper[depositInfo.DepositType].Invoke(depositInfo, custInfo);
             
-            var (pay, payHelper) = GetPayHelper(payInfo, custInfo);
-            var payLang = GetPayLanguage(payInfo.PayId, custInfo);
+            var (pay, payHelper) = _payBll.GetPayHelper(payInfo, custInfo);
+            var payLang = _payBll.GetPayLanguage(payInfo.PayId, custInfo);
             
             input.Add("PayLangId", payLang);
             input.Add("TransID", req.TransId);
@@ -356,34 +356,7 @@ public class DepositV2Controller : ControllerBase
         }
     }
 
-    private (Pay, IPayHelper) GetPayHelper(IPayInfo payInfo, Customer custInfo)
-    {
-        var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == payInfo.PayId);
-        
-        if (pay == null)
-        {
-            throw new PaymentException($"{payInfo.PayName} not found pay setting.", ErrorCode.SettingNotFound);
-        }
-        
-        var payHelper = _payBll.GetPayHelper(pay.PayName);
-        
-        if (payHelper == null)
-        {
-            throw new PaymentException($"{payInfo.PayName} not found PayHelper setting.", ErrorCode.SettingNotFound);
-        }
-
-        return (pay, payHelper);
-    }
-
-    private string GetPayLanguage(int payId, Customer custInfo)
-    {
-        var payLangId = _payBll.GetPayLanguage()
-            ?.FirstOrDefault(x => 
-                string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) 
-                && x.PayId == payId)?.PayLangId;
-
-        return payLangId;
-    }
+    
     
     private static IDictionary<string, string> GetDicDepositInfo(string json, IEnumerable<string> keys)
     {
@@ -420,7 +393,7 @@ public class DepositV2Controller : ControllerBase
         var transId = depositRequest.TransId;
         var custId = depositRequest.CustId;
         var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-        var pay = JsonConvert.DeserializeObject<DepositPayInfo>(depositRequest.DepositInfo);
+        var pay = JsonConvert.DeserializeObject<TpPayInfo>(depositRequest.DepositInfo);
         
         if (pay == null)
         {

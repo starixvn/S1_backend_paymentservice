@@ -758,7 +758,7 @@ namespace PaymentService.Controllers
                     {
                         var custId = depositRequest.CustId;
                         var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-                        var pay = JsonConvert.DeserializeObject<DepositPayInfo>(depositRequest.DepositInfo);
+                        var pay = JsonConvert.DeserializeObject<TpPayInfo>(depositRequest.DepositInfo);
                         var paySetting = _payBll.GetPaymentAllList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == pay.PayId);
                         var DepReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
                         DepReq.Add("TransID", depositRequest.TransId);
