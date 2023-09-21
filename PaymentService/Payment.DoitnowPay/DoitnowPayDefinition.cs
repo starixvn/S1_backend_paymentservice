@@ -1,8 +1,8 @@
-using PaymentCore;
+﻿using PaymentCore;
 
-namespace Payment.PomPay;
+namespace Payment.DoitnowPay;
 
-public class PomPayDefinition
+public class DoitnowPayDefinition
 {
     public const string CallbackResponse = "ok";
     
@@ -53,7 +53,6 @@ public class PomPayDefinition
         public const string Cancelled = "Cancelled";
     }
 }
-
 
 internal class MediaType
 {
