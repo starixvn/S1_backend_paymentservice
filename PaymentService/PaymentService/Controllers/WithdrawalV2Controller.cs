@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using NuGet.Packaging;
+using PaymentCore;
+using PaymentCore.Interface;
 using PaymentService.Exceptions;
+using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -112,6 +115,43 @@ public class WithdrawalV2Controller : ControllerBase
             return new ApiResult<PayResult>(ErrorCode.Fail);
         }
     }
+    
+    [Route("Payment/WithdrawalCallBack/{TransId}")]
+    [HttpPost]
+    [HttpGet]
+    public async Task<IActionResult> CallBackAsync(string transId)
+    {
+        try
+        {
+            var (headers, bodyContent, dicParams) = await HttpExtension.GetCallbackInfo(Request);
+            
+            _logger.LogInformation(
+                $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
+
+            var withdrawalId = _common.GetId(transId);
+            var tmpTransId = $"W{_common.GetEnv()}{withdrawalId}";
+            if (tmpTransId != transId)
+            {
+                var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)_payBll.GetPayHelper(transId);
+                transId = payHelperNoCallBackUrl.FetchTransId(dicParams, bodyContent);
+            }
+            
+            var responseToPay = CallBackHandler(transId, dicParams, bodyContent, headers);
+            return Content(responseToPay);
+        }
+        catch (PaymentException ex)
+        {
+            _logger.LogInformation($"Method={GetCurrentMethod()}, TransId={transId}, Code={ex.Code}, Message={ex.Message}");
+            
+            return Content(ErrorCode.Fail.ToString());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Exception: Method={GetCurrentMethod()}, TransId={transId}, Message={ex.Message}");
+            
+            return Content(ErrorCode.SystemError.ToString());
+        }
+    }
 
     #region GetWithdrawalInput
 
@@ -188,44 +228,87 @@ public class WithdrawalV2Controller : ControllerBase
         return withdrawalInfo;
     }
     
-    /*private (string PayName, Dictionary<string, string> DicParams) GetPayResource(DepositRequest depositRequest)
+    private string CallBackHandler(
+        string transId, Dictionary<string, string> dicParams, string bodyContent, Dictionary<string, string> headers)
     {
-        var transId = depositRequest.TransId;
-        var custId = depositRequest.CustId;
-        var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-        var pay = JsonConvert.DeserializeObject<DepositPayInfo>(depositRequest.DepositInfo);
-        
-        if (pay == null)
+        var lockKey = $"WithdrawalCallBackLock:{transId}";
+        var lockValue = Guid.NewGuid().ToString();
+        var lockExpiry = TimeSpan.FromSeconds(30);
+        if (!_redisHelper.TryCreateLock(lockKey, lockValue, lockExpiry))
+            return $"TransId={transId} is processing";
+        try
         {
-            throw new PaymentException($"TransId={transId} pay info is null.");
-        }
-        
-        var paySetting = _payBll.GetPaymentAllList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == pay.PayId);
-        
-        if (paySetting == null || string.IsNullOrEmpty(paySetting.Setting))
-        {
-            throw new PaymentException($"TransId={transId} pay setting is null.");
-        }
-        
-        var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
-        dic.Add("TransID", depositRequest.TransId);
-        dic.Add("DepositInfo", depositRequest.DepositInfo);
-        dic.Add("DepositType", ((int)depositRequest.DepositType).ToString());
-        dic.Add("RequestAmount", depositRequest.Amount.ToString("G29"));
-        dic.Add("CurrencyId", depositRequest.CurrencyId.ToString());
+            var withdrawalInfo = _paymentBll.GetWithdrawalRequest(transId);
+            
+            if (withdrawalInfo == null)
+            {
+                throw new PaymentException($"TransId={transId} is not exist.");
+            }
 
-        if (!dic.ContainsKey("PayName"))
-        {
-            throw new PaymentException($"TransId={transId} PayName is not exist.");
-        }
+            if (!_common.IsWhiteList(_common.GetClientIP(HttpContext), withdrawalInfo.PayName, transId, GetCurrentMethod()))
+            {
+                throw new PaymentException($"{withdrawalInfo.PayName} requested of {transId} from {_common.GetClientIP(HttpContext)} is Invalid IP!");
+            }
 
-        if (!_common.IsWhiteList(_common.GetClientIP(HttpContext), paySetting.PayName, transId, GetCurrentMethod()))
-        {
-            throw new PaymentException($"{paySetting.PayName} requested of {transId} from {_common.GetClientIP(HttpContext)} is Invalid IP!");
-        }
+            var dic = withdrawalInfo.ISetting ?? new Dictionary<string, string>();
+            dic.Add("TransId", withdrawalInfo.TransId);
+            dic.Add("WithdrawalType", withdrawalInfo.WithdrawalType.ToString());
+            dic.Add("CurrencyId", withdrawalInfo.CurrencyId.ToString());
+            
+            var payHelper = _payBll.GetPayHelper(withdrawalInfo.PayName);
+            var result = payHelper.CallBackCredit(dicParams, bodyContent, headers, dic);
+            _logger.LogInformation($"CallBackDebit result={JsonConvert.SerializeObject(result)}");
 
-        return (paySetting.PayName, dic);
-    }*/
+            if (!string.Equals(transId, result.WithdrawId, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new PaymentException ($"{transId} is not equal WithdrawId={result.WithdrawId}");
+            }
+
+            if (result.RequestAmount == 0)
+                result.RequestAmount = withdrawalInfo.Amount;
+
+            if (withdrawalInfo.Status is WithdrawalStatus.Approved or WithdrawalStatus.Rejected)
+            {
+                var status = result.TransStatus switch 
+                {
+                    TransStatus.Success => WithdrawalStatus.Approved,
+                    TransStatus.Fail => WithdrawalStatus.Verify,
+                    _ => WithdrawalStatus.Process
+                };
+                
+                var message = $"{transId} status is currently {withdrawalInfo.Status.ToString()}, cannot change status to {status.ToString()}";
+                
+                _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {message}");
+                _paymentBll.SetWithdrawalLog(transId, withdrawalInfo.SiteId,
+                    message, (int)withdrawalInfo.Status, withdrawalInfo.PayName);
+
+                return result.Response;
+            }
+
+            switch (result.TransStatus)
+            {
+                case TransStatus.Success when withdrawalInfo.Amount > 0:
+                    _paymentBll.WithdrawalSuccess(withdrawalInfo, result);
+                    break;
+                
+                case TransStatus.Fail:
+                    _paymentBll.WithdrawalFail(withdrawalInfo, result);
+                    break;
+
+                case TransStatus.Pending:
+                default:
+                    _paymentBll.WithdrawalPending(withdrawalInfo, result);
+                    break;
+            }
+            
+            return result.Response;
+        }
+        finally
+        {
+            //key unlock
+            _redisHelper.UnLock(lockKey, lockValue);
+        }
+    }
 
     #endregion
 }

@@ -309,7 +309,7 @@ namespace PaymentService.Controllers
             }
         }
 
-        [Route("Payment/WithdrawalCallBack/{TransId}")]
+        [Route("Payment/OldWithdrawalCallBack/{TransId}")]
         public async Task<IActionResult> WithdrawalCallBackAsync(string transId)
         {
             try
@@ -392,7 +392,7 @@ namespace PaymentService.Controllers
                     {
                         var WithReq = withdrawalRequest.ISetting;
                         WithReq.Add("TransId", transId);
-                        WithReq.Add("WithdrawalType", withdrawalRequest.WithdrawalType.ToString(""));
+                        WithReq.Add("WithdrawalType", withdrawalRequest.WithdrawalType.ToString());
                         WithReq.Add("CurrencyId", withdrawalRequest.CurrencyId.ToString());
 
                         //檢查namespace是否存在 

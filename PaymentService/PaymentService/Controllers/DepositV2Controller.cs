@@ -5,6 +5,7 @@ using PaymentCore;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentService.Exceptions;
+using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -149,33 +150,7 @@ public class DepositV2Controller : ControllerBase
     {
         try
         {
-            var headers = Request.Headers
-                .ToDictionary(x => x.Key, x => x.Value.ToString());
-            
-            using var reader = new StreamReader(Request.Body);
-            var bodyContent = await reader.ReadToEndAsync();
-            
-            var dicParams = new Dictionary<string, string>();
-            if (Request.ContentType != null)
-            {
-                if (Request.ContentType.StartsWithIgnoreCase("multipart/form-data") ||
-                    Request.ContentType.StartsWithIgnoreCase("application/x-www-form-urlencoded"))
-                {
-                    foreach (var (key, value) in Request.Form)
-                    {
-                        dicParams.Add(key, value);
-                    }
-                }
-            }
-            else
-            {
-                var query = QueryHelpers.ParseQuery(Request.QueryString.Value);
-
-                foreach (var (key, value) in query)
-                {
-                    dicParams.Add(key, value);
-                }
-            }
+            var (headers, bodyContent, dicParams) = await HttpExtension.GetCallbackInfo(Request);
             
             _logger.LogInformation(
                 $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
@@ -407,7 +382,8 @@ public class DepositV2Controller : ControllerBase
             throw new PaymentException($"TransId={transId} pay setting is null.");
         }
         
-        var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
+        var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting)
+            ?? new Dictionary<string, string>();
         dic.Add("TransID", depositRequest.TransId);
         dic.Add("DepositInfo", depositRequest.DepositInfo);
         dic.Add("DepositType", ((int)depositRequest.DepositType).ToString());
