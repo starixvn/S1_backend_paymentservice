@@ -115,8 +115,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.CindaPay", "Payment
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.Coin2Pay", "Payment.Coin2Pay\Payment.Coin2Pay.csproj", "{DFA26A8D-8787-444A-A820-D1296EE04216}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.PomPay", "Payment.PomPay\Payment.PomPay.csproj", "{0D85E8FA-73D7-4C00-B57C-414C15BF9A78}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -343,10 +341,6 @@ Global
 		{1E5CF7AE-9225-4259-9944-13FD98BE37D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E5CF7AE-9225-4259-9944-13FD98BE37D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E5CF7AE-9225-4259-9944-13FD98BE37D2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0D85E8FA-73D7-4C00-B57C-414C15BF9A78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0D85E8FA-73D7-4C00-B57C-414C15BF9A78}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0D85E8FA-73D7-4C00-B57C-414C15BF9A78}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0D85E8FA-73D7-4C00-B57C-414C15BF9A78}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -403,7 +397,6 @@ Global
 		{19F9D764-6A06-43DB-9742-4B5069634E2D} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{73074144-7DEB-4B5C-831C-75AD89A2B32A} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{1E5CF7AE-9225-4259-9944-13FD98BE37D2} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
-		{0D85E8FA-73D7-4C00-B57C-414C15BF9A78} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
