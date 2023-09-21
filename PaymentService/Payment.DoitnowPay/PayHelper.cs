@@ -27,7 +27,7 @@ namespace Payment.DoitnowPay
             try
             {
                 var hostDic = JsonConvert.DeserializeObject<Dictionary<string,string>>(inputs["Host"]);
-                    hostDic.TryGetValue(inputs["PayCurrencyId"], out var hostUrl);
+                    hostDic.TryGetValue(inputs["CurrencyId"], out var hostUrl);
                 var sUrl =  hostUrl + DoitnowPayDefinition.Path.CreateOrder;
                 var amount = decimal.Parse(inputs["Amount"]);
                 var formData = new Dictionary<string, string>()
@@ -129,7 +129,7 @@ namespace Payment.DoitnowPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var hostDic = JsonConvert.DeserializeObject<Dictionary<string,string>>(inputs["Host"]);
-                hostDic.TryGetValue(inputs["PayCurrencyId"], out var hostUrl);
+                hostDic.TryGetValue(inputs["CurrencyId"], out var hostUrl);
             var apiUrl = hostUrl;
             var clientSecret = inputs["ClientSecret"];
             var clientId = inputs["ClientId"];
