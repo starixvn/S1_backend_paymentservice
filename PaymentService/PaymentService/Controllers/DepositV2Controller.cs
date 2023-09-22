@@ -117,6 +117,11 @@ public class DepositV2Controller : ControllerBase
                 {
                     _paymentBll.SetThirdId(req.TransId, result.ThirdId);
                 }
+                
+                if (!string.IsNullOrEmpty(result.DepositInfo))
+                {
+                    _paymentBll.UpdateDepositInfo(req.TransId, result.DepositInfo);
+                }
 
                 return new ApiResult<PayResult>(payResult);
             }
