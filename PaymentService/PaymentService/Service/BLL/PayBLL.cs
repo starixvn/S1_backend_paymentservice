@@ -2,6 +2,7 @@
 using System.Reflection;
 using PaymentService.Model;
 using PaymentCore.Interface;
+using PaymentService.Exceptions;
 using PaymentCore.Model;
 using PaymentCore.Model.enums;
 using PaymentService.Service.DAL;
@@ -67,6 +68,16 @@ namespace PaymentService.Service.BLL
                 () => payService.GetEWalletPayListForPayout(siteId));
         }
         
+        public IEnumerable<BankInfoPay> GetPayListForPayout(WithdrawalType withdrawalType , int siteId)
+            => withdrawalType switch
+            {
+                WithdrawalType.OnlineBanking => GetOnlineBankListForPayout(siteId),
+                WithdrawalType.EWalletPayment => GetEWalletPayListForPayout(siteId),
+                WithdrawalType.CryptoPayment => GetCryptoListForPayout(siteId),
+                _ => throw new PaymentException($"No support WithdrawalType={withdrawalType}")
+            };
+
+        
         public IEnumerable<PayLanguage> GetPayLanguage()
         {
             return _redisHelper.TryGetOrCreate("PayLanguage", TimeSpan.FromMinutes(5),
@@ -115,6 +126,35 @@ namespace PaymentService.Service.BLL
         {
             return _redisHelper.TryGetOrCreate($"PaySetting:Crypto:Exchange:{siteId}", TimeSpan.FromMinutes(5),
                 () => payService.GetCryptoExchangeSetting(siteId));
+        }
+        
+        public (Pay, IPayHelper) GetPayHelper(IPayInfo payInfo, Customer custInfo)
+        {
+            var pay = GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == payInfo.PayId);
+        
+            if (pay == null)
+            {
+                throw new PaymentException($"{payInfo.PayName} not found pay setting.", ErrorCode.SettingNotFound);
+            }
+        
+            var payHelper = GetPayHelper(pay.PayName);
+        
+            if (payHelper == null)
+            {
+                throw new PaymentException($"{payInfo.PayName} not found PayHelper setting.", ErrorCode.SettingNotFound);
+            }
+
+            return (pay, payHelper);
+        }
+
+        public string GetPayLanguage(int payId, Customer custInfo)
+        {
+            var payLangId = GetPayLanguage()
+                ?.FirstOrDefault(x => 
+                    string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) 
+                    && x.PayId == payId)?.PayLangId;
+
+            return payLangId;
         }
     }
 }

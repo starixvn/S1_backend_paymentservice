@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Extensions;
@@ -7,6 +6,7 @@ using PaymentCore.Interface;
 using PaymentCore.Model;
 using PaymentCore.Model.enums;
 using PaymentService.Exceptions;
+using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -78,8 +78,8 @@ public class DepositV2Controller : ControllerBase
             var (payInfo, input) =
                 _getDepositInputMapper[depositInfo.DepositType].Invoke(depositInfo, custInfo);
             
-            var (pay, payHelper) = GetPayHelper(payInfo, custInfo);
-            var payLang = GetPayLanguage(payInfo.PayId, custInfo);
+            var (pay, payHelper) = _payBll.GetPayHelper(payInfo, custInfo);
+            var payLang = _payBll.GetPayLanguage(payInfo.PayId, custInfo);
             
             input.Add("PayLangId", payLang);
             input.Add("TransID", req.TransId);
@@ -155,33 +155,7 @@ public class DepositV2Controller : ControllerBase
     {
         try
         {
-            var headers = Request.Headers
-                .ToDictionary(x => x.Key, x => x.Value.ToString());
-            
-            using var reader = new StreamReader(Request.Body);
-            var bodyContent = await reader.ReadToEndAsync();
-            
-            var dicParams = new Dictionary<string, string>();
-            if (Request.ContentType != null)
-            {
-                if (Request.ContentType.StartsWithIgnoreCase("multipart/form-data") ||
-                    Request.ContentType.StartsWithIgnoreCase("application/x-www-form-urlencoded"))
-                {
-                    foreach (var (key, value) in Request.Form)
-                    {
-                        dicParams.Add(key, value);
-                    }
-                }
-            }
-            else
-            {
-                var query = QueryHelpers.ParseQuery(Request.QueryString.Value);
-
-                foreach (var (key, value) in query)
-                {
-                    dicParams.Add(key, value);
-                }
-            }
+            var (headers, bodyContent, dicParams) = await HttpExtension.GetCallbackInfo(Request);
             
             _logger.LogInformation(
                 $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
@@ -362,34 +336,7 @@ public class DepositV2Controller : ControllerBase
         }
     }
 
-    private (Pay, IPayHelper) GetPayHelper(IPayInfo payInfo, Customer custInfo)
-    {
-        var pay = _payBll.GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == payInfo.PayId);
-        
-        if (pay == null)
-        {
-            throw new PaymentException($"{payInfo.PayName} not found pay setting.", ErrorCode.SettingNotFound);
-        }
-        
-        var payHelper = _payBll.GetPayHelper(pay.PayName);
-        
-        if (payHelper == null)
-        {
-            throw new PaymentException($"{payInfo.PayName} not found PayHelper setting.", ErrorCode.SettingNotFound);
-        }
-
-        return (pay, payHelper);
-    }
-
-    private string GetPayLanguage(int payId, Customer custInfo)
-    {
-        var payLangId = _payBll.GetPayLanguage()
-            ?.FirstOrDefault(x => 
-                string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) 
-                && x.PayId == payId)?.PayLangId;
-
-        return payLangId;
-    }
+    
     
     private static IDictionary<string, string> GetDicDepositInfo(string json, IEnumerable<string> keys)
     {
@@ -426,7 +373,7 @@ public class DepositV2Controller : ControllerBase
         var transId = depositRequest.TransId;
         var custId = depositRequest.CustId;
         var custInfo = _custInfoBll.GetCustInfoWithCache(custId);
-        var pay = JsonConvert.DeserializeObject<DepositPayInfo>(depositRequest.DepositInfo);
+        var pay = JsonConvert.DeserializeObject<TpPayInfo>(depositRequest.DepositInfo);
         
         if (pay == null)
         {
@@ -440,7 +387,8 @@ public class DepositV2Controller : ControllerBase
             throw new PaymentException($"TransId={transId} pay setting is null.");
         }
         
-        var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting);
+        var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(paySetting.Setting)
+            ?? new Dictionary<string, string>();
         dic.Add("TransID", depositRequest.TransId);
         dic.Add("DepositInfo", depositRequest.DepositInfo);
         dic.Add("DepositType", ((int)depositRequest.DepositType).ToString());
