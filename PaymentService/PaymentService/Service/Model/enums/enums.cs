@@ -183,4 +183,11 @@ namespace PaymentService.Service.Model.enums
         /// </summary>
         AutoFailBackManual = 2
     }
+    
+    public enum WithdrawalType
+    {
+        OnlineBanking = 1,
+        EWalletPayment = 3,
+        CryptoPayment = 4
+    }
 }
