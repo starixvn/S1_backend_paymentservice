@@ -185,19 +185,18 @@ public class WithdrawalV2Controller : ControllerBase
     
     private (IPayInfo, Dictionary<string, string>) GetEWalletPaymentInput(WithdrawalRequest withdrawalInfo, Customer custInfo)
     {
-        var keys = new[] {"EWalletSysId"};
+        var keys = new[] {"ChannelId"};
         var dicWithdrawalInfo = GetDicWithdrawalInfo(withdrawalInfo.WithdrawalInfo, keys);
-        var sysId = int.Parse(dicWithdrawalInfo["EWalletSysId"]);
+        var channelId = int.Parse(dicWithdrawalInfo["ChannelId"]);
     
-        var payInfo = _payBll.GetPayListForPayout(withdrawalInfo.WithdrawalType, custInfo.SiteId)?.FirstOrDefault(x =>
-            x.PayId == withdrawalInfo.PayId
-            && x.SysId == sysId
+        var payInfo = _payBll.GetEWalletPayListForPayout(custInfo.SiteId)?.FirstOrDefault(x =>
+            x.ChannelId == channelId
             && x.CurrencyId == custInfo.CurrencyId);
         
         if (payInfo == null)
         {
             throw new PaymentException(
-                $"WithdrawalType={withdrawalInfo.WithdrawalType}, PayId={withdrawalInfo.PayId}, SysId={sysId}, CurrencyId={custInfo.CurrencyId}, no support channel.",
+                $"WithdrawalType={withdrawalInfo.WithdrawalType}, ChannelId={channelId}, CurrencyId={custInfo.CurrencyId}, no support channel.",
                 ErrorCode.ChannelNotFound);
         }
     
@@ -217,14 +216,13 @@ public class WithdrawalV2Controller : ControllerBase
         var channelId = int.Parse(dicWithdrawalInfo["ChannelId"]);
     
         var payInfo = _payBll.GetCryptoListForPayout(custInfo.SiteId)?.FirstOrDefault(x =>
-            x.PayId == withdrawalInfo.PayId
-            && x.ChannelId == channelId
+            x.ChannelId == channelId
             && x.CurrencyId == custInfo.CurrencyId);
             
         if (payInfo == null)
         {
             throw new PaymentException(
-                $"WithdrawalType={withdrawalInfo.WithdrawalType}, PayId={withdrawalInfo.PayId}, ChannelId={channelId}, CurrencyId={custInfo.CurrencyId}, no support channel.",
+                $"WithdrawalType={withdrawalInfo.WithdrawalType}, ChannelId={channelId}, CurrencyId={custInfo.CurrencyId}, no support channel.",
                 ErrorCode.ChannelNotFound);
         }
     
