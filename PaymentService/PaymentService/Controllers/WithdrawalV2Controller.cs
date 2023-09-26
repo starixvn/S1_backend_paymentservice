@@ -252,12 +252,12 @@ public class WithdrawalV2Controller : ControllerBase
 
             var dic = withdrawalInfo.ISetting ?? new Dictionary<string, string>();
             dic.Add("TransId", withdrawalInfo.TransId);
-            dic.Add("WithdrawalType", withdrawalInfo.WithdrawalType.ToString());
+            dic.Add("WithdrawalType", ((int)withdrawalInfo.WithdrawalType).ToString());
             dic.Add("CurrencyId", withdrawalInfo.CurrencyId.ToString());
             
             var payHelper = _payBll.GetPayHelper(withdrawalInfo.PayName);
             var result = payHelper.CallBackCredit(dicParams, bodyContent, headers, dic);
-            _logger.LogInformation($"CallBackDebit result={JsonConvert.SerializeObject(result)}");
+            _logger.LogInformation($"CallBackCredit result={JsonConvert.SerializeObject(result)}");
 
             if (!string.Equals(transId, result.WithdrawId, StringComparison.OrdinalIgnoreCase))
             {
