@@ -44,8 +44,8 @@ public class WithdrawalV2Controller : ControllerBase
 
         _getWithdrawalInputMapper = new Dictionary<WithdrawalType, Func<WithdrawalRequest, Customer, (IPayInfo, Dictionary<string, string>)>>
         {
-            {WithdrawalType.OnlineBanking, GetGenericInput},
-            {WithdrawalType.EWalletPayment, GetGenericInput},
+            {WithdrawalType.OnlineBanking, GetOnlineBankingInput},
+            {WithdrawalType.EWalletPayment, GetEWalletPaymentInput},
             {WithdrawalType.CryptoPayment, GetCryptoPaymentInput}
         };
 
@@ -155,7 +155,7 @@ public class WithdrawalV2Controller : ControllerBase
 
     #region GetWithdrawalInput
 
-    private (IPayInfo, Dictionary<string, string>) GetGenericInput(WithdrawalRequest withdrawalInfo, Customer custInfo)
+    private (IPayInfo, Dictionary<string, string>) GetOnlineBankingInput(WithdrawalRequest withdrawalInfo, Customer custInfo)
     {
         var keys = new[] {"SysId", "IFSCCode"};
         var dicWithdrawalInfo = GetDicWithdrawalInfo(withdrawalInfo.WithdrawalInfo, keys);
@@ -178,6 +178,33 @@ public class WithdrawalV2Controller : ControllerBase
             {"BankName", payInfo.BankName},
             {"BankCode", payInfo.BankCode},
             {"IFSCCode", dicWithdrawalInfo["IFSCCode"]}
+        };
+    
+        return (payInfo, input);
+    }
+    
+    private (IPayInfo, Dictionary<string, string>) GetEWalletPaymentInput(WithdrawalRequest withdrawalInfo, Customer custInfo)
+    {
+        var keys = new[] {"EWalletSysId"};
+        var dicWithdrawalInfo = GetDicWithdrawalInfo(withdrawalInfo.WithdrawalInfo, keys);
+        var sysId = int.Parse(dicWithdrawalInfo["EWalletSysId"]);
+    
+        var payInfo = _payBll.GetPayListForPayout(withdrawalInfo.WithdrawalType, custInfo.SiteId)?.FirstOrDefault(x =>
+            x.PayId == withdrawalInfo.PayId
+            && x.SysId == sysId
+            && x.CurrencyId == custInfo.CurrencyId);
+        
+        if (payInfo == null)
+        {
+            throw new PaymentException(
+                $"WithdrawalType={withdrawalInfo.WithdrawalType}, PayId={withdrawalInfo.PayId}, SysId={sysId}, CurrencyId={custInfo.CurrencyId}, no support channel.",
+                ErrorCode.ChannelNotFound);
+        }
+    
+        var input = new Dictionary<string, string>
+        {
+            {"BankName", payInfo.EWalletName},
+            {"BankCode", payInfo.EWalletCode}
         };
     
         return (payInfo, input);
