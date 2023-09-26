@@ -296,7 +296,7 @@ namespace Payment.Coin2Pay
         }
         
         public (string TransId, IDictionary<string, string> Data) FetchTransIdAndDataBeforeVerify(
-            IDictionary<string, string> formData, string bodyContent)
+            IDictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers)
         {
             var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
 
