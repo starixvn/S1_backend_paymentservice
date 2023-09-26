@@ -5,6 +5,7 @@ using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Interface;
+using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -515,28 +516,14 @@ namespace PaymentService.Controllers
         {
             try
             {
-                string bodyContent;
-                using (var reader = new StreamReader(Request.Body))
-                {
-                    bodyContent = await reader.ReadToEndAsync();
-                }
-
-                var formData = new Dictionary<string, string>();
-                
-                if (Request.ContentType != null &&
-                    (Request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase) ||
-                    Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase)))
-                {
-                    formData = Request.Form
-                        .ToDictionary(x => x.Key, x => x.Value.ToString());
-                }
+                var (header, bodyContent, dicParams) = await HttpExtension.GetCallbackInfo(Request);
 
                 _logger.LogInformation(
-                    $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(formData)}, bodyText={bodyContent}");
+                    $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParams)}, bodyText={bodyContent}");
                 var payHelper = (IVerifyTransaction)_payBll.GetPayHelper(payName);
                 
                 
-                var (transId, data) = payHelper.FetchTransIdAndDataBeforeVerify(formData, bodyContent);
+                var (transId, data) = payHelper.FetchTransIdAndDataBeforeVerify(dicParams, bodyContent, header);
 
                 var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
                 var input = withdrawalRequest == null ? new Dictionary<string, string>() : withdrawalRequest.ISetting;
