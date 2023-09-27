@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -140,8 +141,7 @@ namespace Payment.DirePay
                     TransStatus = transStatus,
                     ThirdId = data.ThirdId,
                     WithdrawId = data.TransId,
-                    Message = data.Status,
-                    RequestAmount = data.Amount
+                    Message = data.Status
                 };
             }
             else
@@ -455,8 +455,15 @@ namespace Payment.DirePay
                 return new WithdrawResult("WithdrawalInfo is empty.");
             }
 
+            // 230927: 根據市場需求，改為使用申請當下的匯率
+            var rateInfo = JsonConvert.DeserializeObject<CryptoRateInfo>(withdrawalInfo);
+                
+            if (rateInfo == null)
+                throw new CustomException("CryptoRateInfo is empty.");
+
+            var toAmount = rateInfo.TempExchangeAmount.ToString("G29");
             var accessToken = GetAccessToken(inputs);
-            var toAmount = GetExchangeAmount(strAmount, payCurrency, payCode, inputs, "0");
+            
             var req = new Dictionary<string, string>
             {
                 {"command", Command.PartnerWithdraw},
@@ -467,7 +474,7 @@ namespace Payment.DirePay
                 {"customer_uid", inputs["CustId"]},
                 {"address", inputs["AccountNo"]},
                 {"client_reference_id", transId},
-                {"withdrawal_amount", toAmount.ToString("G29")},
+                {"withdrawal_amount", toAmount},
                 {"hashCode", ToMD5(Command.PartnerWithdraw + inputs["key"]).ToLower()}
             };
 
@@ -479,7 +486,7 @@ namespace Payment.DirePay
                 WithdrawId = transId,
                 Message = resp.Message,
                 WithdrawalInfo = withdrawalInfo
-                    .AddOrSetExchangeInfo((toAmount / amount).ToString("G29"), toAmount.ToString("G29"))
+                    .AddOrSetExchangeInfo(rateInfo.TempExchangeRate.ToString("G29"), toAmount)
             };
         }
         
