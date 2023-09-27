@@ -97,6 +97,11 @@ public class WithdrawalV2Controller : ControllerBase
             input.AddRange(setting);
             
             var result = payHelper.Credit(input);
+            
+            if (!string.IsNullOrEmpty(result.WithdrawalInfo))
+            {
+                _paymentBll.UpdateWithdrawalInfo(req.TransId, result.WithdrawalInfo);
+            }
 
             return new ApiResult(result.Success
                 ? ErrorCode.Success
