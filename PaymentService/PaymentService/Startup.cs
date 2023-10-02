@@ -11,6 +11,7 @@ using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
+using PaymentService.Service.Model;
 using StackExchange.Redis;
 
 namespace PaymentService
@@ -82,6 +83,14 @@ namespace PaymentService
             services.AddSingleton<PayBLL>();
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();
+            
+            
+            /*SiteConfig*/
+            services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
+            services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "PaymentService" });
+            services.AddSiteConfig();
+            services.AddSingleton<ConfigBLL>();
+            
             
             PaymentCore.PayHelperBase.ProxyHost = proxyHost;
             PaymentCore.PayHelperBase.ProxyPort = proxyPort;
