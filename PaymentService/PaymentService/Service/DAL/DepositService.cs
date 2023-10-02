@@ -116,16 +116,6 @@ namespace PaymentService.Service.DAL
                             logMsg += $"transId:{transId} Execute SetDepositInfoFirstDeposit after result:{result} Step4-2";
                         }
 
-                        /*if (result > 0)
-                        {
-                            logMsg += $"transId:{transId} Execute _walletService.SetPayDummy parameter siteId:{siteId},PayId:{pay.PayId},CurrencyId:{pay.CurrencyId}" +
-                                              $"actualDeposit:{actualDeposit} Step5-1";
-
-                            result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, actualDeposit, trans);
-
-                            logMsg += $"transId:{transId} Execute _walletService.SetPayDummy after result:{result} Step5-2";
-                        }*/
-
                         if (result > 0 && canReward)
                         {
                             logMsg += $"transId:{transId} Execute InsertDepositRewardPointQueue parameter Step6-1";
