@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using System.Net;
+using Flurl.Http;
+using Newtonsoft.Json;
+using PaymentCore.Helpers;
 using PaymentService.Model;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
@@ -42,6 +45,36 @@ namespace PaymentService.Extensions
                 UserName = config.UserName,
                 Password = config.Password
             });
+        }
+        
+        public static void AddProxy(this IServiceCollection services)
+        {
+            var provider = services.BuildServiceProvider();
+            var configBll = provider.GetRequiredService<ConfigBLL>();
+            var config = configBll.GetConfigValue<ProxySettingConfig>("ProxySetting");
+                
+            if (!string.IsNullOrEmpty(config.ProxyHost))
+            {
+                var proxy = new HttpClientHandler
+                {
+                    Proxy = new WebProxy(config.ProxyHost, config.ProxyPort),
+                    UseProxy = true
+                };
+
+                services.AddHttpClient("with_proxy")
+                    .ConfigurePrimaryHttpMessageHandler(() => proxy);
+
+                FlurlHttp.Configure(settings => {
+                    settings.HttpClientFactory = new ProxyHttpClientFactory(config.ProxyHost, config.ProxyPort);
+                });
+            }
+            else
+            {
+                services.AddHttpClient();
+            }
+            
+            PaymentCore.PayHelperBase.ProxyHost = config.ProxyHost;
+            PaymentCore.PayHelperBase.ProxyPort = config.ProxyPort;
         }
         
         public static IServiceCollection AddOptionListByDB<T>(this IServiceCollection services, string sql, object parameters = null)
