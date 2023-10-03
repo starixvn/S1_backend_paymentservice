@@ -14,7 +14,6 @@ namespace PaymentService.Controllers
     public class WithdrawalController : ControllerBase
     {
         private readonly PayBLL _payBll;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<WithdrawalController> _logger;
         private readonly Common _common;
         private readonly PaymentBLL _paymentBll;
@@ -22,7 +21,6 @@ namespace PaymentService.Controllers
         public WithdrawalController(IServiceProvider provider)
         {
             _payBll = provider.GetRequiredService<PayBLL>();
-            _configuration = provider.GetRequiredService<IConfiguration>();
             _logger = provider.GetRequiredService<ILogger<WithdrawalController>>();
             _common = provider.GetRequiredService<Common>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();

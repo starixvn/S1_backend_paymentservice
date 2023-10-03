@@ -30,14 +30,14 @@ public class DepositV2Controller : ControllerBase
     
     public DepositV2Controller(IServiceProvider provider)
     {
-        var configuration = provider.GetRequiredService<IConfiguration>();
+        var configBll = provider.GetRequiredService<ConfigBLL>();
         _payBll = provider.GetRequiredService<PayBLL>();
         _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
         _logger = provider.GetRequiredService<ILogger<DepositController>>();
         _paymentBll = provider.GetRequiredService<PaymentBLL>();
         _common = provider.GetRequiredService<Common>();
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
-        _callBackUrl = configuration.GetValue<string>("CallBack");
+        _callBackUrl = configBll.GetConfigValue("CallBack");
 
         #region ActionMapper
 

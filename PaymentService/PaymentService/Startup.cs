@@ -11,6 +11,7 @@ using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
+using PaymentService.Service.Model;
 using StackExchange.Redis;
 
 namespace PaymentService
@@ -29,7 +30,6 @@ namespace PaymentService
         {
             services.AddMemoryCache();
             services.AddDatabaseConnection(Configuration);
-            services.AddMessageQueueConnection(Configuration);
             var redisConnection = ConnectionMultiplexer.Connect(Configuration.GetValue<string>("RedisConnection"));
             redisConnection.UseElasticApm();
             services.AddSingleton<IConnectionMultiplexer>(redisConnection);
@@ -75,6 +75,7 @@ namespace PaymentService
             services.AddSingleton<DepositService>();
             services.AddSingleton<WalletService>();
             services.AddSingleton<WithdrawalService>();
+            services.AddSingleton<ConfigService>();
 
 
             /*BLL*/
@@ -82,6 +83,14 @@ namespace PaymentService
             services.AddSingleton<PayBLL>();
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();
+            
+            
+            /*SiteConfig*/
+            services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
+            services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "PaymentService" });
+            services.AddSiteConfig();
+            services.AddSingleton<ConfigBLL>();
+            services.AddMessageQueueConnection();
             
             PaymentCore.PayHelperBase.ProxyHost = proxyHost;
             PaymentCore.PayHelperBase.ProxyPort = proxyPort;

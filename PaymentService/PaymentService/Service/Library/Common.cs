@@ -1,51 +1,46 @@
 ﻿using System.Text.RegularExpressions;
+using PaymentService.Service.BLL;
 
 namespace PaymentService.Service.Library
 {
     public class Common
     {
-        private readonly IWebHostEnvironment environment;
-        private readonly IConfiguration _configuration;
+        private readonly ConfigBLL _configBll;
+        private readonly IWebHostEnvironment _environment;
         private readonly ILogger<Common> _logger;
 
-
-        public Common(IWebHostEnvironment environment, IConfiguration configuration, ILogger<Common> _logger)
+        public Common(IServiceProvider provider)
         {
-            this.environment = environment;
-            this._configuration = configuration;
-            this._logger = _logger;
+            _configBll = provider.GetRequiredService<ConfigBLL>();
+            _environment = provider.GetRequiredService<IWebHostEnvironment>();
+            _logger = provider.GetRequiredService<ILogger<Common>>();
         }
+        
         public string GetEnv()
         {
-            if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "Local")
+            switch (_environment.EnvironmentName)
             {
-                return "D";
+                case "Development":
+                case "Local":
+                    return "D";
+                    
+                case "Staging":
+                    return "S";
+                
+                case "Production":
+                    return "P";
+                
+                case "QA":
+                    return "Q";
+                
+                default:
+                    return "P";
             }
-            else if (environment.EnvironmentName == "Staging")
-            {
-                return "S";
-            }
-            else if (environment.EnvironmentName == "Production")
-            {
-                return "P";
-            }
-            else if (environment.EnvironmentName == "QA")
-            {
-                return "Q";
-            }
-            return "P";
         }
 
         public string IsTest()
         {
-           if (environment.EnvironmentName == "Production")
-            {
-                return "false";
-            }
-            else 
-            {
-                return "true";
-            }
+            return _environment.EnvironmentName == "Production" ? "false" : "true";
         }
 
         public decimal Floor(decimal d, int decimals)
@@ -58,18 +53,15 @@ namespace PaymentService.Service.Library
         /// <summary>
         /// 获取客户端IP
         /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
         public string GetClientIP(HttpContext httpContext)
         {
-            var HeaderNames = new string[] { "X-Forwarded-For", "HTTP_X_FORWARDED_FOR", "HTTP_INCAP_CLIENT_IP", "HTTP_TRUE_CLIENT_IP", "HTTP_X_REAL_IP", "REMOTE_ADDR" };
+            var headerNames = new[] { "X-Forwarded-For", "HTTP_X_FORWARDED_FOR", "HTTP_INCAP_CLIENT_IP", "HTTP_TRUE_CLIENT_IP", "HTTP_X_REAL_IP", "REMOTE_ADDR" };
 
-            foreach (var Header in HeaderNames)
+            foreach (var header in headerNames)
             {
-
-                if (httpContext.Request.Headers.ContainsKey(Header))
+                if (httpContext.Request.Headers.ContainsKey(header))
                 {
-                    string sServerVariables = httpContext.Request.Headers[Header];
+                    string sServerVariables = httpContext.Request.Headers[header];
                     var ip = GetIPAddress(sServerVariables.Split(','));
                     if (!string.IsNullOrEmpty(ip))
                     {
@@ -84,22 +76,22 @@ namespace PaymentService.Service.Library
         public int GetId(string transId)
         {
             var m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out var id);
+            _ = int.TryParse(m.Value, out var id);
             return id;
         }
 
-        private string GetIPAddress(string[] IPArry)
+        private string GetIPAddress(IEnumerable<string> ipArr)
         {
-            foreach (var ip in IPArry)
+            foreach (var ip in ipArr)
             {
-                var IPAddress = ip.Trim();
-                if (IsIPAddress(IPAddress)
-                    && !isInnerIP(IPAddress)) return IPAddress.Trim();
+                var ipAddress = ip.Trim();
+                if (IsIPAddress(ipAddress)
+                    && !IsInnerIP(ipAddress)) return ipAddress.Trim();
             }
 
             return null;
         }
-        private bool isInnerIP(string ipAddress)
+        private bool IsInnerIP(string ipAddress)
         {
             var ipNum = getIpNum(ipAddress);
 
@@ -112,7 +104,7 @@ namespace PaymentService.Service.Library
 
             // Logger.Log("aBegin:" + aBegin + ",aEnd:" + aEnd + ",bBegin:" + bBegin + ",bEnd:" + bEnd + ",cBegin:" + cBegin + ",cEnd:" + cEnd);
 
-            var isInnerIp = isInner(ipNum, aBegin, aEnd) || isInner(ipNum, bBegin, bEnd) || isInner(ipNum, cBegin, cEnd) || ipAddress == "127.0.0.1";
+            var isInnerIp = IsInner(ipNum, aBegin, aEnd) || IsInner(ipNum, bBegin, bEnd) || IsInner(ipNum, cBegin, cEnd) || ipAddress == "127.0.0.1";
             return isInnerIp;
         }
         private long getIpNum(string ipAddress)
@@ -135,39 +127,33 @@ namespace PaymentService.Service.Library
             return regex.IsMatch(str1);
 
         }
-        private bool isInner(long userIp, long begin, long end)
+        private static bool IsInner(long userIp, long begin, long end)
         {
             return (userIp >= begin) && (userIp <= end);
         }
 
         public bool IsWhiteList(string clientIp, string paymentName, string transId,string methodName)
         {
+            if (!_environment.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase))
+                return true;
+            
             _logger.LogInformation($"Method={methodName}, Request: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
-            var officeList = _configuration.GetSection("OfficeIP")?.Get<string[]>();
-            if (officeList.Any(x => x == clientIp))
+            
+            var officeIps = _configBll.GetConfigValueByEnvironment<string[]>("OfficeIP");
+            
+            if (officeIps.Any(x => x == clientIp))
             {
                 return true;
             }
 
-            var whiteList = _configuration.GetSection("WhiteList")?.Get<Dictionary<string, string[]>>();
-            if (whiteList != null)
-            {
-                var whiteListIgnoreCase = new Dictionary<string, string[]>(whiteList, StringComparer.OrdinalIgnoreCase);
-                if (whiteListIgnoreCase.ContainsKey(paymentName))
-                {
-                    string[] iplist;
-                    whiteListIgnoreCase.TryGetValue(paymentName, out iplist);
-                    if (!iplist.Any(x => x == clientIp))
-                    {
-                        _logger.LogInformation($"Method={methodName}, Reject: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
-                        return false;
-                    }
-                }
+            var whiteList = _configBll.GetConfigValue<string[]>(paymentName);
 
+            if (whiteList.Any(x => x.Equals(clientIp)))
                 return true;
-            }
-
-            return true;
+            
+            _logger.LogInformation($"Method={methodName}, Reject: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
+            
+            return false;
         }
 
         #endregion

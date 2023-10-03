@@ -30,9 +30,9 @@ public class WithdrawalV2Controller : ControllerBase
 
     public WithdrawalV2Controller(IServiceProvider provider)
     {
-        var configuration = provider.GetRequiredService<IConfiguration>();
-        _outgoingIp = configuration.GetValue<string>("OutgoingIp");
-        _callBackUrl = configuration.GetValue<string>("CallBack");
+        var configBll = provider.GetRequiredService<ConfigBLL>();
+        _outgoingIp = configBll.GetConfigValue("OutgoingIp");
+        _callBackUrl = configBll.GetConfigValue("CallBack");
         _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
         _payBll = provider.GetRequiredService<PayBLL>();
         _logger = provider.GetRequiredService<ILogger<WithdrawalV2Controller>>();

@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentService.Exceptions;
 using PaymentService.Service.DAL;
@@ -16,6 +15,7 @@ namespace PaymentService.Service.BLL
         private readonly Common _common;
         private readonly IRabbitMQProducer _producer;
         private readonly ILogger<PaymentBLL> _logger;
+        private readonly ConfigBLL _configBll;
 
         public PaymentBLL(IServiceProvider provider)
         {
@@ -24,6 +24,7 @@ namespace PaymentService.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _producer = provider.GetRequiredService<IRabbitMQProducer>();
             _logger = provider.GetRequiredService<ILogger<PaymentBLL>>();
+            _configBll = provider.GetRequiredService<ConfigBLL>();
         }
 
         public DepositRequest GetDepositRequest(string transId)
@@ -306,5 +307,11 @@ namespace PaymentService.Service.BLL
         }
 
         #endregion
+        private bool CanRewardPoint(int siteId, int currencyId)
+        {
+            var canRewardCurrency =  _configBll.GetConfigValue<int[]>("CanReward", siteId);
+
+            return canRewardCurrency.Contains(currencyId);
+        }
     }
 }
