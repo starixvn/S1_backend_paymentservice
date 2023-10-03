@@ -54,7 +54,7 @@ namespace PaymentService.Service.BLL
                 depositRequest.CurrencyId = deposit.CurrencyId;
             }
 
-            var canReward = CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId);
+            var canReward = CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId);
             SetDepositInfo(depositRequest, depositResult, DepositStatus.Approved, forStatus, canReward);
         }
 
@@ -85,7 +85,7 @@ namespace PaymentService.Service.BLL
                     Status = DepositStatus.Approved
                 },
                 _producer.Publish,
-                CommonExtension.CanRewardPoint(depositInfo.SiteId, depositInfo.CurrencyId));
+                CanRewardPoint(depositInfo.SiteId, depositInfo.CurrencyId));
 
             return result;
         }
@@ -306,12 +306,13 @@ namespace PaymentService.Service.BLL
                 _logger.LogError("Update DepositInfo failed. SetDepositInfoParams=" + JsonConvert.SerializeObject(p));
         }
 
-        #endregion
         private bool CanRewardPoint(int siteId, int currencyId)
         {
             var canRewardCurrency =  _configBll.GetConfigValue<int[]>("CanReward", siteId);
 
             return canRewardCurrency.Contains(currencyId);
         }
+        
+        #endregion
     }
 }
