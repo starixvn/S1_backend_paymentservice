@@ -19,18 +19,19 @@ namespace PaymentService.Controllers
         private readonly CustInfoBLL _custInfoBll;
         private readonly PayBLL _payBll;
         private readonly string _outgoingIp;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<WithdrawalController> _logger;
         private readonly Common _common;
         private readonly PaymentBLL _paymentBll;
         private readonly ICacheHelper _redisHelper;
+        private readonly string _callBackUrl;
 
         public WithdrawalController(IServiceProvider provider)
         {
+            var configBll = provider.GetRequiredService<ConfigBLL>();
             _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
             _payBll = provider.GetRequiredService<PayBLL>();
-            _configuration = provider.GetRequiredService<IConfiguration>();
-            _outgoingIp = _configuration.GetValue<string>("OutgoingIp");
+            _outgoingIp = configBll.GetConfigValue("OutgoingIp");
+            _callBackUrl = configBll.GetConfigValue("CallBack");
             _logger = provider.GetRequiredService<ILogger<WithdrawalController>>();
             _common = provider.GetRequiredService<Common>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
@@ -107,9 +108,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
                 WithReq.Add("AreaCode", custInfo.AreaCode);
                 WithReq.Add("WithdrawalType", "1");
-
-                var callBackUrl = _configuration.GetValue<string>("CallBack");
-                WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
+                WithReq.Add("CallBackUrl", $"{_callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");
@@ -187,8 +186,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("AccountName", reqWithdrawal.AccountName);
                 WithReq.Add("AccountNo", reqWithdrawal.AccountNo);
                 WithReq.Add("IsTest", _common.IsTest());
-                var callBackUrl = _configuration.GetValue<string>("CallBack");
-                WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
+                WithReq.Add("CallBackUrl", $"{_callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
                 WithReq.Add("WithdrawalInfo", withdrawalInfo);
                 WithReq.Add("WithdrawalType", "4");
 
@@ -280,9 +278,7 @@ namespace PaymentService.Controllers
                 WithReq.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
                 WithReq.Add("AreaCode", custInfo.AreaCode);
                 WithReq.Add("WithdrawalType", "1");
-
-                var callBackUrl = _configuration.GetValue<string>("CallBack");
-                WithReq.Add("CallBackUrl", $"{callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
+                WithReq.Add("CallBackUrl", $"{_callBackUrl}/Payment/WithdrawalCallBack/{reqWithdrawal.TransId}");
 
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={pay.PayName}, Request={JsonConvert.SerializeObject(WithReq)}");

@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
@@ -14,6 +13,7 @@ namespace PaymentService.Service.BLL
         private readonly WithdrawalService _withdrawalService;
         private readonly Common _common;
         private readonly IRabbitMQProducer _producer;
+        private readonly ConfigBLL _configBll;
 
         public PaymentBLL(IServiceProvider provider)
         {
@@ -21,6 +21,7 @@ namespace PaymentService.Service.BLL
             _withdrawalService = provider.GetRequiredService<WithdrawalService>();
             _common = provider.GetRequiredService<Common>();
             _producer = provider.GetRequiredService<IRabbitMQProducer>();
+            _configBll = provider.GetRequiredService<ConfigBLL>();
         }
 
         public DepositRequest GetDepositRequest(string transId)
@@ -62,7 +63,7 @@ namespace PaymentService.Service.BLL
                     forStatus,
                     DepositStatus.Approved,
                     _producer.Publish,
-                    CommonExtension.CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId));
+                    CanRewardPoint(depositRequest.SiteId, depositRequest.CurrencyId));
             }
             catch (Exception ex)
             {
@@ -97,7 +98,7 @@ namespace PaymentService.Service.BLL
                     forStatus,
                     DepositStatus.Approved,
                     _producer.Publish,
-                    CommonExtension.CanRewardPoint(depositInfoData.SiteId, depositInfoData.CurrencyId));
+                    CanRewardPoint(depositInfoData.SiteId, depositInfoData.CurrencyId));
 
                 return result;
             }
@@ -274,6 +275,13 @@ namespace PaymentService.Service.BLL
         public int DepositAutoCancel(int depositId, string Operator)
         {
             return _depositService.DepositAutoCancel(depositId, Operator);
+        }
+
+        private bool CanRewardPoint(int siteId, int currencyId)
+        {
+            var canRewardCurrency =  _configBll.GetConfigValue<int[]>("CanReward", siteId);
+
+            return canRewardCurrency.Contains(currencyId);
         }
     }
 }

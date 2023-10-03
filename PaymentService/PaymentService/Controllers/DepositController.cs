@@ -21,21 +21,22 @@ namespace PaymentService.Controllers
     {
         private readonly PayBLL _payBll;
         private readonly CustInfoBLL _custInfoBll;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<DepositController> _logger;
         private readonly PaymentBLL _paymentBll;     
         private readonly Common _common;
         private readonly ICacheHelper _redisHelper;
+        private readonly string _callBackUrl;
 
         public DepositController(IServiceProvider provider)
         {
+            var configBll = provider.GetRequiredService<ConfigBLL>();
             _payBll = provider.GetRequiredService<PayBLL>();
             _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
-            _configuration = provider.GetRequiredService<IConfiguration>();
             _logger = provider.GetRequiredService<ILogger<DepositController>>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
             _common = provider.GetRequiredService<Common>();
             _redisHelper = provider.GetRequiredService<ICacheHelper>();
+            _callBackUrl = configBll.GetConfigValue("CallBack");
         }
 
         public class ReqDeposit
@@ -142,8 +143,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("CustId", reqDeposit.CustId.ToString());
                 DepReq.Add("UserName", custInfo.UserName);
                 DepReq.Add("AccountName", custInfo.AccountName);
-                var callBackUrl = _configuration.GetValue<string>("CallBack");
-                DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+                DepReq.Add("CallBackUrl", $"{_callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("IsTest", _common.IsTest());
                 DepReq.Add("DepositInfo", depositInfo.DepositInfo);
                 DepReq.Add("PhoneNo", custInfo.PhoneNo);
@@ -269,8 +269,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
                 DepReq.Add("PayLangId", payLangId);
                 DepReq.Add("CustId", reqDeposit.CustId.ToString());
-                var callBackUrl = _configuration.GetValue<string>("CallBack");
-                DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+                DepReq.Add("CallBackUrl", $"{_callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("IsTest", _common.IsTest());
                 DepReq.Add("PayAccount", reqDeposit.PayAccount);
                 DepReq.Add("UserName", custInfo.UserName);
@@ -401,8 +400,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
                 DepReq.Add("PayLangId", payLangId);
                 DepReq.Add("CustId", reqDeposit.CustId.ToString());
-                var callBackUrl = _configuration.GetValue<string>("CallBack");
-                DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+                DepReq.Add("CallBackUrl", $"{_callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("IsTest", _common.IsTest());
                 DepReq.Add("DepositInfo", reqDeposit.DepositInfo);
                 DepReq.Add("PhoneNo", custInfo.PhoneNo);
@@ -535,8 +533,7 @@ namespace PaymentService.Controllers
                 DepReq.Add("ReturnUrl", reqDeposit.ReturnUrl);
                 DepReq.Add("PayLangId", payLangId);
                 DepReq.Add("CustId", reqDeposit.CustId.ToString());
-                var callBackUrl = _configuration.GetValue<string>("CallBack");
-                DepReq.Add("CallBackUrl", $"{callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
+                DepReq.Add("CallBackUrl", $"{_callBackUrl}/Payment/DepositCallBack/{reqDeposit.TransId}");
                 DepReq.Add("Lang", custInfo.UserLang);
                 DepReq.Add("IsTest", _common.IsTest());
                 DepReq.Add("PhoneNo", custInfo.PhoneNo);
