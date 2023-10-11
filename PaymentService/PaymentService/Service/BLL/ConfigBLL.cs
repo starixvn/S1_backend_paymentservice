@@ -19,19 +19,10 @@ public class ConfigBLL
 
     public string GetConfigValue(string configKey, int siteId = 0)
     {
-        var configs = _siteConfigs.FirstOrDefault(x => x.SiteId == siteId);
-        
-        if (configs == null)
-        {
-            _logger.LogWarning($"siteId={siteId} config not found.");
-            return string.Empty;
-        }
-        
-        if (!configs.Config.TryGetValue(configKey, out var config))
-        {
-            _logger.LogWarning($"siteId={siteId}, configKey={configKey} not found.");
-            return string.Empty;
-        }
+        var config = GetSiteConfigValue(configKey, siteId);
+
+        if (string.IsNullOrEmpty(config) && siteId != 0)
+            config = GetSiteConfigValue(configKey, 0);
 
         return config;
     }
@@ -51,5 +42,25 @@ public class ConfigBLL
         var json = GetConfigValueByEnvironment(configKey, siteId);
 
         return JsonConvert.DeserializeObject<T>(json);
+    }
+    
+    private string GetSiteConfigValue(string configKey, int siteId)
+    {
+        var configs = _siteConfigs
+            .FirstOrDefault(x => x.SiteId == siteId);
+        
+        if (configs == null)
+        {
+            _logger.LogWarning($"siteId={siteId} config not found.");
+            return string.Empty;
+        }
+        
+        if (!configs.Config.TryGetValue(configKey, out var config))
+        {
+            _logger.LogWarning($"siteId={siteId}, configKey={configKey} not found.");
+            return string.Empty;
+        }
+
+        return config;
     }
 }
