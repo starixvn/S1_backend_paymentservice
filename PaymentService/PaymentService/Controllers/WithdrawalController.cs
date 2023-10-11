@@ -17,6 +17,7 @@ namespace PaymentService.Controllers
         private readonly ILogger<WithdrawalController> _logger;
         private readonly Common _common;
         private readonly PaymentBLL _paymentBll;
+        private readonly WhitelistBLL _whitelistBll;
 
         public WithdrawalController(IServiceProvider provider)
         {
@@ -24,6 +25,7 @@ namespace PaymentService.Controllers
             _logger = provider.GetRequiredService<ILogger<WithdrawalController>>();
             _common = provider.GetRequiredService<Common>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
+            _whitelistBll = provider.GetRequiredService<WhitelistBLL>();
         }
 
         [Route("Payment/VerifyTransaction/{PayName}")]
@@ -71,7 +73,7 @@ namespace PaymentService.Controllers
             // 檢查 IP 是否在白名單內
             const string payName = "Manual";
             var clientIp = _common.GetClientIP(HttpContext);
-            if (!_common.IsWhiteList(clientIp, payName, request.TransId, GetCurrentMethod()))
+            if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod()))
             {
                 _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
@@ -133,7 +135,7 @@ namespace PaymentService.Controllers
             // 檢查 IP 是否在白名單內
             const string payName = "Manual";
             var clientIp = _common.GetClientIP(HttpContext);
-            if (!_common.IsWhiteList(clientIp, payName, request.TransId, GetCurrentMethod()))
+            if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod()))
             {
                 _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
                 apiResult.ErrorCode = (int)ErrorCode.Fail;

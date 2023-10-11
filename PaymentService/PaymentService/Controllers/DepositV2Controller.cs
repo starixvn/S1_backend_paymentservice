@@ -21,6 +21,7 @@ public class DepositV2Controller : ControllerBase
     private readonly CustInfoBLL _custInfoBll;
     private readonly ILogger<DepositController> _logger;
     private readonly PaymentBLL _paymentBll;
+    private readonly WhitelistBLL _whitelistBll;
     private readonly Common _common;
     private readonly ICacheHelper _redisHelper;
     private readonly string _callBackUrl;
@@ -35,6 +36,7 @@ public class DepositV2Controller : ControllerBase
         _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
         _logger = provider.GetRequiredService<ILogger<DepositController>>();
         _paymentBll = provider.GetRequiredService<PaymentBLL>();
+        _whitelistBll = provider.GetRequiredService<WhitelistBLL>();
         _common = provider.GetRequiredService<Common>();
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
         _callBackUrl = configBll.GetConfigValue("CallBack");
@@ -400,7 +402,7 @@ public class DepositV2Controller : ControllerBase
             throw new PaymentException($"TransId={transId} PayName is not exist.");
         }
 
-        if (!_common.IsWhiteList(_common.GetClientIP(HttpContext), paySetting.PayName, transId, GetCurrentMethod()))
+        if (!_whitelistBll.IsWhitelist(_common.GetClientIP(HttpContext), paySetting.PayName, transId, GetCurrentMethod()))
         {
             throw new PaymentException($"{paySetting.PayName} requested of {transId} from {_common.GetClientIP(HttpContext)} is Invalid IP!");
         }
