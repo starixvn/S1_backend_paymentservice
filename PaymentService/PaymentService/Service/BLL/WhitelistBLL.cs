@@ -19,8 +19,8 @@ public class WhitelistBLL
     
     public bool IsWhitelist(string clientIp, string paymentName, string transId, string methodName)
     {
-        // if (!_environment.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase))
-        //     return true;
+        if (!_environment.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase))
+            return true;
             
         _logger.LogInformation($"Method={methodName}, Request: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
             
