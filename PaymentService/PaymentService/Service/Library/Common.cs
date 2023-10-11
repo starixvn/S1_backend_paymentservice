@@ -134,8 +134,8 @@ namespace PaymentService.Service.Library
 
         public bool IsWhiteList(string clientIp, string paymentName, string transId,string methodName)
         {
-            if (!_environment.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase))
-                return true;
+            // if (!_environment.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase))
+            //     return true;
             
             _logger.LogInformation($"Method={methodName}, Request: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
             
