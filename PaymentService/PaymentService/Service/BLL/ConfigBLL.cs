@@ -1,10 +1,14 @@
 using Newtonsoft.Json;
+using PaymentService.Service.DAL;
+using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 
 namespace PaymentService.Service.BLL;
 
 public class ConfigBLL
 {
+    private readonly ConfigService _configService;
+    private readonly ICacheHelper _redisHelper;
     private readonly IEnumerable<SiteConfig> _siteConfigs;
     private readonly ILogger<ConfigBLL> _logger;
     private readonly string _env;
@@ -12,6 +16,8 @@ public class ConfigBLL
     public ConfigBLL(IServiceProvider provider)
     {
         var environment = provider.GetRequiredService<IWebHostEnvironment>();
+        _configService = provider.GetRequiredService<ConfigService>();
+        _redisHelper = provider.GetRequiredService<ICacheHelper>();
         _siteConfigs = provider.GetServices<SiteConfig>();
         _logger = provider.GetRequiredService<ILogger<ConfigBLL>>();
         _env = environment.EnvironmentName;
@@ -23,12 +29,25 @@ public class ConfigBLL
 
         if (string.IsNullOrEmpty(config) && siteId != 0)
             config = GetSiteConfigValue(configKey, 0);
+        
+        if (string.IsNullOrEmpty(config))
+            _logger.LogWarning($"siteId={siteId}, configKey={configKey} not found.");
 
         return config;
     }
+    
+    public string GetConfigValueFromDb(string configKey, int siteId = 0, string configType = "")
+    {
+        var config = GetConfigFromDb(configKey, siteId, configType);
 
-    public string GetConfigValueByEnvironment(string configKey, int siteId = 0)
-        => GetConfigValue($"{configKey}.{_env}.json", siteId);
+        if (string.IsNullOrEmpty(config) && siteId != 0)
+            config = GetConfigFromDb(configKey, 0, configType);
+        
+        if (string.IsNullOrEmpty(config))
+            _logger.LogWarning($"siteId={siteId}, configKey={configKey}, ConfigType={configType} not found.");
+
+        return config;
+    }
 
     public T GetConfigValue<T>(string configKey, int siteId = 0)
     {
@@ -37,9 +56,23 @@ public class ConfigBLL
         return JsonConvert.DeserializeObject<T>(json);
     }
     
+    public T GetConfigValueFromDb<T>(string configKey, int siteId = 0, string configType = "")
+    {
+        var json = GetConfigValueFromDb(configKey, siteId, configType);
+
+        return JsonConvert.DeserializeObject<T>(json);
+    }
+    
     public T GetConfigValueByEnvironment<T>(string configKey, int siteId = 0)
     {
-        var json = GetConfigValueByEnvironment(configKey, siteId);
+        var json = GetConfigValue($"{configKey}.{_env}.json", siteId);
+
+        return JsonConvert.DeserializeObject<T>(json);
+    }
+    
+    public T GetConfigValueFromDbByEnvironment<T>(string configKey, int siteId = 0, string configType = "")
+    {
+        var json = GetConfigValueFromDb($"{configKey}.{_env}.json", siteId, configType);
 
         return JsonConvert.DeserializeObject<T>(json);
     }
@@ -49,18 +82,27 @@ public class ConfigBLL
         var configs = _siteConfigs
             .FirstOrDefault(x => x.SiteId == siteId);
         
-        if (configs == null)
-        {
-            _logger.LogWarning($"siteId={siteId} config not found.");
+        if (configs == null || !configs.Config.TryGetValue(configKey, out var config))
             return string.Empty;
-        }
         
-        if (!configs.Config.TryGetValue(configKey, out var config))
-        {
-            _logger.LogWarning($"siteId={siteId}, configKey={configKey} not found.");
-            return string.Empty;
-        }
-
         return config;
+    }
+    
+    private string GetConfigFromDb(string configKey, int siteId, string configType = "")
+    {
+        var config = GetConfigsFromDbWithCache()
+            .FirstOrDefault(x => x.SiteId == siteId
+                && x.ConfigKey.Equals(configKey)
+                && (string.IsNullOrEmpty(configType) || x.ConfigType.Equals(configType)));
+        
+        return config == null ? string.Empty : config.ConfigValue;
+    }
+    
+    private IEnumerable<Config> GetConfigsFromDbWithCache()
+    {
+        var dbData = _redisHelper.TryGetOrCreate("PaymentServiceConfigs", TimeSpan.FromMinutes(5),
+                () => _configService.Query<Config>("SiteConfig_Get", new { ConfigGroup = "PaymentService" }));
+        
+        return dbData;
     }
 }

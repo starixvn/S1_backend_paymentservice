@@ -22,7 +22,8 @@ namespace PaymentService.Controllers
         private readonly PayBLL _payBll;
         private readonly CustInfoBLL _custInfoBll;
         private readonly ILogger<DepositController> _logger;
-        private readonly PaymentBLL _paymentBll;     
+        private readonly PaymentBLL _paymentBll;
+        private readonly WhitelistBLL _whitelistBll;
         private readonly Common _common;
         private readonly ICacheHelper _redisHelper;
         private readonly string _callBackUrl;
@@ -34,6 +35,7 @@ namespace PaymentService.Controllers
             _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<DepositController>>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
+            _whitelistBll = provider.GetRequiredService<WhitelistBLL>();
             _common = provider.GetRequiredService<Common>();
             _redisHelper = provider.GetRequiredService<ICacheHelper>();
             _callBackUrl = configBll.GetConfigValue("CallBack");
@@ -625,7 +627,7 @@ namespace PaymentService.Controllers
                 };
                 const string payName = "Manual";
                 var clientIp = _common.GetClientIP(HttpContext);
-                if (!_common.IsWhiteList(clientIp, payName, request.TransId, GetCurrentMethod()))
+                if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod()))
                 {
                     _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
                     response.ErrorCode = (int)ErrorCode.Fail;
@@ -787,7 +789,7 @@ namespace PaymentService.Controllers
                             return $"PayName of TransId={transId} is not exist";
                         }
 
-                        if (!_common.IsWhiteList(_common.GetClientIP(HttpContext), paySetting.PayName, transId, GetCurrentMethod()))
+                        if (!_whitelistBll.IsWhitelist(_common.GetClientIP(HttpContext), paySetting.PayName, transId, GetCurrentMethod()))
                         {
                             _logger.LogError($"Method={GetCurrentAsyncMethod()}, {paySetting.PayName} requested of {transId} from {_common.GetClientIP(HttpContext)} is Invalid IP!");
                             return "Invalid IP!";
