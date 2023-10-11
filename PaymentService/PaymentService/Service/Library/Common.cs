@@ -132,30 +132,6 @@ namespace PaymentService.Service.Library
             return (userIp >= begin) && (userIp <= end);
         }
 
-        public bool IsWhiteList(string clientIp, string paymentName, string transId,string methodName)
-        {
-            if (!_environment.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase))
-                return true;
-            
-            _logger.LogInformation($"Method={methodName}, Request: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
-            
-            var officeIps = _configBll.GetConfigValueByEnvironment<string[]>("OfficeIP");
-            
-            if (officeIps.Any(x => x == clientIp))
-            {
-                return true;
-            }
-
-            var whiteList = _configBll.GetConfigValue<string[]>(paymentName);
-
-            if (whiteList.Any(x => x.Equals(clientIp)))
-                return true;
-            
-            _logger.LogInformation($"Method={methodName}, Reject: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
-            
-            return false;
-        }
-
         #endregion
     }
 }

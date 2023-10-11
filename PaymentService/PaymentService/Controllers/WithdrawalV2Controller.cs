@@ -22,6 +22,7 @@ public class WithdrawalV2Controller : ControllerBase
     private readonly ILogger<WithdrawalV2Controller> _logger;
     private readonly Common _common;
     private readonly PaymentBLL _paymentBll;
+    private readonly WhitelistBLL _whitelistBll;
     private readonly ICacheHelper _redisHelper;
     private readonly string _callBackUrl;
 
@@ -38,6 +39,7 @@ public class WithdrawalV2Controller : ControllerBase
         _logger = provider.GetRequiredService<ILogger<WithdrawalV2Controller>>();
         _common = provider.GetRequiredService<Common>();
         _paymentBll = provider.GetRequiredService<PaymentBLL>();
+        _whitelistBll = provider.GetRequiredService<WhitelistBLL>();
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
         
         #region ActionMapper
@@ -275,7 +277,7 @@ public class WithdrawalV2Controller : ControllerBase
                 throw new PaymentException($"TransId={transId} is not exist.");
             }
 
-            if (!_common.IsWhiteList(_common.GetClientIP(HttpContext), withdrawalInfo.PayName, transId, GetCurrentMethod()))
+            if (!_whitelistBll.IsWhitelist(_common.GetClientIP(HttpContext), withdrawalInfo.PayName, transId, GetCurrentMethod()))
             {
                 throw new PaymentException($"{withdrawalInfo.PayName} requested of {transId} from {_common.GetClientIP(HttpContext)} is Invalid IP!");
             }

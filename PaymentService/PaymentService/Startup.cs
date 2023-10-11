@@ -61,7 +61,7 @@ namespace PaymentService
             services.AddSingleton<PayBLL>();
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();
-            
+            services.AddSingleton<WhitelistBLL>();
             
             /*SiteConfig*/
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");

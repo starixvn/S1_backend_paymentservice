@@ -15,12 +15,14 @@ namespace PaymentService.Controllers
         private readonly ILogger<DepositController> _logger;
         private readonly PaymentBLL _paymentBll;     
         private readonly Common _common;
+        private readonly WhitelistBLL _whitelistBll;
         
         public DepositController(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<DepositController>>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
             _common = provider.GetRequiredService<Common>();
+            _whitelistBll = provider.GetRequiredService<WhitelistBLL>();
         }
 
         [Route("Payment/GetClientIp")]
@@ -53,7 +55,7 @@ namespace PaymentService.Controllers
                 };
                 const string payName = "Manual";
                 var clientIp = _common.GetClientIP(HttpContext);
-                if (!_common.IsWhiteList(clientIp, payName, request.TransId, GetCurrentMethod()))
+                if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod()))
                 {
                     _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
                     response.ErrorCode = (int)ErrorCode.Fail;
