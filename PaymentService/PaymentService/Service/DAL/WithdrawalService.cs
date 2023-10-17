@@ -64,11 +64,6 @@ namespace PaymentService.Service.DAL
                 var amount = p.Get<decimal>("_Amount");
                 if (result > 0)
                 {
-                    if (status == WithdrawalStatus.Approved)
-                    {
-                        result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, -1 * amount, trans);
-                    }
-
                     if (result > 0 && (status == WithdrawalStatus.Approved || status == WithdrawalStatus.Rejected))
                     {
                         result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",
@@ -133,11 +128,8 @@ namespace PaymentService.Service.DAL
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set_V2", p, trans);
-                var amount = p.Get<decimal>("_Amount");
                 if (result > 0)
                 {
-                    result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, -1 * amount, trans);
-
                     if (result > 0)
                     {
                         result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set" ,
@@ -210,15 +202,8 @@ namespace PaymentService.Service.DAL
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set_V2", p, trans);
-                var amount = p.Get<decimal>("_Amount");
                 if (result > 0)
                 {
-                    // 如果提款單原本的狀態是 Approved，然後變更成 Rejected，要把 PayDummy 的金額加回去
-                    if (withdrawalRequest.Status == WithdrawalStatus.Approved)
-                    {
-                        result = _walletService.SetPayDummy(siteId, pay.PayId, pay.CurrencyId, amount, trans);
-                    }
-
                     if (result > 0)
                     {
                         result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set",

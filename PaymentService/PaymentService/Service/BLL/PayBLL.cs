@@ -2,6 +2,7 @@
 using System.Reflection;
 using PaymentService.Model;
 using PaymentCore.Interface;
+using PaymentService.Exceptions;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -25,42 +26,20 @@ namespace PaymentService.Service.BLL
             _provider = provider;
         }
 
-        public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId)
-        {
-            var key = $"PaySetting:OnlineBanking:{siteId}";
-            return _redisHelper.TryGetOrCreate<IEnumerable<BankInfoPay>>(key, TimeSpan.FromMinutes(5),
-                () => payService.GetBankInfoPayList(siteId, DepositType.OnlineBanking).OrderBy(x => x.MSort).ThenBy(x => x.SSort),
-                RedisDataBase.Shared);
-        }
-
-        public IEnumerable<BankInfoPay> GetAutoChannelBankInfoList(int siteId, DepositType depositType)
+        public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId, DepositType depositType)
         {
             var key = $"PaySetting:OnlineBanking:{siteId}:{depositType}";
-            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromMinutes(5),
-                () => payService.GetBankInfoPayList(siteId, depositType), RedisDataBase.Shared);
+            return _redisHelper.TryGetOrCreate<IEnumerable<BankInfoPay>>(key, TimeSpan.FromMinutes(5),
+                () => payService.GetBankInfoPayList(siteId, depositType)
+                    .OrderBy(x => x.MSort).ThenBy(x => x.SSort),
+                RedisDataBase.Shared);
         }
-
+        
         public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
         {
             var key = $"PaySetting:{siteId}:{depositType}";
             return _redisHelper.TryGetOrCreate<IEnumerable<PayInfo>>(key, TimeSpan.FromMinutes(5),
                 () => payService.GetPayInfo(siteId, depositType).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
-                RedisDataBase.Shared);
-        }
-
-        public IEnumerable<CryptoPayInfo> GetCryptoPayInfoList(int siteId)
-        {
-            var key = $"PaySetting:Crypto:{siteId}";
-            return _redisHelper.TryGetOrCreate<IEnumerable<CryptoPayInfo>>(key, TimeSpan.FromMinutes(5),
-                () => payService.GetCryptoPayInfo(siteId).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
-            RedisDataBase.Shared);
-        }
-
-        public IEnumerable<LoadCardPayInfo> GetLoadCardPayInfoList(int siteId)
-        {
-            var key = $"PaySetting:LoadCard:{siteId}";
-            return _redisHelper.TryGetOrCreate<IEnumerable<LoadCardPayInfo>>(key, TimeSpan.FromMinutes(5),
-                () => payService.GetLoadCardPayInfo(siteId).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
                 RedisDataBase.Shared);
         }
 
@@ -81,6 +60,16 @@ namespace PaymentService.Service.BLL
             return _redisHelper.TryGetOrCreate($"PaySetting:EWallet:Payout:{siteId}", TimeSpan.FromMinutes(5),
                 () => payService.GetEWalletPayListForPayout(siteId));
         }
+        
+        public IEnumerable<BankInfoPay> GetPayListForPayout(WithdrawalType withdrawalType , int siteId)
+            => withdrawalType switch
+            {
+                WithdrawalType.OnlineBanking => GetOnlineBankListForPayout(siteId),
+                WithdrawalType.EWalletPayment => GetEWalletPayListForPayout(siteId),
+                WithdrawalType.CryptoPayment => GetCryptoListForPayout(siteId),
+                _ => throw new PaymentException($"No support WithdrawalType={withdrawalType}")
+            };
+
         
         public IEnumerable<PayLanguage> GetPayLanguage()
         {
@@ -130,6 +119,35 @@ namespace PaymentService.Service.BLL
         {
             return _redisHelper.TryGetOrCreate($"PaySetting:Crypto:Exchange:{siteId}", TimeSpan.FromMinutes(5),
                 () => payService.GetCryptoExchangeSetting(siteId));
+        }
+        
+        public (Pay, IPayHelper) GetPayHelper(IPayInfo payInfo, Customer custInfo)
+        {
+            var pay = GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == payInfo.PayId);
+        
+            if (pay == null)
+            {
+                throw new PaymentException($"{payInfo.PayName} not found pay setting.", ErrorCode.SettingNotFound);
+            }
+        
+            var payHelper = GetPayHelper(pay.PayName);
+        
+            if (payHelper == null)
+            {
+                throw new PaymentException($"{payInfo.PayName} not found PayHelper setting.", ErrorCode.SettingNotFound);
+            }
+
+            return (pay, payHelper);
+        }
+
+        public string GetPayLanguage(int payId, Customer custInfo)
+        {
+            var payLangId = GetPayLanguage()
+                ?.FirstOrDefault(x => 
+                    string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) 
+                    && x.PayId == payId)?.PayLangId;
+
+            return payLangId;
         }
     }
 }
