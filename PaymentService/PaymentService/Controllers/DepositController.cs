@@ -616,7 +616,6 @@ namespace PaymentService.Controllers
         [HttpPost]
         public ActionResult<DepositManualResponse> DepositManual(DepositManualRequest request)
         {
-
             try
             {
                 var response = new DepositManualResponse
@@ -625,7 +624,7 @@ namespace PaymentService.Controllers
                     Message = ErrorCode.Fail.ToString(),
                     Amount = 0
                 };
-                const string payName = "Manual";
+                /*const string payName = "Manual";
                 var clientIp = _common.GetClientIP(HttpContext);
                 if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod()))
                 {
@@ -634,8 +633,7 @@ namespace PaymentService.Controllers
                     response.Message = "Invalid IP!";
                     response.Amount = 0;
                     return response;
-                }
-
+                }*/
                 var depositInfo = _paymentBll.GetDepositInfo(request.TransId);
                 if (depositInfo == null)
                 {
