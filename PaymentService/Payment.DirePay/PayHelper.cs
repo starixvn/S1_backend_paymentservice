@@ -474,6 +474,7 @@ namespace Payment.DirePay
                 {"customer_uid", inputs["CustId"]},
                 {"address", inputs["AccountNo"]},
                 {"client_reference_id", transId},
+                {"txid", transId},
                 {"withdrawal_amount", toAmount},
                 {"hashCode", ToMD5(Command.PartnerWithdraw + inputs["key"]).ToLower()}
             };
