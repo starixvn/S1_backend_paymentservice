@@ -63,6 +63,7 @@ namespace PaymentService.Service.Library
                 {
                     string sServerVariables = httpContext.Request.Headers[header];
                     var ip = GetIPAddress(sServerVariables.Split(','));
+
                     if (!string.IsNullOrEmpty(ip))
                     {
                         return ip;
@@ -85,26 +86,25 @@ namespace PaymentService.Service.Library
             foreach (var ip in ipArr)
             {
                 var ipAddress = ip.Trim();
-                if (IsIPAddress(ipAddress)
-                    && !IsInnerIP(ipAddress)) return ipAddress.Trim();
+                if (IsIPAddress(ipAddress) && !IsInnerIP(ipAddress))
+                    return ipAddress.Trim();
             }
 
             return null;
         }
-        private bool IsInnerIP(string ipAddress)
+        public bool IsInnerIP(string ipAddress)
         {
             var ipNum = getIpNum(ipAddress);
 
-            long aBegin = 167772160;// getIpNum("10.0.0.0");
-            long aEnd = 184549375;// getIpNum("10.255.255.255");
-            long bBegin = 2886729728; //getIpNum("172.16.0.0");
-            long bEnd = 2887778303; //getIpNum("172.31.255.255");
-            long cBegin = 3232235520; //getIpNum("192.168.0.0");
-            long cEnd = 3232301055; //getIpNum("192.168.255.255");
-
-            // Logger.Log("aBegin:" + aBegin + ",aEnd:" + aEnd + ",bBegin:" + bBegin + ",bEnd:" + bEnd + ",cBegin:" + cBegin + ",cEnd:" + cEnd);
+            const long aBegin = 167772160;  // 10.0.0.0;
+            const long aEnd = 184549375;    // 10.255.255.255
+            const long bBegin = 2886729728; // 172.16.0.0
+            const long bEnd = 2887778303;   // 172.31.255.255
+            const long cBegin = 3232235520; // 192.168.0.0
+            const long cEnd = 3232301055;   // 192.168.255.255
 
             var isInnerIp = IsInner(ipNum, aBegin, aEnd) || IsInner(ipNum, bBegin, bEnd) || IsInner(ipNum, cBegin, cEnd) || ipAddress == "127.0.0.1";
+            
             return isInnerIp;
         }
         private long getIpNum(string ipAddress)
@@ -129,7 +129,7 @@ namespace PaymentService.Service.Library
         }
         private static bool IsInner(long userIp, long begin, long end)
         {
-            return (userIp >= begin) && (userIp <= end);
+            return userIp >= begin && userIp <= end;
         }
 
         #endregion

@@ -44,7 +44,6 @@ namespace PaymentService.Controllers
         [HttpPost]
         public ActionResult<DepositManualResponse> DepositManual(DepositManualRequest request)
         {
-        
             try
             {
                 var response = new DepositManualResponse
@@ -53,9 +52,11 @@ namespace PaymentService.Controllers
                     Message = ErrorCode.Fail.ToString(),
                     Amount = 0
                 };
+                
                 const string payName = "Manual";
                 var clientIp = _common.GetClientIP(HttpContext);
-                if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod()))
+                if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod())
+                    || !_common.IsInnerIP(clientIp))
                 {
                     _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
                     response.ErrorCode = (int)ErrorCode.Fail;
@@ -63,7 +64,7 @@ namespace PaymentService.Controllers
                     response.Amount = 0;
                     return response;
                 }
-        
+                
                 var depositInfo = _paymentBll.GetDepositInfo(request.TransId);
                 if (depositInfo == null)
                 {
