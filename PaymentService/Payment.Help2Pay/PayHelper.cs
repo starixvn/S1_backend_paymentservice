@@ -250,11 +250,9 @@ namespace Payment.Help2Pay
         }
         
         public (string TransId, IDictionary<string, string> Data) FetchTransIdAndDataBeforeVerify(
-            IDictionary<string, string> formData, string bodyContent)
+            IDictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers)
         {
-            var dic = QueryStringToDic(bodyContent);
-
-            return (dic["transId"], dic);
+            return (formData["transId"], formData);
         }
         
         public VerifyTransactionResult VerifyTransaction(IDictionary<string, string> data,
