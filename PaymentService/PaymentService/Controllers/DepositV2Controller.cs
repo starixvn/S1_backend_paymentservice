@@ -144,7 +144,7 @@ public class DepositV2Controller : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Exception: Method={GetCurrentMethod()}, TransId={req.TransId}, Message={ex.Message}");
+            _logger.LogError($"Exception: Method={GetCurrentMethod()}, TransId={req.TransId}, Message={ex.Message}", ex);
             
             return new ApiResult<PayResult>(ErrorCode.Fail);
         }
@@ -181,7 +181,7 @@ public class DepositV2Controller : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Exception: Method={GetCurrentMethod()}, TransId={transId}, Message={ex.Message}");
+            _logger.LogError($"Exception: Method={GetCurrentMethod()}, TransId={transId}, Message={ex.Message}", ex);
             
             return Content(ErrorCode.SystemError.ToString());
         }
