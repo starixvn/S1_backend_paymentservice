@@ -63,9 +63,7 @@ namespace PaymentService.Service.Library
                 {
                     string sServerVariables = httpContext.Request.Headers[header];
                     var ip = GetIPAddress(sServerVariables.Split(','));
-                    
-                    _logger.LogInformation($"{header}: {sServerVariables}, GetIPAddress: {ip}");
-                    
+
                     if (!string.IsNullOrEmpty(ip))
                     {
                         return ip;
@@ -73,8 +71,6 @@ namespace PaymentService.Service.Library
                 }
             }
 
-            _logger.LogInformation("Cannot get client IP address.");
-            
             return httpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
         }
         
@@ -96,7 +92,7 @@ namespace PaymentService.Service.Library
 
             return null;
         }
-        private bool IsInnerIP(string ipAddress)
+        public bool IsInnerIP(string ipAddress)
         {
             var ipNum = getIpNum(ipAddress);
 

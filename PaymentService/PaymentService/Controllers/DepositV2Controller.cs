@@ -98,6 +98,11 @@ public class DepositV2Controller : ControllerBase
             input.Add("CallBackUrl", $"{_callBackUrl}/Payment/DepositCallBack/{req.TransId}");
             input.Add("IsTest", _common.IsTest());
             input.Add("DepositInfo", depositInfo.DepositInfo);
+
+            if (!input.ContainsKey("BankCode"))
+            {
+                input.Add("BankCode", string.Empty);
+            }
             
             var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
             input.AddRange(setting);
@@ -144,7 +149,7 @@ public class DepositV2Controller : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Exception: Method={GetCurrentMethod()}, TransId={req.TransId}, Message={ex.Message}");
+            _logger.LogError(ex, $"Exception: Method={GetCurrentMethod()}, TransId={req.TransId}, Message={ex.Message}");
             
             return new ApiResult<PayResult>(ErrorCode.Fail);
         }
@@ -181,7 +186,7 @@ public class DepositV2Controller : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Exception: Method={GetCurrentMethod()}, TransId={transId}, Message={ex.Message}");
+            _logger.LogError(ex, $"Exception: Method={GetCurrentMethod()}, TransId={transId}, Message={ex.Message}");
             
             return Content(ErrorCode.SystemError.ToString());
         }
