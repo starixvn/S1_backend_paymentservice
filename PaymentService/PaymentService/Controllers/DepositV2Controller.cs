@@ -98,6 +98,11 @@ public class DepositV2Controller : ControllerBase
             input.Add("CallBackUrl", $"{_callBackUrl}/Payment/DepositCallBack/{req.TransId}");
             input.Add("IsTest", _common.IsTest());
             input.Add("DepositInfo", depositInfo.DepositInfo);
+
+            if (!input.ContainsKey("BankCode"))
+            {
+                input.Add("BankCode", string.Empty);
+            }
             
             var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
             input.AddRange(setting);
