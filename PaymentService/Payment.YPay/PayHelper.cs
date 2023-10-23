@@ -138,7 +138,7 @@ namespace Payment.YPay
         {
             var appid = Convert.ToInt32(inputs["transfer_appid"]);
             var key = inputs["transfer_key"];
-            var payType = inputs["BankCode"];
+            var payType = inputs.ContainsKey("BankCode") ? inputs["BankCode"] : string.Empty;
             if (!string.IsNullOrEmpty(inputs["PayCode"]))
             {
                 appid = Convert.ToInt32(inputs["scan_appid"]);
