@@ -46,7 +46,8 @@ namespace PaymentService.Service.BLL
             var forStatus = new []
             {
                 DepositStatus.Pending,
-                DepositStatus.Rejected
+                DepositStatus.Rejected,
+                DepositStatus.Canceled
             };
             
             if (depositRequest.SiteId == 0 || depositRequest.CurrencyId == 0)

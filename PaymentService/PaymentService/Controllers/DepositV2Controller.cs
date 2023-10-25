@@ -369,7 +369,7 @@ public class DepositV2Controller : ControllerBase
     {
         if (transStatus == TransStatus.Success)
         {
-            return depositStatus is DepositStatus.Pending or DepositStatus.Rejected;
+            return depositStatus is DepositStatus.Pending or DepositStatus.Rejected or DepositStatus.Canceled;
         }
         
         return depositStatus == DepositStatus.Pending;
