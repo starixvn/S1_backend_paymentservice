@@ -113,13 +113,13 @@ public class WithdrawalV2Controller : ControllerBase
         {
             _logger.LogInformation($"Method={GetCurrentMethod()}, TransId={req.TransId}, Code={ex.Code}, Message={ex.Message}");
             
-            return new ApiResult<PayResult>(ex.Code, ex.Message);
+            return new ApiResult(ex.Code, ex.Message);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Exception: Method={GetCurrentMethod()}, TransId={req.TransId}, Message={ex.Message}");
             
-            return new ApiResult<PayResult>(ErrorCode.Fail);
+            return new ApiResult(ErrorCode.Fail);
         }
     }
     
