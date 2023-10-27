@@ -29,7 +29,7 @@ namespace PaymentService.Service.DAL
         
         public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry(string payIds)
         {
-            return _reportDbClient.QueryUseCommandDefinition<WithdrawalRequest>("Service_WithdrawalRequestPayEnquiry_Get",
+            return _mainDbClient.QueryUseCommandDefinition<WithdrawalRequest>("Service_WithdrawalRequestPayEnquiry_Get",
                 new DynamicParameters(new { _PayIds = payIds }));
         }
 
