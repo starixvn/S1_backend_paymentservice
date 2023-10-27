@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using NuGet.Packaging;
 using PaymentCore;
+using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentService.Exceptions;
 using PaymentService.Extensions;
@@ -67,7 +67,14 @@ public class WithdrawalV2Controller : ControllerBase
         LogContext.PushProperty("TransId", req.TransId);
         try
         {
-            var withdrawalInfo = _paymentBll.GetWithdrawalRequest(req.TransId);
+            var withdrawalInfo = RetryExtension.Do(
+                _paymentBll.GetWithdrawalRequest, req.TransId, 2, TimeSpan.FromMilliseconds(500), true);
+
+            if (withdrawalInfo == null)
+            {
+                throw new PaymentException("Cannot get withdrawalInfo. transId = " + req.TransId);
+            }
+
             var custInfo = _custInfoBll.GetCustInfoWithCache(withdrawalInfo.CustId);
             var (payInfo, input) =
                 _getWithdrawalInputMapper[withdrawalInfo.WithdrawalType].Invoke(withdrawalInfo, custInfo);
