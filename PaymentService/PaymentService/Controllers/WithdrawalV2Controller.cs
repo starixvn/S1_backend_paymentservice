@@ -65,11 +65,10 @@ public class WithdrawalV2Controller : ControllerBase
     public ApiResult Create(WithdrawalReq req)
     {
         LogContext.PushProperty("TransId", req.TransId);
-        var withdrawalInfo = _paymentBll.GetWithdrawalRequest(req.TransId);
-        var custInfo = _custInfoBll.GetCustInfoWithCache(withdrawalInfo.CustId);
-
         try
         {
+            var withdrawalInfo = _paymentBll.GetWithdrawalRequest(req.TransId);
+            var custInfo = _custInfoBll.GetCustInfoWithCache(withdrawalInfo.CustId);
             var (payInfo, input) =
                 _getWithdrawalInputMapper[withdrawalInfo.WithdrawalType].Invoke(withdrawalInfo, custInfo);
 
