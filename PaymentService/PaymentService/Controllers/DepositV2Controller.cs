@@ -10,6 +10,7 @@ using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
+using Serilog.Context;
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers;
@@ -67,6 +68,7 @@ public class DepositV2Controller : ControllerBase
     [HttpPost]
     public ApiResult<PayResult> Create(DepositReq req)
     {
+        LogContext.PushProperty("TransId", req.TransId);
         var depositInfo = _paymentBll.GetDepositInfo(req.TransId);
         var custInfo = _custInfoBll.GetCustInfoWithCache(depositInfo.CustId);
 
