@@ -73,7 +73,8 @@ namespace PaymentService.Service.Model.enums
         LoadCard = 5,
         QrPay = 6,
         BankAutoChannel = 7,
-        CryptoWallet = 8
+        CryptoWallet = 8,
+        QuickTransfer = 9
     }
     
     /// <summary>
