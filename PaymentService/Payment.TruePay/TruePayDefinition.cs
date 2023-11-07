@@ -8,6 +8,6 @@ internal class ErrorCode
 internal class Path
 {
     public const string Deposit = "/a/getDPLink";
-        
+
     public const string Payout = "/a/sPayout";
 }

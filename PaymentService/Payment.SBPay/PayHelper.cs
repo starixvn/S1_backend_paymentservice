@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -51,7 +53,7 @@ namespace Payment.SBPay
                 }
 
                 var res = CreateOrder(apiUrl, apiToken, req);
-                
+
                 depositInfo = depositInfo.AddOrSetJProperty("PayCode", payCode);
 
                 var response = new DepositResult
@@ -78,13 +80,13 @@ namespace Payment.SBPay
         {
             var depositInfo = input["DepositInfo"];
             var transId = input["TransID"];
-            
+
             var jObj = JObject.Parse(depositInfo);
 
             if (!jObj.TryGetValue("PayCode", StringComparison.OrdinalIgnoreCase, out var jPayCode))
             {
                 _logger.LogError($"{transId} DepositInfo has no PayCode information.");
-                
+
                 return new NotifyDepositResult
                 {
                     DepositId = transId,
@@ -115,7 +117,7 @@ namespace Payment.SBPay
                     Response = "Signature verification failed."
                 };
             }
-            
+
             var result = new NotifyDepositResult
             {
                 ThirdId = req.ThirdId,
@@ -153,7 +155,7 @@ namespace Payment.SBPay
 
             try
             {
-              
+
                 var req = new Dictionary<string, string>
                 {
                     {"account_number", accountNo},
@@ -251,7 +253,7 @@ namespace Payment.SBPay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"SBPay creat order failed, HttpStatus: {(int) statusCode} {statusCode}");
+                    $"SBPay creat order failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
             if (!result.Success)
@@ -271,7 +273,7 @@ namespace Payment.SBPay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"SBPay create payout failed, HttpStatus: {(int) statusCode} {statusCode}");
+                    $"SBPay create payout failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
             if (!result.Success)
@@ -298,11 +300,11 @@ namespace Payment.SBPay
 
             return target.Equals(sign, StringComparison.OrdinalIgnoreCase);
         }
-        
+
         private static (string method, string code) GetMethod(string payCode)
         {
             var result = payCode.Split('-');
-            
+
             return (result[0], result.Length > 1 ? result[1] : string.Empty);
         }
 

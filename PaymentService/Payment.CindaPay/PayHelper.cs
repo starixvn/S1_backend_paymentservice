@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -13,7 +14,7 @@ namespace Payment.CindaPay
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
         private const decimal AmountFix = 100;
-        
+
         public PayHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
@@ -24,7 +25,7 @@ namespace Payment.CindaPay
         {
             var transId = inputs["TransID"];
             var reqAmount = decimal.Parse(inputs["Amount"]) * AmountFix;
-            
+
             try
             {
                 var req = new Dictionary<string, string>
@@ -43,7 +44,7 @@ namespace Payment.CindaPay
                 req.Add("Sign", GetSign(req, inputs["Key"]));
 
                 var resp = CreateOrder(inputs["ApiUrl"], req);
-                
+
                 return new DepositResult
                 {
                     Success = true,
@@ -64,7 +65,7 @@ namespace Payment.CindaPay
         {
             var transId = inputs["TransID"];
             var reqAmount = decimal.Parse(inputs["Amount"]) * AmountFix;
-            
+
             try
             {
                 var req = new Dictionary<string, string>
@@ -104,7 +105,7 @@ namespace Payment.CindaPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var dic = FromJson<Dictionary<string, string>>(bodyContent);
-            
+
             if (!dic["sign"].Equals(GetSign(dic, payResource["Key"])))
             {
                 return new NotifyDepositResult
@@ -117,7 +118,7 @@ namespace Payment.CindaPay
 
             var transStatus = CindaPayDefinition.GetTransStatus(dic["status"]);
             var amount = decimal.Parse(dic["amount"]) / AmountFix;
-            
+
             return new NotifyDepositResult
             {
                 DepositId = dic["tradeNo"],
@@ -133,7 +134,7 @@ namespace Payment.CindaPay
             Dictionary<string, string> payResource)
         {
             var dic = FromJson<Dictionary<string, string>>(bodyContent);
-            
+
             if (!dic["sign"].Equals(GetSign(dic, payResource["Key"])))
             {
                 return new NotifyWithdrawResult
@@ -145,7 +146,7 @@ namespace Payment.CindaPay
             }
 
             var transStatus = CindaPayDefinition.GetTransStatus(dic["status"]);
-            
+
             return new NotifyWithdrawResult
             {
                 WithdrawId = dic["tradeNo"],
@@ -155,7 +156,7 @@ namespace Payment.CindaPay
                 Response = CindaPayDefinition.CallbackResponse
             };
         }
-        
+
         public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
@@ -183,7 +184,7 @@ namespace Payment.CindaPay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"CindaPay creat order failed, HttpStatus: {(int) statusCode} {statusCode}");
+                    $"CindaPay creat order failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
             if (result.Code != CindaPayDefinition.SuccessCode)
@@ -191,7 +192,7 @@ namespace Payment.CindaPay
 
             return result;
         }
-        
+
         private CreatPayoutResponse CreatePayout(string baseApiUrl, Dictionary<string, string> req)
         {
             var apiUrl = $"{baseApiUrl}{CindaPayDefinition.Path.Payout}";
@@ -202,7 +203,7 @@ namespace Payment.CindaPay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"CindaPay creat payout failed, HttpStatus: {(int) statusCode} {statusCode}");
+                    $"CindaPay creat payout failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
             if (result.Code != CindaPayDefinition.SuccessCode)
@@ -210,7 +211,7 @@ namespace Payment.CindaPay
 
             return result;
         }
-        
+
         private string GetSign(IEnumerable<KeyValuePair<string, string>> input, string key)
         {
             var str = string.Join('&', input
@@ -218,17 +219,17 @@ namespace Payment.CindaPay
                     && !string.IsNullOrEmpty(x.Value))
                 .OrderBy(x => x.Key)
                 .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
-            
+
             _logger.LogInformation(str);
             var sign = ToMD5(str).ToLower();
             _logger.LogInformation(sign);
-            
+
             return sign;
         }
-        
+
         private static string GetRequestTime()
             => DateTimeOffset.UtcNow.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
-        
+
         #endregion
     }
 }

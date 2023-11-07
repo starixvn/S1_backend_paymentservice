@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -19,13 +21,13 @@ namespace Payment.TruePay
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
             _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
         }
-        
+
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var merchantInfo = GetMerchantInfo(inputs);
             var apiUrl = merchantInfo.Host + Path.Deposit;
             var ts = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
-            
+
             try
             {
                 var req = new Dictionary<string, string>
@@ -72,7 +74,7 @@ namespace Payment.TruePay
                 return new DepositResult(ex.Message);
             }
         }
-        
+
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
@@ -81,7 +83,7 @@ namespace Payment.TruePay
 
             var str = $"{merchantInfo.Merchant}-{merchantInfo.Key}-{data.TransId}-{data.Amount}-{data.Timestamp}";
             var token = ToMD5(str).ToLower();
-            
+
             if (!token.Equals(data.Token))
             {
                 return new NotifyDepositResult
@@ -90,7 +92,7 @@ namespace Payment.TruePay
                     Response = "Signature does not match."
                 };
             }
-            
+
             return new NotifyDepositResult
             {
                 DepositId = data.TransId,
@@ -102,7 +104,7 @@ namespace Payment.TruePay
                 Response = "OK"
             };
         }
-        
+
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var merchantInfo = GetMerchantInfo(inputs);
@@ -126,7 +128,7 @@ namespace Payment.TruePay
 
                 var str = $"{merchantInfo.Merchant}-{merchantInfo.Key}-sPayout-{ts}";
                 req.Add("token", ToMD5(str).ToLower());
-            
+
                 var (result, statusCode) = _httpHelper
                     .PostUrlEncoded<Dictionary<string, string>, WithdrawalResp>(apiUrl, req);
 
@@ -151,7 +153,7 @@ namespace Payment.TruePay
                 return new WithdrawResult(ex.Message);
             }
         }
-        
+
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
@@ -160,7 +162,7 @@ namespace Payment.TruePay
 
             var str = $"{merchantInfo.Merchant}-{merchantInfo.Key}-{data.TransId}-{data.Amount}-{data.Timestamp}";
             var token = ToMD5(str).ToLower();
-            
+
             if (!token.Equals(data.Token))
             {
                 return new NotifyWithdrawResult
@@ -184,11 +186,11 @@ namespace Payment.TruePay
                     result.TransStatus = TransStatus.Success;
                     result.RequestAmount = data.Amount;
                     return result;
-                
+
                 case -1:
                     result.TransStatus = TransStatus.Fail;
                     return result;
-                
+
                 default:
                     result.TransStatus = TransStatus.Pending;
                     return result;
@@ -208,7 +210,7 @@ namespace Payment.TruePay
         {
             throw new NotImplementedException();
         }
-        
+
         private MerchantInfo GetMerchantInfo(IDictionary<string, string> setting)
         {
             var infos = JsonConvert.DeserializeObject<Dictionary<string, string>>(setting["MerchantInfo"]);
@@ -220,7 +222,7 @@ namespace Payment.TruePay
 
             return JsonConvert.DeserializeObject<MerchantInfo>(infos[currencyId]);
         }
-        
+
         private class MerchantInfo
         {
             public string Host { get; set; }

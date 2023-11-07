@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -129,7 +131,7 @@ namespace Payment.LionPay
 
             try
             {
-              
+
                 var req = new Dictionary<string, string>
                 {
                     {"merchantCode", merchantCode},
@@ -222,7 +224,7 @@ namespace Payment.LionPay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"LionPay CreatOrder failed, HttpStatus: {(int) statusCode} {statusCode}" +
+                    $"LionPay CreatOrder failed, HttpStatus: {(int)statusCode} {statusCode}" +
                     $",errorMsg: {result.Message}");
             }
 
@@ -242,7 +244,7 @@ namespace Payment.LionPay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"LionPay Payout failed, HttpStatus: {(int) statusCode} {statusCode}" +
+                    $"LionPay Payout failed, HttpStatus: {(int)statusCode} {statusCode}" +
                     $", error code: {result.Code} {result.Message}");
             }
 
@@ -257,7 +259,7 @@ namespace Payment.LionPay
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
         {
             var str = string.Join(string.Empty, param
-                .Where(x => x.Key != "sign" )
+                .Where(x => x.Key != "sign")
                 .OrderBy(x => x.Key)
                 .Select(x => x.Value)) + key;
 

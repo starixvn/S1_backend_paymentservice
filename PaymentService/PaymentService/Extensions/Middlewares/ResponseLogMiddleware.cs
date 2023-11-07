@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
+
 using Serilog.Context;
 
 namespace PaymentService.Extensions.Middlewares

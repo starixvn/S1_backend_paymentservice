@@ -1,7 +1,9 @@
-﻿using Newtonsoft.Json;
-using PaymentService.Service.Model;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
+
+using Newtonsoft.Json;
+
+using PaymentService.Service.Model;
 
 namespace PaymentService.Service.Library
 {

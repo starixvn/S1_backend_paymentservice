@@ -1,5 +1,6 @@
-﻿using PaymentCore;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
+using PaymentCore;
 using PaymentCore.Models.Result;
 
 namespace Payment.VNPay
@@ -137,7 +138,7 @@ namespace Payment.VNPay
             creditResult = JsonConvert.DeserializeObject<CreditResult>(sResponse);
 
             var enquiryDepositResult = new EnquiryDepositResult();
-            if (creditResult.status == "1" )
+            if (creditResult.status == "1")
             {
                 enquiryDepositResult.TransStatus = TransStatus.Success;
                 enquiryDepositResult.Message = creditResult.message;

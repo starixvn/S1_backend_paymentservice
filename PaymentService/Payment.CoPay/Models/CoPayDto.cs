@@ -21,7 +21,7 @@
         public decimal real_amount { get; set; }
         public string custom { get; set; }
     }
-    
+
     public class PayoutResult
     {
         public string transactionid { get; set; }
@@ -33,7 +33,7 @@
         public PayoutResult result { get; set; }
         public string sign { get; set; }
     }
-    
+
     public class CallBackPayoutResult
     {
         public int transactionid { get; set; }

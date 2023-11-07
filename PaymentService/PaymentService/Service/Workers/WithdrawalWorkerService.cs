@@ -1,7 +1,11 @@
 ﻿using System.Text;
+
 using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
+
 using PaymentService.Service.BLL;
 
 namespace PaymentService.Service.Workers
@@ -39,7 +43,7 @@ namespace PaymentService.Service.Workers
                     _logger.LogInformation("Start Withdrawal Worker" +
                                            $", TransId List: {string.Join(',', withdrawalList.Select(x => x.TransId))}");
                 }
-                
+
                 foreach (var withdrawalRequest in withdrawalList)
                 {
                     try
@@ -107,14 +111,14 @@ namespace PaymentService.Service.Workers
                             }
                         }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         _logger.LogError($"Query {withdrawalRequest.TransId} Failed. " +
                                          $"Exception: {ex.Message}\r\n{ex.StackTrace}");
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError($"Withdrawal Worker Exception: {ex.Message}\r\n{ex.StackTrace}");
             }

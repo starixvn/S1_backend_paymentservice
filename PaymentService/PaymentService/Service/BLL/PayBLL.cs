@@ -1,8 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
-using PaymentService.Model;
+
 using PaymentCore.Interface;
+
 using PaymentService.Exceptions;
+using PaymentService.Model;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -34,7 +36,7 @@ namespace PaymentService.Service.BLL
                     .OrderBy(x => x.MSort).ThenBy(x => x.SSort),
                 RedisDataBase.Shared);
         }
-        
+
         public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
         {
             var key = $"PaySetting:{siteId}:{depositType}";
@@ -60,8 +62,8 @@ namespace PaymentService.Service.BLL
             return _redisHelper.TryGetOrCreate($"PaySetting:EWallet:Payout:{siteId}", TimeSpan.FromMinutes(5),
                 () => payService.GetEWalletPayListForPayout(siteId));
         }
-        
-        public IEnumerable<BankInfoPay> GetPayListForPayout(WithdrawalType withdrawalType , int siteId)
+
+        public IEnumerable<BankInfoPay> GetPayListForPayout(WithdrawalType withdrawalType, int siteId)
             => withdrawalType switch
             {
                 WithdrawalType.OnlineBanking => GetOnlineBankListForPayout(siteId),
@@ -70,7 +72,7 @@ namespace PaymentService.Service.BLL
                 _ => throw new PaymentException($"No support WithdrawalType={withdrawalType}")
             };
 
-        
+
         public IEnumerable<PayLanguage> GetPayLanguage()
         {
             return _redisHelper.TryGetOrCreate("PayLanguage", TimeSpan.FromMinutes(5),
@@ -114,24 +116,24 @@ namespace PaymentService.Service.BLL
         {
             logger.LogInformation($"Url={url}, Input={input}, Output={output}, RefId={refId}");
         }
-        
+
         public IEnumerable<CryptoExchangeSetting> GetCryptoExchangeSetting(int siteId)
         {
             return _redisHelper.TryGetOrCreate($"PaySetting:Crypto:Exchange:{siteId}", TimeSpan.FromMinutes(5),
                 () => payService.GetCryptoExchangeSetting(siteId));
         }
-        
+
         public (Pay, IPayHelper) GetPayHelper(IPayInfo payInfo, Customer custInfo)
         {
             var pay = GetPaymentList(custInfo.SiteId)?.FirstOrDefault(x => x.PayId == payInfo.PayId);
-        
+
             if (pay == null)
             {
                 throw new PaymentException($"{payInfo.PayName} not found pay setting.", ErrorCode.SettingNotFound);
             }
-        
+
             var payHelper = GetPayHelper(pay.PayName);
-        
+
             if (payHelper == null)
             {
                 throw new PaymentException($"{payInfo.PayName} not found PayHelper setting.", ErrorCode.SettingNotFound);
@@ -143,8 +145,8 @@ namespace PaymentService.Service.BLL
         public string GetPayLanguage(int payId, Customer custInfo)
         {
             var payLangId = GetPayLanguage()
-                ?.FirstOrDefault(x => 
-                    string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase) 
+                ?.FirstOrDefault(x =>
+                    string.Equals(x.LangId, custInfo.UserLang, StringComparison.OrdinalIgnoreCase)
                     && x.PayId == payId)?.PayLangId;
 
             return payLangId;

@@ -13,7 +13,7 @@ public class RetryExtension
                 {
                     Thread.Sleep(retryInterval);
                 }
-                
+
                 var result = func(input);
 
                 if (exWhenNull && result == null)
@@ -23,7 +23,7 @@ public class RetryExtension
 
                 return result;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 exceptions.Add(ex);
             }

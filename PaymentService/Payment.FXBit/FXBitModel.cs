@@ -37,7 +37,7 @@ namespace Payment.FXBit
         [JsonProperty("billed_currency")]
         public string BilledCurrency { get; set; }
     }
-    
+
 
     internal class GetWalletAddressResp
     {
@@ -62,7 +62,7 @@ namespace Payment.FXBit
         [JsonProperty("error_message")]
         public int ErrorMessage { get; set; }
     }
-    
+
 
     internal class GetReceptionTokenReq
     {
@@ -111,7 +111,7 @@ namespace Payment.FXBit
         [JsonProperty("err")]
         public int ErrorMessage { get; set; }
     }
-    
+
     internal class PayoutResp
     {
         [JsonProperty("error")]
@@ -167,7 +167,7 @@ namespace Payment.FXBit
 
         [JsonProperty("received_amount")]
         public decimal ReceivedAmount { get; set; }
-        
+
         [JsonProperty("status")]
         public string Status { get; set; }
 

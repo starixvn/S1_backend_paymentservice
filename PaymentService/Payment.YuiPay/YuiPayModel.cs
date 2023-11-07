@@ -6,7 +6,7 @@ internal class DepositResponse
 {
     [JsonProperty("code")]
     public string Code { get; set; }
-    
+
     [JsonProperty("msg")]
     public string Message { get; set; }
 
@@ -39,7 +39,7 @@ internal class WithdrawalResponse
 {
     [JsonProperty("code")]
     public string Code { get; set; }
-    
+
     [JsonProperty("msg")]
     public string Message { get; set; }
 }
@@ -54,7 +54,7 @@ internal class WithdrawalCallbackRequest
 
     [JsonProperty("status")]
     public string Status { get; set; }
-    
+
     [JsonProperty("remark")]
     public string Remark { get; set; }
 

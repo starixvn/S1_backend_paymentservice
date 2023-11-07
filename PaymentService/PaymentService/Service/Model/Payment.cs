@@ -9,7 +9,7 @@ namespace PaymentService.Service.Model
         int ChannelId { get; set; }
         int CurrencyId { get; set; }
     }
-    
+
     public class TpPayInfo : IPay
     {
         public int PayId { get; set; }
@@ -17,7 +17,7 @@ namespace PaymentService.Service.Model
         public int ChannelId { get; set; }
         public int CurrencyId { get; set; }
     }
-    
+
     public class PayResult
     {
         public string Url { get; set; }

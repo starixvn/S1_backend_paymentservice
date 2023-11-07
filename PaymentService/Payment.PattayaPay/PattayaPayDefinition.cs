@@ -5,7 +5,7 @@ namespace Payment.PattayaPay;
 internal class PattayaPayDefinition
 {
     private static Dictionary<string, TransStatus> PayinTransStatusMap =>
-        new ()
+        new()
         {
             { PattayaPayPayinStatus.Pending, TransStatus.Pending },
             { PattayaPayPayinStatus.Canceled, TransStatus.Fail },
@@ -14,7 +14,7 @@ internal class PattayaPayDefinition
         };
 
     private static Dictionary<string, TransStatus> PayoutTransStatusMap =>
-        new ()
+        new()
         {
             { PattayaPayPayoutStatus.Pending, TransStatus.Pending },
             { PattayaPayPayoutStatus.Abnormal, TransStatus.Pending },
@@ -32,7 +32,7 @@ internal class PattayaPayDefinition
 
         return TransStatus.Pending;
     }
-    
+
     public static TransStatus GetPayoutTransStatus(string status)
     {
         if (PayoutTransStatusMap.TryGetValue(status, out var result))
@@ -73,7 +73,7 @@ internal class PattayaPayPayinStatus
     /// 待付款
     /// </summary>
     public const string Pending = "0";
-    
+
     /// <summary>
     /// 已支付
     /// </summary>
@@ -118,7 +118,7 @@ internal class PattayaPayPayoutStatus
     public const string Canceled = "4";
 }
 
-    
+
 internal class CallbackResponse
 {
     public const string Success = "success";

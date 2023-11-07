@@ -1,6 +1,9 @@
-﻿using NUnit.Framework;
+﻿using NSubstitute;
+
+using NUnit.Framework;
+
 using Payment.NAP3SPay;
-using NSubstitute;
+
 using PaymentCore.Models.Result;
 
 namespace PaymentService.IntegrationTest
@@ -24,8 +27,8 @@ namespace PaymentService.IntegrationTest
             };
         }
 
-    
-        [TestCase("094581000110649", "626505814575", "Mobi", 50000,ExpectedResult = true)]
+
+        [TestCase("094581000110649", "626505814575", "Mobi", 50000, ExpectedResult = true)]
         [TestCase("094581000110650", "189864065110", "Mobi", 50000, ExpectedResult = true)]
         [TestCase("20000147501695", "624480651839201", "VT", 50000, ExpectedResult = true)]
         [TestCase("20000147504104", "626608369258630", "VT", 50000, ExpectedResult = true)]
@@ -41,7 +44,7 @@ namespace PaymentService.IntegrationTest
             _inputs.Add("TransID", Guid.NewGuid().ToString());
             _inputs.Add("Amount", amount.ToString());
             var result = _payHelper.Debit(_inputs);
-            return result.Success; 
+            return result.Success;
         }
 
 

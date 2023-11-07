@@ -1,16 +1,20 @@
 ﻿
 using System.Text;
+
 using Elastic.Apm.AspNetCore;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.SqlClient;
 using Elastic.Apm.StackExchange.Redis;
+
 using PaymentCore.Helpers;
 using PaymentCore.Interface;
+
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
+
 using StackExchange.Redis;
 
 namespace PaymentService
@@ -60,7 +64,7 @@ namespace PaymentService
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();
             services.AddSingleton<WhitelistBLL>();
-            
+
             /*SiteConfig*/
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
             services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "PaymentService" });
@@ -68,7 +72,7 @@ namespace PaymentService
             services.AddSingleton<ConfigBLL>();
             services.AddMessageQueueConnection();
             services.AddProxy();
-            
+
             services.AddControllers();
         }
 

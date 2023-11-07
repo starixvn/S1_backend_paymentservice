@@ -1,11 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+
 using Newtonsoft.Json;
+
 using PaymentCore.Interface;
+
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
+
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers
@@ -39,16 +43,16 @@ namespace PaymentService.Controllers
                 _logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParams)}, bodyText={bodyContent}");
                 var payHelper = (IVerifyTransaction)_payBll.GetPayHelper(payName);
-                
-                
+
+
                 var (transId, data) = payHelper.FetchTransIdAndDataBeforeVerify(dicParams, bodyContent, header);
 
                 var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
                 var input = withdrawalRequest == null ? new Dictionary<string, string>() : withdrawalRequest.ISetting;
                 input.Add("TransIdExists", (withdrawalRequest != null).ToString());
-                
+
                 var result = payHelper.VerifyTransaction(data, input);
-                
+
                 return Content(result.Response, result.ContentType);
             }
             catch (Exception e)

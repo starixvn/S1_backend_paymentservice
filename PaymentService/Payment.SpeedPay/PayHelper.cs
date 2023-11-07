@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -19,7 +21,7 @@ namespace Payment.SpeedPay
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
             _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
         }
-        
+
         #region Debit
 
         public override DepositResult Debit(Dictionary<string, string> input)
@@ -29,7 +31,7 @@ namespace Payment.SpeedPay
             var userName = input["UserName"];
             var reqAmount = decimal.Parse(input["Amount"]);
             var setting = GetSetting(input);
-            
+
             try
             {
                 var req = new Dictionary<string, string>
@@ -37,7 +39,7 @@ namespace Payment.SpeedPay
                     { "version", SpeedPayDefinition.Version },
                     { "merchantNo", setting.MerchantId }
                 };
-                
+
                 var content = new Dictionary<string, string>
                 {
                     { "amount", reqAmount.ToString("F2") },
@@ -48,13 +50,13 @@ namespace Payment.SpeedPay
                     { "notifyUrl", input["CallBackUrl"] },
                     { "memberCode", userName }
                 };
-                
+
                 req.Add("request", EncodeContent(content));
                 req.Add("signMsg", GetSign(req, setting.Key));
 
                 var apiUrl = $"{setting.ApiUrl}{SpeedPayDefinition.Path.Deposit}";
                 var respData = CreateTrans<DepositResp>(req, apiUrl, setting.Key);
-                
+
                 return new DepositResult
                 {
                     Success = true,
@@ -76,7 +78,7 @@ namespace Payment.SpeedPay
         {
             var payCurrency = SpeedPayDefinition.GetPayCurrency(input["CurrencyId"]);
             input.Add("PayCurrencyId", payCurrency);
-            
+
             var setting = GetSetting(input);
             var req = FromJson<CallbackReq>(JsonConvert.SerializeObject(formData));
 
@@ -134,7 +136,7 @@ namespace Payment.SpeedPay
             var reqAmount = decimal.Parse(input["Amount"]);
             var transId = input["TransID"];
             var setting = GetSetting(input);
-            
+
             try
             {
                 var req = new Dictionary<string, string>
@@ -142,7 +144,7 @@ namespace Payment.SpeedPay
                     { "version", SpeedPayDefinition.Version },
                     { "merchantNo", setting.MerchantId }
                 };
-                
+
                 var content = new Dictionary<string, string>
                 {
                     { "amount", reqAmount.ToString("F2") },
@@ -154,13 +156,13 @@ namespace Payment.SpeedPay
                     { "notifyUrl", input["CallBackUrl"] },
                     { "memberCode", input["UserName"] }
                 };
-                
+
                 req.Add("request", EncodeContent(content));
                 req.Add("signMsg", GetSign(req, setting.Key));
 
                 var apiUrl = $"{setting.ApiUrl}{SpeedPayDefinition.Path.Payout}";
                 var respData = CreateTrans<PayoutResp>(req, apiUrl, setting.Key);
-                
+
                 return new WithdrawResult
                 {
                     WithdrawId = transId,
@@ -185,7 +187,7 @@ namespace Payment.SpeedPay
         {
             var payCurrency = SpeedPayDefinition.GetPayCurrency(payResource["CurrencyId"]);
             payResource.Add("PayCurrencyId", payCurrency);
-            
+
             var setting = GetSetting(payResource);
             var req = FromJson<CallbackReq>(JsonConvert.SerializeObject(formData));
 
@@ -198,7 +200,7 @@ namespace Payment.SpeedPay
                     Response = "Signature does not match."
                 };
             }
-            
+
             var content = DecodeContent<CallbackContent>(req.content, setting.Key);
 
             if (content == null)
@@ -210,7 +212,7 @@ namespace Payment.SpeedPay
                     Response = "Missing callback content."
                 };
             }
-            
+
             var transStatus = SpeedPayDefinition.GetTransStatus(content.Status);
 
             return new NotifyWithdrawResult
@@ -238,13 +240,13 @@ namespace Payment.SpeedPay
                 .Where(x => !x.Key.Equals("signMsg"))
                 .OrderBy(x => x.Key)
                 .Select(x => $"{x.Key}:{x.Value}")) + $"&key:{key}";
-            
+
             _logger.LogInformation(str);
             var sign = ToMD5(str);
 
             return sign;
         }
-        
+
         private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)
         {
             var sign = GetSign(param, apiKey);
@@ -260,9 +262,9 @@ namespace Payment.SpeedPay
             {
                 throw new CustomException($"SpeedPay missing {payCurrency} setting.");
             }
-            
+
             var setting = JsonConvert.DeserializeObject<SpeedPaySetting>(input[payCurrency]);
-            
+
             if (setting == null)
             {
                 throw new CustomException($"SpeedPay {payCurrency} setting is null.");
@@ -270,21 +272,21 @@ namespace Payment.SpeedPay
 
             return setting;
         }
-        
+
         private string EncodeContent<T>(T input)
         {
             var json = JsonConvert.SerializeObject(input);
             var result = ToBase64Encode(json);
 
             _logger.LogInformation("orig content: " + json);
-            
+
             return result;
         }
-        
+
         private T DecodeContent<T>(string str, string key)
         {
             var json = ToBase64Decode(str);
-            
+
             _logger.LogInformation("decoded content: " + json);
 
             var content = JsonConvert.DeserializeObject<T>(json);
@@ -292,7 +294,7 @@ namespace Payment.SpeedPay
             return content;
         }
 
-        private T CreateTrans<T> (IDictionary<string, string> req, string apiUrl, string key)
+        private T CreateTrans<T>(IDictionary<string, string> req, string apiUrl, string key)
             where T : ICreateTransResp
         {
             var (response, statusCode) = _httpHelper
@@ -302,14 +304,14 @@ namespace Payment.SpeedPay
             {
                 throw new CustomException($"HttpStatus: {(int)statusCode} {statusCode}");
             }
-                
+
             if (!response["resCode"].Equals(SpeedPayDefinition.SuccessCode))
             {
                 throw new CustomException(response["resCode"], response["resCode"]);
             }
 
             var respData = DecodeContent<T>(response["response"], key);
-                
+
             if (!respData.Code.Equals(SpeedPayDefinition.TransSuccessCode))
             {
                 throw new CustomException(respData.Message, respData.Code);

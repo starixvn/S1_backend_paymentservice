@@ -1,12 +1,10 @@
-﻿using Newtonsoft.Json;
-using PaymentCore;
-using PaymentCore.Models.Result;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using PaymentCore.Interface;
-using Newtonsoft.Json.Linq;
-using PaymentCore.Exceptions;
+
+using PaymentCore;
 using PaymentCore.Extensions;
+using PaymentCore.Interface;
+using PaymentCore.Models.Result;
 
 namespace Payment.MegaPay
 {

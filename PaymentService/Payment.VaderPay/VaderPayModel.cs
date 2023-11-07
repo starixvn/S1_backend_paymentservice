@@ -8,35 +8,35 @@ namespace Payment.VaderPay
         [Required]
         [Description("Merchant Username")]
         public string MerchantCode { get; set; }
-        
+
         [Required]
         [Description("the URL of the page where you want the client to be redirected after a successful transaction")]
         public string ReturnURL { get; set; }
-        
+
         [Required]
         [Description("the URL of the page where you want the client to be redirected after a failed transaction")]
         public string FailedReturnURL { get; set; }
-        
+
         [Required]
         [Description("a URL on the merchant’s website where we will automatically POST the transaction status")]
         public string HTTPPostURL { get; set; }
-        
+
         [Required]
         [Description("Amount to debit from the client’s bank account")]
         public string Amount { get; set; }
-        
+
         [Required]
         [Description("The preferred currency for the transaction")]
         public string Currency { get; set; }
-        
+
         [Required]
-        [Description("merchant provided transaction unique identifier and cannot resubmit same unique identifier")] 
+        [Description("merchant provided transaction unique identifier and cannot resubmit same unique identifier")]
         public string ItemID { get; set; }
-        
+
         [Required]
         [Description("merchant provided description of the transaction")]
         public string ItemDescription { get; set; }
-        
+
         [Required]
         [Description("the client’s full name")]
         public string PlayerId { get; set; }
@@ -55,7 +55,7 @@ namespace Payment.VaderPay
         [Required]
         [Description("Merchant provided transaction identifier(Unique Key)")]
         public string ref_id { get; set; }
-        
+
         [Required]
         [Description("The client’s player user name")]
         public string player_username { get; set; }
@@ -84,9 +84,9 @@ namespace Payment.VaderPay
     public class DepositRes
     {
         public string transaction { get; set; }
-            
+
         public int status { get; set; }
-            
+
         public string token { get; set; }
         public string redirect_to { get; set; }
         public decimal Amount { get; set; }
@@ -104,11 +104,11 @@ namespace Payment.VaderPay
         [Required]
         [Description("a unique identifier for the contract involved")]
         public string contract { get; set; }
-        
+
         [Required]
         [Description("the unique internal id of your API key")]
         public string apikey { get; set; }
-        
+
         [Required]
         [Description("unique transaction identifier")]
         public string transaction { get; set; }
@@ -132,7 +132,7 @@ namespace Payment.VaderPay
         [Required]
         [Description("Amount to debit from the client’s bank account")]
         public decimal Amount { get; set; }
-        
+
         [Required]
         [Description("the transaction’s currency")]
         public string Currency { get; set; }
@@ -144,18 +144,18 @@ namespace Payment.VaderPay
         [Required]
         [Description("hash_hmac() with sha256 of ‘transaction_id + status code + Currency + Amount + created_at’ signed with your API Key")]
         public string signature2 { get; set; }
-        
+
         [Required]
         [Description("creation date at the timezone of the API key’s owner")]
         public string created_at { get; set; }
-        
+
         [Required]
         [Description("last update at the timezone of the API key’s owner")]
         public string updated_at { get; set; }
 
         [Description("the name of the transfer’s originating bank")]
         public string bank_name { get; set; }
-        
+
         [Description("the bank account number where the funds were transfered")]
         public string bank_account { get; set; }
 
@@ -176,43 +176,43 @@ namespace Payment.VaderPay
         [Required]
         [Description("An unique identifier for the contract involved")]
         public string InvoiceNo { get; set; }
-        
+
         [Required]
         [Description("The client’s bank code")]
         public string ReceiverBank { get; set; }
-        
+
         [Required]
         [Description("The client’s bank account number")]
         public string ReceiverAccount { get; set; }
-        
+
         [Required]
         [Description("The transaction’s currency")]
         public string Currency { get; set; }
-        
+
         [Required]
         [Description("Amount credit to Receiver bank account")]
         public decimal Amount { get; set; }
-        
+
         [Required]
         [Description("Original amount credit to Receiver bank account")]
         public decimal OriginalAmount { get; set; }
-        
+
         [Required]
         [Description("Payment date at the timezone of the API key’s owner")]
         public string PaymentDate { get; set; }
-        
+
         [Required]
         [Description("Merchant Username")]
         public string MerchantCode { get; set; }
-        
+
         [Required]
         [Description("Merchant provided transaction identifier")]
         public string RefId { get; set; }
-        
+
         [Required]
         [Description("Latest transaction status")]
         public DepositCallbackStatus Status { get; set; }
-        
+
         [Required]
         public string Signature { get; set; }
     }
@@ -222,31 +222,31 @@ namespace Payment.VaderPay
         [Required]
         [Description("Merchant Username")]
         public string merchant_code { get; set; }
-        
+
         [Required]
         [Description("Merchant provided transaction identifier")]
         public string ref_id { get; set; }
-        
+
         [Required]
         [Description("the client’s full name")]
         public string player_username { get; set; }
-        
+
         [Required]
         [Description("the client’s ip")]
         public string player_ip { get; set; }
-        
+
         [Required]
         [Description("The preferred currency for the transaction")]
         public string currency_code { get; set; }
-        
+
         [Required]
         [Description("Amount to debit to the client’s bank account")]
         public string amount { get; set; }
-        
+
         [Required]
         [Description("the client’s bank code")]
         public string bank_code { get; set; }
-        
+
         [Required]
         [Description("the client’s bank account name")]
         public string beneficiary_account { get; set; }
@@ -278,7 +278,7 @@ namespace Payment.VaderPay
         [Required]
         [Description("An unique identifier for the contract involved")]
         public string InvoiceNo { get; set; }
-        
+
         [Required]
         [Description("The client’s bank account number")]
         public string BeneficiaryAccount { get; set; }
@@ -300,7 +300,7 @@ namespace Payment.VaderPay
 
         [Required]
         public string StatusMessage { get; set; }
-        
+
         [Required]
         [Description("Merchant Username")]
         public string MerchantCode { get; set; }

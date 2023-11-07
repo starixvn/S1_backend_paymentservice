@@ -1,14 +1,20 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Xml.Linq;
+
 using Flurl.Http;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore.Exceptions;
 using PaymentCore.Interface;
 using PaymentCore.Models;
+
 using Serilog.Context;
+
 using JsonExtension = PaymentCore.Extensions.JsonExtension;
 
 namespace PaymentCore.Helpers
@@ -79,7 +85,7 @@ namespace PaymentCore.Helpers
 
             return (result, statusCode);
         }
-        
+
         public (TResult Result, HttpStatusCode StatusCode) PostUrlEncoded<TBody, TResult>(string url, TBody body)
         {
             var (stream, statusCode) = PostData(url, body, ContentType.UrlEncoded);
@@ -143,7 +149,7 @@ namespace PaymentCore.Helpers
 
         #region Private Methods
 
-        
+
 
         #endregion
 
@@ -157,7 +163,7 @@ namespace PaymentCore.Helpers
 
             return request;
         }
-        
+
         private void ClearAll()
         {
             _header.Clear();
@@ -190,15 +196,15 @@ namespace PaymentCore.Helpers
                             .GetResult();
                         break;
                     case ContentType.Text:
-                    {
-                        var content = data.ToString();
-                        response = request
-                            .PostStringAsync(content)
-                            .ConfigureAwait(false)
-                            .GetAwaiter()
-                            .GetResult();
-                        break;
-                    }
+                        {
+                            var content = data.ToString();
+                            response = request
+                                .PostStringAsync(content)
+                                .ConfigureAwait(false)
+                                .GetAwaiter()
+                                .GetResult();
+                            break;
+                        }
                     case ContentType.UrlEncoded:
                         response = request
                             .PostUrlEncodedAsync(data)
@@ -246,23 +252,23 @@ namespace PaymentCore.Helpers
                                        + JsonConvert.SerializeObject(request.Headers.ToDictionary(x => x.Name, x => x.Value)));
                 _logger.LogInformation(JsonConvert.SerializeObject(data));
                 IFlurlResponse response = default(FlurlResponse);
-                
+
                 switch (postType)
                 {
                     case ContentType.Json:
                         response = await request.PostJsonAsync(data);
                         break;
                     case ContentType.Text:
-                    {
-                        var content = data.ToString();
-                        response = await request.PostStringAsync(content);
-                        break;
-                    }
+                        {
+                            var content = data.ToString();
+                            response = await request.PostStringAsync(content);
+                            break;
+                        }
                     case ContentType.UrlEncoded:
                         response = await request.PostUrlEncodedAsync(data);
                         break;
                 }
-            
+
                 LogContext.PushProperty("Url", url);
                 LogContext.PushProperty("Elapsed", sw.Elapsed.TotalMilliseconds);
 

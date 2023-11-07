@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -38,7 +40,7 @@ namespace Payment.ChangChenPay
             var notifyUrl = input["CallBackUrl"];
             var depositInfo = input["DepositInfo"];
             var accountName = input["AccountName"];
-            
+
             try
             {
                 var req = new Dictionary<string, string>
@@ -54,7 +56,7 @@ namespace Payment.ChangChenPay
                     {"body", "body"},
                     {"param1", accountName}
                 };
-                
+
                 req.Add("sign", GetSign(req, key));
 
                 var res = CreateOrder(apiUrl, req);
@@ -83,7 +85,7 @@ namespace Payment.ChangChenPay
         {
             var key = input["Key"];
             var transId = input["TransID"];
-            
+
             if (!VerifySign(formData["sign"], formData, key))
             {
                 return new NotifyDepositResult
@@ -95,7 +97,7 @@ namespace Payment.ChangChenPay
             }
 
             var transStatus = ChangChenPayDefinition.GetPayinTransStatus(formData["status"]);
-            
+
             var result = new NotifyDepositResult
             {
                 ThirdId = formData["payOrderId"],
@@ -138,7 +140,7 @@ namespace Payment.ChangChenPay
 
             try
             {
-              
+
                 var req = new Dictionary<string, string>
                 {
                     {"mchId", merchantId},
@@ -185,7 +187,7 @@ namespace Payment.ChangChenPay
         {
             var key = input["Key"];
             var transId = formData["mchTransOrderNo"];
-            
+
             if (!VerifySign(formData["sign"], formData, key))
             {
                 return new NotifyWithdrawResult
@@ -233,7 +235,7 @@ namespace Payment.ChangChenPay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"ChangChenPay creat order failed, HttpStatus: {(int) statusCode} {statusCode}");
+                    $"ChangChenPay creat order failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
             if (result.Code != ChangChenPayDefinition.SuccessCode)
@@ -251,7 +253,7 @@ namespace Payment.ChangChenPay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"ChangChenPay create payout failed, HttpStatus: {(int) statusCode} {statusCode}");
+                    $"ChangChenPay create payout failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
             if (result.Code != ChangChenPayDefinition.SuccessCode)

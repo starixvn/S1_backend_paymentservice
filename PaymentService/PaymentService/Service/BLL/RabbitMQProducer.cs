@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text;
+
+using Newtonsoft.Json;
+
 using RabbitMQ.Client;
-using System.Text;
 
 namespace PaymentService.Service.BLL
 {
@@ -26,7 +28,7 @@ namespace PaymentService.Service.BLL
             {
                 using var connection = _connectionFactory.CreateConnection();
                 using var channel = connection.CreateModel();
-                
+
                 var body = Encoding.UTF8.GetBytes(message);
                 var properties = channel.CreateBasicProperties();
                 properties.ContentType = "application/json";

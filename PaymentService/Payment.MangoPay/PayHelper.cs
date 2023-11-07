@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Models.Result;
 
@@ -81,7 +82,7 @@ namespace Payment.MangoPay
         {
             public long code { get; set; }
 
-            public string message { get; set; }            
+            public string message { get; set; }
         }
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
@@ -174,7 +175,7 @@ namespace Payment.MangoPay
             formData.Add("notifyUrl", inputs["CallBackUrl"]);
             formData.Add("language", inputs["PayLangId"]);
             formData.Add("goodsName", "N/A");
-            
+
             var p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["notifyUrl"]}{formData["type"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
@@ -264,7 +265,7 @@ namespace Payment.MangoPay
                     oNotify.TransStatus = TransStatus.Pending;
                 }
             }
-            else if(enquiryWithdrawRes.code == "201")
+            else if (enquiryWithdrawRes.code == "201")
             {
                 oNotify.TransStatus = TransStatus.Fail;
             }
@@ -272,7 +273,7 @@ namespace Payment.MangoPay
             {
                 oNotify.TransStatus = TransStatus.Pending;
             }
-            
+
             oNotify.Message = enquiryWithdrawRes.message;
             return oNotify;
         }

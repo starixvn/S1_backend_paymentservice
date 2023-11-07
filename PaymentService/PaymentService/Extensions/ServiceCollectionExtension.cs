@@ -1,12 +1,15 @@
 ﻿using System.Net;
+
 using Flurl.Http;
-using Newtonsoft.Json;
+
 using PaymentCore.Helpers;
+
 using PaymentService.Model;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
+
 using RabbitMQ.Client;
 
 namespace PaymentService.Extensions
@@ -18,7 +21,7 @@ namespace PaymentService.Extensions
             var provider = services.BuildServiceProvider();
             var logger = provider.GetRequiredService<ILogger<MySqlClient>>();
             var serviceType = config.GetValue<string>("ServiceType");
-            
+
             return services
                 .AddSingleton(param => new MySqlClient(config.GetConnectionString($"{serviceType}_MainDB"), logger)
                 {
@@ -38,7 +41,7 @@ namespace PaymentService.Extensions
             var provider = services.BuildServiceProvider();
             var configBll = provider.GetRequiredService<ConfigBLL>();
             var config = configBll.GetConfigValueByEnvironment<RabbitMqConfig>("RabbitMQ");
-                
+
             services.AddSingleton<IConnectionFactory>(_ => new ConnectionFactory
             {
                 HostName = config.HostName,
@@ -46,13 +49,13 @@ namespace PaymentService.Extensions
                 Password = config.Password
             });
         }
-        
+
         public static void AddProxy(this IServiceCollection services)
         {
             var provider = services.BuildServiceProvider();
             var configBll = provider.GetRequiredService<ConfigBLL>();
             var config = configBll.GetConfigValue<ProxySettingConfig>("ProxySetting");
-                
+
             if (!string.IsNullOrEmpty(config.ProxyHost))
             {
                 var proxy = new HttpClientHandler
@@ -64,7 +67,8 @@ namespace PaymentService.Extensions
                 services.AddHttpClient("with_proxy")
                     .ConfigurePrimaryHttpMessageHandler(() => proxy);
 
-                FlurlHttp.Configure(settings => {
+                FlurlHttp.Configure(settings =>
+                {
                     settings.HttpClientFactory = new ProxyHttpClientFactory(config.ProxyHost, config.ProxyPort);
                 });
             }
@@ -72,11 +76,11 @@ namespace PaymentService.Extensions
             {
                 services.AddHttpClient();
             }
-            
+
             PaymentCore.PayHelperBase.ProxyHost = config.ProxyHost;
             PaymentCore.PayHelperBase.ProxyPort = config.ProxyPort;
         }
-        
+
         public static IServiceCollection AddOptionListByDB<T>(this IServiceCollection services, string sql, object parameters = null)
         {
             var provider = services.BuildServiceProvider();
@@ -85,7 +89,7 @@ namespace PaymentService.Extensions
             services.AddSingleton(typeof(IEnumerable<T>), p => option);
             return services;
         }
-        
+
         public static IServiceCollection AddSiteConfig(this IServiceCollection services)
         {
             var provider = services.BuildServiceProvider();
@@ -101,7 +105,7 @@ namespace PaymentService.Extensions
                 //設定SiteConfig
                 var siteConfig = siteConfigGroup.FirstOrDefault(i => i.Key == serverInfo.SiteId)
                                  ?? siteConfigGroup.First(i => i.Key == 0);
-                var config = siteConfig.ToDictionary(i => i.ConfigKey, i => i.ConfigValue);         
+                var config = siteConfig.ToDictionary(i => i.ConfigKey, i => i.ConfigValue);
                 services.AddSingleton(new SiteConfig(serverInfo, config));
             }
 

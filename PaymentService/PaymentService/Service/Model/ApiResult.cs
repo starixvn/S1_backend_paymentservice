@@ -14,7 +14,7 @@ namespace PaymentService.Service.Model
         }
 
         public ApiResult(ErrorCode errorCode, string message = "")
-            : this((int) errorCode, string.IsNullOrEmpty(message) ? errorCode.ToString() : message, string.Empty,
+            : this((int)errorCode, string.IsNullOrEmpty(message) ? errorCode.ToString() : message, string.Empty,
                 string.Empty)
         {
         }
@@ -31,21 +31,21 @@ namespace PaymentService.Service.Model
         public string Message { get; set; }
         public string RawErrorCode { get; set; }
         public string RawMessage { get; set; }
-        
+
     }
     public class ApiResult<TData> : ApiResult
     {
         public ApiResult() : this(enums.ErrorCode.SystemError)
         {
         }
-        
+
         public ApiResult(TData data)
             : this((int)enums.ErrorCode.Success, string.Empty, data)
         {
         }
 
         public ApiResult(ErrorCode errorCode, string message = "")
-            : this((int) errorCode, string.IsNullOrEmpty(message) ? errorCode.ToString() : message, default)
+            : this((int)errorCode, string.IsNullOrEmpty(message) ? errorCode.ToString() : message, default)
         {
         }
 
@@ -54,7 +54,7 @@ namespace PaymentService.Service.Model
         {
             Data = data;
         }
-        
+
         public TData Data { get; set; }
     }
 }

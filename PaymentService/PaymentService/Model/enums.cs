@@ -7,7 +7,7 @@
         Wager,//ConnectionStringWager
         Log,//ConnectionStringLog
     }
-    
+
     public enum RedisDataBase
     {
         Member = 0,
