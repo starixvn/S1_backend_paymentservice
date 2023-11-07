@@ -5,7 +5,7 @@ namespace Payment.LionPay;
 internal class LionPayDefinition
 {
     private static Dictionary<string, TransStatus> TransStatusMap =>
-        new ()
+        new()
         {
             { LionPayOrderStatus.Completed, TransStatus.Success },
             { LionPayOrderStatus.Pending, TransStatus.Pending },
@@ -65,7 +65,7 @@ internal class LionPayOrderStatus
     public const string Rejected = "REJECTED";
 }
 
-    
+
 internal class CallbackResponse
 {
     public const string Success = "SUCCESS";

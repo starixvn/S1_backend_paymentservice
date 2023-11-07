@@ -75,7 +75,7 @@ namespace PaymentCore.Model.enums
         BankAutoChannel = 7,
         CryptoWallet = 8
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -110,13 +110,13 @@ namespace PaymentCore.Model.enums
         ToKYC = 8,
         Error = 99
     }
-    
+
     public enum CryptoPaymentEnum
     {
         DirePay = 22,
         FXBit = 5
     }
-    
+
     public enum ExchangeTypeEnum
     {
         /// <summary>
@@ -128,13 +128,13 @@ namespace PaymentCore.Model.enums
         /// </summary>
         Buy = 1
     }
-    
-    public enum WithdrawalLimitLogCreateFromEnum 
+
+    public enum WithdrawalLimitLogCreateFromEnum
     {
         Default = 0,
         Deposit = 1
     }
-    
+
     public enum WithdrawalLimitAdjustmentReasonEnum
     {
         [Description("None - (Default)")]
@@ -183,7 +183,7 @@ namespace PaymentCore.Model.enums
         /// </summary>
         AutoFailBackManual = 2
     }
-    
+
     public enum WithdrawalType
     {
         OnlineBanking = 1,

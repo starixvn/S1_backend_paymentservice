@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -19,7 +21,7 @@ namespace Payment.HonorPay
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
             _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
         }
-        
+
         #region Debit
 
         public override DepositResult Debit(Dictionary<string, string> input)
@@ -29,7 +31,7 @@ namespace Payment.HonorPay
             var apiToken = input["access_token"];
             var payCode = input["PayCode"];
             var transId = input["TransID"];
-            
+
             try
             {
                 var (payType, bankCode) = ParseDepositPayCode(payCode);
@@ -49,10 +51,10 @@ namespace Payment.HonorPay
                     {
                         bankCode = input["BankCode"];
                     }
-                    
+
                     formData.Add("BankCode", bankCode);
                 }
-                
+
                 var (response, statusCode) = _httpHelper
                     .WithOAuthBearerToken(apiToken)
                     .PostUrlEncoded<Dictionary<string, string>, DepositResponse>($"{baseApiUrl}{Path.Deposit}", formData);
@@ -68,7 +70,7 @@ namespace Payment.HonorPay
                         ? GetDepositErrorMsg(response.ErrorCode) : response.ErrorMessage;
                     throw new CustomException(msg, response.ErrorCode);
                 }
-                
+
                 return new DepositResult
                 {
                     Success = true,
@@ -139,7 +141,7 @@ namespace Payment.HonorPay
             var merchant = inputs["merchant_no"];
             var reqAmount = inputs["Amount"];
             var transId = inputs["TransID"];
-            
+
             try
             {
                 var formData = new Dictionary<string, string>
@@ -156,7 +158,7 @@ namespace Payment.HonorPay
                 };
 
                 formData.Add("sign", GetSign(formData, key));
-               
+
                 var (response, statusCode) = _httpHelper
                     .WithOAuthBearerToken(apiToken)
                     .PostUrlEncoded<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", formData);
@@ -231,7 +233,7 @@ namespace Payment.HonorPay
                 .Where(x => !string.IsNullOrEmpty(x.Value) && !x.Key.Equals("sign"))
                 .OrderBy(x => x.Key)
                 .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
-            
+
             var sign = ToHMACSHA256(str, key).ToUpper();
 
             return sign;
@@ -251,7 +253,7 @@ namespace Payment.HonorPay
 
             return "Unknown error";
         }
-        
+
         private static string GetWithdrawalErrorMsg(string errorCode)
         {
             if (HonorPayDefinition.WithdrawalErrorMsgMap.ContainsKey(errorCode))
@@ -261,14 +263,14 @@ namespace Payment.HonorPay
 
             return "Unknown error";
         }
-        
+
         private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)
         {
             var sign = GetSign(param, apiKey);
 
             return sign.Equals(target);
         }
-        
+
         private static string GenerateNonceStr()
             => Guid.NewGuid().ToString()[..32];
 
@@ -278,7 +280,7 @@ namespace Payment.HonorPay
             {
                 return (string.Empty, string.Empty);
             }
-            
+
             var arr = str.Split('-');
 
             return arr.Length > 1 ? (arr[0], arr[1]) : (arr[0], string.Empty);

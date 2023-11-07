@@ -5,14 +5,14 @@ namespace Payment.CindaPay;
 public class CindaPayDefinition
 {
     public const string SuccessCode = "0";
-    
+
     public class Version
     {
         public const string Deposit = "1.6";
 
         public const string Payout = "1.0";
     }
-    
+
     public class Path
     {
         public const string Deposit = "/louis/gateway.do";
@@ -21,9 +21,9 @@ public class CindaPayDefinition
     }
 
     public const string CallbackResponse = "SUCCESS";
-    
+
     private static Dictionary<string, TransStatus> TransStatusMap =>
-        new ()
+        new()
         {
             { CindaPayStatus.Success, TransStatus.Success },
             { CindaPayStatus.Processing, TransStatus.Pending },

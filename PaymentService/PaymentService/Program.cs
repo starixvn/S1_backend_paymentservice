@@ -1,8 +1,9 @@
+using PaymentService;
+using PaymentService.Extensions;
 using PaymentService.Service.Workers;
+
 using Serilog;
 using Serilog.Exceptions;
-using PaymentService.Extensions;
-using PaymentService;
 
 var builder = WebApplication.CreateBuilder(args);
 

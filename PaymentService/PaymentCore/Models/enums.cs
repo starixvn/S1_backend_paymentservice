@@ -6,7 +6,7 @@ namespace PaymentCore.Models
         Goal123 = 2,
         Bwing = 3
     }
-    
+
     public enum CurrencyEnum
     {
         MYR = 2,

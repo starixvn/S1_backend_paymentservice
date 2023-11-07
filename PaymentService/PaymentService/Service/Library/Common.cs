@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+
 using PaymentService.Service.BLL;
 
 namespace PaymentService.Service.Library
@@ -15,7 +16,7 @@ namespace PaymentService.Service.Library
             _environment = provider.GetRequiredService<IWebHostEnvironment>();
             _logger = provider.GetRequiredService<ILogger<Common>>();
         }
-        
+
         public string GetEnv()
         {
             switch (_environment.EnvironmentName)
@@ -23,16 +24,16 @@ namespace PaymentService.Service.Library
                 case "Development":
                 case "Local":
                     return "D";
-                    
+
                 case "Staging":
                     return "S";
-                
+
                 case "Production":
                     return "P";
-                
+
                 case "QA":
                     return "Q";
-                
+
                 default:
                     return "P";
             }
@@ -73,7 +74,7 @@ namespace PaymentService.Service.Library
 
             return httpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
         }
-        
+
         public int GetId(string transId)
         {
             var m = Regex.Match(transId, @"\d+");
@@ -104,7 +105,7 @@ namespace PaymentService.Service.Library
             const long cEnd = 3232301055;   // 192.168.255.255
 
             var isInnerIp = IsInner(ipNum, aBegin, aEnd) || IsInner(ipNum, bBegin, bEnd) || IsInner(ipNum, cBegin, cEnd) || ipAddress == "127.0.0.1";
-            
+
             return isInnerIp;
         }
         private long getIpNum(string ipAddress)

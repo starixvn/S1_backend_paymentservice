@@ -1,8 +1,9 @@
 ﻿using Newtonsoft.Json;
-using PaymentCore.Extensions;
+
+using PaymentCore.Interface;
 using PaymentCore.Model;
 using PaymentCore.Model.enums;
-using PaymentCore.Interface;
+
 using PaymentService.Exceptions;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
@@ -43,13 +44,13 @@ namespace PaymentService.Service.BLL
 
         public void DepositSuccess(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new []
+            var forStatus = new[]
             {
                 DepositStatus.Pending,
                 DepositStatus.Rejected,
                 DepositStatus.Canceled
             };
-            
+
             if (depositRequest.SiteId == 0 || depositRequest.CurrencyId == 0)
             {
                 var deposit = GetDepositInfo(depositRequest.TransId);
@@ -63,7 +64,7 @@ namespace PaymentService.Service.BLL
 
         public bool DepositManualSuccess(DepositInfoModel depositInfo)
         {
-            var forStatus = new []
+            var forStatus = new[]
             {
                 DepositStatus.Draft,
                 DepositStatus.Pending,
@@ -92,13 +93,13 @@ namespace PaymentService.Service.BLL
 
             return result;
         }
-        
+
         public void DepositFail(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new [] { DepositStatus.Pending };
+            var forStatus = new[] { DepositStatus.Pending };
             SetDepositInfo(depositRequest, depositResult, DepositStatus.Rejected, forStatus);
         }
-        
+
         public void SimpleDepositFail(string transId, int siteId, IPay payInfo, string comment)
         {
             _depositService.SetDepositInfoV2(new SetDepositInfoParams
@@ -108,16 +109,16 @@ namespace PaymentService.Service.BLL
                 SiteId = siteId,
                 PayId = payInfo.PayId,
                 Operator = payInfo.PayName,
-                ForStatus = new [] { DepositStatus.Pending },
-                Status =  DepositStatus.Rejected
+                ForStatus = new[] { DepositStatus.Pending },
+                Status = DepositStatus.Rejected
             }, _producer.Publish);
         }
 
         public void DepositPending(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new [] { DepositStatus.Pending };
+            var forStatus = new[] { DepositStatus.Pending };
             SetDepositInfo(depositRequest, depositResult, DepositStatus.Pending, forStatus);
-       }
+        }
 
         public void SetDepositLog(string transId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
         {
@@ -135,7 +136,7 @@ namespace PaymentService.Service.BLL
             var withdrawalId = _common.GetId(transId);
             return _withdrawalService.GetWithdrawalRequest(withdrawalId);
         }
-     
+
         public void WithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
             var forStatus = new List<int> { (int)WithdrawalStatus.Process };
@@ -311,11 +312,11 @@ namespace PaymentService.Service.BLL
 
         private bool CanRewardPoint(int siteId, int currencyId)
         {
-            var canRewardCurrency =  _configBll.GetConfigValue<int[]>("CanReward", siteId);
+            var canRewardCurrency = _configBll.GetConfigValue<int[]>("CanReward", siteId);
 
             return canRewardCurrency.Contains(currencyId);
         }
-        
+
         #endregion
     }
 }

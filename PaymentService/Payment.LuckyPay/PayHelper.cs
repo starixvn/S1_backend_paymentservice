@@ -1,8 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Models.Result;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Payment.LuckyPay
 {
@@ -21,8 +23,8 @@ namespace Payment.LuckyPay
             public DebitRespData data { get; set; }
             public string message { get; set; }
         }
-        public class DebitRespData 
-        { 
+        public class DebitRespData
+        {
             public string orderNo { get; set; }
             public string receiveAddr { get; set; }
             public string chainName { get; set; }
@@ -273,7 +275,7 @@ namespace Payment.LuckyPay
             formData.Add("clientNo", inputs["TransID"]);
             formData.Add("currentTime", currentTime);
 
-            var queryString = string.Join("&", formData.Select(x=>x.Value).ToArray());
+            var queryString = string.Join("&", formData.Select(x => x.Value).ToArray());
             var sign = ToMD5($"{queryString}{currencyData["key"]}").ToLower();
 
             var dicP = new Dictionary<string, string>();

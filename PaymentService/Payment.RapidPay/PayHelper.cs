@@ -1,11 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using System.Net;
+
+using Newtonsoft.Json;
+
 using PaymentCore;
-using System.Net;
-using PaymentCore.Models.Result;
-using Flurl;
-using System;
-using Org.BouncyCastle.Math.EC.Rfc7748;
 using PaymentCore.Interface;
+using PaymentCore.Models.Result;
 
 namespace Payment.RapidPay
 {
@@ -98,7 +97,7 @@ namespace Payment.RapidPay
             public string charge { set; get; }
         }
         #endregion
-        
+
         #endregion
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
@@ -262,7 +261,7 @@ namespace Payment.RapidPay
                 var authResp = new AuthResp();
                 authResp = JsonConvert.DeserializeObject<AuthResp>(sResponse);
                 if (authResp.status)
-                {                
+                {
                     var withdrawReq = new Dictionary<string, string>()
                     {
                         { "auth", authResp.auth },
@@ -307,7 +306,7 @@ namespace Payment.RapidPay
             return oDepositResult;
         }
 
-        
+
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var PayCurrencyId = inputs["PayCurrencyId"];
@@ -316,7 +315,7 @@ namespace Payment.RapidPay
 
             var currencyData = PayCurrencyId switch
             {
-                "MYR"=> new Dictionary<string, string> { 
+                "MYR" => new Dictionary<string, string> {
                 { "User", inputs["dMYRUser"] },{ "APIKey", inputs["dMYRAPI"]}
                 },
                 "THB" => new Dictionary<string, string> {

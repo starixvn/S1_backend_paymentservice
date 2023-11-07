@@ -138,7 +138,7 @@ namespace Payment.FXBit
         /// </summary>
         public const string Success = "2";
     }
-    
+
     internal class ErrorCode
     {
         public const string Success = "0";

@@ -5,7 +5,7 @@ namespace Payment.HonorPay;
 internal class HonorPayDefinition
 {
     public static Dictionary<string, TransStatus> DepositQueryStatusMap =>
-        new ()
+        new()
         {
             { DepositQueryStatus.Pending, TransStatus.Pending },
             { DepositQueryStatus.Success, TransStatus.Success },
@@ -13,23 +13,23 @@ internal class HonorPayDefinition
         };
 
     public static Dictionary<string, TransStatus> WithdrawalQueryStatusMap =>
-        new ()
+        new()
         {
             { WithdrawalQueryStatus.New, TransStatus.Pending },
             { WithdrawalQueryStatus.Pending, TransStatus.Pending },
             { WithdrawalQueryStatus.Success, TransStatus.Success },
             { WithdrawalQueryStatus.Cancel, TransStatus.Fail }
         };
-    
+
     public static Dictionary<string, TransStatus> WithdrawalStatusMap =>
-        new ()
+        new()
         {
             { WithdrawalStatus.Success, TransStatus.Success },
             { WithdrawalStatus.Cancel, TransStatus.Fail }
         };
-    
+
     public static Dictionary<string, string> DepositErrorMsgMap =>
-        new ()
+        new()
         {
             { "-100", "充值金额不符合规定" },
             { "-101", "充值金额不符合规定" },
@@ -40,9 +40,9 @@ internal class HonorPayDefinition
             { "-201", "提交请求服务器 IP 不在白名单内" },
             { "-202", "请求数据验证失败，请检查 header 设置或更新 token" }
         };
-    
+
     public static Dictionary<string, string> WithdrawalErrorMsgMap =>
-        new ()
+        new()
         {
             { "-100", "Unauthorized" },
             { "-101", "接口参数有误" },
@@ -56,13 +56,13 @@ internal class HonorPayDefinition
             { "-109", "已有相同的订单号，无法申请代付" },
             { "-200", "請求失敗" }
         };
-    
+
     public static List<string> NeedBankCodeChannels =>
-        new ()
+        new()
         {
             PayType.BankQr, PayType.OnlineBanking
         };
-    
+
     public const string CallbackResponse = "888888";
 
     public static TransStatus GetWithdrawalTransStatus(string status)
@@ -79,13 +79,13 @@ internal class HonorPayDefinition
 internal class Path
 {
     public const string Deposit = "/api/v2/pay_request";
-        
+
     public const string DepositQuery = "/api/pay_status";
-        
+
     public const string Withdrawal = "/api/withdraw/request";
-        
+
     public const string WithdrawalQuery = "/api/withdraw/status";
-        
+
     public const string BalanceQuery = "/api/withdraw/cash_balance";
 }
 
@@ -140,7 +140,7 @@ internal class WithdrawalQueryStatus
     /// 申請中
     /// </summary>
     public const string New = "0";
-    
+
     /// <summary>
     /// 處理中
     /// </summary>
@@ -160,9 +160,9 @@ internal class WithdrawalQueryStatus
 internal class PayType
 {
     public const string Momo = "momopay";
-    
+
     public const string BankQr = "bankcode";
-    
+
     public const string OnlineBanking = "zhilian";
 }
 

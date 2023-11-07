@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+
 using PaymentCore;
 using PaymentCore.Models.Result;
 
@@ -53,7 +53,7 @@ namespace Payment.YPay
         {
             public string BankCode { get; set; }
         }
-        
+
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var oNotify = new NotifyDepositResult();
@@ -61,7 +61,7 @@ namespace Payment.YPay
             var key = payResource["transfer_key"];
             var depositInfo = payResource["DepositInfo"];
             var di = JsonConvert.DeserializeObject<DepositInfo>(depositInfo);
-            
+
             if (di == null || string.IsNullOrEmpty(di.BankCode))
             {
                 key = payResource["scan_Key"];
@@ -110,12 +110,12 @@ namespace Payment.YPay
             };
             var parameter = $"appid={request.appid}bankMark={request.bankMark}money={request.money}name={request.name}orderId={request.orderId}recAcc={request.recAcc}secret={inputs["key"]}";
             request.sn = ToMD5(parameter).ToLower();
-            
+
             var sUrl = inputs["withdrawalhost"] + inputs["withdraw"];
             var dicP = FromJson<Dictionary<string, string>>(ToJson(request));
             var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             var sResponse = HttpGet(sUrl, sParam, inputs["TransID"], true);
-            
+
             var withdrawResult = new WithdrawResult();
             var withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
             if (withdrawalRes.code == (int)WithdrawalStatus.Success)
@@ -192,8 +192,8 @@ namespace Payment.YPay
 
             return depositResult;
         }
-        
-        private string GetSignature(int appid,string cliIp, string cliNa, string order, string payType, string price, string uid, string key)
+
+        private string GetSignature(int appid, string cliIp, string cliNa, string order, string payType, string price, string uid, string key)
         {
             var type = string.Empty;
             if (!string.IsNullOrEmpty(payType))
@@ -201,7 +201,7 @@ namespace Payment.YPay
                 type = $"payType={payType}";
             }
             var parameter = $"appid={appid}cliIP={cliIp}cliNA={cliNa}order={order}{type}price={price}uid={uid}secret={key}";
-            
+
             return ToMD5(parameter).ToLower();
         }
 

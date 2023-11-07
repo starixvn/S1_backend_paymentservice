@@ -6,7 +6,7 @@ internal class DepositResponse
 {
     [JsonProperty("retCode")]
     public string ErrorCode { get; set; }
-    
+
     [JsonProperty("retMsg")]
     public string ErrorMessage { get; set; }
 

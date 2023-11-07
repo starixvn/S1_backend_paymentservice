@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json.Linq;
-using PaymentCore.Models;
 
 namespace PaymentCore.Extensions
 {
@@ -18,7 +17,7 @@ namespace PaymentCore.Extensions
 
             return obj.ToString();
         }
-        
+
         public static string AddOrSetJProperty(this string json, string propName, object propValue)
         {
             if (string.IsNullOrEmpty(json))
@@ -31,7 +30,7 @@ namespace PaymentCore.Extensions
 
             return obj.ToString();
         }
-        
+
         public static bool StartsWithIgnoreCase(this string str, string target)
             => str.StartsWith(target, StringComparison.OrdinalIgnoreCase);
 
@@ -40,9 +39,9 @@ namespace PaymentCore.Extensions
             foreach (var (key, value) in collection)
             {
                 source.Add(key, value);
-            } 
+            }
         }
-        
+
         public static void AddRange<T>(this IEnumerable<T> collection, IEnumerable<T> items)
         {
             items?.Aggregate(collection, (current, obj) => current.Append(obj));

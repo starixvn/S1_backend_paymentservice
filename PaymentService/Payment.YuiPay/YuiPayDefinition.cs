@@ -6,17 +6,17 @@ internal class YuiPayDefinition
 {
     public const string Version = "V2";
     public const string SingType = "MD5";
-    
+
     public static Dictionary<string, TransStatus> YuiPayStatusMap =>
-        new ()
+        new()
         {
             { YuiPayStatus.Pending, TransStatus.Pending },
             { YuiPayStatus.Success, TransStatus.Success },
             { YuiPayStatus.Failed, TransStatus.Fail }
         };
-    
+
     public const string CallbackResponse = "SUCCESS";
-    
+
     public static TransStatus GetTransStatus(string status)
         => YuiPayStatusMap.TryGetValue(status, out var result)
             ? result : TransStatus.Pending;
@@ -47,7 +47,7 @@ internal class WithdrawalQueryStatus
     /// 申請中
     /// </summary>
     public const string New = "0";
-    
+
     /// <summary>
     /// 處理中
     /// </summary>

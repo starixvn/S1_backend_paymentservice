@@ -1,14 +1,17 @@
-﻿using Newtonsoft.Json;
-using System.Net;
+﻿using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-using Org.BouncyCastle.Security;
-using System.Security.Cryptography;
+
+using Newtonsoft.Json;
+
 using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
+
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
+
 using Serilog.Context;
-using System.Text.Json.Nodes;
 
 namespace PaymentCore
 {
@@ -398,20 +401,20 @@ namespace PaymentCore
             var outBytes = c.DoFinal(DataToEncrypt);//加密
             return Encoding.UTF8.GetString(outBytes);
         }
-        
-        protected string AES128CBCDecrypt(string key , string iv, string content)
-        { 
+
+        protected string AES128CBCDecrypt(string key, string iv, string content)
+        {
             var keyArray = Encoding.UTF8.GetBytes(key);
             var ivArray = Encoding.UTF8.GetBytes(iv);
             var cipher = CipherUtilities.GetCipher("AES/CBC/PKCS7");
             cipher.Init(false, new ParametersWithIV(new KeyParameter(keyArray), ivArray));
             var encData = Convert.FromBase64String(content);
-            
+
             return Encoding.UTF8.GetString(cipher.DoFinal(encData));
         }
 
-        protected string AES128CBCEncrypt(string key , string iv, string content)
-        { 
+        protected string AES128CBCEncrypt(string key, string iv, string content)
+        {
             var keyArray = Encoding.UTF8.GetBytes(key);
             var ivArray = Encoding.UTF8.GetBytes(iv);
             var cipher = CipherUtilities.GetCipher("AES/CBC/PKCS7");
@@ -773,11 +776,11 @@ namespace PaymentCore
 
             return currencyMapping.ContainsKey(currencyId) ? currencyMapping[currencyId] : "";
         }
-        
+
         protected static Dictionary<string, string> QueryStringToDic(string queryString)
         {
             var nvc = HttpUtility.ParseQueryString(queryString);
-            
+
             return nvc.AllKeys.ToDictionary(k => k, k => nvc[k]);
         }
 

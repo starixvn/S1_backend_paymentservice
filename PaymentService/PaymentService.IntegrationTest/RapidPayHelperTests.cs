@@ -1,9 +1,6 @@
 ﻿using NUnit.Framework;
+
 using Payment.RapidPay;
-using NSubstitute;
-using PaymentCore;
-using PaymentCore.Models.Result;
-using System.Net.Sockets;
 
 namespace PaymentService.IntegrationTest
 {

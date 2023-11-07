@@ -1,10 +1,13 @@
-﻿using Dapper;
-using PaymentService.Service.Model;
-using System.Data;
+﻿using System.Data;
+
+using Dapper;
+
 using PaymentCore.Model;
 using PaymentCore.Model.enums;
+
 using PaymentService.Model;
 using PaymentService.Service.Library;
+using PaymentService.Service.Model;
 
 namespace PaymentService.Service.DAL
 {
@@ -22,12 +25,12 @@ namespace PaymentService.Service.DAL
             _walletService = provider.GetRequiredService<WalletService>();
             _common = provider.GetRequiredService<Common>();
         }
-        
+
         public WithdrawalRequest GetWithdrawalRequest(int withdrawalId)
         {
             return _mainDbClient.QueryFirst<WithdrawalRequest>("Service_WithdrawalRequestPay_Get", new { WithdrawalId = withdrawalId });
         }
-        
+
         public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry(string payIds)
         {
             return _mainDbClient.QueryUseCommandDefinition<WithdrawalRequest>("Service_WithdrawalRequestPayEnquiry_Get",
@@ -43,7 +46,7 @@ namespace PaymentService.Service.DAL
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                
+
                 var sForStatus = Newtonsoft.Json.JsonConvert.SerializeObject(forStatus);
                 var p = new DynamicParameters(new
                 {
@@ -106,7 +109,7 @@ namespace PaymentService.Service.DAL
             var withdrawalId = _common.GetId(transId);
             var result = 0;
             try
-            {             
+            {
                 var sForStatus = Newtonsoft.Json.JsonConvert.SerializeObject(forStatus);
                 var p = new DynamicParameters(new
                 {
@@ -179,7 +182,7 @@ namespace PaymentService.Service.DAL
             var withdrawalId = _common.GetId(transId);
             var result = 0;
             try
-            {            
+            {
                 var sForStatus = Newtonsoft.Json.JsonConvert.SerializeObject(forStatus);
                 var p = new DynamicParameters(new
                 {
@@ -245,7 +248,7 @@ namespace PaymentService.Service.DAL
 
         private int SetWithdrawalLog(int withdrawalId, int siteId, string comment, int status, string @operator, IDbTransaction trans)
         {
-            return _mainDbClient.Execute("WithdrawalLog_Ins" ,new
+            return _mainDbClient.Execute("WithdrawalLog_Ins", new
             {
                 WithdrawalId = withdrawalId,
                 SiteId = siteId,

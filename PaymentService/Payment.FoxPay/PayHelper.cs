@@ -1,7 +1,10 @@
 ﻿using System.Text;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
@@ -11,7 +14,7 @@ namespace Payment.FoxPay
     class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
         private readonly ILogger<PayHelper> _logger;
-        
+
         public PayHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
@@ -38,13 +41,13 @@ namespace Payment.FoxPay
             [JsonProperty("amount")]
             public string Amount { get; set; }
         }
-        
+
         private class CallBackReq
         {
             public string encryptedData { get; set; }
             public string thirdOrderNumber { get; set; }
         }
-        
+
         private class CallBackData
         {
             public string amount { get; set; }
@@ -59,7 +62,7 @@ namespace Payment.FoxPay
             public string thirdOrderNumber { get; set; }
             public string utrNo { get; set; }
         }
-        
+
         private class CallBackResponse
         {
             [JsonProperty("code")]
@@ -71,7 +74,7 @@ namespace Payment.FoxPay
         }
 
         #endregion
-        
+
         #region Deposit
 
         private class DepositReq
@@ -80,7 +83,7 @@ namespace Payment.FoxPay
             public string thirdOrderNumber { get; set; }
             public string thirdUserId { get; set; }
         }
-        
+
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
@@ -97,12 +100,12 @@ namespace Payment.FoxPay
                 thirdOrderNumber = inputs["TransID"],
                 thirdUserId = thirdUserId
             };
-            
+
             var sResponse = HttpPost(sUrl, ToJson(req), "application/json", inputs["apiId"], inputs["key"], req.thirdOrderNumber);
 
             var depositRes = JsonConvert.DeserializeObject<Response>(sResponse);
             var oDepositResult = new DepositResult();
-            
+
             if (depositRes.Code == "0")
             {
                 var resData = new Dictionary<string, string>
@@ -111,7 +114,7 @@ namespace Payment.FoxPay
                     {"Amount", depositRes.Data.Amount}
                 };
                 var payUrl = $"{inputs["PayUrl"]}{depositRes.Data.OrderNumber}";
-                
+
                 oDepositResult.Url = payUrl;
                 oDepositResult.FormData = resData;
                 oDepositResult.ThirdId = depositRes.Data.OrderNumber;
@@ -127,18 +130,18 @@ namespace Payment.FoxPay
 
             return oDepositResult;
         }
-        
+
         public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
-        { 
+        {
             var preData = JsonConvert.DeserializeObject<CallBackReq>(bodyContent);
             return preData?.thirdOrderNumber;
         }
-        
+
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var pay = GetPaySetting(bodyContent);
-            var data = DecryptResponse(pay["key"].Substring(0,16),pay["iv"],bodyContent);
+            var data = DecryptResponse(pay["key"].Substring(0, 16), pay["iv"], bodyContent);
 
             var response = new CallBackResponse
             {
@@ -146,7 +149,7 @@ namespace Payment.FoxPay
                 Message = "success",
                 Success = true
             };
-            
+
             var oNotify = new NotifyDepositResult
             {
                 DepositId = payResource["TransID"],
@@ -156,10 +159,10 @@ namespace Payment.FoxPay
             if (data != null)
             {
                 _logger.LogInformation($"CallBackDebit Decrypt Data, Message:{JsonConvert.SerializeObject(data)}");
-                
+
                 oNotify.RefThirdId = data.utrNo;
                 oNotify.ThirdId = data.fiatOrderId;
-                
+
                 switch (data.status)
                 {
                     case (int)FoxPayStatus.Success:
@@ -169,14 +172,14 @@ namespace Payment.FoxPay
                         oNotify.ActualAmount = decimal.Parse(data.amount);
                         oNotify.Response = JsonConvert.SerializeObject(response);
                         break;
-                    
+
                     case (int)FoxPayStatus.Fail:
                         oNotify.TransStatus = TransStatus.Fail;
                         oNotify.Message = "cancel deposit";
                         oNotify.Comment = "Fail";
                         oNotify.Response = JsonConvert.SerializeObject(response);
                         break;
-                    
+
                     default:
                         oNotify.TransStatus = TransStatus.Pending;
                         response.Code = (int)FoxPayStatus.ResponseError;
@@ -196,14 +199,14 @@ namespace Payment.FoxPay
                 oNotify.TransStatus = TransStatus.Pending;
                 oNotify.Response = JsonConvert.SerializeObject(response);
             }
-            
+
             return oNotify;
         }
-        
+
         #endregion
 
         #region Withdrawal
-        
+
         public class PreWithdrawalReq
         {
             public string amount { get; set; }
@@ -218,13 +221,13 @@ namespace Payment.FoxPay
             public string name { get; set; }
             public string paymentId { get; set; }
         }
-        
+
         public class WithdrawalReq
         {
             public string encryptedData { get; set; }
             public SignaturePo signaturePo { get; set; }
         }
-        
+
         public class SignaturePo
         {
             public string apiId { get; set; }
@@ -232,24 +235,24 @@ namespace Payment.FoxPay
             public string signature { get; set; }
             public string timestamp { get; set; }
         }
-        
+
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var sUrl = inputs["host"];
             sUrl += "issue";
-            
+
             var accountName = inputs["AccountName"];
             if (accountName.Length < 6)
             {
                 accountName = accountName.PadLeft(6, '0');
             }
-            
+
             var thirdUserId = inputs["CustId"];
             if (thirdUserId.Length < 6)
             {
                 thirdUserId = thirdUserId.PadLeft(6, '0');
             }
-            
+
             var preRequest = new PreWithdrawalReq
             {
                 amount = Convert.ToDecimal(inputs["Amount"]).ToString(),
@@ -262,16 +265,16 @@ namespace Payment.FoxPay
                     paymentId = inputs["EWalletSysId"] == ((int)FoxPayEWalletSysId.Nagad).ToString() ? ((int)FoxPayPaymentId.Nagad).ToString() : ((int)FoxPayPaymentId.Bkash).ToString()
                 }
             };
-            
+
             var reqJson = JsonConvert.SerializeObject(preRequest);
-            
+
             _logger.LogInformation($"FoxPay Credit Data, Message:{reqJson}");
-            
-            var encryptedData = EncryptResponse(inputs["key"].Substring(0,16),inputs["iv"],reqJson);
-            
+
+            var encryptedData = EncryptResponse(inputs["key"].Substring(0, 16), inputs["iv"], reqJson);
+
             var timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
             var nonce = DateTime.Now.ToString("HHmmssddMMyyyy");
-            var reqArr = new[] { inputs["key"], timestamp, nonce , inputs["apiId"]};
+            var reqArr = new[] { inputs["key"], timestamp, nonce, inputs["apiId"] };
             Array.Sort(reqArr);
             var content = new StringBuilder();
             foreach (var t in reqArr)
@@ -317,15 +320,15 @@ namespace Payment.FoxPay
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var data = DecryptResponse(payResource["key"].Substring(0,16),payResource["iv"],bodyContent);
-            
+            var data = DecryptResponse(payResource["key"].Substring(0, 16), payResource["iv"], bodyContent);
+
             var oNotify = new NotifyWithdrawResult
             {
                 WithdrawId = data.thirdOrderNumber,
                 Message = "success",
                 ThirdId = data.fiatOrderId
             };
-            
+
             var response = new CallBackResponse
             {
                 Code = (int)FoxPayStatus.Success,
@@ -336,7 +339,7 @@ namespace Payment.FoxPay
             if (data != null)
             {
                 _logger.LogInformation($"CallBackCredit Decrypt Data, Message:{JsonConvert.SerializeObject(data)}");
-                
+
                 switch (data.status)
                 {
                     case (int)FoxPayStatus.Success:
@@ -344,12 +347,12 @@ namespace Payment.FoxPay
                         oNotify.RequestAmount = decimal.Parse(data.amount);
                         oNotify.Response = JsonConvert.SerializeObject(response);
                         break;
-                    
+
                     case (int)FoxPayStatus.Fail:
                         oNotify.TransStatus = TransStatus.Fail;
                         oNotify.Response = JsonConvert.SerializeObject(response);
                         break;
-                    
+
                     default:
                         oNotify.TransStatus = TransStatus.Pending;
                         response.Code = (int)FoxPayStatus.ResponseError;
@@ -368,15 +371,15 @@ namespace Payment.FoxPay
                 oNotify.TransStatus = TransStatus.Pending;
                 oNotify.Response = JsonConvert.SerializeObject(response);
             }
-            
-            
+
+
             return oNotify;
         }
 
         #endregion
 
         #region Not Implemented
-        
+
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
@@ -396,7 +399,7 @@ namespace Payment.FoxPay
 
         #region private
 
-        private CallBackData DecryptResponse(string key , string iv ,string bodyContent)
+        private CallBackData DecryptResponse(string key, string iv, string bodyContent)
         {
             try
             {
@@ -411,8 +414,8 @@ namespace Payment.FoxPay
                 return null;
             }
         }
-        
-        private string EncryptResponse(string key , string iv ,string bodyContent)
+
+        private string EncryptResponse(string key, string iv, string bodyContent)
         {
             try
             {

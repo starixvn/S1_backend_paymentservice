@@ -1,5 +1,6 @@
-﻿using PaymentCore;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
+using PaymentCore;
 using PaymentCore.Models.Result;
 
 namespace Payment.TenPay
@@ -36,7 +37,7 @@ namespace Payment.TenPay
                 oNotify.RequestAmount = decimal.Parse(data.Amount);
                 oNotify.ThirdId = data.TrackingNumber;
                 oNotify.Message = data.PaymentOrderStatusId;
-                oNotify.Response ="ok";
+                oNotify.Response = "ok";
             }
             else if (data.PaymentOrderStatusId == "3")
             {
@@ -155,7 +156,7 @@ namespace Payment.TenPay
             var amount = decimal.Parse(inputs["Amount"]);
             var phoneNo = (inputs["AreaCode"].Replace("+", "") + inputs["PhoneNo"])
                 .Replace(" ", "");
-            
+
             formData.Add("Amount", amount.ToString("#"));
             formData.Add("CurrencyId", inputs["PayCurrencyId"]);
             formData.Add("IsTest", inputs["IsTest"]);

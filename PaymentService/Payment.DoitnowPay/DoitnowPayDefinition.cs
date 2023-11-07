@@ -5,7 +5,7 @@ namespace Payment.DoitnowPay;
 public class DoitnowPayDefinition
 {
     public const string CallbackResponse = "ok";
-    
+
     internal class Path
     {
         /// <summary>
@@ -18,9 +18,9 @@ public class DoitnowPayDefinition
         /// </summary>
         public const string CreatePayout = "/v2/payout";
     }
-    
+
     private static Dictionary<string, TransStatus> TransStatusMap =>
-        new ()
+        new()
         {
             { PayoutStatus.Success, TransStatus.Success },
             { PayoutStatus.New, TransStatus.Pending },
@@ -43,7 +43,7 @@ public class DoitnowPayDefinition
     private class PayoutStatus
     {
         public const string New = "New";
-        
+
         public const string Processing = "Processing";
 
         public const string Success = "Success";

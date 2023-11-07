@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using System.Globalization;
+
+using Newtonsoft.Json;
+
 using PaymentCore;
-using System.Globalization;
 using PaymentCore.Models.Result;
 
 namespace Payment.WealthPay
@@ -153,7 +155,7 @@ namespace Payment.WealthPay
 
             var p = $"{formData["MerchantCode"]}{formData["TransactionID"]}{formData["MemberID"]}{formData["CurrencyCode"]}{formData["BankCode"]}" +
                     $"{formData["ToAccountNumber"]}{formData["ToAccountName"]}{formData["ToProvince"]}{formData["ToCity"]}{formData["ToBranch"]}" +
-                    $"{formData["Amount"]}{formData["Note"]}{formData["CallbackURL"]}{formData["ClientIP"]}{formData["TransactionTime"]}{inputs["key"]}"; 
+                    $"{formData["Amount"]}{formData["Note"]}{formData["CallbackURL"]}{formData["ClientIP"]}{formData["TransactionTime"]}{inputs["key"]}";
             formData.Add("Signature", ToSHA256(p).ToUpper());
 
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());

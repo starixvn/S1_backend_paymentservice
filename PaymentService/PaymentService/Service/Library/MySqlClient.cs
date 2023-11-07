@@ -1,8 +1,12 @@
 ﻿using System.Data;
 using System.Diagnostics;
+
 using Dapper;
+
 using MySql.Data.MySqlClient;
+
 using PaymentService.Model;
+
 using Serilog.Context;
 
 namespace PaymentService.Service.Library
@@ -23,7 +27,7 @@ namespace PaymentService.Service.Library
         {
             return new MySqlConnection(_connectionString);
         }
-        
+
         #region Query
 
         public async Task<T> QueryFirstAsync<T>(string name, object parameters)
@@ -60,7 +64,7 @@ namespace PaymentService.Service.Library
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 result = connection.QueryFirstOrDefault<T>(command);
-                
+
                 connection.Close();
                 connection.Dispose();
             }
@@ -107,7 +111,7 @@ namespace PaymentService.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name,parameters,
+                var command = new CommandDefinition(name, parameters,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 result = connection.Query<T>(command);
@@ -132,7 +136,7 @@ namespace PaymentService.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(sql,parameters,
+                var command = new CommandDefinition(sql, parameters,
                     commandType: commandType,
                     flags: CommandFlags.NoCache);
                 result = connection.Query<T>(command);
@@ -157,7 +161,7 @@ namespace PaymentService.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name,parameters,
+                var command = new CommandDefinition(name, parameters,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 var multiple = connection.QueryMultiple(command);
@@ -210,7 +214,7 @@ namespace PaymentService.Service.Library
                     flags: CommandFlags.NoCache);
                 var multiple = connection.QueryMultipleAsync(command);
                 result = func.Invoke(await multiple);
-                
+
                 await connection.CloseAsync();
                 await connection.DisposeAsync();
             }
@@ -224,7 +228,7 @@ namespace PaymentService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         public IEnumerable<T> QueryUseCommandDefinition<T>(string name, SqlMapper.IDynamicParameters parameters, int? commandTimeout = null)
         {
             IEnumerable<T> result;
@@ -254,9 +258,9 @@ namespace PaymentService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result.ToList();
         }
-        
+
         #endregion
-        
+
         #region Execute
 
         public int Execute(string name, object parameters)
@@ -280,8 +284,8 @@ namespace PaymentService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
-        public int Execute(string name, object parameters , IDbTransaction transaction)
+
+        public int Execute(string name, object parameters, IDbTransaction transaction)
         {
             var sw = Stopwatch.StartNew();
             int result;
@@ -343,7 +347,7 @@ namespace PaymentService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         public T ExecuteScalar<T>(string name, object parameters)
         {
             T result;
@@ -389,7 +393,7 @@ namespace PaymentService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         #endregion
     }
 }

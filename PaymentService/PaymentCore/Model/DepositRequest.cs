@@ -20,7 +20,7 @@ namespace PaymentCore.Model
         public DateTime CreateTime { set; get; }
         public DepositStatus Status { set; get; }
     }
-   
+
     public class DepositAutoCancel
     {
         public int DepositId { get; set; }

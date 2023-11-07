@@ -1,8 +1,11 @@
 ﻿using System.Text.RegularExpressions;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -39,7 +42,7 @@ namespace Payment.FXBit
 
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
                 var rate = type.Equals("0") ? rateInfo.BuyRate : rateInfo.SellRate; // FxBit的匯率買入買出和一般是反過來
-                var exchangeAmount = GetExchangeAmountString(reqAmount, rate , toCurrency);
+                var exchangeAmount = GetExchangeAmountString(reqAmount, rate, toCurrency);
 
                 return new ExchangeResult(ErrorCode.Success, "Success", new CryptoExchangeInfo
                 {
@@ -216,7 +219,7 @@ namespace Payment.FXBit
 
                 // 230927: 根據市場需求，改為使用申請當下的匯率
                 var rateInfo = JsonConvert.DeserializeObject<CryptoRateInfo>(withdrawalInfo);
-                
+
                 if (rateInfo == null)
                     throw new CustomException("CryptoRateInfo is empty.");
 
@@ -236,7 +239,7 @@ namespace Payment.FXBit
                 };
 
                 payoutReq.Add("signature", GetSign(payoutReq, payoutKey));
-               
+
                 var payoutResp = Payout(payoutApiUrl, apiKey, payoutReq);
                 var response = new WithdrawResult
                 {
@@ -370,7 +373,7 @@ namespace Payment.FXBit
                     $",errorCode: {response.Result.Error}",
                     ErrorCode.GetReceptionTokenFailed);
             }
-            
+
             if (response.Result.Error != 0)
                 throw new CustomException($"FxBit GetReceptionToken response error code: {response.Result.Error}",
                     ErrorCode.GetReceptionTokenFailed);
@@ -501,13 +504,13 @@ namespace Payment.FXBit
                 ? 8 : 2;
 
             var amount = decimal.Parse(reqAmount) / decimal.Parse(rate);
-            
+
             return amount.ToString($"f{unit}");
         }
 
         private static string GetExchangeRateString(string rate)
             => (1M / decimal.Parse(rate)).ToString("f15");
-        
+
         #endregion
     }
 }
