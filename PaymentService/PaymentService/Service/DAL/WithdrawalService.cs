@@ -25,12 +25,12 @@ namespace PaymentService.Service.DAL
         
         public WithdrawalRequest GetWithdrawalRequest(int withdrawalId)
         {
-            return _reportDbClient.QueryFirst<WithdrawalRequest>("Service_WithdrawalRequestPay_Get", new { WithdrawalId = withdrawalId });
+            return _mainDbClient.QueryFirst<WithdrawalRequest>("Service_WithdrawalRequestPay_Get", new { WithdrawalId = withdrawalId });
         }
         
         public IEnumerable<WithdrawalRequest> GetWithdrawalRequesPayEnquiry(string payIds)
         {
-            return _reportDbClient.QueryUseCommandDefinition<WithdrawalRequest>("Service_WithdrawalRequestPayEnquiry_Get",
+            return _mainDbClient.QueryUseCommandDefinition<WithdrawalRequest>("Service_WithdrawalRequestPayEnquiry_Get",
                 new DynamicParameters(new { _PayIds = payIds }));
         }
 

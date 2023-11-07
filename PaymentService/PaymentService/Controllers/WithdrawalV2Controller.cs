@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using NuGet.Packaging;
 using PaymentCore;
+using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Model.enums;
 using PaymentService.Exceptions;
@@ -9,6 +9,7 @@ using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
+using Serilog.Context;
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers;
@@ -63,13 +64,21 @@ public class WithdrawalV2Controller : ControllerBase
     [HttpPost]
     public ApiResult Create(WithdrawalReq req)
     {
-        var withdrawalInfo = _paymentBll.GetWithdrawalRequest(req.TransId);
-        var custInfo = _custInfoBll.GetCustInfoWithCache(withdrawalInfo.CustId);
-
+        LogContext.PushProperty("TransId", req.TransId);
         try
         {
+            var withdrawalInfo = _paymentBll.GetWithdrawalRequest(req.TransId);
+            
+            if (withdrawalInfo == null)
+            {
+                throw new PaymentException("Cannot get withdrawalInfo. transId = " + req.TransId);
+            }
+            
+            var custInfo = _custInfoBll.GetCustInfoWithCache(withdrawalInfo.CustId);
             var (payInfo, input) =
                 _getWithdrawalInputMapper[withdrawalInfo.WithdrawalType].Invoke(withdrawalInfo, custInfo);
+
+            _logger.LogInformation("PayInfo:" + JsonConvert.SerializeObject(payInfo));
             
             var (pay, payHelper) = _payBll.GetPayHelper(payInfo, custInfo);
             var payLang = _payBll.GetPayLanguage(payInfo.PayId, custInfo);
@@ -98,6 +107,8 @@ public class WithdrawalV2Controller : ControllerBase
             var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
             input.AddRange(setting);
             
+            _logger.LogInformation("Input:" + JsonConvert.SerializeObject(input));
+            
             var result = payHelper.Credit(input);
             
             if (!string.IsNullOrEmpty(result.WithdrawalInfo))
@@ -113,13 +124,13 @@ public class WithdrawalV2Controller : ControllerBase
         {
             _logger.LogInformation($"Method={GetCurrentMethod()}, TransId={req.TransId}, Code={ex.Code}, Message={ex.Message}");
             
-            return new ApiResult<PayResult>(ex.Code, ex.Message);
+            return new ApiResult(ex.Code, ex.Message);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Exception: Method={GetCurrentMethod()}, TransId={req.TransId}, Message={ex.Message}");
             
-            return new ApiResult<PayResult>(ErrorCode.Fail);
+            return new ApiResult(ErrorCode.Fail);
         }
     }
     
@@ -166,6 +177,7 @@ public class WithdrawalV2Controller : ControllerBase
     {
         var keys = new[] {"SysId", "IFSCCode"};
         var dicWithdrawalInfo = GetDicWithdrawalInfo(withdrawalInfo.WithdrawalInfo, keys);
+        _logger.LogInformation("WithdrawalInfo:" + JsonConvert.SerializeObject(dicWithdrawalInfo));
         var sysId = int.Parse(dicWithdrawalInfo["SysId"]);
     
         var payInfo = _payBll.GetPayListForPayout(withdrawalInfo.WithdrawalType, custInfo.SiteId)?.FirstOrDefault(x =>
@@ -194,6 +206,7 @@ public class WithdrawalV2Controller : ControllerBase
     {
         var keys = new[] {"ChannelId"};
         var dicWithdrawalInfo = GetDicWithdrawalInfo(withdrawalInfo.WithdrawalInfo, keys);
+        _logger.LogInformation("WithdrawalInfo:" + JsonConvert.SerializeObject(dicWithdrawalInfo));
         var channelId = int.Parse(dicWithdrawalInfo["ChannelId"]);
     
         var payInfo = _payBll.GetEWalletPayListForPayout(custInfo.SiteId)?.FirstOrDefault(x =>
@@ -220,6 +233,7 @@ public class WithdrawalV2Controller : ControllerBase
     {
         var keys = new[] {"ChannelId"};
         var dicWithdrawalInfo = GetDicWithdrawalInfo(withdrawalInfo.WithdrawalInfo, keys);
+        _logger.LogInformation("WithdrawalInfo:" + JsonConvert.SerializeObject(dicWithdrawalInfo));
         var channelId = int.Parse(dicWithdrawalInfo["ChannelId"]);
     
         var payInfo = _payBll.GetCryptoListForPayout(custInfo.SiteId)?.FirstOrDefault(x =>

@@ -2,7 +2,7 @@ namespace PaymentCore.Extensions;
 
 public class RetryExtension
 {
-    public static TResult Do<T, TResult>(Func<T, TResult> func, T input, int maxRetryTimes, TimeSpan retryInterval)
+    public static TResult Do<T, TResult>(Func<T, TResult> func, T input, int maxRetryTimes, TimeSpan retryInterval, bool exWhenNull = false)
     {
         var exceptions = new List<Exception>();
         for (var i = 0; i < maxRetryTimes; i++)
@@ -13,7 +13,15 @@ public class RetryExtension
                 {
                     Thread.Sleep(retryInterval);
                 }
-                return func(input);
+                
+                var result = func(input);
+
+                if (exWhenNull && result == null)
+                {
+                    throw new Exception("NULL DATA");
+                }
+
+                return result;
             }
             catch(Exception ex)
             {
