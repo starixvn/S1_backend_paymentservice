@@ -40,8 +40,8 @@ pipeline {
                 steps{
                     dir('/jenkins/backend-manifest/dev-galaxy/leobet'){
                         sh 'git pull'
-                        sh "yq -i '.spec.template.spec.containers[0].image = \"harbor.ailabpte.co/adminsite/backendsite:${imageversion}\"' paymentservice-deploy.yaml"
-                        sh "yq -i '.spec.template.spec.containers[0].image = \"harbor.ailabpte.co/adminsite/backendsite:${imageversion}\"' paymentworker-deploy.yaml"
+                        sh "yq -i '.spec.template.spec.containers[0].image = \"harbor.ailabpte.co/paymentservice/paymentservice:${imageversion}\"' paymentservice-deploy.yaml"
+                        sh "yq -i '.spec.template.spec.containers[0].image = \"harbor.ailabpte.co/paymentservice/paymentservice:${imageversion}\"' paymentworker-deploy.yaml"
                         sh 'git add paymentservice-deploy.yaml'
                         sh 'git add paymentworker-deploy.yaml'
                         sh "git commit -m 'update dev payservice ver:${imageversion}'"
