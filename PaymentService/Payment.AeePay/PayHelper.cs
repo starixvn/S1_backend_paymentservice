@@ -149,7 +149,7 @@ namespace Payment.AeePay
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = decimal.Parse(formData["tjmoney"]);
-                    oNotify.ActualAmount = decimal.Parse(formData["money"]);
+                    oNotify.ActualAmount = decimal.Parse(formData["tjmoney"]);
                     oNotify.ThirdId = formData["orderno"];
                     oNotify.Comment = "Success";
                     oNotify.Message = "Success";
