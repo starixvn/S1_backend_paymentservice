@@ -205,28 +205,26 @@ namespace Payment.FXBit
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-
-            var baseApiUrl = inputs["host"];
             var apiKey = inputs["key"];
             var payoutKey = inputs["payoutKey"];
             var payoutApiUrl = inputs["payoutUrl"];
-            var fromCurrency = inputs["PayCurrencyId"];
             var toCurrency = inputs["PayCode"];
-            var reqAmount = inputs["Amount"];
             var transId = inputs["TransID"];
             var withdrawalInfo = inputs["WithdrawalInfo"];
 
             try
             {
-                // Step 1: 取得當下匯率並換算為加密貨幣金額
-                var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
-                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.BuyRate, toCurrency);
-
-                // 將匯率資訊加入 WithdrawalInfo
                 if (withdrawalInfo == null)
                     throw new CustomException("WithdrawalInfo is empty.");
 
-                withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rateInfo.BuyRate, exchangeAmount);
+                // 230927: 根據市場需求，改為使用申請當下的匯率
+                var rateInfo = JsonConvert.DeserializeObject<CryptoRateInfo>(withdrawalInfo);
+                
+                if (rateInfo == null)
+                    throw new CustomException("CryptoRateInfo is empty.");
+
+                var exchangeAmount = rateInfo.TempExchangeAmount.ToString("G29");
+                withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rateInfo.TempExchangeRate.ToString("G29"), exchangeAmount);
 
                 // Step 2: 建立交易
                 var payoutReq = new Dictionary<string, string>
