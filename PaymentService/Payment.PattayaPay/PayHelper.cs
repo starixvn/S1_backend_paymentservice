@@ -1,7 +1,10 @@
 using System.Web;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -33,7 +36,7 @@ public class PayHelper : PayHelperBase
         var merchantCode = input["merchantCode"];
         var notifyUrl = input["CallBackUrl"];
         var payCode = input["PayCode"];
-        
+
         try
         {
             var req = new Dictionary<string, string>
@@ -45,7 +48,7 @@ public class PayHelper : PayHelperBase
                 {"notifyurl", notifyUrl},
                 {"returndataformat", "serverjson"}
             };
-            
+
             req.Add("sign", GetSign(req, apiKey));
 
             var res = CreateOrder(apiUrl, req);
@@ -134,7 +137,7 @@ public class PayHelper : PayHelperBase
             };
 
             req.Add("sign", GetSign(req, apiKey));
-           
+
             var res = Payout(apiUrl, req);
             var response = new WithdrawResult
             {
@@ -196,7 +199,7 @@ public class PayHelper : PayHelperBase
     }
 
     #region Private Methods
-    
+
     private PattayaPayResponse<CreatOrderResults> CreateOrder(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePay;
@@ -209,7 +212,7 @@ public class PayHelper : PayHelperBase
             throw new CustomException(
                 $"PattayaPay CreatOrder failed, HttpStatus: {(int)statusCode} {statusCode}");
         }
-        
+
         if (result.Code != 0)
             throw new CustomException($"PattayaPay CreatOrder response error: {result.Code} {result.Results}");
 
@@ -242,7 +245,7 @@ public class PayHelper : PayHelperBase
             .OrderBy(x => x.Key)
             .Select(x => $"{x.Key}={HttpUtility.UrlEncode(x.Value)}"))
                 .ToLower() + $"&secret={key}";
-        
+
         _logger.LogInformation(str);
         var sign = base.ToMD5(str).ToLower();
         _logger.LogInformation(sign);

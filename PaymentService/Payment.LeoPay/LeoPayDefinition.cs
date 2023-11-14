@@ -5,7 +5,7 @@ namespace Payment.LeoPay;
 public class LeoPayDefinition
 {
     public const string CallbackResponse = "ok";
-    
+
     internal class Path
     {
         /// <summary>
@@ -18,9 +18,9 @@ public class LeoPayDefinition
         /// </summary>
         public const string CreatePayout = "/api/payment";
     }
-    
+
     private static Dictionary<string, TransStatus> TransStatusMap =>
-        new ()
+        new()
         {
             { PayoutStatus.Completed, TransStatus.Success },
             { PayoutStatus.New, TransStatus.Pending },
@@ -44,7 +44,7 @@ public class LeoPayDefinition
     private class PayoutStatus
     {
         public const string New = "new";
-        
+
         public const string Processing = "processing";
 
         public const string Completed = "completed";

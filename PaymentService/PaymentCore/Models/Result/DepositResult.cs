@@ -5,7 +5,7 @@ public class DepositResult
     public DepositResult()
     {
     }
-    
+
     public DepositResult(string message) : this(false, "", message)
     {
     }
@@ -16,7 +16,7 @@ public class DepositResult
         this.ErrorCode = errorCode;
         this.Message = message;
     }
-        
+
     public bool Success { get; set; }
     public string Message { get; set; }
     public string ErrorCode { get; set; }

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Models.Result;
 
@@ -60,7 +61,7 @@ namespace Payment.GlobalPay
         #endregion
 
         #region Enum
-        public enum TradeStatusEnum 
+        public enum TradeStatusEnum
         {
             Pending = 0,
             Success = 1,

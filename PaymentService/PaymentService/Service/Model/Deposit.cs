@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+
 using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.Model
@@ -20,8 +21,8 @@ namespace PaymentService.Service.Model
         public string Message { get; set; }
         public decimal Amount { get; set; }
     }
-    
-    public class DepositInfoData
+
+    public class DepositInfoModel
     {
         public string DepositId { get; set; }
         public string TransId { set; get; }
@@ -32,22 +33,22 @@ namespace PaymentService.Service.Model
         public string DepositInfo { set; get; }
         public decimal Amount { set; get; }
         public decimal ActualDeposit { set; get; }
-        public IDepositInfo depositInfo
-        {
-            get
-            {
-                return DepositType switch
-                {
-                    DepositType.OnlineBanking => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo1_1>(DepositInfo),
-                    DepositType.MobilePayment => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo2_1>(DepositInfo),
-                    DepositType.LocalBank => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfo3_1>(DepositInfo),
-                    _ => Newtonsoft.Json.JsonConvert.DeserializeObject<DepositInfoGeneral_1>(DepositInfo)
-                };
-            }
-        }
         public int Status { set; get; }
         public string Comment { set; get; }
         public string RefId { set; get; }
         public string Operator { set; get; }
+    }
+
+    public class SetDepositInfoParams
+    {
+        public string TransId { set; get; }
+        public int SiteId { set; get; }
+        public int PayId { set; get; }
+        public decimal ActualDeposit { set; get; }
+        public string Comment { set; get; }
+        public string ThirdId { set; get; }
+        public string Operator { set; get; }
+        public IEnumerable<DepositStatus> ForStatus { set; get; }
+        public DepositStatus Status { set; get; }
     }
 }

@@ -10,13 +10,13 @@ namespace Payment.VaderPay
         Error = -2,
         Pending = -3
     }
-    
+
     public enum MobileDepositStatus
     {
         OperationSuccess = 0,
         InvalidParameter = 1
     }
-    
+
     public enum DepositCallbackStatus
     {
         Pending = 0,
@@ -28,13 +28,13 @@ namespace Payment.VaderPay
     public enum WithdrawalStatus
     {
         Success = 0,
-        
+
         [Description("Duplicate Reference Id")]
-        Duplicate =101,
-        
+        Duplicate = 101,
+
         [Description("Amount more than maximum transaction amount")]
         OverMaxAmount = 204,
-        
+
         [Description("Beneficiary RefId is Exists")]
         TransactionExists = 302
     }
@@ -56,7 +56,7 @@ namespace Payment.VaderPay
         OperationFailed = 1001,
         SystemMaintenance = 1002
     }
-    
+
     public enum DepositResponseStatus
     {
         OperationSuccess = 0,

@@ -1,16 +1,20 @@
-﻿using System.Net;
+﻿
 using System.Text;
+
 using Elastic.Apm.AspNetCore;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.SqlClient;
 using Elastic.Apm.StackExchange.Redis;
-using Flurl.Http;
+
 using PaymentCore.Helpers;
 using PaymentCore.Interface;
+
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
+using PaymentService.Service.Model;
+
 using StackExchange.Redis;
 
 namespace PaymentService
@@ -29,34 +33,10 @@ namespace PaymentService
         {
             services.AddMemoryCache();
             services.AddDatabaseConnection(Configuration);
-            services.AddMessageQueueConnection(Configuration);
             var redisConnection = ConnectionMultiplexer.Connect(Configuration.GetValue<string>("RedisConnection"));
             redisConnection.UseElasticApm();
             services.AddSingleton<IConnectionMultiplexer>(redisConnection);
             services.AddSingleton<ICacheHelper, RedisCacheHelper>();
-
-            var proxyHost = Configuration.GetValue<string>("ProxyHost");
-            var proxyPort = Configuration.GetValue<int>("ProxyPort");
-
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                var proxy = new HttpClientHandler
-                {
-                    Proxy = new WebProxy(proxyHost, proxyPort),
-                    UseProxy = true
-                };
-
-                services.AddHttpClient("with_proxy")
-                .ConfigurePrimaryHttpMessageHandler(() => proxy);
-
-                FlurlHttp.Configure(settings => {
-                    settings.HttpClientFactory = new ProxyHttpClientFactory(proxyHost, proxyPort);
-                });
-            }
-            else
-            {
-                services.AddHttpClient();
-            }
 
             /*Library*/
             services.AddSingleton<Common>();
@@ -75,6 +55,7 @@ namespace PaymentService
             services.AddSingleton<DepositService>();
             services.AddSingleton<WalletService>();
             services.AddSingleton<WithdrawalService>();
+            services.AddSingleton<ConfigService>();
 
 
             /*BLL*/
@@ -82,9 +63,15 @@ namespace PaymentService
             services.AddSingleton<PayBLL>();
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();
-            
-            PaymentCore.PayHelperBase.ProxyHost = proxyHost;
-            PaymentCore.PayHelperBase.ProxyPort = proxyPort;
+            services.AddSingleton<WhitelistBLL>();
+
+            /*SiteConfig*/
+            services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
+            services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "PaymentService" });
+            services.AddSiteConfig();
+            services.AddSingleton<ConfigBLL>();
+            services.AddMessageQueueConnection();
+            services.AddProxy();
 
             services.AddControllers();
         }

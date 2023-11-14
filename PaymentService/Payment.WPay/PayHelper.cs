@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -36,7 +38,7 @@ public class PayHelper : PayHelperBase
         var ts = now.ToUnixTimeSeconds().ToString();
         var notifyUrl = input["CallBackUrl"];
         var payCode = input["PayCode"];
-        
+
         if (payCode.Contains('-'))
         {
             var p = payCode.Split('-');
@@ -58,7 +60,7 @@ public class PayHelper : PayHelperBase
                 {"notifyUrl", notifyUrl},
                 {"time", ts},
             };
-            
+
             var req = new Dictionary<string, string>
             {
                 {"merchantNo", merchantNo},
@@ -72,7 +74,7 @@ public class PayHelper : PayHelperBase
                 {"time", ts},
                 {"appSecret", input["appSecret"]}
             };
-            
+
             req.Add("sign", GetSign(signDic, apiKey, OrderTypeEnum.Payin));
 
             var res = CreateOrder(apiUrl, req);
@@ -169,7 +171,7 @@ public class PayHelper : PayHelperBase
                 {"extra", ""},
                 {"time", ts},
             };
-            
+
             var req = new Dictionary<string, string>
             {
                 {"merchantNo", merchantNo},
@@ -185,7 +187,7 @@ public class PayHelper : PayHelperBase
             };
 
             req.Add("sign", GetSign(signDic, apiKey, OrderTypeEnum.Payout));
-           
+
             var res = Payout(apiUrl, req);
             var response = new WithdrawResult
             {
@@ -247,7 +249,7 @@ public class PayHelper : PayHelperBase
     }
 
     #region Private Methods
-    
+
     private CreatOrderResponse CreateOrder(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreateOrder;
@@ -262,7 +264,7 @@ public class PayHelper : PayHelperBase
                 $"WPay CreatOrder failed, HttpStatus: {(int)statusCode} {statusCode}" +
                 $",errorMsg: {result.ErrorMessage}");
         }
-        
+
         if (result.Code != 0)
             throw new CustomException($"WPay CreatOrder response error message: {result.ErrorMessage}");
 
@@ -291,7 +293,7 @@ public class PayHelper : PayHelperBase
     }
 
     private static readonly Dictionary<OrderTypeEnum, IEnumerable<string>> _ignoreKeys =
-        new ()
+        new()
         {
             {OrderTypeEnum.Payin, new []
             {
@@ -302,14 +304,14 @@ public class PayHelper : PayHelperBase
                 "bankBranch", "memo", "VerifyChannelNo", "appSecret", "sign"
             }}
         };
-    
+
     private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key, OrderTypeEnum type)
     {
         var str = string.Join("&", param
             .Where(x => _ignoreKeys[type].All(k => !x.Key.Equals(k, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(x => x.Key)
             .Select(x => $"{x.Key}={x.Value}")) + key;
-        
+
         //_logger.LogInformation(str);
         var digest = base.ToSHA256(str).ToLower();
         //_logger.LogInformation(digest);

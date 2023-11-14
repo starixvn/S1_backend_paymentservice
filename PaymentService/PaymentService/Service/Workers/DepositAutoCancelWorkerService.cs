@@ -1,5 +1,4 @@
 ﻿using PaymentService.Service.BLL;
-using PaymentService.Service.Model;
 
 namespace PaymentService.Service.Workers
 {

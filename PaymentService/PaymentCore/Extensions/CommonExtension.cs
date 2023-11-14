@@ -1,23 +1,9 @@
 ﻿using Newtonsoft.Json.Linq;
-using PaymentCore.Models;
 
 namespace PaymentCore.Extensions
 {
     public static class CommonExtension
     {
-        private static IEnumerable<int> _canRewardPointSiteIds = new []
-        {
-            (int) SiteEnum.Nova88
-        };
-        private static IEnumerable<int> _canRewardPointCurrencyIds = new []
-        {
-            (int) CurrencyEnum.MYR,
-            (int) CurrencyEnum.THB,
-            (int) CurrencyEnum.IDR,
-            (int) CurrencyEnum.VND
-        };
-
-
         public static string AddOrSetExchangeInfo(this string json, string strExchangeRate, string strExchangeAmount)
         {
             if (string.IsNullOrEmpty(json))
@@ -31,7 +17,7 @@ namespace PaymentCore.Extensions
 
             return obj.ToString();
         }
-        
+
         public static string AddOrSetJProperty(this string json, string propName, object propValue)
         {
             if (string.IsNullOrEmpty(json))
@@ -45,8 +31,20 @@ namespace PaymentCore.Extensions
             return obj.ToString();
         }
 
-        public static bool CanRewardPoint(int siteId, int currencyId)
-            => _canRewardPointSiteIds.Contains(siteId)
-               && _canRewardPointCurrencyIds.Contains(currencyId);
+        public static bool StartsWithIgnoreCase(this string str, string target)
+            => str.StartsWith(target, StringComparison.OrdinalIgnoreCase);
+
+        public static void AddRange<T, S>(this IDictionary<T, S> source, IDictionary<T, S> collection)
+        {
+            foreach (var (key, value) in collection)
+            {
+                source.Add(key, value);
+            }
+        }
+
+        public static void AddRange<T>(this IEnumerable<T> collection, IEnumerable<T> items)
+        {
+            items?.Aggregate(collection, (current, obj) => current.Append(obj));
+        }
     }
 }

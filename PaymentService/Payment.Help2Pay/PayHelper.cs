@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Xml.Serialization;
+
 using PaymentCore;
 using PaymentCore.Interface;
 using PaymentCore.Models;
@@ -227,7 +228,7 @@ namespace Payment.Help2Pay
             formData.Add("Language", inputs["PayLangId"]);
             formData.Add("ClientIP", inputs["ClientIP"]);
             formData.Add("Customer", "");
-            
+
             var p = $"{formData["Merchant"]}{formData["Reference"]}{""}{formData["Amount"]}{formData["Currency"]}{time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss")}{inputs["key"]}{formData["ClientIP"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 
@@ -248,21 +249,19 @@ namespace Payment.Help2Pay
         {
             throw new NotImplementedException();
         }
-        
-        public (string TransId, IDictionary<string, string> Data) FetchTransIdAndDataBeforeVerify(
-            IDictionary<string, string> formData, string bodyContent)
-        {
-            var dic = QueryStringToDic(bodyContent);
 
-            return (dic["transId"], dic);
+        public (string TransId, IDictionary<string, string> Data) FetchTransIdAndDataBeforeVerify(
+            IDictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers)
+        {
+            return (formData["transId"], formData);
         }
-        
+
         public VerifyTransactionResult VerifyTransaction(IDictionary<string, string> data,
             IDictionary<string, string> input)
         {
             var transExists = bool.Parse(input["TransIdExists"]);
 
-            return new VerifyTransactionResult (ContentType.Text, transExists.ToString());
+            return new VerifyTransactionResult(ContentType.Text, transExists.ToString());
         }
     }
 }

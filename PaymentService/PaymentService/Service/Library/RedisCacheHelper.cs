@@ -1,13 +1,8 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using System;
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 using PaymentService.Model;
 
 using StackExchange.Redis;
-using System.Composition;
 
 namespace PaymentService.Service.Library;
 

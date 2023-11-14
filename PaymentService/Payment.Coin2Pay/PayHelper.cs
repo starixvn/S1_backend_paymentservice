@@ -1,9 +1,12 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -49,7 +52,7 @@ namespace Payment.Coin2Pay
                 var addr = GetWalletAddress(input);
                 var (token, _) = PayCode2TokenInfo(payCode);
                 var obj = JObject.Parse(depositInfo);
-                
+
                 if (!obj.TryGetValue("ExchangeRate", StringComparison.OrdinalIgnoreCase, out var jExchangeRate)
                     || !obj.TryGetValue("ExchangeAmount", StringComparison.OrdinalIgnoreCase, out var jExchangeAmount))
                 {
@@ -93,11 +96,11 @@ namespace Payment.Coin2Pay
 
             var str =
                 $"{transId}{dic["txid"]}{dic["address"]}{dic["token"]}{dic["quantity"]}{dic["amount_in_usdt"]}{dic["deposit_fee"]}{dic["given_Credit"]}{dic["credit_Rate"]}{dic["timestamp"]}{dic["currency"]}";
-            
+
             if (!VerifySign(str, dic["sign"], mPublicKey))
             {
                 _logger.LogError($"Coin2Pay {transId}, signature verification failed.");
-                
+
                 return new NotifyDepositResult
                 {
                     DepositId = transId,
@@ -114,7 +117,7 @@ namespace Payment.Coin2Pay
                 || !jObj.TryGetValue("ExchangeAmount", StringComparison.OrdinalIgnoreCase, out var jExchangeAmount))
             {
                 _logger.LogError($"Coin2Pay {transId}, depositInfo has no exchange rate data.");
-                
+
                 return new NotifyDepositResult
                 {
                     DepositId = transId,
@@ -135,7 +138,7 @@ namespace Payment.Coin2Pay
                 TransStatus = TransStatus.Success,
                 Response = CallbackResponse.Success
             };
-            
+
             result.ActualAmount =
                 GetActualAmount(requestAmount, requestCryptoAmount, decimal.Parse(dic["quantity"]), exchangeRate);
 
@@ -173,18 +176,18 @@ namespace Payment.Coin2Pay
                     {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()},
                     {"withdrawal_credit", reqAmount.ToString("f8")}
                 };
-                
+
                 req.Add("sign", GetSign(req, privateKey));
-                
+
                 var withdrawalEstimate = GetWithdrawalEstimate(baseApiUrl, req);
-                var estVal  = withdrawalEstimate.Data.AssetEstimate
+                var estVal = withdrawalEstimate.Data.AssetEstimate
                     .FirstOrDefault(x => x.Token.Equals(token, StringComparison.OrdinalIgnoreCase));
-                
+
                 if (estVal == null)
                 {
                     throw new CustomException("Get withdrawal estimation asset data not exists. token: " + token);
                 }
-                
+
                 if (withdrawalInfo == null)
                     throw new CustomException("WithdrawalInfo is empty.");
 
@@ -199,7 +202,7 @@ namespace Payment.Coin2Pay
                     { "network", network },
                     { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
                 };
-                
+
                 req.Add("sign", GetSign(req, privateKey));
 
                 var withdrawalResp = Withdrawal(baseApiUrl, req);
@@ -207,7 +210,7 @@ namespace Payment.Coin2Pay
                 // 將匯率資訊加入 WithdrawalInfo
                 var rate = CalculateRate(reqAmount, estVal.EstimateValue);
                 withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rate.ToString(), withdrawalResp.Data.ActualAmountReceived.ToString());
-                
+
                 var response = new WithdrawResult
                 {
                     Success = true,
@@ -239,11 +242,11 @@ namespace Payment.Coin2Pay
 
             var str =
                 $"{dic["txid"]}{dic["order_id"]}{dic["token"]}{dic["amount"]}{dic["withdrawal_amount"]}{dic["withdrawal_fee"]}{dic["is_green"]}{dic["timestamp"]}";
-            
+
             if (!VerifySign(str, dic["sign"], mPublicKey))
             {
                 _logger.LogError($"Coin2Pay {transId}, signature verification failed.");
-                
+
                 return new NotifyWithdrawResult
                 {
                     WithdrawId = transId,
@@ -294,15 +297,15 @@ namespace Payment.Coin2Pay
         {
             throw new NotImplementedException();
         }
-        
+
         public (string TransId, IDictionary<string, string> Data) FetchTransIdAndDataBeforeVerify(
-            IDictionary<string, string> formData, string bodyContent)
+            IDictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers)
         {
             var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
 
             return (dicReq["UID"], dicReq);
         }
-        
+
         public VerifyTransactionResult VerifyTransaction(IDictionary<string, string> data, IDictionary<string, string> input)
         {
             var transExists = bool.Parse(input["TransIdExists"]);
@@ -321,7 +324,7 @@ namespace Payment.Coin2Pay
             }
 
             var str = $"{data["UID"]}{data["order_id"]}{data["token"]}{data["network"]}{data["creditamount"]}{data["timestamp"]}";
-            
+
             if (!VerifySign(str, data["sign"], input["key"]))
             {
                 return new VerifyTransactionResult
@@ -334,7 +337,7 @@ namespace Payment.Coin2Pay
                     })
                 };
             }
-            
+
             return new VerifyTransactionResult
             {
                 ContentType = ContentType.Json,
@@ -347,7 +350,7 @@ namespace Payment.Coin2Pay
         }
 
         #region Private Methods
-        
+
         private GetAddressData GetWalletAddress(IDictionary<string, string> input)
         {
             var baseApiUrl = input["host"];
@@ -357,7 +360,7 @@ namespace Payment.Coin2Pay
             var platformId = input["PlatformID"];
             var transId = input["TransID"];
             var privateKey = input["PrivateKey"];
-            
+
             var req = new Dictionary<string, string>
             {
                 { "platformID", platformId },
@@ -366,7 +369,7 @@ namespace Payment.Coin2Pay
                 { "timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
                 { "currency", currency }
             };
-                
+
             req.Add("sign", GetSign(req, privateKey));
 
             var (token, network) = PayCode2TokenInfo(payCode);
@@ -396,7 +399,7 @@ namespace Payment.Coin2Pay
                 throw new CustomException(
                     $"Coin2Pay GetAddress failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
-            
+
             if (!result.Result)
                 throw new CustomException(
                     $"Coin2Pay GetAddress response error code: {result.Code}, msg: {result.Message}");
@@ -429,7 +432,7 @@ namespace Payment.Coin2Pay
         private WithdrawalResp Withdrawal(string baseApiUrl, Dictionary<string, string> req)
         {
             var apiUrl = baseApiUrl + Path.RequestWithdrawal;
-            
+
             var (result, statusCode) = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .PostJson<Dictionary<string, string>, WithdrawalResp>(apiUrl, req);
@@ -452,9 +455,9 @@ namespace Payment.Coin2Pay
         {
             var str = string.Join(string.Empty, param
                 .Select(x => x.Value));
-            
+
             _logger.LogInformation("str: " + str);
-            
+
             var inputBytes = Encoding.UTF8.GetBytes(str);
             using var alg = SHA256.Create();
             var inputHash = alg.ComputeHash(inputBytes);
@@ -462,27 +465,27 @@ namespace Payment.Coin2Pay
             var keyBytes = Convert.FromBase64String(privateKey);
             using var rsa = new RSACryptoServiceProvider(2048);
             rsa.ImportRSAPrivateKey(keyBytes, out _);
-            
+
             var signHash = rsa.SignHash(inputHash, "SHA256");
             var sign = ReplaceBase64(Convert.ToBase64String(signHash));
 
             return sign;
         }
-        
+
         private static bool VerifySign(string str, string target, string publicKey)
         {
             var targetBase64Str = RevertBase64(target);
             var targetBytes = Convert.FromBase64String(targetBase64Str);
             var inputBytes = Encoding.UTF8.GetBytes(str);
             var keyBytes = Convert.FromBase64String(publicKey);
-            
+
             var rsa = DecodeX509PublicKey(keyBytes);
             var result = rsa
                 .VerifyData(inputBytes, targetBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-            
+
             return result;
         }
-        
+
         private static decimal GetActualAmount(decimal requestAmount,
             decimal requestCryptoAmount,
             decimal receivedCryptoAmount,
@@ -495,7 +498,7 @@ namespace Payment.Coin2Pay
             var actualAmount = decimal.Round(receivedCryptoAmount / exchangeRate, 2);
             return actualAmount;
         }
-        
+
         private static string RevertBase64(string str)
             => PadBase64(str).Replace('-', '+')
                 .Replace('_', '/')
@@ -506,7 +509,7 @@ namespace Payment.Coin2Pay
                 .Replace('/', '_')
                 .Replace("=", string.Empty);
 
-        
+
         private static string PadBase64(string base64String)
         {
             var gapBase64 = base64String.Length % 4;
@@ -522,12 +525,12 @@ namespace Payment.Coin2Pay
 
             return base64String;
         }
-        
+
         private static RSACryptoServiceProvider DecodeX509PublicKey(byte[] x509Key)
         {
             // encoded OID sequence for  PKCS #1 rsaEncryption szOID_RSA_RSA = "1.2.840.113549.1.1.1"
             byte[] seqOid = { 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01, 0x05, 0x00 };
-            
+
             using var mem = new MemoryStream(x509Key);
             using var reader = new BinaryReader(mem);
             try
@@ -616,7 +619,7 @@ namespace Payment.Coin2Pay
                     return null;
                 var expBytes = reader.ReadByte();        // should only need one byte for actual exponent data (for all useful values)
                 var exponent = reader.ReadBytes(expBytes);
-                
+
                 var rsa = new RSACryptoServiceProvider();
                 var rsaKeyInfo = new RSAParameters
                 {
@@ -631,7 +634,7 @@ namespace Payment.Coin2Pay
                 throw new CustomException("DecodeX509PublicKey failed.", ex);
             }
         }
-        
+
         private static bool CompareBytearrays(IReadOnlyCollection<byte> a, IReadOnlyList<byte> b)
         {
             if (a.Count != b.Count)
@@ -645,11 +648,11 @@ namespace Payment.Coin2Pay
             }
             return true;
         }
-        
+
         private static (string Token, string Network) PayCode2TokenInfo(string payCode)
         {
             var tokenInfo = payCode.Split('_');
-            
+
             return (tokenInfo[0], tokenInfo[1]);
         }
 
@@ -660,7 +663,7 @@ namespace Payment.Coin2Pay
                 ? bodyContent : temp.Replace("\\\"", "\""));
 
             return req;
-            
+
         }
 
         private static decimal CalculateRate(decimal amount, decimal cryptoAmount)

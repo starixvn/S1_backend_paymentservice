@@ -1,6 +1,6 @@
-﻿using PaymentService.Service.Model;
-using PaymentService.Model;
+﻿using PaymentService.Model;
 using PaymentService.Service.Library;
+using PaymentService.Service.Model;
 
 namespace PaymentService.Service.DAL
 {

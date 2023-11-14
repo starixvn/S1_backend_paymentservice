@@ -12,7 +12,7 @@ internal class Coin2PayBaseResp<T>
 
     [JsonProperty("msg")]
     public string Message { get; set; }
-    
+
     [JsonProperty("data")]
     public T Data { get; set; }
 }
@@ -57,7 +57,7 @@ internal class HostedPage
     public string Withdrawal { get; set; }
 
     [JsonProperty("HostedPage_Withdrawal_B")]
-    public string WithdrawalB{ get; set; }
+    public string WithdrawalB { get; set; }
 }
 
 internal class GetAddressResp : Coin2PayBaseResp<IEnumerable<GetAddressData>>
@@ -69,22 +69,22 @@ internal class GetAddressResp : Coin2PayBaseResp<IEnumerable<GetAddressData>>
 internal class GetWithdrawalEstimateData
 {
     [JsonProperty("withdrawal_Credit")]
-    public decimal WithdrawalCredit{ get; set; }
+    public decimal WithdrawalCredit { get; set; }
 
     [JsonProperty("withdrawal_credit_rate")]
-    public decimal WithdrawalCreditRate{ get; set; }
+    public decimal WithdrawalCreditRate { get; set; }
 
     [JsonProperty("asset_Estimate_get")]
-    public IEnumerable<AssetEstimate> AssetEstimate{ get; set; }
+    public IEnumerable<AssetEstimate> AssetEstimate { get; set; }
 }
 
 internal class AssetEstimate
 {
     [JsonProperty("Token")]
-    public string Token{ get; set; }
+    public string Token { get; set; }
 
     [JsonProperty("Estimate_Get_Value")]
-    public decimal EstimateValue{ get; set; }
+    public decimal EstimateValue { get; set; }
 }
 
 internal class GetWithdrawalEstimateResp : Coin2PayBaseResp<GetWithdrawalEstimateData>
@@ -105,16 +105,16 @@ internal class PriceInfo
     public string Network { get; set; }
 
     [JsonProperty("Price_Deposit")]
-    public decimal PriceDeposit{ get; set; }
+    public decimal PriceDeposit { get; set; }
 
     [JsonProperty("Price_Withdraw")]
-    public decimal PriceWithdrawal{ get; set; }
+    public decimal PriceWithdrawal { get; set; }
 
     [JsonProperty("Estimate_Given_Credit")]
-    public decimal EstimateGivenCredit{ get; set; }
-    
+    public decimal EstimateGivenCredit { get; set; }
+
     [JsonProperty("Estimate_Withdrawal_Credit")]
-    public decimal EstimateWithdrawalCredit{ get; set; }
+    public decimal EstimateWithdrawalCredit { get; set; }
 }
 
 internal class GetTokenPriceResp : Coin2PayBaseResp<GetTokenPriceData>
@@ -152,28 +152,28 @@ internal class GetReceptionTokenReq
 internal class WithdrawalInfo
 {
     [JsonProperty("address")]
-    public string Address{ get; set; }
+    public string Address { get; set; }
 
     [JsonProperty("Token")]
-    public string Token{ get; set; }
+    public string Token { get; set; }
 
     [JsonProperty("amount")]
-    public decimal Amount{ get; set; }
-    
+    public decimal Amount { get; set; }
+
     [JsonProperty("creditamount")]
-    public decimal CreditAmount{ get; set; }
-    
+    public decimal CreditAmount { get; set; }
+
     [JsonProperty("actual_amount_received")]
-    public decimal ActualAmountReceived{ get; set; }
-    
+    public decimal ActualAmountReceived { get; set; }
+
     [JsonProperty("txid")]
-    public string ThirdId{ get; set; }
-    
+    public string ThirdId { get; set; }
+
     [JsonProperty("order_id")]
-    public string TransId{ get; set; }
+    public string TransId { get; set; }
 }
 
-internal class WithdrawalResp: Coin2PayBaseResp<WithdrawalInfo>
+internal class WithdrawalResp : Coin2PayBaseResp<WithdrawalInfo>
 {
 }
 
@@ -214,13 +214,13 @@ internal class DepositCallBackReq
 
     [JsonProperty("quantity")]
     public decimal Quantity { get; set; }
-    
+
     [JsonProperty("given_Credit")]
     public decimal GivenCredit { get; set; }
-    
+
     [JsonProperty("credit_Rate")]
     public decimal CreditRate { get; set; }
-    
+
     [JsonProperty("currency")]
     public string Currency { get; set; }
 

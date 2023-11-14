@@ -5,7 +5,7 @@ namespace Payment.ChangChenPay;
 public class ChangChenPayDefinition
 {
     private static Dictionary<string, TransStatus> PayinTransStatusMap =>
-        new ()
+        new()
         {
             { ChangChenPayinStatus.Completed, TransStatus.Success },
             { ChangChenPayinStatus.Pending, TransStatus.Pending },
@@ -17,9 +17,9 @@ public class ChangChenPayDefinition
     public static TransStatus GetPayinTransStatus(string status)
         => PayinTransStatusMap.TryGetValue(status, out var result)
             ? result : TransStatus.Pending;
-    
+
     private static Dictionary<string, TransStatus> PayoutTransStatusMap =>
-        new ()
+        new()
         {
             { ChangChenPayoutStatus.Completed, TransStatus.Success },
             { ChangChenPayoutStatus.Pending, TransStatus.Pending },
@@ -27,11 +27,11 @@ public class ChangChenPayDefinition
             { ChangChenPayoutStatus.Processing5, TransStatus.Pending },
             { ChangChenPayoutStatus.Failed, TransStatus.Fail }
         };
-    
+
     public static TransStatus GetPayoutTransStatus(string status)
         => PayoutTransStatusMap.TryGetValue(status, out var result)
             ? result : TransStatus.Pending;
-    
+
     internal class Path
     {
         /// <summary>
@@ -58,7 +58,7 @@ internal class ChangChenPayinStatus
     public const string Completed = "2";
 
     public const string Success = "3";
-    
+
     public const string Failed = "5";
 }
 
@@ -71,6 +71,6 @@ internal class ChangChenPayoutStatus
     public const string Completed = "2";
 
     public const string Failed = "3";
-    
+
     public const string Processing5 = "5";
 }

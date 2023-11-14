@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -19,7 +21,7 @@ namespace Payment.YuiPay
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
             _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
         }
-        
+
         #region Debit
 
         public override DepositResult Debit(Dictionary<string, string> input)
@@ -30,7 +32,7 @@ namespace Payment.YuiPay
             var transId = input["TransID"];
             var merchantNo = input["merchantNo"];
             var reqAmount = decimal.Parse(input["Amount"]);
-            
+
             try
             {
                 var req = new Dictionary<string, string>
@@ -49,14 +51,14 @@ namespace Payment.YuiPay
                 {
                     req.Add("bankCode", input["BankCode"]);
                 }
-                
+
                 if (payCode[0].Equals(PayType.QR))
                 {
                     req.Add("bankCode", payCode[1]);
                 }
-                
+
                 req.Add("sign", GetSign(req, key));
-                
+
                 var (response, statusCode) = _httpHelper
                     .PostUrlEncoded<Dictionary<string, string>, DepositResponse>($"{baseApiUrl}{Path.Deposit}", req);
 
@@ -69,7 +71,7 @@ namespace Payment.YuiPay
                 {
                     throw new CustomException(response.Message, response.Code);
                 }
-                
+
                 return new DepositResult
                 {
                     Success = true,
@@ -136,7 +138,7 @@ namespace Payment.YuiPay
             var merchantNo = inputs["merchantNo"];
             var reqAmount = decimal.Parse(inputs["Amount"]);
             var transId = inputs["TransID"];
-            
+
             try
             {
                 var req = new Dictionary<string, string>
@@ -154,7 +156,7 @@ namespace Payment.YuiPay
                     { "cardNo", inputs["AccountNo"] },
                     { "accName", inputs["AccountName"] }
                 };
-                
+
                 req.Add("sign", GetSign(req, key));
 
                 var (response, statusCode) = _httpHelper
@@ -232,7 +234,7 @@ namespace Payment.YuiPay
                 .Where(x => !x.Key.Equals("sign") && !string.IsNullOrEmpty(x.Value))
                 .OrderBy(x => x.Key)
                 .Select(x => $"{x.Key}={x.Value}")) + key;
-            
+
             var sign = ToMD5(str).ToLower();
 
             return sign;

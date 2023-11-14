@@ -67,12 +67,13 @@ namespace PaymentService.Service.Model.enums
     public enum DepositType
     {
         OnlineBanking = 1,
-        MobilePayment = 2,
+        MobilePay = 2,
         LocalBank = 3,
-        CryptoPayPayment = 4,
-        LoadCardPayment = 5,
-        QRPayPayment = 6,
+        CryptoPay = 4,
+        LoadCard = 5,
+        QrPay = 6,
         BankAutoChannel = 7,
+        CryptoWallet = 8
     }
 
     /// <summary>
@@ -109,13 +110,13 @@ namespace PaymentService.Service.Model.enums
         ToKYC = 8,
         Error = 99
     }
-    
+
     public enum CryptoPaymentEnum
     {
         DirePay = 22,
         FXBit = 5
     }
-    
+
     public enum ExchangeTypeEnum
     {
         /// <summary>
@@ -127,13 +128,13 @@ namespace PaymentService.Service.Model.enums
         /// </summary>
         Buy = 1
     }
-    
-    public enum WithdrawalLimitLogCreateFromEnum 
+
+    public enum WithdrawalLimitLogCreateFromEnum
     {
         Default = 0,
         Deposit = 1
     }
-    
+
     public enum WithdrawalLimitAdjustmentReasonEnum
     {
         [Description("None - (Default)")]
@@ -181,5 +182,12 @@ namespace PaymentService.Service.Model.enums
         /// 自動出款失敗後轉回手動出款
         /// </summary>
         AutoFailBackManual = 2
+    }
+
+    public enum WithdrawalType
+    {
+        OnlineBanking = 1,
+        EWalletPayment = 3,
+        CryptoPayment = 4
     }
 }

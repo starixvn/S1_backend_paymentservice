@@ -1,10 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
-using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace Payment.AeePay
 {
@@ -148,7 +149,7 @@ namespace Payment.AeePay
                 {
                     oNotify.TransStatus = TransStatus.Success;
                     oNotify.RequestAmount = decimal.Parse(formData["tjmoney"]);
-                    oNotify.ActualAmount = decimal.Parse(formData["money"]);
+                    oNotify.ActualAmount = decimal.Parse(formData["tjmoney"]);
                     oNotify.ThirdId = formData["orderno"];
                     oNotify.Comment = "Success";
                     oNotify.Message = "Success";
@@ -270,7 +271,7 @@ namespace Payment.AeePay
             formData.Add("money", inputs["Amount"]);
             formData.Add("paycode", inputs["PayCode"]);
             formData.Add("sendtime", dateTimeString);
-            formData.Add("notifyurl", inputs["CallBackUrl"]);           
+            formData.Add("notifyurl", inputs["CallBackUrl"]);
             formData.Add("buyerip", inputs["ClientIP"]);
             formData.Add("userinfo", inputs["UserName"]);
             formData.Add("sign", sign);

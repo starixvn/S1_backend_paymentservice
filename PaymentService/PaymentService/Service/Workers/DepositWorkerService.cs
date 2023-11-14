@@ -1,7 +1,10 @@
-﻿using MySql.Data.MySqlClient;
+﻿using System.Text;
+
+using MySql.Data.MySqlClient;
+
 using PaymentCore;
+
 using PaymentService.Service.BLL;
-using System.Text;
 
 namespace PaymentService.Service.Workers
 {
@@ -40,7 +43,7 @@ namespace PaymentService.Service.Workers
                         {
                             DepReq.Add("TransID", depositRequest.TransId);
                         }
-                        
+
                         if (!DepReq.ContainsKey("Amount"))
                         {
                             DepReq.Add("Amount", depositRequest.Amount.ToString());
@@ -57,7 +60,7 @@ namespace PaymentService.Service.Workers
                         }
 
                         var enquiryDepositResult = payHelper.EnquiryForDebit(DepReq);
-                        
+
                         if (enquiryDepositResult.TransStatus == TransStatus.Success)
                         {
                             #region Transaction is Success
