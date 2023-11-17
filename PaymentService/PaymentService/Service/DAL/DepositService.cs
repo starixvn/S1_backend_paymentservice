@@ -1,9 +1,6 @@
 ﻿using System.Data;
-
 using Dapper;
-
 using Newtonsoft.Json;
-
 using PaymentService.Model;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -17,6 +14,7 @@ namespace PaymentService.Service.DAL
         private readonly MySqlClient _reportDbClient;
         private readonly WalletService _walletService;
         private readonly WithdrawalLimitService _withdrawalLimitService;
+        private readonly CustInfoService _custInfoService;
         private readonly Common _common;
         private const int PayTypePosition = 100;
         private readonly ILogger<DepositService> _logger;
@@ -27,6 +25,7 @@ namespace PaymentService.Service.DAL
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _walletService = provider.GetRequiredService<WalletService>();
             _withdrawalLimitService = provider.GetRequiredService<WithdrawalLimitService>();
+            _custInfoService = provider.GetRequiredService<CustInfoService>();
             _common = provider.GetRequiredService<Common>();
             _logger = provider.GetRequiredService<ILogger<DepositService>>();
         }
@@ -45,127 +44,8 @@ namespace PaymentService.Service.DAL
         {
             return _mainDbClient.QueryUseCommandDefinition<DepositRequest>("Service_DepositRequesPayEnquiry_Get", new DynamicParameters());
         }
-
-        public int SetDepositInfo(string transId, int siteId, IPay pay, decimal actualDeposit, string comment, string refThirdId, string thirdId, string Operator, IEnumerable<int> forStatus, DepositStatus status, Action<string, string, object> publish, bool canReward = false)
-        {
-            var type = PayTypePosition + pay.PayId;
-            var depositId = _common.GetId(transId);
-            var logMsg = string.Empty;
-
-            int result;
-            try
-            {
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                using var trans = conn.BeginTransaction();
-
-                var sForStatus = JsonConvert.SerializeObject(forStatus);
-                var p = new DynamicParameters(new
-                {
-                    DepositId = depositId,
-                    SiteId = siteId,
-                    ActualDeposit = actualDeposit,
-                    Comment = comment,
-                    ForStatus = sForStatus,
-                    Status = (int)status,
-                    RefThirdId = refThirdId,
-                    ThirdId = thirdId,
-                    Operator
-                });
-                p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
-                result = _mainDbClient.Execute("Service_DepositInfo_Set_V3", p, trans);
-                logMsg += $"transId:{transId} Execute Service_DepositInfo_Set_V3 after result:{result} Step1";
-
-                if (result >= 0)
-                {
-                    SetDepositLog(depositId, siteId, comment, (int)status, actualDeposit, Operator);
-
-                    if (status == DepositStatus.Approved)
-                    {
-                        decimal afterAmount = 0;
-
-                        var custId = p.Get<int?>("CustId") ?? 0;
-                        var userName = p.Get<string>("UserName");
-
-                        logMsg += $"transId:{transId} _walletService.SetBalance parameter custId:{custId},siteId:{siteId},userName:{userName}," +
-                                          $"actualDeposit:{actualDeposit},type:{type},Deposit Approved: {actualDeposit},afterAmount:{afterAmount} Step2-1";
-
-
-                        result = _walletService.SetBalance(custId, siteId, userName, actualDeposit, type,
-                            $"Deposit Approved: {actualDeposit}", transId, out afterAmount, out var is1stDepoist, trans);
-
-                        logMsg += $"transId:{transId} Execute _walletService.SetBalance after result:{result} Step2-2";
-
-                        if (result >= 0)
-                        {
-                            logMsg += $"transId:{transId} Execute _withdrawalLimitService.SetWithdrawalLimit parameter custId:{custId},userName:{userName},siteId:{siteId}" +
-                                              $"actualDeposit:{actualDeposit},WithdrawalLimit: {actualDeposit},Step3-1";
-
-                            result = _withdrawalLimitService.SetWithdrawalLimit(custId, userName, siteId, actualDeposit, (int)WithdrawalLimitAdjustmentReasonEnum.Deposit,
-                                $"WithdrawalLimit: {actualDeposit}", transId, (int)WithdrawalLimitLogCreateFromEnum.Deposit, Operator, out _, trans);
-
-                            logMsg += $"transId:{transId} Execute _withdrawalLimitService.SetWithdrawalLimit after result:{result} Step3-2";
-                        }
-
-                        if (is1stDepoist == 1 && result > 0)
-                        {
-                            logMsg += $"transId:{transId} Execute SetDepositInfoFirstDeposit parameter depositId:{depositId},siteId:{siteId} Step4-1";
-
-                            result = SetDepositInfoFirstDeposit(depositId, siteId, trans);
-
-                            logMsg += $"transId:{transId} Execute SetDepositInfoFirstDeposit after result:{result} Step4-2";
-                        }
-
-                        if (result > 0 && canReward)
-                        {
-                            logMsg += $"transId:{transId} Execute InsertDepositRewardPointQueue parameter Step6-1";
-
-                            var resultCode = InsertDepositRewardPointQueue(transId, trans);
-                            if (resultCode != (int)ErrorCode.Success)
-                            {
-                                _logger.LogError($"InsertDepositRewardPointQueue Failed. ResultCode({resultCode}), TransId: {transId}");
-                            }
-                            else
-                            {
-                                result = 1;
-                            }
-
-                            logMsg += $"transId:{transId} Execute InsertDepositRewardPointQueue after result:{result} Step6-2";
-                        }
-                    }
-
-                    if (result > 0)
-                    {
-                        trans.Commit();
-                        result = p.Get<int?>("CustId") ?? result;
-                        if (status == DepositStatus.Approved)
-                            publish("MemberExchange", "deposit.payment", new { CustId = result });
-                    }
-                    else
-                    {
-                        _logger.LogInformation(logMsg); // 沒有正常Commit，將 Log 送到 ELK，以便查問題
-                        trans.Rollback();
-                    }
-                }
-                else
-                {
-                    _logger.LogInformation(logMsg); // 沒有正常Commit，將 Log 送到 ELK，以便查問題
-                }
-
-                conn.Close();
-                conn.Dispose();
-            }
-            catch (Exception ex)
-            {
-                SetDepositLog(depositId, siteId, ex.Message, (int)DepositStatus.Error, actualDeposit, "Payment Service");
-                throw ex;
-            }
-
-            return result;
-        }
-
-        public bool SetDepositInfoV2(SetDepositInfoParams input, Action<string, string, object> publish, bool canReward = false)
+        
+        public bool SetDepositInfoV2(SetDepositInfoParams input, bool canReward = false)
         {
             var type = PayTypePosition + input.PayId;
             var depositId = _common.GetId(input.TransId);
@@ -266,7 +146,13 @@ namespace PaymentService.Service.DAL
                         trans.Commit();
 
                         if (input.Status == DepositStatus.Approved)
-                            publish("MemberExchange", "deposit.payment", new { CustId = custId });
+                        {
+                            var custVerificationReward = _custInfoService.GetCustVerificationReward(custId);
+                            if (custVerificationReward is {EmailVerified: true, EmailReward: 0} or {PhoneVerified: true, PhoneReward: 0})
+                            {
+                                _custInfoService.InsertQueueJob(custId, QueueJob.Verification, string.Empty);
+                            }
+                        }
                     }
                     else
                     {
@@ -292,8 +178,7 @@ namespace PaymentService.Service.DAL
 
             return true;
         }
-
-
+        
         private int SetDepositInfoFirstDeposit(int depositId, int siteId, IDbTransaction trans)
         {
             return _mainDbClient.Execute("DepositInfoFirstDeposit_Set", new { DepositId = depositId, SiteId = siteId }, trans);

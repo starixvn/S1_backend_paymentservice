@@ -15,7 +15,6 @@ namespace PaymentService.Service.BLL
         private readonly DepositService _depositService;
         private readonly WithdrawalService _withdrawalService;
         private readonly Common _common;
-        private readonly IRabbitMQProducer _producer;
         private readonly ILogger<PaymentBLL> _logger;
         private readonly ConfigBLL _configBll;
 
@@ -24,7 +23,6 @@ namespace PaymentService.Service.BLL
             _depositService = provider.GetRequiredService<DepositService>();
             _withdrawalService = provider.GetRequiredService<WithdrawalService>();
             _common = provider.GetRequiredService<Common>();
-            _producer = provider.GetRequiredService<IRabbitMQProducer>();
             _logger = provider.GetRequiredService<ILogger<PaymentBLL>>();
             _configBll = provider.GetRequiredService<ConfigBLL>();
         }
@@ -87,7 +85,6 @@ namespace PaymentService.Service.BLL
                     ForStatus = forStatus,
                     Status = DepositStatus.Approved
                 },
-                _producer.Publish,
                 CanRewardPoint(depositInfo.SiteId, depositInfo.CurrencyId));
 
             return result;
@@ -110,7 +107,7 @@ namespace PaymentService.Service.BLL
                 Operator = payInfo.PayName,
                 ForStatus = new[] { DepositStatus.Pending },
                 Status = DepositStatus.Rejected
-            }, _producer.Publish);
+            });
         }
 
         public void DepositPending(DepositRequest depositRequest, IDepositResult depositResult)
@@ -303,7 +300,7 @@ namespace PaymentService.Service.BLL
                 ForStatus = forStatus,
                 Status = status
             };
-            var result = _depositService.SetDepositInfoV2(p, _producer.Publish, canReward);
+            var result = _depositService.SetDepositInfoV2(p, canReward);
 
             if (!result)
                 _logger.LogError("Update DepositInfo failed. SetDepositInfoParams=" + JsonConvert.SerializeObject(p));
