@@ -149,7 +149,7 @@ namespace PaymentService.Service.DAL
                         if (input.Status == DepositStatus.Approved)
                         {
                             var custVerificationReward = _custInfoService.GetCustVerificationReward(custId);
-                            if (custVerificationReward is {EmailVerified: true, EmailReward: 0} or {PhoneVerified: true, PhoneReward: 0})
+                            if (custVerificationReward is null or {EmailVerified: true, EmailReward: 0} or {PhoneVerified: true, PhoneReward: 0})
                             {
                                 _custInfoService.InsertQueueJob(custId, QueueJob.Verification, string.Empty);
                             }
