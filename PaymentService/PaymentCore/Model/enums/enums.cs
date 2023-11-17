@@ -191,4 +191,10 @@ namespace PaymentCore.Model.enums
         EWalletPayment = 3,
         CryptoPayment = 4
     }
+    
+    public enum QueueJob
+    {
+        Init = 0 ,
+        Verification = 1
+    }
 }

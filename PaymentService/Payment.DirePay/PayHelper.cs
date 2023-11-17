@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
-
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
