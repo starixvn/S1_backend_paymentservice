@@ -365,10 +365,8 @@ namespace Payment.FXBit
             return response.Result;
         }
         
-        private PayoutFeeResp GetPayoutFee(string apiKey, string baseApiUrl, Dictionary<string, string> req)
+        private PayoutFeeResp GetPayoutFee(string apiKey, string apiUrl, Dictionary<string, string> req)
         {
-            var apiUrl = baseApiUrl + Path.GetExchangeRate;
-
             var (result, statusCode) = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
