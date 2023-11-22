@@ -129,6 +129,18 @@ namespace Payment.FXBit
         [JsonProperty("res_payout_id")]
         public string ResPayoutId { get; set; }
     }
+    
+    internal class PayoutFeeResp
+    {
+        [JsonProperty("error")]
+        public int Error { get; set; }
+
+        [JsonProperty("payout_fee")]
+        public decimal PayoutFee { get; set; }
+
+        [JsonProperty("currency")]
+        public string Currency { get; set; }
+    }
 
     internal class PayoutQueryResp
     {

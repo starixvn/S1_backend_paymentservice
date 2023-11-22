@@ -150,6 +150,8 @@ namespace Payment.FXBit
         public const string GetWalletAddressFailed = "9902";
 
         public const string PayoutFailed = "9903";
+
+        public const string GetPayoutFeeFailed = "9904";
     }
 
     internal class Path
