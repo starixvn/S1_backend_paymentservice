@@ -26,4 +26,14 @@
         public string AffCode { get; set; }
         public string Token { get; set; }
     }
+
+    public class CustVerificationReward
+    {
+        public int CustId { get; set; }
+        public int CurrencyId { get; set; }
+        public bool PhoneVerified { get; set; }
+        public bool EmailVerified { get; set; }
+        public decimal EmailReward { get; set; }
+        public decimal PhoneReward { get; set; }
+    }
 }

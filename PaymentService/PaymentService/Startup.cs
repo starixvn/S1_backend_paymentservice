@@ -59,7 +59,7 @@ namespace PaymentService
 
 
             /*BLL*/
-            services.AddSingleton<IRabbitMQProducer, RabbitMQProducer>();
+            //services.AddSingleton<IRabbitMQProducer, RabbitMQProducer>();
             services.AddSingleton<PayBLL>();
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();
