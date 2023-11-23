@@ -223,14 +223,25 @@ namespace Payment.FXBit
                 if (rateInfo == null)
                     throw new CustomException("CryptoRateInfo is empty.");
 
-                var exchangeAmount = rateInfo.TempExchangeAmount.ToString("G29");
-                withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rateInfo.TempExchangeRate.ToString("G29"), exchangeAmount);
+                var payoutFeeReq = new Dictionary<string, string>
+                {
+                    {"currency", toCurrency},
+                    {"time_stamp", new DateTimeOffset().ToUnixTimeSeconds().ToString()},
+                    {"type", "4"}
+                };
+                
+                payoutFeeReq.Add("signature", GetSign(payoutFeeReq, payoutKey));
+                
+                var payoutFeeResp = GetPayoutFee(apiKey, payoutApiUrl, payoutFeeReq);
+
+                var exchangeAmount = rateInfo.TempExchangeAmount;
+                withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rateInfo.TempExchangeRate.ToString("G29"), exchangeAmount.ToString("G29"));
 
                 // Step 2: 建立交易
                 var payoutReq = new Dictionary<string, string>
                 {
                     { "currency", toCurrency },
-                    { "amount", exchangeAmount },
+                    { "amount", (exchangeAmount + payoutFeeResp.PayoutFee).ToString("G29") }, // 加上 gas fee
                     { "address", inputs["AccountNo"] },
                     { "time_stamp", new DateTimeOffset().ToUnixTimeSeconds().ToString() },
                     { "req_payout_id", GetPayoutId(transId) },
@@ -353,6 +364,27 @@ namespace Payment.FXBit
 
             return response.Result;
         }
+        
+        private PayoutFeeResp GetPayoutFee(string apiKey, string apiUrl, Dictionary<string, string> req)
+        {
+            var (result, statusCode) = _httpHelper
+                .WithHeader("accept", ContentType.Json)
+                .WithHeader("x-api-key", apiKey)
+                .PostJson<Dictionary<string, string>, PayoutFeeResp>(apiUrl, req);
+
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"FxBit GetPayoutFee failed, HttpStatus: {(int)statusCode} {statusCode}",
+                    ErrorCode.GetExchangeRateFailed);
+            }
+            
+            if (result.Error != 0)
+                throw new CustomException($"FxBit GetPayoutFee response error code: {result.Error}",
+                    ErrorCode.GetPayoutFeeFailed);
+
+            return result;
+        }
 
         private GetReceptionTokenResp GetReceptionToken(string baseApiUrl,
             string apiKey,
@@ -363,9 +395,8 @@ namespace Payment.FXBit
             var response = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
-                .PostJsonAsync<GetReceptionTokenReq, GetReceptionTokenResp>(apiUrl, req)
-                .Result;
-
+                .PostJson<GetReceptionTokenReq, GetReceptionTokenResp>(apiUrl, req);
+            
             if (!response.StatusCode.IsSuccessStatus())
             {
                 throw new CustomException(
@@ -390,8 +421,7 @@ namespace Payment.FXBit
             var response = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
-                .PostJsonAsync<GetWalletAddressReq, GetWalletAddressResp>(apiUrl, req)
-                .Result;
+                .PostJson<GetWalletAddressReq, GetWalletAddressResp>(apiUrl, req);
 
             if (!response.StatusCode.IsSuccessStatus())
             {
@@ -416,8 +446,7 @@ namespace Payment.FXBit
             var response = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
-                .PostJsonAsync<Dictionary<string, string>, PayoutQueryResp>(apiUrl, req)
-                .Result;
+                .PostJson<Dictionary<string, string>, PayoutQueryResp>(apiUrl, req);
 
             if (!response.StatusCode.IsSuccessStatus())
             {
@@ -442,8 +471,7 @@ namespace Payment.FXBit
             var response = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
-                .PostJsonAsync<Dictionary<string, string>, PayoutResp>(apiUrl, req)
-                .Result;
+                .PostJson<Dictionary<string, string>, PayoutResp>(apiUrl, req);
 
             if (!response.StatusCode.IsSuccessStatus())
             {
