@@ -250,11 +250,11 @@ namespace Payment.Super7Pay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"SBPay creat order failed, HttpStatus: {(int)statusCode} {statusCode}");
+                    $"Super7Pay creat order failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
             if (!result.Success)
-                throw new CustomException("SBPay creat order failed Failed.");
+                throw new CustomException("Super7Pay creat order failed Failed.");
 
             return result;
         }
@@ -270,11 +270,11 @@ namespace Payment.Super7Pay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"SBPay create payout failed, HttpStatus: {(int)statusCode} {statusCode}");
+                    $"Super7Pay create payout failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
             if (!result.Success)
-                throw new CustomException("SBPay create payout failed.");
+                throw new CustomException("Super7Pay create payout failed.");
 
             return result;
         }
