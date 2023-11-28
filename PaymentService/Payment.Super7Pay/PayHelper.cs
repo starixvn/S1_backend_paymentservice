@@ -96,7 +96,7 @@ namespace Payment.Super7Pay
             var (method, _) = GetMethod(payCode);
             var apiToken = input[method];
             var callbackToken = input[$"{method}_CallbackToken"];
-            var req = FromJson<Super7PayModel.CallBackRequest>(bodyContent);
+            var req = FromJson<CallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
             {
                 {"amount", req.Amount},
@@ -120,7 +120,7 @@ namespace Payment.Super7Pay
                 ThirdId = req.ThirdId,
                 DepositId = req.TransId,
                 Comment = req.State,
-                TransStatus = TransStatus.Success, // SBPay只回調成功的單
+                TransStatus = TransStatus.Success, // Super7Pay只回調成功的單
                 ActualAmount = decimal.Parse(req.Amount),
                 Response = Super7PayDefinition.CallbackResponse
             };
@@ -192,7 +192,7 @@ namespace Payment.Super7Pay
         {
             var apiToken = payResource["Card"];
             var callbackToken = payResource["Card_CallbackToken"];
-            var req = FromJson<Super7PayModel.CallBackRequest>(bodyContent);
+            var req = FromJson<CallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
             {
                 {"amount", req.Amount},
@@ -238,14 +238,14 @@ namespace Payment.Super7Pay
 
         #region Private Methods
 
-        private Super7PayModel.CreatOrderResponse CreateOrder(string baseApiUrl, string token, Dictionary<string, string> req)
+        private CreatOrderResponse CreateOrder(string baseApiUrl, string token, Dictionary<string, string> req)
         {
             var apiUrl = baseApiUrl + Super7PayDefinition.Path.CreateOrder;
 
             var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(token)
                 .WithHeader("accept", MediaType.Json)
-                .PostUrlEncoded<Dictionary<string, string>, Super7PayModel.CreatOrderResponse>(apiUrl, req);
+                .PostUrlEncoded<Dictionary<string, string>, CreatOrderResponse>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
             {
@@ -259,13 +259,13 @@ namespace Payment.Super7Pay
             return result;
         }
 
-        private Super7PayModel.CreatPayoutResponse Payout(string baseApiUrl, string token, Dictionary<string, string> req)
+        private CreatPayoutResponse Payout(string baseApiUrl, string token, Dictionary<string, string> req)
         {
             var apiUrl = baseApiUrl + Super7PayDefinition.Path.CreatePayout;
             var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(token)
                 .WithHeader("accept", MediaType.Json)
-                .PostUrlEncoded<Dictionary<string, string>, Super7PayModel.CreatPayoutResponse>(apiUrl, req);
+                .PostUrlEncoded<Dictionary<string, string>, CreatPayoutResponse>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
             {
