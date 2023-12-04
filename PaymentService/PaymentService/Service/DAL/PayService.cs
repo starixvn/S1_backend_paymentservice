@@ -16,13 +16,13 @@ namespace PaymentService.Service.DAL
 
         public IEnumerable<BankInfoPay> GetBankInfoPayList(int siteId, DepositType depositType)
         {
-            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPay_Get_V3"
+            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPay_Get_V4"
                 , new { _SiteId = siteId, _DepositType = depositType });
         }
 
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout(int siteId)
         {
-            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPayForPayout_Get_V4", new { _SiteId = siteId });
+            return _reportDbClient.Query<BankInfoPay>("Common_BankInfoPayForPayout_Get_V5", new { _SiteId = siteId });
         }
 
         public IEnumerable<BankInfoPay> GetCryptoListForPayout(int siteId)
