@@ -5,7 +5,7 @@ namespace Payment.WPay;
 internal class WPayDefinition
 {
     private static Dictionary<string, TransStatus> PayinTransStatusMap =>
-        new ()
+        new()
         {
             { WPayPayinStatus.Pending, TransStatus.Pending },
             { WPayPayinStatus.ManualPaid, TransStatus.Success },
@@ -13,7 +13,7 @@ internal class WPayDefinition
         };
 
     private static Dictionary<string, TransStatus> PayoutTransStatusMap =>
-        new ()
+        new()
         {
             { WPayPayoutStatus.Pending, TransStatus.Pending },
             { WPayPayoutStatus.Cancel, TransStatus.Fail },
@@ -30,7 +30,7 @@ internal class WPayDefinition
 
         return TransStatus.Pending;
     }
-    
+
     public static TransStatus GetPayoutTransStatus(string status)
     {
         if (PayoutTransStatusMap.TryGetValue(status, out var result))
@@ -106,7 +106,7 @@ internal class WPayPayoutStatus
     public const string Success = "PAID";
 }
 
-    
+
 internal class CallbackResponse
 {
     public const string Success = "success";

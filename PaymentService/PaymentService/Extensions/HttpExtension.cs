@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.WebUtilities;
+
 using PaymentCore.Extensions;
 
 namespace PaymentService.Extensions;
@@ -10,10 +11,10 @@ public static class HttpExtension
     {
         var headers = httpRequest.Headers
             .ToDictionary(x => x.Key, x => x.Value.ToString());
-            
+
         using var reader = new StreamReader(httpRequest.Body);
         var bodyContent = await reader.ReadToEndAsync();
-            
+
         var dicParams = new Dictionary<string, string>();
         if (httpRequest.ContentType != null)
         {
@@ -38,5 +39,5 @@ public static class HttpExtension
 
         return (headers, bodyContent, dicParams);
     }
-    
+
 }

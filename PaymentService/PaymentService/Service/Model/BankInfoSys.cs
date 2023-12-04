@@ -39,7 +39,7 @@ namespace PaymentService.Service.Model
         public decimal MinAmount { get; set; }
         public decimal MaxAmount { get; set; }
     }
-    
+
     public class PayInfo : IPayInfo
     {
         public int PayId { get; set; }
@@ -108,7 +108,7 @@ namespace PaymentService.Service.Model
         public string Code { get; set; }
         public string Serial { get; set; }
     }
-    
+
     public class CryptoExchangeSetting
     {
         public int PayId { get; set; }

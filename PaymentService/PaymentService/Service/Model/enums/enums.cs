@@ -76,7 +76,7 @@ namespace PaymentService.Service.Model.enums
         CryptoWallet = 8,
         QuickTransfer = 9
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -111,13 +111,13 @@ namespace PaymentService.Service.Model.enums
         ToKYC = 8,
         Error = 99
     }
-    
+
     public enum CryptoPaymentEnum
     {
         DirePay = 22,
         FXBit = 5
     }
-    
+
     public enum ExchangeTypeEnum
     {
         /// <summary>
@@ -129,13 +129,13 @@ namespace PaymentService.Service.Model.enums
         /// </summary>
         Buy = 1
     }
-    
-    public enum WithdrawalLimitLogCreateFromEnum 
+
+    public enum WithdrawalLimitLogCreateFromEnum
     {
         Default = 0,
         Deposit = 1
     }
-    
+
     public enum WithdrawalLimitAdjustmentReasonEnum
     {
         [Description("None - (Default)")]
@@ -184,11 +184,17 @@ namespace PaymentService.Service.Model.enums
         /// </summary>
         AutoFailBackManual = 2
     }
-    
+
     public enum WithdrawalType
     {
         OnlineBanking = 1,
         EWalletPayment = 3,
         CryptoPayment = 4
+    }
+    
+    public enum QueueJob
+    {
+        Init = 0 ,
+        Verification = 1
     }
 }

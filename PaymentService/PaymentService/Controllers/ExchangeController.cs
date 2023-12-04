@@ -1,11 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
+
 using Newtonsoft.Json;
+
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models;
+
 using PaymentService.Service.BLL;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;
+
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers;
@@ -16,14 +20,14 @@ public class ExchangeController : ControllerBase
     private readonly PayBLL _payBll;
     private readonly IEnumerable<CryptoPaymentEnum> _cryptoPayment;
     private readonly ILogger<ExchangeController> _logger;
-    
+
     public ExchangeController(IServiceProvider provider)
     {
         _payBll = provider.GetRequiredService<PayBLL>();
-        _cryptoPayment = new[] {CryptoPaymentEnum.DirePay, CryptoPaymentEnum.FXBit}; // 市場要求優先使用 DirePay, Coin2Pay沒有匯率API
+        _cryptoPayment = new[] { CryptoPaymentEnum.DirePay, CryptoPaymentEnum.FXBit }; // 市場要求優先使用 DirePay, Coin2Pay沒有匯率API
         _logger = provider.GetRequiredService<ILogger<ExchangeController>>();
     }
-    
+
     // GET
     public class CryptoExchangeReq
     {
@@ -33,7 +37,7 @@ public class ExchangeController : ControllerBase
         public decimal Amount { get; set; }
         public ExchangeTypeEnum Type { get; set; }
     }
-    
+
     [HttpPost]
     [Route("Payment/CryptoExchange")]
     public ApiResult<CryptoExchangeInfo> CryptoExchange(CryptoExchangeReq req)
@@ -67,13 +71,13 @@ public class ExchangeController : ControllerBase
                     continue;
                 }
 
-                var cryptoInfo = cryptoList.FirstOrDefault(x => x.PayId == (int) payment);
+                var cryptoInfo = cryptoList.FirstOrDefault(x => x.PayId == (int)payment);
                 if (cryptoInfo == null)
                 {
                     _logger.LogDebug($"Method={GetCurrentMethod()}, {payment} {req.ChannelName} crypto info not found");
                     continue;
                 }
-                
+
                 var payHelper = (IExchangeHelper)_payBll.GetPayHelper(paySetting.PayName);
                 if (payHelper == null)
                 {
@@ -87,12 +91,12 @@ public class ExchangeController : ControllerBase
                 exchangeReq.Add("PayCode", cryptoInfo.PayCode);
                 exchangeReq.Add("CurrencyId", req.CurrencyId.ToString());
                 exchangeReq.Add("ExchangeType", ((int)req.Type).ToString());
-                
+
                 _logger.LogInformation(
                     $"Method={GetCurrentMethod()}, PayName={payment}, Request={JsonConvert.SerializeObject(exchangeReq)}");
 
                 var result = RetryExtension.Do(payHelper.GetExchange, exchangeReq, 3, TimeSpan.FromMilliseconds(300));
-                
+
                 if (result.ErrorCode == "0")
                 {
                     return new ApiResult<CryptoExchangeInfo>((int)ErrorCode.Success, result.Message, result.ExchangeInfo);

@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
@@ -10,14 +12,14 @@ namespace Payment.EPay
     class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
         private readonly ILogger<PayHelper> _logger;
-        
+
         public PayHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
         }
 
         #region Models
-        
+
         public class EPayBase
         {
             [JsonProperty("merchantCode")]
@@ -25,13 +27,13 @@ namespace Payment.EPay
             [JsonProperty("signType")]
             public string SignType { get; set; }
         }
-        
+
         private class RequestBase : EPayBase
         {
             [JsonProperty("content")]
             public string Content { get; set; }
         }
-        
+
         public class ResponseBase
         {
             [JsonProperty("status")]
@@ -51,7 +53,7 @@ namespace Payment.EPay
         }
 
         #region Debit
-        
+
         public class DebitResponseContent
         {
             [JsonProperty("merchantCode")]
@@ -65,7 +67,7 @@ namespace Payment.EPay
             [JsonProperty("sign")]
             public string Sign { get; set; }
         }
-        
+
         private class CallBackData : EPayBase
         {
             [JsonProperty("content")]
@@ -91,11 +93,11 @@ namespace Payment.EPay
         }
 
         #endregion
-        
+
         #endregion
-        
+
         #region Deposit
-        
+
         private class DepositReqContent
         {
             [JsonProperty("merchantCode")]
@@ -115,7 +117,7 @@ namespace Payment.EPay
             [JsonProperty("sign")]
             public string Sign { get; set; }
         }
-        
+
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var hostDic = JsonConvert.DeserializeObject<dynamic>(inputs["host"]);
@@ -124,7 +126,7 @@ namespace Payment.EPay
             var key = keyDic[inputs["PayCurrencyId"]].ToString();
 
             sUrl += "pay/center/deposit/apply";
-            
+
             var content = new DepositReqContent
             {
                 MerchantCode = inputs["merchantCode"],
@@ -136,20 +138,20 @@ namespace Payment.EPay
                 Channel = inputs["PayCode"],
                 Sign = null
             };
-            
+
             var dicP = FromJson<Dictionary<string, string>>(ToJson(content)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            var p = string.Join("", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}").ToArray()) + key ;
+            var p = string.Join("", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}").ToArray()) + key;
             content.Sign = ToMD5(p).ToLower();
-            
+
             var req = new RequestBase
             {
                 MerchantCode = inputs["merchantCode"],
                 SignType = "md5",
                 Content = JsonConvert.SerializeObject(content)
             };
-      
-            var sResponse = HttpPost(sUrl, ToJson(req), "application/json", inputs["TransID"] , true);
-            
+
+            var sResponse = HttpPost(sUrl, ToJson(req), "application/json", inputs["TransID"], true);
+
             var depositRes = JsonConvert.DeserializeObject<ResponseBase>(sResponse);
 
             var depositDataRes = new ResponseDataBase();
@@ -162,7 +164,7 @@ namespace Payment.EPay
             {
                 depositContentRes = JsonConvert.DeserializeObject<DebitResponseContent>(depositDataRes.Content);
             }
-            
+
             var oDepositResult = new DepositResult();
             if (depositRes.Status == "SUCCESS")
             {
@@ -175,7 +177,7 @@ namespace Payment.EPay
                     {"PayUrl", depositContentRes.PayUrl},
                     {"Sign", depositContentRes.Sign}
                 };
-              
+
                 oDepositResult.Url = depositContentRes.PayUrl;
                 oDepositResult.FormData = resData;
                 oDepositResult.ThirdId = depositContentRes.TradeNo;
@@ -191,12 +193,12 @@ namespace Payment.EPay
 
             return oDepositResult;
         }
-        
+
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackData>(bodyContent);
             var dataContent = FromJson<CallBackDataContent>(data.Content);
-            
+
             var oNotify = new NotifyDepositResult
             {
                 DepositId = payResource["TransID"],
@@ -206,10 +208,10 @@ namespace Payment.EPay
             if (dataContent != null)
             {
                 _logger.LogInformation($"CallBackDebit Data, Message:{JsonConvert.SerializeObject(data)}");
-                
+
                 oNotify.RefThirdId = dataContent.TradeNo;
                 oNotify.ThirdId = dataContent.TradeNo;
-                
+
                 switch (dataContent.TradeStatus)
                 {
                     case "PAYMENT_SUCCESS":
@@ -219,13 +221,13 @@ namespace Payment.EPay
                         oNotify.ActualAmount = decimal.Parse(dataContent.Amount);
                         oNotify.Response = "SUCCESS";
                         break;
-                    
+
                     case "PAYMENT_FAILURE":
                         oNotify.TransStatus = TransStatus.Fail;
                         oNotify.Message = "cancel deposit";
                         oNotify.Response = "SUCCESS";
                         break;
-                    
+
                     default:
                         oNotify.TransStatus = TransStatus.Pending;
                         oNotify.Comment = "Unknown status";
@@ -239,14 +241,14 @@ namespace Payment.EPay
                 oNotify.Message = "Data Error";
                 oNotify.Response = "Data Error";
             }
-            
+
             return oNotify;
         }
-        
+
         #endregion
 
         #region Withdrawal
-        
+
         private class WithdrawalReqContent
         {
             [JsonProperty("merchantCode")]
@@ -270,7 +272,7 @@ namespace Payment.EPay
             [JsonProperty("sign")]
             public string Sign { get; set; }
         }
-        
+
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var hostDic = JsonConvert.DeserializeObject<dynamic>(inputs["host"]);
@@ -279,7 +281,7 @@ namespace Payment.EPay
             var key = keyDic[inputs["PayCurrencyId"]].ToString();
 
             sUrl += "pay/center/withdrawal/apply";
-            
+
             var content = new WithdrawalReqContent
             {
                 MerchantCode = inputs["merchantCode"],
@@ -293,32 +295,32 @@ namespace Payment.EPay
                 Channel = inputs["PayCode"],
                 Sign = null
             };
-            
+
             var dicP = FromJson<Dictionary<string, string>>(ToJson(content)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            var p = string.Join("", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) 
+            var p = string.Join("", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase)
                                                     && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)
-                                                    && !x.Key.Equals("bankName", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}").ToArray()) + key ;
+                                                    && !x.Key.Equals("bankName", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}").ToArray()) + key;
             content.Sign = ToMD5(p).ToLower();
-            
+
             var req = new RequestBase
             {
                 MerchantCode = inputs["merchantCode"],
                 SignType = "md5",
                 Content = JsonConvert.SerializeObject(content)
             };
-            
-            var sResponse = HttpPost(sUrl, ToJson(req), "application/json", inputs["TransID"] , true).ToString();
-            
+
+            var sResponse = HttpPost(sUrl, ToJson(req), "application/json", inputs["TransID"], true).ToString();
+
             var withdrawalResponse = JsonConvert.DeserializeObject<ResponseBase>(sResponse);
-                
+
             var withdrawalDataRes = new ResponseDataBase();
             if (withdrawalResponse.Data != null)
             {
                 withdrawalDataRes = JsonConvert.DeserializeObject<ResponseDataBase>(withdrawalResponse.Data);
             }
-            
+
             var withdrawResult = new WithdrawResult();
-            
+
             if (withdrawalResponse.Status == "SUCCESS")
             {
                 withdrawResult.Success = true;
@@ -331,7 +333,7 @@ namespace Payment.EPay
                 withdrawResult.Message = withdrawalResponse.Message;
                 withdrawResult.RawContent = withdrawalDataRes.Content;
             }
-            
+
             return withdrawResult;
         }
 
@@ -339,18 +341,18 @@ namespace Payment.EPay
         {
             var data = FromJson<CallBackData>(bodyContent);
             var dataContent = FromJson<CallBackDataContent>(data.Content);
-            
+
             var oNotify = new NotifyWithdrawResult
             {
                 WithdrawId = dataContent.MerchantTradeNo,
                 Message = "success",
                 ThirdId = dataContent.TradeNo
             };
-            
+
             if (dataContent != null)
             {
                 _logger.LogInformation($"CallBackCredit Data, Message:{JsonConvert.SerializeObject(data)}");
-                
+
                 switch (dataContent.TradeStatus)
                 {
                     case "WITHDRAWAL_SUCCESS":
@@ -359,19 +361,19 @@ namespace Payment.EPay
                         oNotify.Message = "Withdrawal Success";
                         oNotify.Response = "SUCCESS";
                         break;
-                    
+
                     case "WITHDRAWAL_FAILURE":
                         oNotify.TransStatus = TransStatus.Fail;
                         oNotify.Message = "Withdrawal Reject";
                         oNotify.Response = "SUCCESS";
                         break;
-                    
+
                     case "WAITING_WITHDRAWAL":
                         oNotify.TransStatus = TransStatus.Pending;
                         oNotify.Message = "Withdrawal Pending";
                         oNotify.Response = "SUCCESS";
                         break;
-                    
+
                     default:
                         oNotify.TransStatus = TransStatus.Pending;
                         oNotify.Response = "Unknown Status";
@@ -384,15 +386,15 @@ namespace Payment.EPay
                 oNotify.TransStatus = TransStatus.Pending;
                 oNotify.Response = "Failed";
             }
-            
-            
+
+
             return oNotify;
         }
 
         #endregion
 
         #region Not Implemented
-        
+
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
@@ -415,6 +417,6 @@ namespace Payment.EPay
 
         #endregion
 
-        
+
     }
 }

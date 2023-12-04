@@ -138,7 +138,7 @@ namespace Payment.FXBit
         /// </summary>
         public const string Success = "2";
     }
-    
+
     internal class ErrorCode
     {
         public const string Success = "0";
@@ -150,6 +150,8 @@ namespace Payment.FXBit
         public const string GetWalletAddressFailed = "9902";
 
         public const string PayoutFailed = "9903";
+
+        public const string GetPayoutFeeFailed = "9904";
     }
 
     internal class Path

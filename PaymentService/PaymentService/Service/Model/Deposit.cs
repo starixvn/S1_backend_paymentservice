@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+
 using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.Model
@@ -20,7 +21,7 @@ namespace PaymentService.Service.Model
         public string Message { get; set; }
         public decimal Amount { get; set; }
     }
-    
+
     public class DepositInfoModel
     {
         public string DepositId { get; set; }

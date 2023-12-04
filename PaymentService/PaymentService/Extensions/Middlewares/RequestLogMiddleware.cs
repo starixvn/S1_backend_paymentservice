@@ -1,7 +1,11 @@
 ﻿using System.Text;
+
 using Microsoft.AspNetCore.Http.Extensions;
+
 using Newtonsoft.Json;
+
 using PaymentService.Service.Library;
+
 using Serilog.Context;
 
 namespace PaymentService.Extensions.Middlewares
@@ -39,8 +43,8 @@ namespace PaymentService.Extensions.Middlewares
             using (var requestBody = new StreamReader(requestBodyStream, Encoding.UTF8, true, 1024, true))
             {
                 var codePage = requestBody.CurrentEncoding.CodePage;
-                
-                content = !context.Request.Method.Equals("GET",StringComparison.OrdinalIgnoreCase)
+
+                content = !context.Request.Method.Equals("GET", StringComparison.OrdinalIgnoreCase)
                           && string.IsNullOrEmpty(content)
                     ? await requestBody.ReadToEndAsync()
                     : content;

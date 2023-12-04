@@ -2,13 +2,13 @@
 
 public class WithdrawResult
 {
-    public WithdrawResult(){}
+    public WithdrawResult() { }
 
     public WithdrawResult(string msg)
     {
         this.Message = msg;
     }
-    
+
     public bool Success { get; set; }
     public string Message { get; set; }
     public string WithdrawId { get; set; }

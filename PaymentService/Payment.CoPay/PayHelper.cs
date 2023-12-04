@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
+
 using Payment.CoPay.Models;
+
 using PaymentCore;
 using PaymentCore.Models.Result;
 
@@ -14,9 +16,9 @@ namespace Payment.CoPay
             var payCode = int.Parse(inputs["PayCode"]);
 
             var channel = CoPayChannel.BankPayScan;
-            if(Enum.IsDefined(typeof(CoPayChannel), payCode))
+            if (Enum.IsDefined(typeof(CoPayChannel), payCode))
                 channel = (CoPayChannel)payCode;
-             
+
             var formData = new Dictionary<string, string>()
             {
                 { "uid", inputs["MerchantId"] },
@@ -35,10 +37,10 @@ namespace Payment.CoPay
                 formData.Add("bank_id", bankId);
             }
             formData.Add("sign", Sign(formData, inputs["key"]));
-            
+
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
-            
+
             var depositRes = JsonConvert.DeserializeObject<PayResponse>(sResponse);
             var oDepositResult = new DepositResult();
             if (depositRes.status == 10000)
@@ -84,7 +86,7 @@ namespace Payment.CoPay
 
             var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
-            
+
             var withdrawResult = new WithdrawResult();
             var withdrawalRes = JsonConvert.DeserializeObject<PayoutResponse>(sResponse);
 
@@ -100,7 +102,7 @@ namespace Payment.CoPay
             var expectedSign = formData["sign"];
             formData.Remove("sign");
             var actualSign = Sign(formData, payResource["key"]);
-            
+
             if (actualSign == expectedSign)
             {
                 var status = formData["status"];

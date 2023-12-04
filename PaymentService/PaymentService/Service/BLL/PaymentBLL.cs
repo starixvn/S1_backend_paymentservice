@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
+
 using PaymentCore.Interface;
+
 using PaymentService.Exceptions;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
@@ -13,7 +15,6 @@ namespace PaymentService.Service.BLL
         private readonly DepositService _depositService;
         private readonly WithdrawalService _withdrawalService;
         private readonly Common _common;
-        private readonly IRabbitMQProducer _producer;
         private readonly ILogger<PaymentBLL> _logger;
         private readonly ConfigBLL _configBll;
 
@@ -22,7 +23,6 @@ namespace PaymentService.Service.BLL
             _depositService = provider.GetRequiredService<DepositService>();
             _withdrawalService = provider.GetRequiredService<WithdrawalService>();
             _common = provider.GetRequiredService<Common>();
-            _producer = provider.GetRequiredService<IRabbitMQProducer>();
             _logger = provider.GetRequiredService<ILogger<PaymentBLL>>();
             _configBll = provider.GetRequiredService<ConfigBLL>();
         }
@@ -41,13 +41,13 @@ namespace PaymentService.Service.BLL
 
         public void DepositSuccess(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new []
+            var forStatus = new[]
             {
                 DepositStatus.Pending,
                 DepositStatus.Rejected,
                 DepositStatus.Canceled
             };
-            
+
             if (depositRequest.SiteId == 0 || depositRequest.CurrencyId == 0)
             {
                 var deposit = GetDepositInfo(depositRequest.TransId);
@@ -61,7 +61,7 @@ namespace PaymentService.Service.BLL
 
         public bool DepositManualSuccess(DepositInfoModel depositInfo)
         {
-            var forStatus = new []
+            var forStatus = new[]
             {
                 DepositStatus.Draft,
                 DepositStatus.Pending,
@@ -85,18 +85,17 @@ namespace PaymentService.Service.BLL
                     ForStatus = forStatus,
                     Status = DepositStatus.Approved
                 },
-                _producer.Publish,
                 CanRewardPoint(depositInfo.SiteId, depositInfo.CurrencyId));
 
             return result;
         }
-        
+
         public void DepositFail(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new [] { DepositStatus.Pending };
+            var forStatus = new[] { DepositStatus.Pending };
             SetDepositInfo(depositRequest, depositResult, DepositStatus.Rejected, forStatus);
         }
-        
+
         public void SimpleDepositFail(string transId, int siteId, IPay payInfo, string comment)
         {
             _depositService.SetDepositInfoV2(new SetDepositInfoParams
@@ -106,16 +105,16 @@ namespace PaymentService.Service.BLL
                 SiteId = siteId,
                 PayId = payInfo.PayId,
                 Operator = payInfo.PayName,
-                ForStatus = new [] { DepositStatus.Pending },
-                Status =  DepositStatus.Rejected
-            }, _producer.Publish);
+                ForStatus = new[] { DepositStatus.Pending },
+                Status = DepositStatus.Rejected
+            });
         }
 
         public void DepositPending(DepositRequest depositRequest, IDepositResult depositResult)
         {
-            var forStatus = new [] { DepositStatus.Pending };
+            var forStatus = new[] { DepositStatus.Pending };
             SetDepositInfo(depositRequest, depositResult, DepositStatus.Pending, forStatus);
-       }
+        }
 
         public void SetDepositLog(string transId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
         {
@@ -301,7 +300,7 @@ namespace PaymentService.Service.BLL
                 ForStatus = forStatus,
                 Status = status
             };
-            var result = _depositService.SetDepositInfoV2(p, _producer.Publish, canReward);
+            var result = _depositService.SetDepositInfoV2(p, canReward);
 
             if (!result)
                 _logger.LogError("Update DepositInfo failed. SetDepositInfoParams=" + JsonConvert.SerializeObject(p));
@@ -309,11 +308,11 @@ namespace PaymentService.Service.BLL
 
         private bool CanRewardPoint(int siteId, int currencyId)
         {
-            var canRewardCurrency =  _configBll.GetConfigValue<int[]>("CanReward", siteId);
+            var canRewardCurrency = _configBll.GetConfigValue<int[]>("CanReward", siteId);
 
             return canRewardCurrency.Contains(currencyId);
         }
-        
+
         #endregion
     }
 }

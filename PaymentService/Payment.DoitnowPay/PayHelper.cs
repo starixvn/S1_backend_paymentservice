@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -11,7 +13,7 @@ namespace Payment.DoitnowPay
 {
     public class PayHelper : PayHelperBase
     {
-        
+
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
 
@@ -20,15 +22,15 @@ namespace Payment.DoitnowPay
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
             _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
         }
-        
+
         #region Debit
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             try
             {
-                var hostDic = JsonConvert.DeserializeObject<Dictionary<string,string>>(inputs["Host"]);
-                    hostDic.TryGetValue(inputs["CurrencyId"], out var hostUrl);
-                var sUrl =  hostUrl + DoitnowPayDefinition.Path.CreateOrder;
+                var hostDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(inputs["Host"]);
+                hostDic.TryGetValue(inputs["CurrencyId"], out var hostUrl);
+                var sUrl = hostUrl + DoitnowPayDefinition.Path.CreateOrder;
                 var amount = decimal.Parse(inputs["Amount"]);
                 var formData = new Dictionary<string, string>()
                 {
@@ -41,7 +43,7 @@ namespace Payment.DoitnowPay
                     { "paymentMethod", inputs["PayCode"] }
                 };
                 formData.Add("hashVal", Hash(formData, inputs["ClientSecret"]));
-            
+
                 var oDepositResult = new DepositResult
                 {
                     Url = sUrl,
@@ -58,7 +60,7 @@ namespace Payment.DoitnowPay
                 return new DepositResult(false, ex.Code, ex.Message);
             }
         }
-        
+
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> input)
         {
@@ -68,7 +70,7 @@ namespace Payment.DoitnowPay
             {
                 { "clientId", input["ClientId"] }
             };
-            
+
             if (status == "success")
             {
                 dict.Add("referenceId", formData["referenceId"]);
@@ -82,12 +84,12 @@ namespace Payment.DoitnowPay
                 dict.Add("transactionId", formData["transactionId"]);
                 dict.Add("status", formData["status"]);
             }
-            
+
             var hashVal = formData["hashVal"];
             var actual = Hash(dict, input["ClientSecret"]);
             if (string.Equals(hashVal, actual))
             {
-                
+
                 oNotify.DepositId = formData["transactionId"];
                 oNotify.Message = status;
                 oNotify.Comment = status;
@@ -116,20 +118,20 @@ namespace Payment.DoitnowPay
 
             return oNotify;
         }
-        
+
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
         {
             throw new System.NotImplementedException();
         }
-        
+
         #endregion
-        
+
         #region Credit
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var hostDic = JsonConvert.DeserializeObject<Dictionary<string,string>>(inputs["Host"]);
-                hostDic.TryGetValue(inputs["CurrencyId"], out var hostUrl);
+            var hostDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(inputs["Host"]);
+            hostDic.TryGetValue(inputs["CurrencyId"], out var hostUrl);
             var apiUrl = hostUrl;
             var clientSecret = inputs["ClientSecret"];
             var clientId = inputs["ClientId"];
@@ -143,7 +145,7 @@ namespace Payment.DoitnowPay
 
             try
             {
-              
+
                 var req = new Dictionary<string, string>
                 {
                     {"clientId", clientId},
@@ -177,7 +179,7 @@ namespace Payment.DoitnowPay
                 };
             }
         }
-        
+
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var clientId = payResource["ClientId"];
@@ -217,21 +219,21 @@ namespace Payment.DoitnowPay
 
             return result;
         }
-        
+
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
             throw new System.NotImplementedException();
         }
-        
+
         #endregion
-        
+
         public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
         {
             throw new System.NotImplementedException();
         }
-        
+
         #region Private Methods
-        
+
         private PayoutCallBackResponse Payout(string baseApiUrl, Dictionary<string, string> req)
         {
             var apiUrl = baseApiUrl + DoitnowPayDefinition.Path.CreatePayout;
@@ -242,7 +244,7 @@ namespace Payment.DoitnowPay
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"DoitnowPay create payout failed, HttpStatus: {(int) statusCode} {statusCode}");
+                    $"DoitnowPay create payout failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
             if (result.Status != "success")
@@ -250,14 +252,14 @@ namespace Payment.DoitnowPay
 
             return result;
         }
-        
-        private bool VerifySign(string target, Dictionary<string,string> param, string clientSecret)
+
+        private bool VerifySign(string target, Dictionary<string, string> param, string clientSecret)
         {
             var sign = Hash(param, clientSecret);
 
             return target.Equals(sign, StringComparison.OrdinalIgnoreCase);
         }
-        
+
         public string Hash(Dictionary<string, string> para, string key)
         {
             var queryString = string.Join("", para.Select(p => p.Value).ToArray());
@@ -266,7 +268,7 @@ namespace Payment.DoitnowPay
             _logger.LogInformation(sign);
             return sign;
         }
-        
+
         #endregion
     }
 }

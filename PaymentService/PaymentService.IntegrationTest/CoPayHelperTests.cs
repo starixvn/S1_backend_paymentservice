@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+
 using Payment.CoPay;
 
 namespace PaymentService.IntegrationTest
@@ -23,7 +24,7 @@ namespace PaymentService.IntegrationTest
             };
             var payHelper = new PayHelper();
             var expect = "83E6EF82AD8519E94A497E63B55B650A";
-            
+
             var actual = payHelper.Sign(testData, "4nBa2Pxocn36vdq7");
 
             Assert.AreEqual(expect, actual);

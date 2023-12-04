@@ -6,15 +6,15 @@ public class CreatOrderResponse
 {
     [JsonProperty("retCode")]
     public string Code { get; set; }
-    
+
     [JsonProperty("retMsg")]
     public string Message { get; set; }
-    
+
     [JsonProperty("payOrderId")]
-    public string ThirdId  { get; set; }
-    
+    public string ThirdId { get; set; }
+
     [JsonProperty("payParams")]
-    public CreatOrderData Data  { get; set; }
+    public CreatOrderData Data { get; set; }
 }
 
 public class CreatOrderData
@@ -27,10 +27,10 @@ public class CreatPayoutResponse
 {
     [JsonProperty("retCode")]
     public string Code { get; set; }
-    
+
     [JsonProperty("retMsg")]
     public string Message { get; set; }
-    
+
     [JsonProperty("payOrderId")]
-    public string ThirdId  { get; set; }
+    public string ThirdId { get; set; }
 }

@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
@@ -14,7 +16,7 @@ namespace Payment.VaderPay
         {
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
         }
-        
+
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
@@ -120,7 +122,7 @@ namespace Payment.VaderPay
             else
             {
                 var data = FromJson<CallBackDebitMobileReq>(bodyContent);
-                var parameter = $"{data.InvoiceNo }{data.ReceiverBank}{data.ReceiverAccount}{data.Currency}{data.Amount}{data.PaymentDate}";
+                var parameter = $"{data.InvoiceNo}{data.ReceiverBank}{data.ReceiverAccount}{data.Currency}{data.Amount}{data.PaymentDate}";
                 var sign = ToHMACSHA256(parameter, payResource["key"]);
                 oNotify.DepositId = data.RefId;
                 oNotify.ThirdId = data.InvoiceNo;
@@ -130,7 +132,7 @@ namespace Payment.VaderPay
                     error_code = (int)DepositResponseStatus.OperationSuccess,
                     message = DepositResponseStatus.OperationSuccess.ToString()
                 });
-                
+
                 if (sign == data.Signature)
                 {
                     switch (data.Status)
@@ -193,7 +195,7 @@ namespace Payment.VaderPay
 
             var parameter = $"{request.merchant_code}{request.ref_id}{request.player_username}{request.player_ip}{request.currency_code}{request.amount}{request.bank_code}{request.beneficiary_account}{request.beneficiary_name}";
             request.hash = ToHMACSHA256(parameter, inputs["key"]);
-            
+
             var sUrl = inputs["withdrawHost"];
             var sResponse = HttpPost(sUrl, ToJson(request), "application/json", request.ref_id, false);
 
@@ -253,7 +255,7 @@ namespace Payment.VaderPay
                 };
                 var parameter = $"{mobileDepositReq.merchant_code}{mobileDepositReq.ref_id}{mobileDepositReq.player_username}{mobileDepositReq.player_ip}{mobileDepositReq.currency_code}{mobileDepositReq.amount}{mobileDepositReq.client_url}";
                 mobileDepositReq.hash = ToHMACSHA256(parameter, inputs["key"]);
-                
+
                 _logger.LogInformation($"TransId={mobileDepositReq.ref_id}, parameter={parameter}, key={inputs["key"]}, hash={mobileDepositReq.hash}");
                 sResponse = HttpPost(sUrl, ToJson(mobileDepositReq), "application/json", mobileDepositReq.ref_id, false);
             }
@@ -292,7 +294,7 @@ namespace Payment.VaderPay
         {
             throw new NotImplementedException();
         }
-        
+
         public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
         {
             string refId;

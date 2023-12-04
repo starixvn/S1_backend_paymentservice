@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -13,10 +14,10 @@ namespace PaymentService.Controllers
     public class DepositController : ControllerBase
     {
         private readonly ILogger<DepositController> _logger;
-        private readonly PaymentBLL _paymentBll;     
+        private readonly PaymentBLL _paymentBll;
         private readonly Common _common;
         private readonly WhitelistBLL _whitelistBll;
-        
+
         public DepositController(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<DepositController>>();
@@ -32,14 +33,14 @@ namespace PaymentService.Controllers
             var clientIp = _common.GetClientIP(HttpContext);
             return clientIp;
         }
-        
+
         [Route("Payment/getheaders")]
         [HttpGet]
         public ActionResult<Dictionary<string, StringValues>> GetHeaders()
         {
             return Ok(Request.Headers.ToDictionary(d => d.Key));
         }
-        
+
         [Route("Payment/DepositManual")]
         [HttpPost]
         public ActionResult<DepositManualResponse> DepositManual(DepositManualRequest request)
@@ -52,7 +53,7 @@ namespace PaymentService.Controllers
                     Message = ErrorCode.Fail.ToString(),
                     Amount = 0
                 };
-                
+
                 const string payName = "Manual";
                 var clientIp = _common.GetClientIP(HttpContext);
                 if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod())
@@ -64,7 +65,7 @@ namespace PaymentService.Controllers
                     response.Amount = 0;
                     return response;
                 }
-                
+
                 var depositInfo = _paymentBll.GetDepositInfo(request.TransId);
                 if (depositInfo == null)
                 {
@@ -73,7 +74,7 @@ namespace PaymentService.Controllers
                     response.Amount = 0;
                     return response;
                 }
-        
+
                 if (depositInfo.Status == (int)DepositStatus.Approved)
                 {
                     response.ErrorCode = (int)ErrorCode.Fail;
@@ -81,13 +82,13 @@ namespace PaymentService.Controllers
                     response.Amount = 0;
                     return response;
                 }
-        
+
                 depositInfo.ActualDeposit = (request.Amount == 0) ? depositInfo.ActualDeposit : request.Amount;
                 depositInfo.Comment = "Manual Approved";
                 depositInfo.Status = (int)DepositStatus.Approved;
                 depositInfo.RefId = string.IsNullOrEmpty(request.ThirdId) ? null : request.ThirdId;
                 depositInfo.Operator = string.IsNullOrEmpty(request.Operator) ? "Manual" : request.Operator;
-        
+
                 var success = _paymentBll.DepositManualSuccess(depositInfo);
                 if (success)
                 {
@@ -95,7 +96,7 @@ namespace PaymentService.Controllers
                     response.Message = ErrorCode.Success.ToString();
                     response.Amount = depositInfo.ActualDeposit;
                 }
-        
+
                 return response;
             }
             catch (Exception e)

@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using PaymentCore;
 using PaymentCore.Models.Result;
 
@@ -241,10 +243,10 @@ namespace Payment.FattyPay
             var formData = new Dictionary<string, string>();
             var findPayCode = FindPayCode(inputs["PayCode"]);
             var payMethod = findPayCode[0];
-            
+
             if (payMethod == "BankQr")
             {
-                formData.Add("PaymentMethod", payMethod); 
+                formData.Add("PaymentMethod", payMethod);
                 formData.Add("BankCode", findPayCode[1]);
             }
             else
@@ -254,7 +256,7 @@ namespace Payment.FattyPay
                 {
                     bankCode = GetNoBankCode(currency, payMethod);
                 }
-                
+
                 formData.Add("PaymentMethod", payMethod);
                 formData.Add("BankCode", bankCode);
             }
@@ -279,7 +281,7 @@ namespace Payment.FattyPay
 
             var p = $"{inputs["key"]}&{formData["MerchantTransactionId"]}&{formData["ServiceProvider"]}&{formData["PaymentMethod"]}&{formData["IsoCurrency"]}&" +
                     $"{formData["Amount"]}&{formData["Email"]}";
-            
+
             //_logger.LogInformation($"Plain Text: {p}");
             var sign = ToSHA512(p).ToUpper();
             //_logger.LogInformation($"Signature: {sign}");

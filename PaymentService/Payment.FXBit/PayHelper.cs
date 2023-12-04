@@ -1,8 +1,11 @@
 ﻿using System.Text.RegularExpressions;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -39,7 +42,7 @@ namespace Payment.FXBit
 
                 var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
                 var rate = type.Equals("0") ? rateInfo.BuyRate : rateInfo.SellRate; // FxBit的匯率買入買出和一般是反過來
-                var exchangeAmount = GetExchangeAmountString(reqAmount, rate , toCurrency);
+                var exchangeAmount = GetExchangeAmountString(reqAmount, rate, toCurrency);
 
                 return new ExchangeResult(ErrorCode.Success, "Success", new CryptoExchangeInfo
                 {
@@ -202,34 +205,43 @@ namespace Payment.FXBit
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            
-            var baseApiUrl = inputs["host"];
             var apiKey = inputs["key"];
             var payoutKey = inputs["payoutKey"];
             var payoutApiUrl = inputs["payoutUrl"];
-            var fromCurrency = inputs["PayCurrencyId"];
             var toCurrency = inputs["PayCode"];
-            var reqAmount = inputs["Amount"];
             var transId = inputs["TransID"];
             var withdrawalInfo = inputs["WithdrawalInfo"];
 
             try
             {
-                // Step 1: 取得當下匯率並換算為加密貨幣金額
-                var rateInfo = GetExchangeRateInfo(baseApiUrl, apiKey, fromCurrency, toCurrency);
-                var exchangeAmount = GetExchangeAmountString(reqAmount, rateInfo.BuyRate, toCurrency);
-
-                // 將匯率資訊加入 WithdrawalInfo
                 if (withdrawalInfo == null)
                     throw new CustomException("WithdrawalInfo is empty.");
 
-                withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rateInfo.BuyRate, exchangeAmount);
+                // 230927: 根據市場需求，改為使用申請當下的匯率
+                var rateInfo = JsonConvert.DeserializeObject<CryptoRateInfo>(withdrawalInfo);
+                
+                if (rateInfo == null)
+                    throw new CustomException("CryptoRateInfo is empty.");
+
+                var payoutFeeReq = new Dictionary<string, string>
+                {
+                    {"currency", toCurrency},
+                    {"time_stamp", new DateTimeOffset().ToUnixTimeSeconds().ToString()},
+                    {"type", "4"}
+                };
+                
+                payoutFeeReq.Add("signature", GetSign(payoutFeeReq, payoutKey));
+                
+                var payoutFeeResp = GetPayoutFee(apiKey, payoutApiUrl, payoutFeeReq);
+
+                var exchangeAmount = rateInfo.TempExchangeAmount;
+                withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rateInfo.TempExchangeRate.ToString("G29"), exchangeAmount.ToString("G29"));
 
                 // Step 2: 建立交易
                 var payoutReq = new Dictionary<string, string>
                 {
                     { "currency", toCurrency },
-                    { "amount", exchangeAmount },
+                    { "amount", (exchangeAmount + payoutFeeResp.PayoutFee).ToString("G29") }, // 加上 gas fee
                     { "address", inputs["AccountNo"] },
                     { "time_stamp", new DateTimeOffset().ToUnixTimeSeconds().ToString() },
                     { "req_payout_id", GetPayoutId(transId) },
@@ -238,7 +250,7 @@ namespace Payment.FXBit
                 };
 
                 payoutReq.Add("signature", GetSign(payoutReq, payoutKey));
-               
+
                 var payoutResp = Payout(payoutApiUrl, apiKey, payoutReq);
                 var response = new WithdrawResult
                 {
@@ -352,6 +364,27 @@ namespace Payment.FXBit
 
             return response.Result;
         }
+        
+        private PayoutFeeResp GetPayoutFee(string apiKey, string apiUrl, Dictionary<string, string> req)
+        {
+            var (result, statusCode) = _httpHelper
+                .WithHeader("accept", ContentType.Json)
+                .WithHeader("x-api-key", apiKey)
+                .PostJson<Dictionary<string, string>, PayoutFeeResp>(apiUrl, req);
+
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException(
+                    $"FxBit GetPayoutFee failed, HttpStatus: {(int)statusCode} {statusCode}",
+                    ErrorCode.GetExchangeRateFailed);
+            }
+            
+            if (result.Error != 0)
+                throw new CustomException($"FxBit GetPayoutFee response error code: {result.Error}",
+                    ErrorCode.GetPayoutFeeFailed);
+
+            return result;
+        }
 
         private GetReceptionTokenResp GetReceptionToken(string baseApiUrl,
             string apiKey,
@@ -362,9 +395,8 @@ namespace Payment.FXBit
             var response = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
-                .PostJsonAsync<GetReceptionTokenReq, GetReceptionTokenResp>(apiUrl, req)
-                .Result;
-
+                .PostJson<GetReceptionTokenReq, GetReceptionTokenResp>(apiUrl, req);
+            
             if (!response.StatusCode.IsSuccessStatus())
             {
                 throw new CustomException(
@@ -372,7 +404,7 @@ namespace Payment.FXBit
                     $",errorCode: {response.Result.Error}",
                     ErrorCode.GetReceptionTokenFailed);
             }
-            
+
             if (response.Result.Error != 0)
                 throw new CustomException($"FxBit GetReceptionToken response error code: {response.Result.Error}",
                     ErrorCode.GetReceptionTokenFailed);
@@ -389,8 +421,7 @@ namespace Payment.FXBit
             var response = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
-                .PostJsonAsync<GetWalletAddressReq, GetWalletAddressResp>(apiUrl, req)
-                .Result;
+                .PostJson<GetWalletAddressReq, GetWalletAddressResp>(apiUrl, req);
 
             if (!response.StatusCode.IsSuccessStatus())
             {
@@ -415,8 +446,7 @@ namespace Payment.FXBit
             var response = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
-                .PostJsonAsync<Dictionary<string, string>, PayoutQueryResp>(apiUrl, req)
-                .Result;
+                .PostJson<Dictionary<string, string>, PayoutQueryResp>(apiUrl, req);
 
             if (!response.StatusCode.IsSuccessStatus())
             {
@@ -441,8 +471,7 @@ namespace Payment.FXBit
             var response = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
-                .PostJsonAsync<Dictionary<string, string>, PayoutResp>(apiUrl, req)
-                .Result;
+                .PostJson<Dictionary<string, string>, PayoutResp>(apiUrl, req);
 
             if (!response.StatusCode.IsSuccessStatus())
             {
@@ -503,13 +532,13 @@ namespace Payment.FXBit
                 ? 8 : 2;
 
             var amount = decimal.Parse(reqAmount) / decimal.Parse(rate);
-            
+
             return amount.ToString($"f{unit}");
         }
 
         private static string GetExchangeRateString(string rate)
             => (1M / decimal.Parse(rate)).ToString("f15");
-        
+
         #endregion
     }
 }
