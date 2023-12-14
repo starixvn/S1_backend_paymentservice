@@ -221,7 +221,7 @@ namespace Payment.DouDouPay
                 amount = int.Parse(formData["amount"])
             };
             var p = JsonConvert.SerializeObject(toMD5Data) + payResource["key"];
-            var sign = ToMD5(p);
+            var sign = ToMD5(p).ToLower();
 
             if (sign == formData["sign"])
             {
@@ -257,7 +257,7 @@ namespace Payment.DouDouPay
             };
 
             var p = JsonConvert.SerializeObject(toMD5Data) + payResource["key"];
-            var sign = ToMD5(p);
+            var sign = ToMD5(p).ToLower();
 
             if (sign == formData["sign"])
             {
