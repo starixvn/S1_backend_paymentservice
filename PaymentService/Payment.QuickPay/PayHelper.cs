@@ -31,7 +31,6 @@ namespace Payment.QuickPay
             var apiKey = input["apiKey"];
             var userNo = input["CustId"];
             var accountName = input["AccountName"];
-            var bankName = input["BankName"];
             var payCode = input["PayCode"];
             var reqAmount = decimal.Parse(input["Amount"]);
             var strAmount = reqAmount.ToString("G29");
@@ -63,7 +62,7 @@ namespace Payment.QuickPay
 
                 if (payCode.Equals("OnlineBanking"))
                 {
-                    req.Add("bankName", bankName);
+                    req.Add("bankName", input["BankName"]);
                 }
 
                 var res = CreateOrder(apiUrl, req);
@@ -166,7 +165,6 @@ namespace Payment.QuickPay
             var transId = input["TransID"];
             var accountNo = input["AccountNo"];
             var notifyUrl = input["CallBackUrl"];
-            
             
             try
             {
@@ -327,19 +325,15 @@ namespace Payment.QuickPay
             return target.Equals(sign, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static (string method, string code) GetMethod(string payCode)
-        {
-            var result = payCode.Split('-');
-
-            return (result[0], result.Length > 1 ? result[1] : string.Empty);
-        }
-
         private string ConvertChannel(string payCode)
         {
             return payCode switch
             {
                 "OnlineBanking" => "4",
-                "MobilePayment" => "2",
+                "QRIS" => "2",
+                "OVO" => "0",
+                "DANA" => "1",
+                "Withdrawal" => "6",
                 _ => ""
             };
         }
