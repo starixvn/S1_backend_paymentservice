@@ -19,4 +19,12 @@ namespace PaymentCore.Models
         BDT = 74,
         USDT = 96
     }
+    
+    public enum DeviceTypeEnum
+    {
+        Old = 0,
+        Desktop = 1,
+        H5 = 2,
+        App = 3
+    }
 }

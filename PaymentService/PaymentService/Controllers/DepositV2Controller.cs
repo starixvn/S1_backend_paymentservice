@@ -69,6 +69,8 @@ public class DepositV2Controller : ControllerBase
         public string TransId { get; set; }
         public string ClientIP { get; set; }
         public string ReturnUrl { get; set; }
+        
+        public DeviceTypeEnum DeviceType { get; set; }
     }
 
     [Route("Payment/Deposit/Create")]
@@ -107,6 +109,7 @@ public class DepositV2Controller : ControllerBase
             input.Add("CallBackUrl", $"{_callBackUrl}/Payment/DepositCallBack/{req.TransId}");
             input.Add("IsTest", _common.IsTest());
             input.Add("DepositInfo", depositInfo.DepositInfo);
+            input.Add("DeviceType", ((int) req.DeviceType).ToString());
 
             if (!input.ContainsKey("BankCode"))
             {
