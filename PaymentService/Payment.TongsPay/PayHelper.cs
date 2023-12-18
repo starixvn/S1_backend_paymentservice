@@ -221,13 +221,8 @@ public class PayHelper : PayHelperBase
 
         _logger.LogInformation("str=" + str);
         
-        var sign = RsaSign(str, key, HashAlgorithmName.SHA1); //RsaHelper.RsaEncrypt(str, key, 1024);
-        
-        _logger.LogInformation("sign=" + sign);
-        
+        var sign = RsaSign(str, key, HashAlgorithmName.SHA1);
         var urlEncodedSign = HttpUtility.UrlEncode(sign);
-        
-        _logger.LogInformation("urlEncode sign=" + urlEncodedSign);
 
         return urlEncodedSign;
     }
