@@ -1,4 +1,5 @@
-﻿using System.Web;
+﻿using System.Security.Cryptography;
+using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -26,214 +27,223 @@ public class PayHelper : PayHelperBase
     
     #region Debit
 
-        public override DepositResult Debit(Dictionary<string, string> input)
+    public override DepositResult Debit(Dictionary<string, string> input)
+    {
+        var baseApiUrl = input["Host"];
+        var key = input["OurPrivateKey"];
+        var transId = input["TransID"];
+        var merchantNo = input["MerchantNo"];
+        var reqAmount = decimal.Parse(input["Amount"]) * AmountFix;
+        var isMobile = int.Parse(input["DeviceType"]) != (int)DeviceTypeEnum.Desktop;
+
+        try
         {
-            var baseApiUrl = input["Host"];
-            var key = input["OurPrivateKey"];
-            var transId = input["TransID"];
-            var merchantNo = input["MerchantNo"];
-            var reqAmount = decimal.Parse(input["Amount"]) * AmountFix;
-            var isMobile = int.Parse(input["DeviceType"]) != (int)DeviceTypeEnum.Desktop;
-
-            try
+            var req = new Dictionary<string, string>
             {
-                var req = new Dictionary<string, string>
-                {
-                    { "charset", "UTF-8" },
-                    { "merchantCode", merchantNo },
-                    { "orderNo", transId },
-                    { "amount", reqAmount.ToString("G29") },
-                    { "channel", input["PayCode"] },
-                    { "bankCode", isMobile ? "BANK_MOBILE" : "CASHIER" },
-                    { "remark", input["UserName"] },
-                    { "notifyUrl", input["CallBackUrl"] },
-                    { "returnUrl", input["ReturnUrl"] },
-                    { "extraReturnParam", string.Empty }
-                };
-                
-                req.Add("sign", GetSign(req, key));
-                req.Add("signType", "RSA");
-                req.Add("userId", input["AccountName"]);
+                { "charset", "UTF-8" },
+                { "merchantCode", merchantNo },
+                { "orderNo", transId },
+                { "amount", reqAmount.ToString("G29") },
+                { "channel", input["PayCode"] },
+                { "bankCode", isMobile ? "BANK_MOBILE" : "CASHIER" },
+                { "remark", input["UserName"] },
+                { "notifyUrl", input["CallBackUrl"] },
+                { "returnUrl", input["ReturnUrl"] },
+                { "extraReturnParam", string.Empty }
+            };
+            
+            req.Add("sign", GetSign(req, key));
+            req.Add("signType", "RSA");
+            req.Add("userId", input["AccountName"]);
 
-                return new DepositResult
-                {
-                    Success = true,
-                    FormData = req,
-                    Url = baseApiUrl + Path.Deposit
-                };
-            }
-            catch (CustomException ex)
+            return new DepositResult
             {
-                _logger.LogError($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
-
-                return new DepositResult(false, ex.Code, ex.Message);
-            }
+                Success = true,
+                FormData = req,
+                Url = baseApiUrl + Path.Deposit
+            };
         }
-
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
-            Dictionary<string, string> headers, Dictionary<string, string> input)
+        catch (CustomException ex)
         {
-            var key = input["PublicKey"];
-            var req = FromJson<DepositCallbackRequest>(JsonConvert.SerializeObject(formData));
+            _logger.LogError($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
 
-            if (!VerifySign(formData, key, req.Sign))
-            {
-                return new NotifyDepositResult
-                {
-                    DepositId = req.TransId,
-                    TransStatus = TransStatus.Pending,
-                    Response = "Signature does not match."
-                };
-            }
+            return new DepositResult(false, ex.Code, ex.Message);
+        }
+    }
 
-            var transStatus = TongsPayDefinition.GetPayinTransStatus(req.Status);
+    public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
+        Dictionary<string, string> headers, Dictionary<string, string> input)
+    {
+        var key = input["PublicKey"];
+        var req = FromJson<DepositCallbackRequest>(JsonConvert.SerializeObject(formData));
 
+        if (!VerifySign(formData, key, req.Sign))
+        {
             return new NotifyDepositResult
             {
                 DepositId = req.TransId,
-                ActualAmount = req.Amount / AmountFix,
-                ThirdId = req.TransId,
-                Comment = req.Status,
-                TransStatus = transStatus,
-                Response = TongsPayDefinition.CallbackResponse
+                TransStatus = TransStatus.Pending,
+                Response = "Signature does not match."
             };
         }
 
-        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
+        var transStatus = TongsPayDefinition.GetPayinTransStatus(req.Status);
+
+        return new NotifyDepositResult
         {
-            throw new NotImplementedException();
-        }
+            DepositId = req.TransId,
+            ActualAmount = req.Amount / AmountFix,
+            ThirdId = req.TransId,
+            Comment = req.Status,
+            TransStatus = transStatus,
+            Response = TongsPayDefinition.CallbackResponse
+        };
+    }
 
-        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> input)
+    public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> input)
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region Credit
+
+    public override WithdrawResult Credit(Dictionary<string, string> input)
+    {
+        var baseApiUrl = input["Host"];
+        var key = input["OurPrivateKey"];
+        var transId = input["TransID"];
+        var merchantNo = input["MerchantNo"];
+        var reqAmount = decimal.Parse(input["Amount"]) * AmountFix;
+
+        try
         {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-        #region Credit
-
-        public override WithdrawResult Credit(Dictionary<string, string> input)
-        {
-            var baseApiUrl = input["Host"];
-            var key = input["OurPrivateKey"];
-            var transId = input["TransID"];
-            var merchantNo = input["MerchantNo"];
-            var reqAmount = decimal.Parse(input["Amount"]) * AmountFix;
-
-            try
+            var req = new Dictionary<string, string>
             {
-                var req = new Dictionary<string, string>
-                {
-                    { "charset", "UTF-8" },
-                    { "merchantCode", merchantNo },
-                    { "orderNo", transId },
-                    { "amount", reqAmount.ToString("G29") },
-                    { "bankCode", input["BankCode"] },
-                    { "accountNumber", input["AccountName"] },
-                    { "accountName", input["AccountNo"] },
-                    { "provinceName", "provinceName" },
-                    { "cityName", "cityName" },
-                    { "remark", input["UserName"] },
-                    { "notifyUrl", input["CallBackUrl"] },
-                    { "extraReturnParam", string.Empty }
-                };
-                
-                req.Add("sign", GetSign(req, key));
-                req.Add("signType", "RSA");
+                { "charset", "UTF-8" },
+                { "merchantCode", merchantNo },
+                { "orderNo", transId },
+                { "amount", reqAmount.ToString("G29") },
+                { "bankCode", input["BankCode"] },
+                { "accountNumber", input["AccountName"] },
+                { "accountName", input["AccountNo"] },
+                { "provinceName", "provinceName" },
+                { "cityName", "cityName" },
+                { "remark", input["UserName"] },
+                { "notifyUrl", input["CallBackUrl"] },
+                { "extraReturnParam", string.Empty }
+            };
+            
+            req.Add("sign", GetSign(req, key));
+            req.Add("signType", "RSA");
 
-                var (response, statusCode) = _httpHelper
-                    .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", req);
+            var (response, statusCode) = _httpHelper
+                .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", req);
 
-                if (!statusCode.IsSuccessStatus())
-                {
-                    throw new CustomException($"TongsPay withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
-                }
-
-                if (response.Code is not ("PAYING" or "SUCCESS"))
-                {
-                    throw new CustomException(response.Message, response.Code);
-                }
-
-                return new WithdrawResult
-                {
-                    Success = true,
-                    RawContent = JsonConvert.SerializeObject(response)
-                };
-            }
-            catch (CustomException ex)
+            if (!statusCode.IsSuccessStatus())
             {
-                _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
-
-                return new WithdrawResult
-                {
-                    Success = false,
-                    Message = ex.Message
-                };
-            }
-        }
-
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
-            Dictionary<string, string> headers, Dictionary<string, string> payResource)
-        {
-            var key = payResource["PublicKey"];
-            var req = FromJson<WithdrawalCallbackRequest>(JsonConvert.SerializeObject(formData));
-
-            if (!VerifySign(formData, key, req.Sign))
-            {
-                return new NotifyWithdrawResult
-                {
-                    ThirdId = req.TransId,
-                    TransStatus = TransStatus.Pending,
-                    Response = "Signature does not match."
-                };
+                throw new CustomException($"TongsPay withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
-            var transStatus = TongsPayDefinition.GetPayoutTransStatus(req.Code);
+            if (response.Code is not ("PAYING" or "SUCCESS"))
+            {
+                throw new CustomException(response.Message, response.Code);
+            }
 
+            return new WithdrawResult
+            {
+                Success = true,
+                RawContent = JsonConvert.SerializeObject(response)
+            };
+        }
+        catch (CustomException ex)
+        {
+            _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
+
+            return new WithdrawResult
+            {
+                Success = false,
+                Message = ex.Message
+            };
+        }
+    }
+
+    public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
+        Dictionary<string, string> headers, Dictionary<string, string> payResource)
+    {
+        var key = payResource["PublicKey"];
+        var req = FromJson<WithdrawalCallbackRequest>(JsonConvert.SerializeObject(formData));
+
+        if (!VerifySign(formData, key, req.Sign))
+        {
             return new NotifyWithdrawResult
             {
                 ThirdId = req.TransId,
-                TransStatus = transStatus,
-                Message = req.Message,
-                Response = TongsPayDefinition.CallbackResponse,
-                WithdrawId = req.TransId
+                TransStatus = TransStatus.Pending,
+                Response = "Signature does not match."
             };
         }
 
-        public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
+        var transStatus = TongsPayDefinition.GetPayoutTransStatus(req.Code);
+
+        return new NotifyWithdrawResult
         {
-            throw new NotImplementedException();
-        }
+            ThirdId = req.TransId,
+            TransStatus = transStatus,
+            Message = req.Message,
+            Response = TongsPayDefinition.CallbackResponse,
+            WithdrawId = req.TransId
+        };
+    }
 
-        #endregion
+    public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
+    {
+        throw new NotImplementedException();
+    }
 
-        #region Private
+    #endregion
 
-        private readonly IEnumerable<string> _exceptKey = new[] {"sign", "singType"};
+    #region Private
 
-        private string GetSign(IEnumerable<KeyValuePair<string, string>> input, string key)
-        {
-            var str = string.Join('&', input
-                .Where(x => !_exceptKey.Contains(x.Key))
-                .Select(x => $"{x.Key}={x.Value}"));
+    private readonly IEnumerable<string> _exceptKey = new[] {"sign", "singType"};
 
-            var sign = RsaHelper.RsaEncrypt(str, key, 1024);
-            var urlEncodedSign = HttpUtility.UrlEncode(sign);
+    private string GetSign(IEnumerable<KeyValuePair<string, string>> input, string key)
+    {
+        var str = string.Join('&', input
+            .Where(x => !_exceptKey.Contains(x.Key))
+            .Select(x => $"{x.Key}={x.Value}"));
 
-            return urlEncodedSign;
-        }
-        private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string publicKey, string target)
-        {
-            target = HttpUtility.HtmlDecode(target);
-            var str = string.Join('&', param
-                .Where(x => !_exceptKey.Contains(x.Key))
-                .Select(x => $"{x.Key}={x.Value}"));
-            
-            var result = RsaHelper.RsaVerifyData(str, target, publicKey);
+        _logger.LogInformation("str=" + str);
+        
+        var sign = RsaSign(str, key, HashAlgorithmName.SHA1); //RsaHelper.RsaEncrypt(str, key, 1024);
+        
+        _logger.LogInformation("sign=" + sign);
+        
+        var urlEncodedSign = HttpUtility.UrlEncode(sign);
+        
+        _logger.LogInformation("urlEncode sign=" + urlEncodedSign);
 
-            return result;
-        }
+        return urlEncodedSign;
+    }
+    private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string publicKey, string target)
+    {
+        target = HttpUtility.HtmlDecode(target);
+        var str = string.Join('&', param
+            .Where(x => !_exceptKey.Contains(x.Key))
+            .Select(x => $"{x.Key}={x.Value}"));
+        
+        _logger.LogInformation("str=" + str);
+        
+        var result = RsaHelper.RsaVerifyData(str, target, publicKey);
 
-        #endregion
+        return result;
+    }
+
+    #endregion
 }
