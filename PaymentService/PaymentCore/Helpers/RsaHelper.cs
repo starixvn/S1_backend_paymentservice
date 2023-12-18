@@ -6,21 +6,6 @@ namespace PaymentCore.Helpers;
 
 public static class RsaHelper
 {
-    public static string RsaEncrypt(string str, string privateKey, int keyByte)
-    {
-        var inputBytes = Encoding.UTF8.GetBytes(str);
-        using var alg = SHA256.Create();
-        var inputHash = alg.ComputeHash(inputBytes);
-        
-        var keyBytes = Convert.FromBase64String(privateKey);
-        using var rsa = new RSACryptoServiceProvider(keyByte);
-        rsa.ImportRSAPrivateKey(keyBytes, out _);
-        
-        var signHash = rsa.SignHash(inputHash, "SHA256");
-
-        return Convert.ToBase64String(signHash);
-    }
-    
     public static bool RsaVerifyData(string str, string target, string publicKey)
     {
         var targetBytes = Convert.FromBase64String(target);

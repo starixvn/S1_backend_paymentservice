@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Security.Cryptography;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -454,7 +455,7 @@ namespace Payment.Coin2Pay
 
             _logger.LogInformation("str: " + str);
 
-            var signHash = RsaHelper.RsaEncrypt(str, privateKey, 2048);
+            var signHash = RsaSign(str, privateKey, HashAlgorithmName.SHA256);
             var sign = ReplaceBase64(signHash);
 
             return sign;
