@@ -159,10 +159,10 @@ namespace Payment.QuickPay
             var appSecret = input["appSecret"];
             var apiKey = input["apiKey"];
             var accountName = input["AccountName"];
-            var bankName = input["BankName"];
             var reqAmount = decimal.Parse(input["Amount"]);
             var strAmount = reqAmount.ToString("G29");
             var transId = input["TransID"];
+            var bankCode = input["BankCode"];
             var accountNo = input["AccountNo"];
             var notifyUrl = input["CallBackUrl"];
             
@@ -175,11 +175,12 @@ namespace Payment.QuickPay
                     {"orderNo",transId},
                     {"amount", strAmount + ".00"},
                     {"name",accountName},
-                    {"bankName",bankName},
+                    {"bankName",bankCode},
                     {"bankAccount",accountNo},
                     {"mobile",string.Empty},
                     {"datetime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")},
                     {"notifyUrl",notifyUrl},
+                    {"reverseUrl",string.Empty},
                     {"extra",string.Empty},
                     {"time", ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds().ToString()},
                 };
@@ -288,10 +289,10 @@ namespace Payment.QuickPay
 
         private CreatPayoutResponse Payout(string baseApiUrl, Dictionary<string, string> req)
         {
-            var apiUrl = baseApiUrl + QuickPayDefinition.Path.CreatePayout;
+             var apiUrl = baseApiUrl + QuickPayDefinition.Path.CreatePayout;
             var (result, statusCode) = _httpHelper
                 .WithHeader("accept", MediaType.Json)
-                .PostUrlEncoded<Dictionary<string, string>, CreatPayoutResponse>(apiUrl, req);
+                .PostJson<Dictionary<string, string>, CreatPayoutResponse>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
             {
