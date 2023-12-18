@@ -1,21 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using PaymentCore;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Model;
 using PaymentCore.Model.enums;
-
+using PaymentCore.Models;
 using PaymentService.Exceptions;
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-
 using Serilog.Context;
-
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers;
