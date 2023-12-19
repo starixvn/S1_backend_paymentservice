@@ -68,9 +68,11 @@ namespace Payment.BigPayz
                     req = new Dictionary<string, string>
                     {
                         { "MerchantCode", merchantNo },
-                        { "Amount", reqAmount.ToString("G29") },
-                        { "Currency", input["PayCurrencyId"] },
                         { "ItemID", input["TransID"] },
+                        { "Currency", input["PayCurrencyId"] },
+                        { "Amount", reqAmount.ToString("G29") }
+                        
+                        
                     };
 
                     req.Add("Hash", GetSign(req, key));
