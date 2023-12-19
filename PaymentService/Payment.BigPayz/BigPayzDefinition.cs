@@ -1,18 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using PaymentCore;
 
-namespace Payment.BigPayz
+namespace Payment.BigPayz;
+
+internal class BigPayzDefinition
 {
-    internal class BigPayzDefinition
+    internal class Path
     {
-        internal class Path
-        {
-            public const string Deposit = "/Payin/DepositV2";
+        public const string Deposit = "/payin/depositv2";
 
-            public const string Withdrawal = "/Payout/Withdrawal";
-        }
+        public const string QRDeposit = "/QRScanDeposit";
+
+        public const string Withdrawal = "/payout/withdrawal";
+    }
+
+    internal class ErrorCode
+    {
+        public const string Success = "0";
+    }
+
+    public const string CallbackResponse = "SUCCESS";
+
+    public static Dictionary<string, TransStatus> BigPayzStatusMap =>
+        new()
+        {
+            { BigPayzStatus.Approved, TransStatus.Success },
+            { BigPayzStatus.Success, TransStatus.Success },
+            { BigPayzStatus.Rejected, TransStatus.Fail },
+            { BigPayzStatus.Pending, TransStatus.Pending }
+        };
+
+    public static TransStatus GetTransStatus(string status)
+        => BigPayzStatusMap.TryGetValue(status, out var result)
+            ? result : TransStatus.Pending;
+
+    internal class BigPayzStatus
+    {
+        public const string Pending = "0";
+        public const string Success = "1";
+        public const string Rejected = "2";
+        public const string Approved = "3";
     }
 }
