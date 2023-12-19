@@ -1,0 +1,368 @@
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using PaymentCore;
+using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
+using PaymentCore.Interface;
+using PaymentCore.Models.Result;
+using static Payment.BigPayz.BigPayzModel;
+using static Payment.BigPayz.BigPayzDefinition;
+using Flurl.Util;
+using System.Security.Cryptography;
+using System.Text;
+using System.Web;
+using Org.BouncyCastle.Ocsp;
+using Newtonsoft.Json;
+
+namespace Payment.BigPayz
+{
+    public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
+    {
+        private readonly IFlurlHttpHelper _httpHelper;
+        private readonly ILogger<PayHelper> _logger;
+        public PayHelper(IServiceProvider provider)
+        {
+            _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+            _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
+        }
+
+        #region Debit
+        public override DepositResult Debit(Dictionary<string, string> input)
+        {
+            var baseApiUrl = input["host"];
+            var qrBaseApiUrl = input["QRhost"];
+            var key = input["APIKey"];
+            var merchantNo = input["MerchantCode"];
+            var reqAmount = decimal.Parse(input["Amount"]);
+            var payCode = input["PayCode"];
+            Dictionary<string, string> req;
+
+            try
+            {
+                //PromptPay
+                if (payCode == "BigQR")
+                {
+                    req = new Dictionary<string, string>
+                    {
+                        { "merchant_code", merchantNo },
+                        { "ref_id", input["TransID"] },
+                        { "player_username", input["UserName"] },
+                        { "player_ip", input["ClientIP"] },
+                        { "currency_code", input["PayCurrencyId"] },
+                        { "amount", reqAmount.ToString("G29") },
+                        { "client_url", input["ReturnUrl"] },
+                    };
+
+                    req.Add("hash", GetSign(req, key));
+                    req.Add("lang", input["Lang"]);
+                }
+                //BankTransfer
+                else
+                {
+                    req = new Dictionary<string, string>
+                    {
+                        { "MerchantCode", merchantNo },
+                        { "Amount", reqAmount.ToString("G29") },
+                        { "Currency", input["PayCurrencyId"] },
+                        { "ItemID", input["TransID"] },
+                    };
+
+                    req.Add("Hash", GetSign(req, key));
+                    req.Add("ReturnURL", input["CallBackUrl"]);
+                    req.Add("FailedReturnURL", input["CallBackUrl"]);
+                    req.Add("HTTPPostURL", input["CallBackUrl"]);
+                    req.Add("PlayerId", input["UserName"]);
+                    req.Add("ItemDescription", input["TransID"]);
+                }
+
+                var (response, statusCode) = _httpHelper
+                            .PostJson<Dictionary<string, string>, DepositResponse>($"{qrBaseApiUrl}{BigPayzDefinition.Path.QRDeposit}", req);
+
+                if (!statusCode.IsSuccessStatus())
+                {
+                    throw new CustomException($"Bigpayz deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
+                }
+
+                if (!ErrorCode.Success.Equals(response.ErrorCode))
+                {
+                    throw new CustomException(response.Message, response.ErrorCode);
+                }
+
+                return new DepositResult
+                {
+                    Success = true,
+                    ErrorCode = ErrorCode.Success,
+                    Url = response.RedirectTo,
+                    ThirdId = response.InvoiceNumber
+                };
+            }
+            catch (CustomException ex)
+            {
+                _logger.LogError($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+
+                return new DepositResult(false, ex.Code, ex.Message);
+            }
+
+        }
+
+
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
+            Dictionary<string, string> headers, Dictionary<string, string> input)
+        {
+            var apiKey = input["APIKey"];
+            var depositType = input["DepositType"];
+
+            //MobilePayment
+            if (depositType == "2")
+            {
+                var req = FromJson<CallbackRequest>(bodyContent);
+                var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+
+                var reqforsign = new Dictionary<string, string>
+                {
+                    // ‘InvoiceNo + ReceiverBank + ReceiverAccount + Currency + Amount + PaymentDate’ 
+                    { "InvoiceNo", dicReq["InvoiceNo"] },
+                    { "ReceiverBank", dicReq["ReceiverBank"] },
+                    { "ReceiverAccount", dicReq["ReceiverAccount"] },
+                    { "Currency", dicReq["Currency"] },
+                    { "Amount", dicReq["Amount"] },
+                    { "PaymentDate", dicReq["PaymentDate"] }
+                };
+
+                if (!VerifySign(reqforsign, apiKey, req.Signature))
+                {
+                    return new NotifyDepositResult
+                    {
+                        DepositId = req.RefId,
+                        TransStatus = TransStatus.Pending,
+                        Response = "Signature does not match."
+                    };
+                }
+
+                var transStatus = BigPayzDefinition.GetTransStatus(req.Status);
+
+                return new NotifyDepositResult
+                {
+                    DepositId = req.RefId,
+                    ActualAmount = req.Amount,
+                    ThirdId = req.RefId,
+                    Comment = req.Status,
+                    TransStatus = transStatus,
+                    Response = BigPayzDefinition.CallbackResponse
+                };
+            }
+            ////BankTransfer
+            else
+            {
+                var json = ToJson(HttpUtility.ParseQueryString(bodyContent));
+                var req = FromJson<DepositCallbackRequest>(json);
+                var dicReq = FromJson<Dictionary<string, string>>(json);
+
+                var reqforsign = new Dictionary<string, string>
+                {
+                    // ‘transaction_id + status code + Currency + Amount + created_at’
+                    { "TransactionId", dicReq["transaction"] },
+                    { "status", dicReq["status"] },
+                    { "Currency", dicReq["Currency"] },
+                    { "Amount", dicReq["Amount"] },
+                    { "createdat", dicReq["created_at"] }
+                };
+
+                if (!VerifySign(reqforsign, apiKey, req.Sign))
+                {
+                    return new NotifyDepositResult
+                    {
+                        DepositId = req.TransId,
+                        TransStatus = TransStatus.Pending,
+                        Response = "Signature does not match."
+                    };
+                }
+
+                var transStatus = BigPayzDefinition.GetTransStatus(req.Status);
+
+                return new NotifyDepositResult
+                {
+                    DepositId = req.TransId,
+                    ActualAmount = req.Amount,
+                    ThirdId = req.TransId,
+                    Comment = req.Status,
+                    TransStatus = transStatus,
+                    Response = BigPayzDefinition.CallbackResponse
+                };
+            }
+
+        }
+
+        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
+
+        #region Credit
+
+        public override WithdrawResult Credit(Dictionary<string, string> inputs)
+        {
+            var baseApiUrl = inputs["Payouthost"];
+            var key = inputs["APIKey"];
+            var merchantNo = inputs["MerchantCode"];
+            var reqAmount = decimal.Parse(inputs["Amount"]);
+            var transId = inputs["TransID"];
+
+            try
+            {
+                var req = new Dictionary<string, string>
+                {
+                    { "merchant_code", merchantNo },
+                    { "ref_id", transId },
+                    { "player_username", inputs["UserName"] },
+                    { "player_ip", inputs["ClientIP"] },
+                    { "currency_code", inputs["PayCurrencyId"] },
+                    { "amount", reqAmount.ToString("G29") },
+                    { "bank_code", inputs["BankCode"] },
+                    { "beneficiary_account", inputs["AccountNo"] },
+                    { "beneficiary_name", inputs["AccountName"] },
+                };
+
+                req.Add("hash", GetSign(req, key));
+                req.Add("account_type", "1");
+
+                var (response, statusCode) = _httpHelper
+                    .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{BigPayzDefinition.Path.Withdrawal}", req);
+
+                if (!statusCode.IsSuccessStatus())
+                {
+                    throw new CustomException($"Bigpayz withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
+                }
+
+                if (!ErrorCode.Success.Equals(response.ErrorCode))
+                {
+                    throw new CustomException(response.Message, response.ErrorCode);
+                }
+
+                return new WithdrawResult
+                {
+                    Success = true,
+                    RawContent = JsonConvert.SerializeObject(response)
+                };
+            }
+            catch (CustomException ex)
+            {
+                _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
+
+                return new WithdrawResult
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
+        }
+
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
+        {
+            var apikey = payResource["APIKey"];
+            var json = ToJson(HttpUtility.ParseQueryString(bodyContent));
+            var req = FromJson<WithdrawalCallbackRequest>(json);
+            var dicReq = FromJson<Dictionary<string, string>>(json);
+            
+
+            var reqforsign = new Dictionary<string, string>
+                {
+                    //InvoiceNo + Status + Currency + Amount + PaymentDate
+                    { "InvoiceNo", dicReq["InvoiceNo"] },
+                    { "Status", dicReq["Status"] },
+                    { "Currency", dicReq["Currency"] },
+                    { "Amount", dicReq["Amount"] },
+                    { "PaymentDate", dicReq["PaymentDate"] }
+                };
+
+            if (!VerifySign(reqforsign, apikey, req.Signature))
+            {
+                return new NotifyWithdrawResult
+                {
+                    ThirdId = req.RefId,
+                    TransStatus = TransStatus.Pending,
+                    Response = "Signature does not match."
+                };
+            }
+
+            var transStatus = BigPayzDefinition.GetTransStatus(req.Status);
+
+            return new NotifyWithdrawResult
+            {
+                ThirdId = req.InvoiceNo,
+                TransStatus = transStatus,
+                Message = req.StatusMessage,
+                Response = BigPayzDefinition.CallbackResponse,
+                WithdrawId = req.RefId
+            };
+        }
+
+        public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
+
+        #region Private
+        public string hash_hmac(string signatureString, string secretKey)
+        {
+            var enc = Encoding.UTF8;
+            HMACSHA256 hmac = new HMACSHA256(enc.GetBytes(secretKey));
+            hmac.Initialize();
+            byte[] buffer = enc.GetBytes(signatureString);
+            return BitConverter.ToString(hmac.ComputeHash(buffer)).Replace("-", "").ToLower();
+        }
+        private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiKey)
+        {
+            var str = string.Join("", param
+                .Select(x => x.Value));
+
+            var sign = hash_hmac(str, apiKey);
+
+            return sign;
+        }
+
+        private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)
+        {
+            var sign = GetSign(param, apiKey);
+
+            return sign.Equals(target);
+        }
+
+        static string ToJson(System.Collections.Specialized.NameValueCollection formData)
+        {
+            var dict = new Dictionary<string, string>();
+            foreach (string key in formData.Keys)
+            {
+                dict.Add(key, formData[key]);
+            }
+            return Newtonsoft.Json.JsonConvert.SerializeObject(dict);
+        }
+
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        {
+            CallbackRequest data = null; 
+            //因banktransfer與Promptypay的callback格式不同，這邊做區分轉換
+            if (formData.Count == 0)
+            {
+                data = FromJson<CallbackRequest>(bodyContent);
+            }
+            else
+            {
+                //x-www-form-urlencoded轉json
+                var temp = ToJson(HttpUtility.ParseQueryString(bodyContent));
+                data = FromJson<CallbackRequest>(temp);
+            }
+
+            return data.RefId;
+        }
+
+        #endregion
+    }
+}
