@@ -20,7 +20,7 @@ internal class BigPayzDefinition
 
     public const string CallbackResponse = "SUCCESS";
 
-    public static Dictionary<string, TransStatus> BigPayzStatusMap =>
+    private static Dictionary<string, TransStatus> BigPayzStatusMap =>
         new()
         {
             { BigPayzStatus.Approved, TransStatus.Success },
@@ -33,7 +33,7 @@ internal class BigPayzDefinition
         => BigPayzStatusMap.TryGetValue(status, out var result)
             ? result : TransStatus.Pending;
 
-    internal class BigPayzStatus
+    private class BigPayzStatus
     {
         public const string Pending = "0";
         public const string Success = "1";
