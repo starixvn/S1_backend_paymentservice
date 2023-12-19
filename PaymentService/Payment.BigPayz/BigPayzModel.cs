@@ -34,16 +34,9 @@ internal class BigPayzModel
         [JsonProperty("Currency")]
         public string Currency { get; set; }
 
-        [JsonProperty("error_code")]
-        public string ErrorCode { get; set; }
+        [JsonProperty("Currency_code")]
+        public string CurrencyCode { get; set; }
 
-        [JsonProperty("message")]
-        public string Message { get; set; }
-
-    }
-
-    internal class QRDepositResponse
-    {
         [JsonProperty("error_code")]
         public string ErrorCode { get; set; }
 
@@ -55,19 +48,8 @@ internal class BigPayzModel
 
         [JsonProperty("invoice_number")]
         public string InvoiceNumber { get; set; }
-
-        [JsonProperty("Currency_code")]
-        public string Currency { get; set; }
-
-        [JsonProperty("Amount")]
-        public decimal Amount { get; set; }
-
-        [JsonProperty("token")]
-        public string Token { get; set; }
-
-        [JsonProperty("redirect_to")]
-        public string RedirectTo { get; set; }
     }
+
 
     internal class DepositCallbackRequest
     {

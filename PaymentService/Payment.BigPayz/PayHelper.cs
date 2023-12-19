@@ -30,30 +30,19 @@ namespace Payment.BigPayz
         public override DepositResult Debit(Dictionary<string, string> input)
         {
             var baseApiUrl = input["host"];
-            var QRbaseApiUrl = input["QRhost"];
+            var qrBaseApiUrl = input["QRhost"];
             var key = input["APIKey"];
             var merchantNo = input["MerchantCode"];
             var reqAmount = decimal.Parse(input["Amount"]);
-            var PayCode = input["PayCode"];
+            var payCode = input["PayCode"];
+            Dictionary<string, string> req;
 
             try
             {
                 //PromptPay
-                if (PayCode == "BigQR")
+                if (payCode == "BigQR")
                 {
-                    var reqforsign = new Dictionary<string, string>
-                    {
-                        //‘merchant_code + ref_id + player_username + player_ip + currency_code + amount + client_url’
-                        { "MerchantCode", merchantNo },
-                        { "RefId", input["TransID"] },
-                        { "PlayerUserName", input["UserName"] },
-                        { "PlayerIP", input["ClientIP"] },
-                        { "Currency", input["PayCurrencyId"] },
-                        { "Amount", reqAmount.ToString("G29") },
-                        { "ClientURL", input["ReturnUrl"] },
-                    };
-
-                    var req = new Dictionary<string, string>
+                    req = new Dictionary<string, string>
                     {
                         { "merchant_code", merchantNo },
                         { "ref_id", input["TransID"] },
@@ -62,82 +51,50 @@ namespace Payment.BigPayz
                         { "currency_code", input["PayCurrencyId"] },
                         { "amount", reqAmount.ToString("G29") },
                         { "client_url", input["ReturnUrl"] },
-                        { "lang", input["Lang"] },
                     };
 
-                    req.Add("hash", GetSign(reqforsign, key));
-
-                    var (response, statusCode) = _httpHelper
-                            .PostJson<Dictionary<string, string>, QRDepositResponse>($"{QRbaseApiUrl}{BigPayzDefinition.Path.QRDeposit}", req);
-
-                    if (!statusCode.IsSuccessStatus())
-                    {
-                        throw new CustomException($"Bigpayz deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
-                    }
-
-                    if (!ErrorCode.Success.Equals(response.ErrorCode))
-                    {
-                        throw new CustomException(response.Message, response.ErrorCode);
-                    }
-
-                    return new DepositResult
-                    {
-                        Success = true,
-                        ErrorCode = ErrorCode.Success,
-                        Url = response.RedirectTo,
-                        ThirdId = response.InvoiceNumber
-                    };
+                    req.Add("hash", GetSign(req, key));
+                    req.Add("lang", input["Lang"]);
                 }
                 //BankTransfer
                 else
                 {
-                    var reqforsign = new Dictionary<string, string>
-                    {
-                        //‘MerchantCode + ItemID + Currency + Amount’
-                        { "MerchantCode", merchantNo },
-                        { "ItemID", input["TransID"] },
-                        { "Currency", input["PayCurrencyId"] },
-                        { "Amount", reqAmount.ToString("G29") }
-                    };
-
-                    var req = new Dictionary<string, string>
+                    req = new Dictionary<string, string>
                     {
                         { "MerchantCode", merchantNo },
-                        { "ReturnURL", input["CallBackUrl"] },
-                        { "FailedReturnURL", input["CallBackUrl"] },
-                        { "HTTPPostURL", input["CallBackUrl"] },
                         { "Amount", reqAmount.ToString("G29") },
                         { "Currency", input["PayCurrencyId"] },
                         { "ItemID", input["TransID"] },
-                        { "PlayerId", input["UserName"] },
-                        { "ItemDescription", input["TransID"] },
                     };
-                    req.Add("Hash", GetSign(reqforsign, key));
 
-                    var (response, statusCode) = _httpHelper
-                            .PostJson<Dictionary<string, string>, DepositResponse>($"{baseApiUrl}{BigPayzDefinition.Path.Deposit}", req);
-
-                    if (!statusCode.IsSuccessStatus())
-                    {
-                        throw new CustomException($"Bigpayz deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
-                    }
-
-                    if (!ErrorCode.Success.Equals(response.ErrorCode))
-                    {
-                        throw new CustomException(response.Message, response.ErrorCode);
-                    }
-
-
-                    return new DepositResult
-                    {
-                        Success = true,
-                        ErrorCode = ErrorCode.Success,
-                        Url = response.RedirectTo.Replace("redirectlink=", ""),
-                        ThirdId = response.transaction
-                    };
+                    req.Add("Hash", GetSign(req, key));
+                    req.Add("ReturnURL", input["CallBackUrl"]);
+                    req.Add("FailedReturnURL", input["CallBackUrl"]);
+                    req.Add("HTTPPostURL", input["CallBackUrl"]);
+                    req.Add("PlayerId", input["UserName"]);
+                    req.Add("ItemDescription", input["TransID"]);
                 }
 
+                var (response, statusCode) = _httpHelper
+                            .PostJson<Dictionary<string, string>, DepositResponse>($"{qrBaseApiUrl}{BigPayzDefinition.Path.QRDeposit}", req);
 
+                if (!statusCode.IsSuccessStatus())
+                {
+                    throw new CustomException($"Bigpayz deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
+                }
+
+                if (!ErrorCode.Success.Equals(response.ErrorCode))
+                {
+                    throw new CustomException(response.Message, response.ErrorCode);
+                }
+
+                return new DepositResult
+                {
+                    Success = true,
+                    ErrorCode = ErrorCode.Success,
+                    Url = response.RedirectTo,
+                    ThirdId = response.InvoiceNumber
+                };
             }
             catch (CustomException ex)
             {
@@ -259,20 +216,6 @@ namespace Payment.BigPayz
 
             try
             {
-                var reqforsign = new Dictionary<string, string>
-                {
-                    // ‘merchant_code + ref_id + player_username + player_ip + currency_code + amount + bank_code + beneficiary_account + beneficiary_name’ 
-                    { "merchant_code", merchantNo },
-                    { "ref_id", transId },
-                    { "player_username", inputs["UserName"] },
-                    { "player_ip", inputs["ClientIP"] },
-                    { "currency_code", inputs["PayCurrencyId"] },
-                    { "amount", reqAmount.ToString("G29") },
-                    { "bank_code", inputs["BankCode"] },
-                    { "beneficiary_account", inputs["AccountNo"] },
-                    { "beneficiary_name", inputs["AccountName"] },
-                };
-
                 var req = new Dictionary<string, string>
                 {
                     { "merchant_code", merchantNo },
@@ -284,10 +227,10 @@ namespace Payment.BigPayz
                     { "bank_code", inputs["BankCode"] },
                     { "beneficiary_account", inputs["AccountNo"] },
                     { "beneficiary_name", inputs["AccountName"] },
-                    { "account_type", "1" },
                 };
 
-                req.Add("hash", GetSign(reqforsign, key));
+                req.Add("hash", GetSign(req, key));
+                req.Add("account_type", "1");
 
                 var (response, statusCode) = _httpHelper
                     .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{BigPayzDefinition.Path.Withdrawal}", req);
