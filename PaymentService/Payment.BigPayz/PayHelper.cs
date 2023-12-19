@@ -13,6 +13,7 @@ using System.Text;
 using System.Web;
 using Org.BouncyCastle.Ocsp;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace Payment.BigPayz
 {
@@ -36,6 +37,8 @@ namespace Payment.BigPayz
             var reqAmount = decimal.Parse(input["Amount"]);
             var payCode = input["PayCode"];
             Dictionary<string, string> req;
+            DepositResponse? response = null;
+            HttpStatusCode statusCode = HttpStatusCode.OK;
 
             try
             {
@@ -55,6 +58,9 @@ namespace Payment.BigPayz
 
                     req.Add("hash", GetSign(req, key));
                     req.Add("lang", input["Lang"]);
+
+                    (response, statusCode) = _httpHelper
+                            .PostJson<Dictionary<string, string>, DepositResponse>($"{qrBaseApiUrl}{BigPayzDefinition.Path.QRDeposit}", req);
                 }
                 //BankTransfer
                 else
@@ -73,10 +79,12 @@ namespace Payment.BigPayz
                     req.Add("HTTPPostURL", input["CallBackUrl"]);
                     req.Add("PlayerId", input["UserName"]);
                     req.Add("ItemDescription", input["TransID"]);
+
+                    (response, statusCode) = _httpHelper
+                            .PostJson<Dictionary<string, string>, DepositResponse>($"{baseApiUrl}{BigPayzDefinition.Path.Deposit}", req);
                 }
 
-                var (response, statusCode) = _httpHelper
-                            .PostJson<Dictionary<string, string>, DepositResponse>($"{qrBaseApiUrl}{BigPayzDefinition.Path.QRDeposit}", req);
+                
 
                 if (!statusCode.IsSuccessStatus())
                 {
