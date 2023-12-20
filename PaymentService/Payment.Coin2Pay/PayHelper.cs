@@ -464,7 +464,7 @@ namespace Payment.Coin2Pay
         private static bool VerifySign(string str, string target, string publicKey)
         {
             var targetBase64Str = RevertBase64(target);
-            var result = RsaHelper.RsaVerifyData(str, targetBase64Str, publicKey);
+            var result = RsaHelper.RsaVerifyData(str, targetBase64Str, publicKey, HashAlgorithmName.SHA256);
             
             return result;
         }

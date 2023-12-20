@@ -6,7 +6,7 @@ namespace PaymentCore.Helpers;
 
 public static class RsaHelper
 {
-    public static bool RsaVerifyData(string str, string target, string publicKey)
+    public static bool RsaVerifyData(string str, string target, string publicKey, HashAlgorithmName hashAlgorithmName)
     {
         var targetBytes = Convert.FromBase64String(target);
         var inputBytes = Encoding.UTF8.GetBytes(str);
@@ -14,7 +14,7 @@ public static class RsaHelper
 
         var rsa = DecodeX509PublicKey(keyBytes);
         var result = rsa
-            .VerifyData(inputBytes, targetBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            .VerifyData(inputBytes, targetBytes, hashAlgorithmName, RSASignaturePadding.Pkcs1);
 
         return result;
     }

@@ -76,8 +76,18 @@ public class PayHelper : PayHelperBase
     {
         var key = input["PublicKey"];
         var req = FromJson<DepositCallbackRequest>(JsonConvert.SerializeObject(formData));
+        var dic4Sign = new Dictionary<string, string> // 有順序
+        {
+            { "merchantCode", formData["merchantCode"] },
+            { "orderNo", formData["orderNo"] },
+            { "amount", formData["amount"] },
+            { "successAmt", formData["successAmt"] },
+            { "payOrderNo", formData["payOrderNo"] },
+            { "orderStatus", formData["orderStatus"] },
+            { "extraReturnParam", formData["extraReturnParam"] }
+        };
 
-        if (!VerifySign(formData, key, req.Sign))
+        if (!VerifySign(dic4Sign, key, req.Sign))
         {
             return new NotifyDepositResult
             {
@@ -179,8 +189,17 @@ public class PayHelper : PayHelperBase
     {
         var key = payResource["PublicKey"];
         var req = FromJson<WithdrawalCallbackRequest>(JsonConvert.SerializeObject(formData));
+        var dic4Sign = new Dictionary<string, string> // 有順序
+        {
+            { "merchantCode", formData["merchantCode"] },
+            { "orderNo", formData["orderNo"] },
+            { "amount", formData["amount"] },
+            { "recode", formData["recode"] },
+            { "msg", formData["msg"] },
+            { "extraReturnParam", formData["extraReturnParam"] }
+        };
 
-        if (!VerifySign(formData, key, req.Sign))
+        if (!VerifySign(dic4Sign, key, req.Sign))
         {
             return new NotifyWithdrawResult
             {
@@ -211,15 +230,12 @@ public class PayHelper : PayHelperBase
 
     #region Private
 
-    private readonly IEnumerable<string> _exceptKey = new[] {"sign", "singType"};
-
     private string GetSign(IEnumerable<KeyValuePair<string, string>> input, string key)
     {
         var str = string.Join('&', input
-            .Where(x => !_exceptKey.Contains(x.Key))
             .Select(x => $"{x.Key}={x.Value}"));
 
-        _logger.LogInformation("str=" + str);
+        _logger.LogInformation(str);
         
         var sign = RsaSign(str, key, HashAlgorithmName.SHA1);
         var urlEncodedSign = HttpUtility.UrlEncode(sign);
@@ -230,12 +246,11 @@ public class PayHelper : PayHelperBase
     {
         target = HttpUtility.HtmlDecode(target);
         var str = string.Join('&', param
-            .Where(x => !_exceptKey.Contains(x.Key))
             .Select(x => $"{x.Key}={x.Value}"));
         
-        _logger.LogInformation("str=" + str);
+        _logger.LogInformation(str);
         
-        var result = RsaHelper.RsaVerifyData(str, target, publicKey);
+        var result = RsaHelper.RsaVerifyData(str, target, publicKey, HashAlgorithmName.SHA1);
 
         return result;
     }
