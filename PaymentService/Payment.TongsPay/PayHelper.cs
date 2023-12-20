@@ -154,7 +154,7 @@ public class PayHelper : PayHelperBase
             req.Add("signType", "RSA");
 
             var (response, statusCode) = _httpHelper
-                .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", req);
+                .PostUrlEncoded<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", req);
 
             if (!statusCode.IsSuccessStatus())
             {
