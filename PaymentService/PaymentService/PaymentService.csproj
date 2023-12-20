@@ -67,6 +67,7 @@
     <ProjectReference Include="..\Payment.YuiPay\Payment.YuiPay.csproj" />
     <ProjectReference Include="..\Payment.SBPay\Payment.SBPay.csproj" />
     <ProjectReference Include="..\Payment.Super7Pay\Payment.Super7Pay.csproj" />
+    <ProjectReference Include="..\Payment.QuickPay\Payment.QuickPay.csproj" />
     <ProjectReference Include="..\PaymentCore\PaymentCore.csproj" />
   </ItemGroup>
 </Project>
