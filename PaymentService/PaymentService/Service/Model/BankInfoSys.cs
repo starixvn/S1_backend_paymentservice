@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.Model
 {
@@ -49,6 +50,7 @@ namespace PaymentService.Service.Model
         public int ChannelId { get; set; }
         public string ChannelName { get; set; }
         public int Mode { get; set; }
+        public DepositType DepositType { get; set; }
         public int PointLevel { get; set; }
         public string PayCode { get; set; }
         public int CurrencyId { get; set; }
