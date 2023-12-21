@@ -36,6 +36,7 @@ namespace Payment.BigPayz
             var merchantNo = input["MerchantCode"];
             var reqAmount = decimal.Parse(input["Amount"]);
             var payCode = input["PayCode"];
+            var transaction = "";
 
             try
             {
@@ -62,6 +63,8 @@ namespace Payment.BigPayz
 
                     (response, statusCode) = _httpHelper
                             .PostJson<Dictionary<string, string>, DepositResponse>($"{qrBaseApiUrl}{BigPayzDefinition.Path.QRDeposit}", req);
+
+                    transaction = response.InvoiceNumber;
                 }
                 //BankTransfer
                 else
@@ -85,8 +88,9 @@ namespace Payment.BigPayz
 
                     (response, statusCode) = _httpHelper
                             .PostJson<Dictionary<string, string>, DepositResponse>($"{baseApiUrl}{BigPayzDefinition.Path.Deposit}", req);
-                }
 
+                    transaction = response.transaction;
+                }
                 
 
                 if (!statusCode.IsSuccessStatus())
@@ -94,17 +98,22 @@ namespace Payment.BigPayz
                     throw new CustomException($"Bigpayz deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
                 }
 
-                if (!ErrorCode.Success.Equals(response.ErrorCode))
+                //BankTransfer不回傳errorcode
+                if (response.ErrorCode != null)
                 {
-                    throw new CustomException(response.Message, response.ErrorCode);
+                    if (!ErrorCode.Success.Equals(response.ErrorCode))
+                    {
+                        throw new CustomException(response.Message, response.ErrorCode);
+                    }
                 }
+                
 
                 return new DepositResult
                 {
                     Success = true,
                     ErrorCode = ErrorCode.Success,
                     Url = response.RedirectTo,
-                    ThirdId = response.InvoiceNumber
+                    ThirdId = transaction
                 };
             }
             catch (CustomException ex)
@@ -324,9 +333,18 @@ namespace Payment.BigPayz
 
         public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
         {
-            var data = FromJson<DepositCallbackRequest>(bodyContent);
+            string result = "";
+            //QR callback
+            if (formData.Count == 0)
+            {
+                var data = FromJson<DepositCallbackRequest>(bodyContent);
+                result = data.RefId;
+            }else//bank transfer callback
+            {
+                result = formData["RefId"];
+            }
             
-            return data.RefId;
+            return result;
         }
 
         #endregion
