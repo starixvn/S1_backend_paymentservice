@@ -115,7 +115,7 @@ namespace Payment.BigPayz
                 {
                     Success = true,
                     ErrorCode = ErrorCode.Success,
-                    Url = response.RedirectTo,
+                    Url = redirectURL,
                     ThirdId = transaction
                 };
             }
