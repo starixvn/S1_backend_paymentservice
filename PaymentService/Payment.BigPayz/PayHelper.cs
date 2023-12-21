@@ -37,6 +37,7 @@ namespace Payment.BigPayz
             var reqAmount = decimal.Parse(input["Amount"]);
             var payCode = input["PayCode"];
             var transaction = "";
+            var redirectURL = "";
 
             try
             {
@@ -65,6 +66,7 @@ namespace Payment.BigPayz
                             .PostJson<Dictionary<string, string>, DepositResponse>($"{qrBaseApiUrl}{BigPayzDefinition.Path.QRDeposit}", req);
 
                     transaction = response.InvoiceNumber;
+                    redirectURL = response.RedirectTo;
                 }
                 //BankTransfer
                 else
@@ -90,6 +92,7 @@ namespace Payment.BigPayz
                             .PostJson<Dictionary<string, string>, DepositResponse>($"{baseApiUrl}{BigPayzDefinition.Path.Deposit}", req);
 
                     transaction = response.transaction;
+                    redirectURL = response.RedirectTo.Replace("redirectlink=", "");
                 }
                 
 
