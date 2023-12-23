@@ -12,6 +12,7 @@ remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, r
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
 var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
+var excludesResponseEmptyMessage = builder.Configuration.GetValue<string>("ExcludesResponseEmptyMessage");
 var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
 builder.Host.UseSerilog((context, Configuration) =>
 {
@@ -22,8 +23,7 @@ builder.Host.UseSerilog((context, Configuration) =>
             c.Properties.Any(p =>
                 excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item)
-                || c.MessageTemplate.ToString() == "RESPONSE: "
-                )))
+                || c.MessageTemplate.ToString().Equals(excludesResponseEmptyMessage))))
         .Enrich.WithExceptionDetails();
 });
 
