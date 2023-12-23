@@ -13,6 +13,7 @@ builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
 var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
 var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
+const string excludesRootApiEndpoint = "/"; // ALB Root health
 builder.Host.UseSerilog((context, Configuration) =>
 {
     Configuration
@@ -20,7 +21,7 @@ builder.Host.UseSerilog((context, Configuration) =>
         .Enrich.FromLogContext()
         .Filter.ByExcluding(c =>
             c.Properties.Any(p =>
-                excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
+                excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item) || p.Value.ToString() == excludesRootApiEndpoint)
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails();
 });
