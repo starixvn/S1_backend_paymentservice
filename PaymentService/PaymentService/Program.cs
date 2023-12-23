@@ -21,8 +21,9 @@ builder.Host.UseSerilog((context, Configuration) =>
         .Enrich.FromLogContext()
         .Filter.ByExcluding(c =>
             c.Properties.Any(p =>
-                excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item) || p.Value.ToString() == excludesRootApiEndpoint)
-                || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
+                excludesApiEndpoints.Any(item =>
+                    item.Equals(excludesRootApiEndpoint) && p.Value.ToString().Contains(item))
+                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails();
 });
 
