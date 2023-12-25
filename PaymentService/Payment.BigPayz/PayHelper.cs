@@ -102,12 +102,9 @@ namespace Payment.BigPayz
                 }
 
                 //BankTransfer不回傳errorcode
-                if (response.ErrorCode != null)
+                if (response.ErrorCode != null && !ErrorCode.Success.Equals(response.ErrorCode))
                 {
-                    if (!ErrorCode.Success.Equals(response.ErrorCode))
-                    {
-                        throw new CustomException(response.Message, response.ErrorCode);
-                    }
+                    throw new CustomException(response.Message, response.ErrorCode);
                 }
                 
 
