@@ -37,6 +37,7 @@
     <ProjectReference Include="..\Payment.Coin2Pay\Payment.Coin2Pay.csproj" />
     <ProjectReference Include="..\Payment.DirePay\Payment.DirePay.csproj" />
     <ProjectReference Include="..\Payment.DoitnowPay\Payment.DoitnowPay.csproj" />
+    <ProjectReference Include="..\Payment.DouDouPay\Payment.DouDouPay.csproj" />
     <ProjectReference Include="..\Payment.EPay\Payment.EPay.csproj" />
     <ProjectReference Include="..\Payment.FattyPayATM\Payment.FattyPayATM.csproj" />
     <ProjectReference Include="..\Payment.FattyPay\Payment.FattyPay.csproj" />
@@ -68,6 +69,7 @@
     <ProjectReference Include="..\Payment.YuiPay\Payment.YuiPay.csproj" />
     <ProjectReference Include="..\Payment.SBPay\Payment.SBPay.csproj" />
     <ProjectReference Include="..\Payment.Super7Pay\Payment.Super7Pay.csproj" />
+    <ProjectReference Include="..\Payment.QuickPay\Payment.QuickPay.csproj" />
     <ProjectReference Include="..\PaymentCore\PaymentCore.csproj" />
   </ItemGroup>
 </Project>

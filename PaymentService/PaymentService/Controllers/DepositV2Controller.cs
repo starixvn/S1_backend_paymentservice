@@ -56,7 +56,8 @@ public class DepositV2Controller : ControllerBase
             {DepositType.MobilePay, GetMobilePayDepositInput},
             {DepositType.CryptoPay, GetGenericDepositInput},
             {DepositType.LoadCard, GetLoadCardDepositInput},
-            {DepositType.QrPay, GetGenericDepositInput}
+            {DepositType.QrPay, GetGenericDepositInput},
+            {DepositType.ChatTransfer,  GetGenericDepositInput}
         };
 
         #endregion
