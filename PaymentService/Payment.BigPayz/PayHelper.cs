@@ -104,7 +104,8 @@ namespace Payment.BigPayz
                 //BankTransfer不回傳errorcode
                 if (response.ErrorCode != null && !ErrorCode.Success.Equals(response.ErrorCode))
                 {
-                    throw new CustomException(response.Message, response.ErrorCode);
+                    //BankTransfer回傳message，PromptPay回傳errormessage
+                    throw new CustomException(response.Message + response.ErrorMessage, response.ErrorCode);
                 }
                 
 
