@@ -48,6 +48,11 @@ namespace Payment.Super7Pay
                 {
                     req.Add("bank", input["BankCode"]);
                 }
+                
+                if (method.Equals("QR"))
+                {
+                    req.Add("bank", code);
+                }
 
                 var res = CreateOrder(apiUrl, apiToken, req);
 
@@ -302,7 +307,7 @@ namespace Payment.Super7Pay
         {
             var result = payCode.Split('-');
 
-            return (result[0], result.Length > 1 ? result[1] : string.Empty);
+            return (result[0], result.Length > 0 ? result[1] : string.Empty);
         }
 
         #endregion
