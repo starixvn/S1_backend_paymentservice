@@ -54,7 +54,7 @@ namespace Payment.SBPay
                 
                 if (method.Equals("QR"))
                 {
-                    req.Add("bank", input["code"]);
+                    req.Add("bank", code);
                 }
 
                 var res = CreateOrder(apiUrl, apiToken, req);
