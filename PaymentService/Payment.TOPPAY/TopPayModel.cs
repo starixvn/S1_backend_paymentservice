@@ -4,9 +4,6 @@ namespace Payment.TopPay
 {
     public class CreatOrderResponse
     {
-        [JsonProperty("success")] 
-        public bool Success { get; set; }
-        
         [JsonProperty("platRespCode")]
         public string PlatRespCode { get; set; }
         
@@ -88,8 +85,6 @@ namespace Payment.TopPay
 
     public class CreatPayoutResponse
     {
-        [JsonProperty("success")] 
-        public bool Success { get; set; }
         [JsonProperty("platRespCode")]
         public string PlatRespCode { get; set; }
 

@@ -18,54 +18,35 @@ namespace Payment.TopPay
             /// </summary>
             public const string CreatePayout = "/gateway/cash";
         }
-
-        private static Dictionary<string, TransStatus> TransStatusMap =>
+        
+        private static Dictionary<string, TransStatus> TopPayInStatusMap =>
             new()
             {
-                { PayoutStatus.Completed, TransStatus.Success },
-                { PayoutStatus.New, TransStatus.Pending },
-                { PayoutStatus.Processing, TransStatus.Pending },
-                { PayoutStatus.Failed, TransStatus.Fail },
-                { CreditStatus.Completed, TransStatus.Success},
-                { CreditStatus.New, TransStatus.Pending},
-                { CreditStatus.Processing, TransStatus.Pending},
-                { CreditStatus.Failed, TransStatus.Fail},
+                { "SUCCESS", TransStatus.Success },
+                { "INIT_ORDER", TransStatus.Pending },
+                { "PAY_CANCEL", TransStatus.Fail },
+                { "PAY_ERROR", TransStatus.Fail },
+                { "NO_PAY", TransStatus.Fail }
+                
             };
-
-
-        public static TransStatus GetTransStatus(string status)
-        {
-            if (TransStatusMap.TryGetValue(status, out var result))
+    
+        private static Dictionary<string, TransStatus> TopPayoutStatusMap =>
+            new()
             {
-                return result;
-            }
-
-            return TransStatus.Pending;
-        }
-
-        private class CreditStatus
-        {
-            public const string New = "INIT_ORDER";
-
-            public const string Processing = "NO_PAY";
-
-            public const string Completed = "SUCCESS";
-
-            public const string Failed = "PAY_ERROR";
-
-            public const string Cancel = "PAY_CANCEL";
-        }
-
-        private class PayoutStatus
-        {
-            public const string New = "0";
-
-            public const string Processing = "1";
-
-            public const string Completed = "2";
-
-            public const string Failed = "4";
-        }
+                { "2", TransStatus.Success },
+                { "1", TransStatus.Pending },
+                { "0", TransStatus.Pending },
+                { "5", TransStatus.Pending},
+                { "4", TransStatus.Fail }
+            };
+        
+        public static TransStatus GetPayInTransStatus(string status)
+            => TopPayInStatusMap.TryGetValue(status, out var result)
+                ? result : TransStatus.Pending;
+    
+        public static TransStatus GetPayoutTransStatus(string status)
+            => TopPayoutStatusMap.TryGetValue(status, out var result)
+                ? result : TransStatus.Pending;
     }
 
     internal class MediaType
