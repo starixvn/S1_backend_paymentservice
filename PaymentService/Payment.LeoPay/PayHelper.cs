@@ -51,6 +51,11 @@ namespace Payment.LeoPay
                 {
                     req.Add("bank", input["BankCode"]);
                 }
+                
+                if (method.Equals("QR"))
+                {
+                    req.Add("bank", code);
+                }
 
                 var res = CreateOrder(apiUrl, apiToken, req);
 
