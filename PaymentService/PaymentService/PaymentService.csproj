@@ -60,6 +60,7 @@
     <ProjectReference Include="..\Payment.SpeedPay\Payment.SpeedPay.csproj" />
     <ProjectReference Include="..\Payment.TenPay\Payment.TenPay.csproj" />
     <ProjectReference Include="..\Payment.TruePay\Payment.TruePay.csproj" />
+    <ProjectReference Include="..\Payment.TongsPay\Payment.TongsPay.csproj" />
     <ProjectReference Include="..\Payment.VaderPay\Payment.VaderPay.csproj" />
     <ProjectReference Include="..\Payment.VNPay\Payment.VNPay.csproj" />
     <ProjectReference Include="..\Payment.WPay\Payment.WPay.csproj" />
