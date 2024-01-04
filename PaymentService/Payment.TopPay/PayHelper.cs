@@ -312,7 +312,7 @@ namespace Payment.TopPay
             var apiUrl = baseApiUrl + TopPayDefinition.Path.CreatePayout;
             var (result, statusCode) = _httpHelper
                 .WithHeader("accept", MediaType.Json)
-                .PostUrlEncoded<Dictionary<string, string>, CreatPayoutResponse>(apiUrl, req);
+                .PostJson<Dictionary<string, string>, CreatPayoutResponse>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
             {
