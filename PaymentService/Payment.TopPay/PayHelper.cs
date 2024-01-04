@@ -1,14 +1,10 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+﻿using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Crypto.Encodings;
-using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 using PaymentCore;
 using PaymentCore.Exceptions;
@@ -94,7 +90,7 @@ namespace Payment.TopPay
         {
             var depositInfo = payResource["DepositInfo"];
             var transId = payResource["TransID"];
-            var merchantPublicKey = payResource["MerchantPublicKey"];
+            var paymentPublicKey = payResource["TopPayPublicKey"];
 
             var jObj = JObject.Parse(depositInfo);
 
@@ -127,7 +123,7 @@ namespace Payment.TopPay
                 { "platSign", req.PlatSign }
             };
 
-            if (!VerifySign(dic, merchantPublicKey))
+            if (!VerifySign(dic, paymentPublicKey))
             {
                 return new NotifyDepositResult
                 {
@@ -144,7 +140,7 @@ namespace Payment.TopPay
                 ThirdId = req.PlatOrderNum,
                 DepositId = req.OrderNum,
                 Comment = req.Msg,
-                TransStatus = TransStatus.Success, // TopPay只回調成功的單
+                TransStatus = transStatus,
                 ActualAmount = decimal.Parse(req.PayMoney),
                 Response = TopPayDefinition.CallbackResponse
             };
@@ -216,7 +212,7 @@ namespace Payment.TopPay
             Dictionary<string, string> headers,
             Dictionary<string, string> payResource)
         {
-            var key = payResource["MerchantPublicKey"];
+            var key = payResource["TopPayPublicKey"];
             var req = FromJson<PayOutCallBackResponse>(JsonConvert.SerializeObject(formData));
             var dic4Sign = new Dictionary<string, string> 
             {
