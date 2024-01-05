@@ -10,8 +10,6 @@ using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 
-using RabbitMQ.Client;
-
 namespace PaymentService.Extensions
 {
     public static class ServiceCollectionExtension
@@ -35,19 +33,6 @@ namespace PaymentService.Extensions
                 {
                     DataBase = DataBase.Wager
                 });
-        }
-        public static void AddMessageQueueConnection(this IServiceCollection services)
-        {
-            var provider = services.BuildServiceProvider();
-            var configBll = provider.GetRequiredService<ConfigBLL>();
-            var config = configBll.GetConfigValueByEnvironment<RabbitMqConfig>("RabbitMQ");
-
-            services.AddSingleton<IConnectionFactory>(_ => new ConnectionFactory
-            {
-                HostName = config.HostName,
-                UserName = config.UserName,
-                Password = config.Password
-            });
         }
 
         public static void AddProxy(this IServiceCollection services)
