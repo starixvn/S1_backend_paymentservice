@@ -213,7 +213,7 @@ namespace Payment.TopPay
             Dictionary<string, string> payResource)
         {
             var key = payResource["TopPayPublicKey"];
-            var req = FromJson<PayOutCallBackResponse>(JsonConvert.SerializeObject(formData));
+            var req = FromJson<PayOutCallBackResponse>(bodyContent);
             var dic4Sign = new Dictionary<string, string> 
             {
                 { "platOrderNum", req.PlatOrderNum },
