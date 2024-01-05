@@ -59,7 +59,6 @@ namespace PaymentService
 
 
             /*BLL*/
-            //services.AddSingleton<IRabbitMQProducer, RabbitMQProducer>();
             services.AddSingleton<PayBLL>();
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();
@@ -70,7 +69,6 @@ namespace PaymentService
             services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "PaymentService" });
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
-            services.AddMessageQueueConnection();
             services.AddProxy();
 
             services.AddControllers();
