@@ -12,14 +12,12 @@ namespace PaymentService.Service.DAL
     public class WithdrawalService
     {
         private readonly MySqlClient _mainDbClient;
-        private readonly MySqlClient _reportDbClient;
         private readonly WalletService _walletService;
         private readonly Common _common;
 
         public WithdrawalService(IServiceProvider provider)
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _walletService = provider.GetRequiredService<WalletService>();
             _common = provider.GetRequiredService<Common>();
         }
