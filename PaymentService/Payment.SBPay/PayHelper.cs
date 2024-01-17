@@ -310,7 +310,7 @@ namespace Payment.SBPay
         {
             var result = payCode.Split('-');
 
-            return (result[0], result.Length > 0 ? result[1] : string.Empty);
+            return (result[0], result.Length > 1 ? result[1] : string.Empty);
         }
 
         #endregion
