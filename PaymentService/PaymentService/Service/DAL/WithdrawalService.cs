@@ -13,12 +13,14 @@ namespace PaymentService.Service.DAL
     {
         private readonly MySqlClient _mainDbClient;
         private readonly WalletService _walletService;
+        private readonly ILogger<WithdrawalService> _logger;
         private readonly Common _common;
 
         public WithdrawalService(IServiceProvider provider)
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _walletService = provider.GetRequiredService<WalletService>();
+            _logger = provider.GetRequiredService<ILogger<WithdrawalService>>();
             _common = provider.GetRequiredService<Common>();
         }
 
@@ -61,7 +63,7 @@ namespace PaymentService.Service.DAL
                 p.Add("_UserName", dbType: DbType.String, direction: ParameterDirection.Output);
                 p.Add("_Amount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set_V2", p, trans);
-                var amount = p.Get<decimal>("_Amount");
+                
                 if (result > 0)
                 {
                     if (result > 0 && (status == WithdrawalStatus.Approved || status == WithdrawalStatus.Rejected))
@@ -81,6 +83,7 @@ namespace PaymentService.Service.DAL
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "SetWithdrawalInfo Exception");
                 SetWithdrawalLog(withdrawalId, siteId, ex.Message, (int)WithdrawalStatus.Error, "Payment Service");
             }
 
@@ -155,6 +158,7 @@ namespace PaymentService.Service.DAL
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "SetWithdrawalInfoByManualApprove Exception");
                 SetWithdrawalLog(withdrawalId, siteId, ex.Message, (int)WithdrawalStatus.Error, "Payment Service");
             }
 
@@ -226,6 +230,7 @@ namespace PaymentService.Service.DAL
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "SetWithdrawalInfoByManualReject Exception");
                 SetWithdrawalLog(withdrawalId, siteId, ex.Message, (int)WithdrawalStatus.Error, "Payment Service");
             }
 

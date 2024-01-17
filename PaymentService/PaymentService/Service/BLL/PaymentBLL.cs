@@ -135,7 +135,11 @@ namespace PaymentService.Service.BLL
 
         public void WithdrawalSuccess(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
-            var forStatus = new List<int> { (int)WithdrawalStatus.Process };
+            var forStatus = new List<int>
+            {
+                (int)WithdrawalStatus.Process,
+                (int)WithdrawalStatus.Verify // 有可能送單timeout失敗退回後回調成功
+            };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
             SetWithdrawalAccountCounter(withdrawalRequest, WithdrawalStatus.Approved);
         }
