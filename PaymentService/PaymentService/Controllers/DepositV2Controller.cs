@@ -117,6 +117,8 @@ public class DepositV2Controller : ControllerBase
 
             var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
             input.AddRange(setting);
+            
+            _logger.LogInformation("INPUT=" + JsonConvert.SerializeObject(input));
 
             var result = payHelper.Debit(input);
 
