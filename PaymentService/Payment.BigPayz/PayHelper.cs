@@ -155,7 +155,7 @@ namespace Payment.BigPayz
                 transId = dicReq["RefId"];
                 sign = dicReq["Signature"];
                 status = dicReq["Status"];
-                amount = decimal.Parse(dicReq["Amount"]);
+                amount = decimal.Parse(dicReq["OriginalAmount"]);
             }
             ////BankTransfer
             else
