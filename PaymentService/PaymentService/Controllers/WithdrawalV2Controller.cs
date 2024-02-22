@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
-
+using PaymentCore.Models;
 using PaymentService.Exceptions;
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
@@ -294,6 +294,11 @@ public class WithdrawalV2Controller : ControllerBase
             if (withdrawalInfo == null)
             {
                 throw new PaymentException($"TransId={transId} is not exist.");
+            }
+            
+            if (withdrawalInfo.WithdrawalType.IsNotOnlinePayment())
+            {
+                throw new PaymentException($"TransId={transId}, Type={withdrawalInfo.WithdrawalType} is not online payment.");
             }
 
             if (!_whitelistBll.IsWhitelist(_common.GetClientIP(HttpContext), withdrawalInfo.PayName, transId, GetCurrentMethod()))

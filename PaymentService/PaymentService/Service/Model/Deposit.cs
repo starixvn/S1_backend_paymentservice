@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-
+using PaymentCore.Models;
 using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.Model

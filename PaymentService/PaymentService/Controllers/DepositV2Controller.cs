@@ -297,6 +297,11 @@ public class DepositV2Controller : ControllerBase
             {
                 throw new PaymentException($"TransId={transId} is not exist.");
             }
+            
+            if (depositRequest.DepositType.IsNotOnlinePayment())
+            {
+                throw new PaymentException($"TransId={transId}, Type={depositRequest.DepositType} is not online payment.");
+            }
 
             var (payName, dic) = GetPayResource(depositRequest);
             var payHelper = _payBll.GetPayHelper(payName);

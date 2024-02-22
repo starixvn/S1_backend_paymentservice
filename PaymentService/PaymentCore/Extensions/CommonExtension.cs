@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using PaymentCore.Models;
 
 namespace PaymentCore.Extensions
 {
@@ -46,5 +47,14 @@ namespace PaymentCore.Extensions
         {
             items?.Aggregate(collection, (current, obj) => current.Append(obj));
         }
+        
+        public static bool IsNotOnlinePayment(this WithdrawalType type)
+            => type is (WithdrawalType.LocalBank
+                or WithdrawalType.CryptoWallet
+                or WithdrawalType.Undefined);
+        
+        public static bool IsNotOnlinePayment(this DepositType type)
+            => type is (DepositType.LocalBank
+                or DepositType.CryptoWallet);
     }
 }
