@@ -27,4 +27,28 @@ namespace PaymentCore.Models
         H5 = 2,
         App = 3
     }
+
+    public enum WithdrawalType
+    {
+        Undefined = 0,
+        OnlineBanking = 1,
+        LocalBank = 2,
+        EWalletPayment = 3,
+        CryptoPayment = 4,
+        CryptoWallet = 5
+    }
+    
+    public enum DepositType
+    {
+        OnlineBanking = 1,
+        MobilePay = 2,
+        LocalBank = 3,
+        CryptoPay = 4,
+        LoadCard = 5,
+        QrPay = 6,
+        BankAutoChannel = 7,
+        CryptoWallet = 8,
+        QuickTransfer = 9,
+        ChatTransfer = 10
+    }
 }

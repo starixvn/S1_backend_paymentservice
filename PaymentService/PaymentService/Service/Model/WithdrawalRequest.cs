@@ -1,4 +1,5 @@
-﻿using PaymentService.Service.Model.enums;
+﻿using PaymentCore.Models;
+using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.Model
 {

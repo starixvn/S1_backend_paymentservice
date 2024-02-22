@@ -1,9 +1,6 @@
 ﻿using System.Net;
-
 using Flurl.Http;
-
 using PaymentCore.Helpers;
-
 using PaymentService.Model;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;

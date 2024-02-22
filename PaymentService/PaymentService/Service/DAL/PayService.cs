@@ -1,4 +1,5 @@
-﻿using PaymentService.Model;
+﻿using PaymentCore.Models;
+using PaymentService.Model;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 using PaymentService.Service.Model.enums;

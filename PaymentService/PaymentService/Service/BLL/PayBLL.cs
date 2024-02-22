@@ -2,7 +2,7 @@
 using System.Reflection;
 
 using PaymentCore.Interface;
-
+using PaymentCore.Models;
 using PaymentService.Exceptions;
 using PaymentService.Model;
 using PaymentService.Service.DAL;

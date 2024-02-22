@@ -64,19 +64,6 @@ namespace PaymentService.Service.Model.enums
         Suspend = 2,
         Closed = 3,
     }
-    public enum DepositType
-    {
-        OnlineBanking = 1,
-        MobilePay = 2,
-        LocalBank = 3,
-        CryptoPay = 4,
-        LoadCard = 5,
-        QrPay = 6,
-        BankAutoChannel = 7,
-        CryptoWallet = 8,
-        QuickTransfer = 9,
-        ChatTransfer = 10
-    }
 
     /// <summary>
     /// 
@@ -184,13 +171,6 @@ namespace PaymentService.Service.Model.enums
         /// 自動出款失敗後轉回手動出款
         /// </summary>
         AutoFailBackManual = 2
-    }
-
-    public enum WithdrawalType
-    {
-        OnlineBanking = 1,
-        EWalletPayment = 3,
-        CryptoPayment = 4
     }
     
     public enum QueueJob
