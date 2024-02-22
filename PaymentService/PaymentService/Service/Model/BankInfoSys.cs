@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using PaymentService.Service.Model.enums;
+using PaymentCore.Models;
 
 namespace PaymentService.Service.Model
 {

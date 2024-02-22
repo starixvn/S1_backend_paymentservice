@@ -115,6 +115,8 @@ public class DepositV2Controller : ControllerBase
 
             var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
             input.AddRange(setting);
+            
+            _logger.LogInformation("INPUT=" + JsonConvert.SerializeObject(input));
 
             var result = payHelper.Debit(input);
 
@@ -292,6 +294,11 @@ public class DepositV2Controller : ControllerBase
             if (depositRequest == null)
             {
                 throw new PaymentException($"TransId={transId} is not exist.");
+            }
+            
+            if (depositRequest.DepositType.IsNotOnlinePayment())
+            {
+                throw new PaymentException($"TransId={transId}, Type={depositRequest.DepositType} is not online payment.");
             }
 
             var (payName, dic) = GetPayResource(depositRequest);
