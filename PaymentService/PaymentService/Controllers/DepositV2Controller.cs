@@ -4,15 +4,16 @@ using PaymentCore;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Model;
-using PaymentCore.Model.enums;
 using PaymentCore.Models;
 using PaymentService.Exceptions;
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
+using PaymentService.Service.Model.enums;
 using Serilog.Context;
 using static PaymentService.Extensions.MethodExtension;
+using TpPayInfo = PaymentService.Service.Model.TpPayInfo;
 
 namespace PaymentService.Controllers;
 

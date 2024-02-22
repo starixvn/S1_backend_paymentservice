@@ -2,12 +2,10 @@
 
 using Dapper;
 
-using PaymentCore.Model;
-using PaymentCore.Model.enums;
-
 using PaymentService.Model;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
+using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.DAL
 {

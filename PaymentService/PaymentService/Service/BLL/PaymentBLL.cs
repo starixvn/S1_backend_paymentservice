@@ -1,13 +1,13 @@
 ﻿using Newtonsoft.Json;
-
 using PaymentCore.Interface;
 using PaymentCore.Model;
-using PaymentCore.Model.enums;
-
 using PaymentService.Exceptions;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
+using PaymentService.Service.Model.enums;
+using IPay = PaymentService.Service.Model.IPay;
+using TpPayInfo = PaymentService.Service.Model.TpPayInfo;
 
 namespace PaymentService.Service.BLL
 {

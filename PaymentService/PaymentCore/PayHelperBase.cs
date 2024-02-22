@@ -25,8 +25,6 @@ namespace PaymentCore
         // Startup 的時候 Setter
         public static int ProxyPort;
 
-        public static IPaymentHelper PaymentHelper;
-
         public event InsertPaymentLogEventHandler InsertPaymentLog;
         public abstract DepositResult Debit(Dictionary<string, string> inputs);
         public abstract WithdrawResult Credit(Dictionary<string, string> inputs);

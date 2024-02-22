@@ -5,14 +5,12 @@ using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
-using PaymentCore.Model.enums;
-
 using PaymentService.Exceptions;
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-
+using PaymentService.Service.Model.enums;
 using Serilog.Context;
 
 using static PaymentService.Extensions.MethodExtension;

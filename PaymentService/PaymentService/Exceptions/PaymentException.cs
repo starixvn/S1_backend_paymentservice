@@ -1,6 +1,6 @@
 ﻿
 
-using PaymentCore.Model.enums;
+using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Exceptions
 {

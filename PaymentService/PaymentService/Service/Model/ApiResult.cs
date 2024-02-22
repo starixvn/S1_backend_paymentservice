@@ -1,4 +1,4 @@
-﻿using PaymentCore.Model.enums;
+﻿using PaymentService.Service.Model.enums;
 
 namespace PaymentService.Service.Model
 {
@@ -9,7 +9,7 @@ namespace PaymentService.Service.Model
 
     public class ApiResult
     {
-        public ApiResult() : this(PaymentCore.Model.enums.ErrorCode.SystemError)
+        public ApiResult() : this(enums.ErrorCode.SystemError)
         {
         }
 
@@ -35,12 +35,12 @@ namespace PaymentService.Service.Model
     }
     public class ApiResult<TData> : ApiResult
     {
-        public ApiResult() : this(PaymentCore.Model.enums.ErrorCode.SystemError)
+        public ApiResult() : this(enums.ErrorCode.SystemError)
         {
         }
 
         public ApiResult(TData data)
-            : this((int)PaymentCore.Model.enums.ErrorCode.Success, string.Empty, data)
+            : this((int)enums.ErrorCode.Success, string.Empty, data)
         {
         }
 

@@ -3,13 +3,11 @@
 using Newtonsoft.Json;
 
 using PaymentCore.Interface;
-using PaymentCore.Model.enums;
-
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
-
+using PaymentService.Service.Model.enums;
 using static PaymentService.Extensions.MethodExtension;
 
 namespace PaymentService.Controllers
