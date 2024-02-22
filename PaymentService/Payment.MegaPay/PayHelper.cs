@@ -148,7 +148,7 @@ namespace Payment.MegaPay
             {
                 oNotify.TransStatus = TransStatus.Success;
                 oNotify.RequestAmount = decimal.Parse(data.request_amount);
-                oNotify.ActualAmount = decimal.Parse(data.amount);
+                oNotify.ActualAmount = decimal.Parse(data.request_amount);
                 oNotify.ThirdId = data.trade_no;
                 oNotify.Comment = data.state;
                 oNotify.Message = data.state;

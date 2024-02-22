@@ -136,7 +136,7 @@ namespace Payment.QuickPay
                 DepositId = req.OrderNo,
                 Comment = req.Extra,
                 TransStatus = TransStatus.Success, // QuickPay只回調成功的單
-                ActualAmount = req.Amount,
+                ActualAmount = req.Paid,
                 Response = QuickPayDefinition.CallbackResponse
             };
 

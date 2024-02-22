@@ -94,7 +94,7 @@ public class PayHelper : PayHelperBase
             DepositId = req.outtradeno,
             Comment = req.status,
             TransStatus = transStatus,
-            ActualAmount = req.ramount,
+            ActualAmount = req.amount,
             Response = CallbackResponse.Success
         };
 
