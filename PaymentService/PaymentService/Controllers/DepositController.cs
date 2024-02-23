@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+using PaymentCore.Extensions;
+using PaymentService.Exceptions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -65,12 +67,19 @@ namespace PaymentService.Controllers
                 }
 
                 var depositInfo = _paymentBll.GetDepositInfo(request.TransId);
+                
+                
                 if (depositInfo == null)
                 {
                     response.ErrorCode = (int)ErrorCode.Fail;
                     response.Message = $"{request.TransId} is not exist";
                     response.Amount = 0;
                     return response;
+                }
+                
+                if (depositInfo.DepositType.IsNotOnlinePayment())
+                {
+                    throw new PaymentException($"TransId={request.TransId}, Type={depositInfo.DepositType} is not online payment, cannot do manual action.");
                 }
 
                 if (depositInfo.Status == (int)DepositStatus.Approved)

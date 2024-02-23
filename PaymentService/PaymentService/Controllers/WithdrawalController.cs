@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
 using Newtonsoft.Json;
-
+using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentService.Exceptions;
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
@@ -92,6 +93,11 @@ namespace PaymentService.Controllers
                 apiResult.Message = $"withdrawal transId：{request.TransId} not found";
                 return apiResult;
             }
+            
+            if (withdrawalRequest.WithdrawalType.IsNotOnlinePayment())
+            {
+                throw new PaymentException($"TransId={request.TransId}, Type={withdrawalRequest.WithdrawalType} is not online payment, cannot do manual action.");
+            }
 
             // 提款單狀態是否原本就 Approved
             if (withdrawalRequest.Status == WithdrawalStatus.Approved)
@@ -153,6 +159,11 @@ namespace PaymentService.Controllers
                 apiResult.ErrorCode = (int)ErrorCode.SystemError;
                 apiResult.Message = $"withdrawal transId：{request.TransId} not found";
                 return apiResult;
+            }
+            
+            if (withdrawalRequest.WithdrawalType.IsNotOnlinePayment())
+            {
+                throw new PaymentException($"TransId={request.TransId}, Type={withdrawalRequest.WithdrawalType} is not online payment, cannot do manual action.");
             }
 
             // 提款單狀態是否原本就 Rejected
