@@ -9,7 +9,7 @@ using Elastic.Apm.StackExchange.Redis;
 using PaymentCore;
 using PaymentCore.Helpers;
 using PaymentCore.Interface;
-
+using PaymentService.Exceptions;
 using PaymentService.Extensions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.DAL;
@@ -71,6 +71,11 @@ namespace PaymentService
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
             services.AddProxy();
+            
+            services.AddMvc(config =>
+            {
+                config.Filters.Add<ExceptionFilter>();
+            });
 
             services.AddControllers();
         }
