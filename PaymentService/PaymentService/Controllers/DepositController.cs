@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
-
+using PaymentCore.Extensions;
+using PaymentService.Exceptions;
 using PaymentService.Service.BLL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -49,7 +50,7 @@ namespace PaymentService.Controllers
             {
                 var response = new DepositManualResponse
                 {
-                    ErrorCode = (int)ErrorCode.Fail,
+                    ErrorCode = (int) ErrorCode.Fail,
                     Message = ErrorCode.Fail.ToString(),
                     Amount = 0
                 };
@@ -59,25 +60,34 @@ namespace PaymentService.Controllers
                 if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod())
                     && !_common.IsInnerIP(clientIp))
                 {
-                    _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
-                    response.ErrorCode = (int)ErrorCode.Fail;
+                    _logger.LogInformation(
+                        $"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
+                    response.ErrorCode = (int) ErrorCode.Fail;
                     response.Message = "Invalid IP!";
                     response.Amount = 0;
                     return response;
                 }
 
                 var depositInfo = _paymentBll.GetDepositInfo(request.TransId);
+
+
                 if (depositInfo == null)
                 {
-                    response.ErrorCode = (int)ErrorCode.Fail;
+                    response.ErrorCode = (int) ErrorCode.Fail;
                     response.Message = $"{request.TransId} is not exist";
                     response.Amount = 0;
                     return response;
                 }
 
-                if (depositInfo.Status == (int)DepositStatus.Approved)
+                if (depositInfo.DepositType.IsNotOnlinePayment())
                 {
-                    response.ErrorCode = (int)ErrorCode.Fail;
+                    throw new PaymentException(
+                        $"TransId={request.TransId}, Type={depositInfo.DepositType} is not online payment, cannot do manual action.");
+                }
+
+                if (depositInfo.Status == (int) DepositStatus.Approved)
+                {
+                    response.ErrorCode = (int) ErrorCode.Fail;
                     response.Message = $"{request.TransId} status is already approved and cannot be changed";
                     response.Amount = 0;
                     return response;
@@ -85,19 +95,23 @@ namespace PaymentService.Controllers
 
                 depositInfo.ActualDeposit = (request.Amount == 0) ? depositInfo.ActualDeposit : request.Amount;
                 depositInfo.Comment = "Manual Approved";
-                depositInfo.Status = (int)DepositStatus.Approved;
+                depositInfo.Status = (int) DepositStatus.Approved;
                 depositInfo.RefId = string.IsNullOrEmpty(request.ThirdId) ? null : request.ThirdId;
                 depositInfo.Operator = string.IsNullOrEmpty(request.Operator) ? "Manual" : request.Operator;
 
                 var success = _paymentBll.DepositManualSuccess(depositInfo);
                 if (success)
                 {
-                    response.ErrorCode = (int)ErrorCode.Success;
+                    response.ErrorCode = (int) ErrorCode.Success;
                     response.Message = ErrorCode.Success.ToString();
                     response.Amount = depositInfo.ActualDeposit;
                 }
 
                 return response;
+            }
+            catch (PaymentException)
+            {
+                throw;
             }
             catch (Exception e)
             {
