@@ -89,7 +89,10 @@ namespace PaymentCore.Helpers
         public (TResult Result, HttpStatusCode StatusCode) PostUrlEncoded<TBody, TResult>(string url, TBody body)
         {
             var (stream, statusCode) = PostData(url, body, ContentType.UrlEncoded);
-            var result = JsonConvert.DeserializeObject<TResult>(stream);
+            var result = JsonConvert.DeserializeObject<TResult>(stream, new JsonSerializerSettings
+            {
+                FloatParseHandling = FloatParseHandling.Decimal
+            });
 
             return (result, statusCode);
         }
