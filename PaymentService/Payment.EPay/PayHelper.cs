@@ -1,15 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
-
 using PaymentCore;
-using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
 namespace Payment.EPay
 {
-    class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
+    class PayHelper : PayHelperBase
     {
         private readonly ILogger<PayHelper> _logger;
 
@@ -406,11 +403,6 @@ namespace Payment.EPay
         }
 
         public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
         {
             throw new NotImplementedException();
         }
