@@ -22,7 +22,8 @@ namespace Payment.QuickPay
         private static Dictionary<string, TransStatus> TransStatusMap =>
             new()
             {
-                { PayoutStatus.Completed, TransStatus.Success }
+                { PayoutStatus.Completed, TransStatus.Success },
+                { PayoutStatus.Canceled, TransStatus.Fail }
             };
 
 
@@ -40,6 +41,7 @@ namespace Payment.QuickPay
         {
 
             public const string Completed = "PAID";
+            public const string Canceled = "CANCELLED";
         }
     }
 
