@@ -52,7 +52,7 @@ public class PayHelper: PayHelperBase
     
             if (response.Code != Definition.SuccessCode)
             {
-                throw new CustomException(response.Message, response.Code);
+                throw new CustomException(response.ErrorMessage, response.Code);
             }
     
             return new DepositResult
@@ -162,7 +162,7 @@ public class PayHelper: PayHelperBase
     
             if (response.Code != Definition.SuccessCode)
             {
-                throw new CustomException(response.Message, response.Code);
+                throw new CustomException(response.ErrorMessage, response.Code);
             }
     
             return new WithdrawResult
