@@ -231,12 +231,12 @@ public class PayHelper: PayHelperBase
     {
         var str = string.Join('&', input
             .Where(x => !x.Key.Equals("sign"))
-            .OrderBy(x => key)
-            .Select(x => $"{x.Key}={x.Value}") + "&key=" + key);
+            .OrderBy(x => x.Key)
+            .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
     
         _logger.LogInformation(str);
         
-        var sign = ToSHA256(str);
+        var sign = ToSHA256(str).ToLower();
     
         return sign;
     }
