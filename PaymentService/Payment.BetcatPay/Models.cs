@@ -12,6 +12,9 @@ public class DepositResponse
     
     [JsonProperty("msg")]
     public string Message { get; set; }
+    
+    [JsonProperty("error")]
+    public string ErrorMessage { get; set; }
 }
 
 public class DepositResponseData
@@ -61,11 +64,13 @@ public class CallbackRequest
 
 public class WithdrawalRequest
 {
+    [JsonProperty("appId")]
     public string AppId { get; set; }
     
     [JsonProperty("merOrderNo")]
     public string TransId { get; set; }
     
+    [JsonProperty("currency")]
     public string Currency { get; set; }
     
     [JsonProperty("amount")]
@@ -77,6 +82,7 @@ public class WithdrawalRequest
     [JsonProperty("extra")]
     public WithdrawalRequestData Data { get; set; }
     
+    [JsonProperty("sign")]
     public string Sign { get; set; }
 }
 
@@ -99,6 +105,9 @@ public class WithdrawalResponse
     
     [JsonProperty("msg")]
     public string Message { get; set; }
+    
+    [JsonProperty("error")]
+    public string ErrorMessage { get; set; }
 }
 
 public class WithdrawalResponseData
