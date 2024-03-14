@@ -53,7 +53,7 @@ namespace PaymentService.Extensions.Middlewares
 
                 foreach (var header in context.Request.Headers)
                 {
-                    LogContext.PushProperty(header.Key, header.Value.ToString());
+                   LogContext.PushProperty($"Headers.{header.Key}", header.Value.ToString());
                 }
 
                 var log = new StringBuilder();
