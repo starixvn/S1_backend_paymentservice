@@ -1,13 +1,8 @@
 namespace Payment.SDSPay;
 
-public class Definition
+internal class Definition
 {
-    
-}
-
-internal static class ErrorCode
-{
-    public const string Success = "0";
+    public const string SuccessCode = "0";
 }
 
 internal static class Path
