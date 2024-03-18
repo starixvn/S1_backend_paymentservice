@@ -65,7 +65,7 @@ public class PayHelper : PayHelperBase
 
             _logger.LogInformation($"plainData={JsonConvert.SerializeObject(plainreq)}.");
 
-            var res = Payout(apiUrl, apiKey, req).Result;
+            var res = Payout(apiUrl, apiKey, req);
 
             var response = new WithdrawResult
             {
@@ -159,7 +159,7 @@ public class PayHelper : PayHelperBase
 
             _logger.LogInformation($"plainData={JsonConvert.SerializeObject(plainreq)}.");
 
-            var res = CreateOrder(apiUrl, apiKey, req).Result;
+            var res = CreateOrder(apiUrl, apiKey, req);
 
             var response = new DepositResult
             {
@@ -228,13 +228,13 @@ public class PayHelper : PayHelperBase
 
     #region Private Methods
 
-    private async Task<OnePayCreateResponse<OnePayCreateData>> CreateOrder(string baseApiUrl, string key, Dictionary<string, string> req)
+    private OnePayCreateResponse<OnePayCreateData> CreateOrder(string baseApiUrl, string key, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePay;
-        var (result, statusCode) = await _httpHelper
+        var (result, statusCode) = _httpHelper
             .WithHeader("Authorization", key)
             .WithHeader("Content-Type", MediaType.Json)
-            .PostJsonAsync<Dictionary<string, string>, OnePayCreateResponse<OnePayCreateData>>(apiUrl, req);
+            .PostJson<Dictionary<string, string>, OnePayCreateResponse<OnePayCreateData>>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -248,13 +248,13 @@ public class PayHelper : PayHelperBase
         return result;
     }
 
-    private async Task<OnePayCreateResponse<OnePayCreateData>> Payout(string baseApiUrl, string key, Dictionary<string, string> req)
+    private OnePayCreateResponse<OnePayCreateData> Payout(string baseApiUrl, string key, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePayout;
-        var (result, statusCode) = await _httpHelper
+        var (result, statusCode) = _httpHelper
             .WithHeader("Authorization", key)
             .WithHeader("Content-Type", MediaType.Json)
-            .PostJsonAsync<Dictionary<string, string>, OnePayCreateResponse<OnePayCreateData>>(apiUrl, req);
+            .PostJson<Dictionary<string, string>, OnePayCreateResponse<OnePayCreateData>>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {

@@ -48,11 +48,6 @@ namespace PaymentService.Extensions
 
                 services.AddHttpClient("with_proxy")
                     .ConfigurePrimaryHttpMessageHandler(() => proxy);
-
-                FlurlHttp.Configure(settings =>
-                {
-                    settings.HttpClientFactory = new ProxyHttpClientFactory(config.ProxyHost, config.ProxyPort);
-                });
             }
             else
             {

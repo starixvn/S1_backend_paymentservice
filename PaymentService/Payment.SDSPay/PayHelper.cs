@@ -23,9 +23,14 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
 
     #region ExchangeRate
 
+    /// <summary>
+    /// 這家匯率幣別資訊是綁商戶，多幣別沒法用
+    /// </summary>
     public ExchangeResult GetExchange(Dictionary<string, string> input)
     {
-        var baseApiUrl = input["host"];
+        throw new NotImplementedException();
+        
+        /*var baseApiUrl = input["host"];
         var type = input["ExchangeType"]; // 0: 提款, 1: 存款
 
         try
@@ -50,7 +55,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
             _logger.LogInformation($"GetExchange failed, Code:{ex.Code}, Message:{ex.Message}");
 
             return new ExchangeResult(ex.Code, ex.Message);
-        }
+        }*/
     }
 
     #endregion
@@ -243,14 +248,13 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
 
     #region Private Methods
 
-    private ExchangeRate GetExchangeRate(string baseApiUrl, Dictionary<string, string> input)
+    /*private ExchangeRate GetExchangeRate(string baseApiUrl, Dictionary<string, string> input)
     {
         var apiUrl = baseApiUrl + Path.ExchangeRate;
         var q = string.Join("&", input.Select(x => $"{x.Key}={x.Value}"));
 
         var response = _httpHelper
-            .GetAsync<ExchangeRate>(apiUrl, q)
-            .Result;
+            .Get<ExchangeRate>(apiUrl, q);
 
         if (!response.StatusCode.IsSuccessStatus())
         {
@@ -259,7 +263,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
         }
 
         return response.Result;
-    }
+    }*/
     
     private string GetWalletAddress(IDictionary<string, string> input)
     {
@@ -282,7 +286,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
 
         var (result, statusCode) = _httpHelper
             .WithHeader("accept", ContentType.Json)
-            .PostUrlEncoded<IDictionary<string, string>, GetAddressData>(baseApiUrl + Path.Deposit, req);
+            .PostUrlEncoded<IDictionary<string, string>, GetAddressData>(baseApiUrl + Path.Deposit, req,  true);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -320,7 +324,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
         req.Add("sign", GetSign(req, key));
 
         var (result, statusCode) = _httpHelper
-            .PostUrlEncoded<IDictionary<string, string>, GetAddressData>(baseApiUrl + Path.Payout, req);
+            .PostUrlEncoded<IDictionary<string, string>, GetAddressData>(baseApiUrl + Path.Payout, req, true);
 
         if (!statusCode.IsSuccessStatus())
         {

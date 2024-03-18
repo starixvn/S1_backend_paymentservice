@@ -1,133 +1,104 @@
 ﻿using System.Diagnostics;
 using System.Net;
-using System.Xml.Linq;
-
 using Flurl.Http;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
-
 using PaymentCore.Exceptions;
 using PaymentCore.Interface;
 using PaymentCore.Models;
-
 using Serilog.Context;
-
 using JsonExtension = PaymentCore.Extensions.JsonExtension;
 
 namespace PaymentCore.Helpers
 {
     public sealed class FlurlHttpHelper : IFlurlHttpHelper
     {
-
         private readonly Dictionary<string, string> _header;
-        private readonly JsonNetSerializer _serializer;
+        private readonly IPayHttpHelper _httpHelper;
         private readonly ILogger<FlurlHttpHelper> _logger;
         private string _authToken = string.Empty;
 
         public FlurlHttpHelper(IServiceProvider serviceProvider)
         {
             _logger = serviceProvider.GetRequiredService<ILogger<FlurlHttpHelper>>();
-            _serializer = serviceProvider.GetRequiredService<JsonNetSerializer>();
+            _httpHelper = serviceProvider.GetRequiredService<IPayHttpHelper>();
             _header = new Dictionary<string, string>();
         }
+        
+        public (TResult Result, HttpStatusCode StatusCode) Get<TResult>(string url, string query, bool withProxy = false)
+            where TResult : class
+        {
+            var result = GetAsync<TResult>(url, query, withProxy)
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
 
-        public async Task<(TResult Result, HttpStatusCode StatusCode)> GetAsync<TResult>(string url, string query)
+            return result;
+        }
+
+        public async Task<(TResult Result, HttpStatusCode StatusCode)> GetAsync<TResult>(string url, string query, bool withProxy = false)
             where TResult : class
         {
             var tResult = default(TResult);
-            var result = await GetDataAsync(url, query);
+            var result = await GetDataAsync(url, query, withProxy);
 
             if (result.StatusCode == HttpStatusCode.OK)
-                tResult = _serializer.DeserializeFormStream<TResult>(result.ContentStream);
+                tResult = JsonExtension.DeserializeObject<TResult>(result.Content);
 
             return (tResult, result.StatusCode);
         }
 
-        public (TResult Result, HttpStatusCode StatusCode) Post<TBody, TResult>(string url, TBody body)
-            where TResult : class
+        public async Task<(TResult Result, HttpStatusCode StatusCode)> PostUrlEncodedAsync<TBody, TResult>(
+            string url, TBody body, bool withProxy = false)
         {
-            var returnObj = PostData(url, body, ContentType.Text);
-
-            if (!JsonExtension.IsJson(returnObj.Result))
+            var (str, statusCode) = await PostDataAsync(url, body, ContentType.UrlEncoded, withProxy);
+            
+            if (!JsonExtension.IsJson(str))
             {
                 throw new CustomException("Invalid JSON string, Cannot DeserializeObject.");
             }
-
-            var result = JsonConvert.DeserializeObject<TResult>(returnObj.Result);
-
-            return (result, returnObj.StatusCode);
-        }
-
-        public async Task<(TResult Result, HttpStatusCode StatusCode)> PostAsync<TBody, TResult>(string url, TBody body)
-            where TResult : class
-        {
-            try
-            {
-                var returnObj = await PostDataAsync(url, body, ContentType.Text);
-                var result = _serializer.DeserializeFormStream<TResult>(returnObj.Result);
-
-                return (result, returnObj.StatusCode);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-        }
-
-        public async Task<(TResult Result, HttpStatusCode StatusCode)> PostUrlEncodedAsync<TBody, TResult>(string url, TBody body)
-        {
-            var (stream, statusCode) = await PostDataAsync(url, body, ContentType.UrlEncoded);
-            var result = _serializer.DeserializeFormStream<TResult>(stream);
-
+            
+            var result = JsonExtension.DeserializeObject<TResult>(str);
+            
             return (result, statusCode);
         }
 
-        public (TResult Result, HttpStatusCode StatusCode) PostUrlEncoded<TBody, TResult>(string url, TBody body)
+        public (TResult Result, HttpStatusCode StatusCode) PostUrlEncoded<TBody, TResult>(string url, TBody body, bool withProxy = false)
         {
-            var (stream, statusCode) = PostData(url, body, ContentType.UrlEncoded);
-            var result = JsonConvert.DeserializeObject<TResult>(stream);
+            var result = PostUrlEncodedAsync<TBody, TResult>(url, body, withProxy)
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
 
-            return (result, statusCode);
+            return result;
         }
 
-        public (TResult Result, HttpStatusCode StatusCode) Post<TBody, TResult>(string url, TBody body, Func<XDocument, TResult> selecor)
+        public (TResult Result, HttpStatusCode StatusCode) PostJson<TBody, TResult>(string url, TBody body, bool withProxy = false)
             where TResult : class
         {
-            var returnObj = PostData(url, body, ContentType.Text);
-            var xml = XDocument.Parse(returnObj.Result);
-            var result = selecor(xml);
+            var result = PostJsonAsync<TBody, TResult>(url, body, withProxy)
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
 
-            return (result, returnObj.StatusCode);
+            return result;
         }
 
-        public (TResult Result, HttpStatusCode StatusCode) PostJson<TBody, TResult>(string url, TBody data)
+        public async Task<(TResult Result, HttpStatusCode StatusCode)> PostJsonAsync<TBody, TResult>(string url, TBody data, bool withProxy = false)
             where TResult : class
         {
-            var (json, statusCode) = PostData(url, data, ContentType.Json);
-
+            var (json, statusCode) = await PostDataAsync(url, data, ContentType.Json, withProxy);
+            
             if (!JsonExtension.IsJson(json))
             {
                 throw new CustomException("Invalid JSON string, Cannot DeserializeObject.");
             }
-
-            var result = JsonConvert.DeserializeObject<TResult>(json);
-            return (result, StatusCode: statusCode);
+            
+            var result = JsonExtension.DeserializeObject<TResult>(json);
+            
+            return (result, statusCode);
         }
-
-        public async Task<(TResult Result, HttpStatusCode StatusCode)> PostJsonAsync<TBody, TResult>(string url, TBody data)
-            where TResult : class
-        {
-            LogContext.PushProperty("url", url);
-            _logger.LogInformation(_serializer.SerializeToString(data));
-            var returnObj = await PostDataAsync(url, data, ContentType.Json);
-            var result = _serializer.DeserializeFormStream<TResult>(returnObj.Result);
-            return (result, returnObj.StatusCode);
-        }
-
 
         public IFlurlHttpHelper WithOAuthBearerToken(string token)
         {
@@ -138,8 +109,7 @@ namespace PaymentCore.Helpers
 
         public IFlurlHttpHelper WithHeader(string key, string value)
         {
-            if (!_header.ContainsKey(key))
-                _header.Add(key, value);
+            _header.TryAdd(key, value);
 
             if (_header.ContainsKey(key) && _header[key] != value)
                 _header[key] = value;
@@ -149,11 +119,7 @@ namespace PaymentCore.Helpers
 
         #region Private Methods
 
-
-
-        #endregion
-
-        private FlurlRequest CreateFlurlRequest(string url)
+        private IFlurlRequest CreateFlurlRequest(string url)
         {
             var request = new FlurlRequest(url)
                 .AllowAnyHttpStatus();
@@ -163,6 +129,21 @@ namespace PaymentCore.Helpers
 
             return request;
         }
+        
+        private IFlurlRequest CreateFlurlRequestWithProxy(string url)
+        {
+            var hc = _httpHelper.GetClientWithProxy();
+            var fc = new FlurlClient(hc);
+            fc.BaseUrl = url;
+            
+            var request = fc.Request()
+                .AllowAnyHttpStatus();
+            
+            if (_authToken != string.Empty)
+                request.WithOAuthBearerToken(_authToken);
+            
+            return request;
+        }
 
         private void ClearAll()
         {
@@ -170,8 +151,7 @@ namespace PaymentCore.Helpers
             _authToken = string.Empty;
         }
 
-
-        private (string Result, HttpStatusCode StatusCode) PostData<TBody>(string url, TBody data, string postType)
+        private async Task<(string Result, HttpStatusCode StatusCode)> PostDataAsync<TBody>(string url, TBody data, string postType, bool withProxy)
         {
             try
             {
@@ -179,80 +159,12 @@ namespace PaymentCore.Helpers
                 var request = CreateFlurlRequest(url);
                 request = _header.Aggregate(request, (current, item)
                     => current.WithHeader(item.Key, item.Value));
+                
                 _logger.LogInformation($"POST ({postType}): {url}");
-                _logger.LogInformation("Headers:"
-                                       + JsonConvert.SerializeObject(
-                                           request.Headers.ToDictionary(x => x.Name, x => x.Value)));
+                _logger.LogInformation("Headers:" + JsonConvert.SerializeObject(request.Headers));
                 _logger.LogInformation(JsonConvert.SerializeObject(data));
 
                 IFlurlResponse response = default(FlurlResponse);
-                switch (postType)
-                {
-                    case ContentType.Json:
-                        response = request
-                            .PostJsonAsync(data)
-                            .ConfigureAwait(false)
-                            .GetAwaiter()
-                            .GetResult();
-                        break;
-                    case ContentType.Text:
-                        {
-                            var content = data.ToString();
-                            response = request
-                                .PostStringAsync(content)
-                                .ConfigureAwait(false)
-                                .GetAwaiter()
-                                .GetResult();
-                            break;
-                        }
-                    case ContentType.UrlEncoded:
-                        response = request
-                            .PostUrlEncodedAsync(data)
-                            .ConfigureAwait(false)
-                            .GetAwaiter()
-                            .GetResult();
-                        break;
-                }
-
-
-                LogContext.PushProperty("Url", url);
-                LogContext.PushProperty("Elapsed", sw.Elapsed.TotalMilliseconds);
-
-                var result = response.ResponseMessage.Content
-                    .ReadAsStringAsync()
-                    .GetAwaiter()
-                    .GetResult();
-
-                _logger.LogInformation(result);
-                ClearAll();
-
-                return (Result: result, response.ResponseMessage.StatusCode);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("PostData Exception", ex);
-                throw;
-            }
-            finally
-            {
-                ClearAll();
-            }
-        }
-
-        private async Task<(Stream Result, HttpStatusCode StatusCode)> PostDataAsync<TBody>(string url, TBody data, string postType)
-        {
-            try
-            {
-                var sw = Stopwatch.StartNew();
-                var request = CreateFlurlRequest(url);
-                request = _header.Aggregate(request, (current, item) => current.WithHeader(item.Key, item.Value));
-
-                _logger.LogInformation($"POST ({postType}): {url}");
-                _logger.LogInformation("Headers:"
-                                       + JsonConvert.SerializeObject(request.Headers.ToDictionary(x => x.Name, x => x.Value)));
-                _logger.LogInformation(JsonConvert.SerializeObject(data));
-                IFlurlResponse response = default(FlurlResponse);
-
                 switch (postType)
                 {
                     case ContentType.Json:
@@ -272,16 +184,16 @@ namespace PaymentCore.Helpers
                 LogContext.PushProperty("Url", url);
                 LogContext.PushProperty("Elapsed", sw.Elapsed.TotalMilliseconds);
 
-                _logger.LogInformation(await response.ResponseMessage.Content.ReadAsStringAsync());
+                var result = await response.ResponseMessage.Content.ReadAsStringAsync();
 
-                var result = await response.ResponseMessage.Content.ReadAsStreamAsync();
-                ClearAll();
+                _logger.LogInformation(result);
 
-                return (Result: result, response.ResponseMessage.StatusCode);
+                return (result, response.ResponseMessage.StatusCode);
             }
             catch (Exception ex)
             {
-                _logger.LogError("PostData Exception", ex);
+                _logger.LogError(ex, "PostDataAsync Exception"
+                    );
                 throw;
             }
             finally
@@ -290,31 +202,40 @@ namespace PaymentCore.Helpers
             }
         }
 
-        private async Task<(Stream ContentStream, HttpStatusCode StatusCode)> GetDataAsync(string url, string query)
+        private async Task<(string Content, HttpStatusCode StatusCode)> GetDataAsync(string url, string query, bool withProxy = false)
         {
             try
             {
                 var sw = Stopwatch.StartNew();
                 var urlWithQuery = $"{url}?{query}";
-                var request = CreateFlurlRequest(urlWithQuery);
+                
+                var request = withProxy
+                    ? CreateFlurlRequestWithProxy(urlWithQuery)
+                    : CreateFlurlRequest(urlWithQuery);
+                
                 request = _header.Aggregate(request, (current, item)
                     => current.WithHeader(item.Key, item.Value));
 
-                _logger.LogInformation(
-                    $"header, Keys: {string.Join(",", request.Headers.ToList())}, Values: {string.Join(",", request.Headers.ToList())}");
+                _logger.LogInformation("Headers:" + JsonConvert.SerializeObject(request.Headers));
 
-                var response = await request.GetAsync();
+                var response = request.GetAsync()
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
 
                 LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
                 LogContext.PushProperty("url", urlWithQuery);
-                _logger.LogInformation(await response.ResponseMessage.Content.ReadAsStringAsync());
-                var stream = response.ResponseMessage.Content.ReadAsStreamAsync();
-                ClearAll();
-                return (await stream, response.ResponseMessage.StatusCode);
+                
+                var result = await response.ResponseMessage.Content
+                    .ReadAsStringAsync();
+                
+                _logger.LogInformation(result);
+                
+                return (result, response.ResponseMessage.StatusCode);
             }
             catch (Exception ex)
             {
-                _logger.LogError("PostData Exception", ex);
+                _logger.LogError(ex, "GetDataAsync Exception");
                 throw;
             }
             finally
@@ -322,5 +243,7 @@ namespace PaymentCore.Helpers
                 ClearAll();
             }
         }
+
+        #endregion
     }
 }

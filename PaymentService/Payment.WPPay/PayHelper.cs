@@ -71,7 +71,7 @@ internal class PayHelper : PayHelperBase
                 {"content",  content }
             };
 
-            var res = Payout(apiUrl, req).Result;
+            var res = Payout(apiUrl, req);
 
             if (!VerifyCreateData(res.Content, privateKey, publicKey, out WPPayCreateDataContent decryptDataResult))
             {
@@ -175,7 +175,7 @@ internal class PayHelper : PayHelperBase
                 {"content",  content }
             };
 
-            var res = CreateOrder(apiUrl, req).Result;
+            var res = CreateOrder(apiUrl, req);
 
             if (!VerifyCreateData(res.Content, privateKey, publicKey, out WPPayCreateDataContent decryptDataResult))
             {
@@ -250,12 +250,12 @@ internal class PayHelper : PayHelperBase
 
     #region Private Methods
 
-    private async Task<WPPayCreateData> CreateOrder(string baseApiUrl, Dictionary<string, string> req)
+    private WPPayCreateData CreateOrder(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePay;
 
-        var (result, statusCode) = await _httpHelper
-            .PostJsonAsync<Dictionary<string, string>, WPPayCreateResponse>(apiUrl, req);
+        var (result, statusCode) = _httpHelper
+            .PostJson<Dictionary<string, string>, WPPayCreateResponse>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -280,12 +280,12 @@ internal class PayHelper : PayHelperBase
         return data;
     }
 
-    private async Task<WPPayCreateData> Payout(string baseApiUrl, Dictionary<string, string> req)
+    private WPPayCreateData Payout(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePayout;
 
-        var (result, statusCode) = await _httpHelper
-            .PostJsonAsync<Dictionary<string, string>, WPPayCreateResponse>(apiUrl, req);
+        var (result, statusCode) = _httpHelper
+            .PostJson<Dictionary<string, string>, WPPayCreateResponse>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
