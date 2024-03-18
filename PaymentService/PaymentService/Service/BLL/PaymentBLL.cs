@@ -123,9 +123,11 @@ namespace PaymentService.Service.BLL
             _depositService.SetDepositLog(depositId, siteId, comment, status, actualDeposit, @operator);
         }
 
-        public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
+        public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry(IEnumerable<int> payIds)
         {
-            return _depositService.GetDepositRequesPayEnquiry();
+            var json = JsonConvert.SerializeObject(payIds);
+            
+            return _depositService.GetDepositRequesPayEnquiry(json);
         }
 
         public WithdrawalRequest GetWithdrawalRequest(string transId)

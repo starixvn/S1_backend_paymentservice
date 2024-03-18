@@ -4,13 +4,17 @@ namespace PaymentService.Service.Library
 {
     public class HttpHelper : IPayHttpHelper
     {
-        private readonly IHttpClientFactory clientFactory;
-        private readonly IConfiguration configuration;
+        private readonly IHttpClientFactory _clientFactory;
+        private readonly IConfiguration _configuration;
         public HttpHelper(IHttpClientFactory clientFactory, IConfiguration configuration)
         {
-            this.clientFactory = clientFactory;
-            this.configuration = configuration;
+            _clientFactory = clientFactory;
+            _configuration = configuration;
         }
-        public HttpClient GetClient() => configuration.GetValue<string>("ProxyHost") != null ? clientFactory.CreateClient("with_proxy") : clientFactory.CreateClient();
+        public HttpClient GetClient() => _clientFactory.CreateClient();
+        
+        public HttpClient GetClientWithProxy() => _configuration.GetValue<string>("TokyoProxy") != null
+            ? _clientFactory.CreateClient("with_proxy")
+            : _clientFactory.CreateClient(); 
     }
 }

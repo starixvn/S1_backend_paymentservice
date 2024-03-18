@@ -36,7 +36,7 @@ namespace PaymentService.Extensions
         {
             var provider = services.BuildServiceProvider();
             var configBll = provider.GetRequiredService<ConfigBLL>();
-            var config = configBll.GetConfigValue<ProxySettingConfig>("ProxySetting");
+            var config = configBll.GetConfigValue<ProxySettingConfig>("TokyoProxy");
 
             if (!string.IsNullOrEmpty(config.ProxyHost))
             {
@@ -48,11 +48,6 @@ namespace PaymentService.Extensions
 
                 services.AddHttpClient("with_proxy")
                     .ConfigurePrimaryHttpMessageHandler(() => proxy);
-
-                FlurlHttp.Configure(settings =>
-                {
-                    settings.HttpClientFactory = new ProxyHttpClientFactory(config.ProxyHost, config.ProxyPort);
-                });
             }
             else
             {

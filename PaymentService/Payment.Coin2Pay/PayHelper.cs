@@ -410,8 +410,7 @@ namespace Payment.Coin2Pay
 
             var (result, statusCode) = _httpHelper
                 .WithHeader("accept", ContentType.Json)
-                .PostJsonAsync<IDictionary<string, string>, GetWithdrawalEstimateResp>(apiUrl, req)
-                .Result;
+                .PostJson<IDictionary<string, string>, GetWithdrawalEstimateResp>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
             {

@@ -352,8 +352,7 @@ namespace Payment.FXBit
             var response = _httpHelper
                 .WithHeader("accept", ContentType.Json)
                 .WithHeader("x-api-key", apiKey)
-                .GetAsync<Dictionary<string, Dictionary<string, FxBitExchangeRate>>>(apiUrl, string.Empty)
-                .Result;
+                .Get<Dictionary<string, Dictionary<string, FxBitExchangeRate>>>(apiUrl, string.Empty);
 
             if (!response.StatusCode.IsSuccessStatus())
             {

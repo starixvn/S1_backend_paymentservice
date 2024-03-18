@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace PaymentCore.Extensions
 {
@@ -28,5 +30,12 @@ namespace PaymentCore.Extensions
 
             return obj;
         }
+
+        public static T DeserializeObject<T>(string str)
+            => JsonConvert.DeserializeObject<T>(str, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
     }
 }

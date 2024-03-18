@@ -10,34 +10,36 @@ namespace PaymentService.Service.Workers
 {
     public class DepositWorkerService : BackgroundService
     {
-        private readonly IHostEnvironment environment;
-        private readonly ILogger<DepositWorkerService> logger;
-        private readonly PaymentBLL paymentBLL;
-        private readonly PayBLL payBLL;
-        private Timer timer;
-        public DepositWorkerService(ILogger<DepositWorkerService> logger, IHostEnvironment environment, PaymentBLL paymentBLL, PayBLL payBLL)
+        private readonly IHostEnvironment _environment;
+        private readonly ILogger<DepositWorkerService> _logger;
+        private readonly PaymentBLL _paymentBll;
+        private readonly PayBLL _payBll;
+        private Timer _timer;
+        private readonly IEnumerable<int> _payIds;
+        public DepositWorkerService(ILogger<DepositWorkerService> logger, IHostEnvironment environment, PaymentBLL paymentBll, PayBLL payBll)
         {
-            this.environment = environment;
-            this.logger = logger;
-            this.paymentBLL = paymentBLL;
-            this.payBLL = payBLL;
+            _environment = environment;
+            _logger = logger;
+            _paymentBll = paymentBll;
+            _payBll = payBll;
+            _payIds = new List<int> { 3, 4, 5, 32, 63 };
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
         private void DoWork(object state)
         {
             try
             {
-                var depositRequesList = paymentBLL.GetDepositRequesPayEnquiry();
+                var depositRequesList = _paymentBll.GetDepositRequesPayEnquiry(_payIds);
                 foreach (var depositRequest in depositRequesList)
                 {
                     try
                     {
-                        var payHelper = payBLL.GetPayHelper(depositRequest.PayName);
+                        var payHelper = _payBll.GetPayHelper(depositRequest.PayName);
                         var DepReq = depositRequest.ISetting;
                         if (!DepReq.ContainsKey("TransID"))
                         {
@@ -66,7 +68,7 @@ namespace PaymentService.Service.Workers
                             #region Transaction is Success
                             try
                             {
-                                paymentBLL.DepositSuccess(depositRequest, enquiryDepositResult);
+                                _paymentBll.DepositSuccess(depositRequest, enquiryDepositResult);
                             }
                             catch (MySqlException SqlEx)
                             {
@@ -79,11 +81,11 @@ namespace PaymentService.Service.Workers
                                 errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
                                 errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
                                 errorMessages.AppendLine($"Source: {SqlEx.Source}");
-                                logger.LogError(SqlEx, errorMessages.ToString());
+                                _logger.LogError(SqlEx, errorMessages.ToString());
                             }
                             catch (Exception exForEachTransaction)
                             {
-                                logger.LogError(exForEachTransaction, $"PayName: {depositRequest.PayName}\r\n{exForEachTransaction.Message}");
+                                _logger.LogError(exForEachTransaction, $"PayName: {depositRequest.PayName}\r\n{exForEachTransaction.Message}");
                                 continue;
                             }
                             #endregion
@@ -92,11 +94,11 @@ namespace PaymentService.Service.Workers
                         {
                             try
                             {
-                                paymentBLL.DepositFail(depositRequest, enquiryDepositResult);
+                                _paymentBll.DepositFail(depositRequest, enquiryDepositResult);
                             }
                             catch (Exception ex)
                             {
-                                logger.LogError(ex, $"PayName: {depositRequest.PayName}\r\n{ex.Message}");
+                                _logger.LogError(ex, $"PayName: {depositRequest.PayName}\r\n{ex.Message}");
                                 continue;
                             }
                         }
@@ -114,26 +116,26 @@ namespace PaymentService.Service.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {
                 var dueTimeSpan = TimeSpan.FromSeconds(30);
-                if (environment.IsDevelopment() || environment.IsEnvironment("QA"))
+                if (_environment.IsDevelopment() || _environment.IsEnvironment("QA"))
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
-                timer.Change(dueTimeSpan, TimeSpan.Zero);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
         ~DepositWorkerService()
         {
-            timer?.Dispose();
+            _timer?.Dispose();
         }
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("DepositWorkerService: Process Stopped");
-            timer?.Change(Timeout.Infinite, 0);
+            _logger.LogInformation("DepositWorkerService: Process Stopped");
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
