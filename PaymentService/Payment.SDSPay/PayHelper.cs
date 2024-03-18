@@ -77,12 +77,21 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
                 
             if (rateInfo == null)
                 throw new CustomException("CryptoRateInfo is empty.");
+            
+            var formData = new Dictionary<string, string>
+            {
+                { "DepositAmount", reqAmount },
+                { "Rate", rateInfo.ExchangeRate.ToString("G29") },
+                { "RequestAmount", rateInfo.ExchangeAmount.ToString("G29") },
+                { "Token", payCode }
+            };
 
             return new DepositResult
             {
                 Success = true,
                 ErrorCode = "0",
                 Url = GetWalletAddress(input),
+                FormData = formData,
                 ThirdId = string.Empty
             };
         }
