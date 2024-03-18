@@ -85,7 +85,7 @@ namespace PaymentCore.Helpers
             return result;
         }
 
-        public async Task<(TResult Result, HttpStatusCode StatusCode)> PostJsonAsync<TBody, TResult>(string url, TBody data, bool withProxy = false)
+        private async Task<(TResult Result, HttpStatusCode StatusCode)> PostJsonAsync<TBody, TResult>(string url, TBody data, bool withProxy = false)
             where TResult : class
         {
             var (json, statusCode) = await PostDataAsync(url, data, ContentType.Json, withProxy);
@@ -119,10 +119,24 @@ namespace PaymentCore.Helpers
 
         #region Private Methods
 
-        private IFlurlRequest CreateFlurlRequest(string url)
+        private IFlurlRequest CreateFlurlRequest(string url, bool withProxy)
         {
-            var request = new FlurlRequest(url)
-                .AllowAnyHttpStatus();
+            IFlurlRequest request;
+
+            if (withProxy)
+            {
+                var hc = _httpHelper.GetClientWithProxy();
+                var fc = new FlurlClient(hc);
+            
+                request = fc.Request(new Uri(url));
+            }
+            else
+            {
+                
+                request = new FlurlRequest(url);
+            }
+            
+            request = request.AllowAnyHttpStatus();
 
             if (_authToken != string.Empty)
                 request.WithOAuthBearerToken(_authToken);
@@ -130,20 +144,6 @@ namespace PaymentCore.Helpers
             return request;
         }
         
-        private IFlurlRequest CreateFlurlRequestWithProxy(string url)
-        {
-            var hc = _httpHelper.GetClientWithProxy();
-            var fc = new FlurlClient(hc);
-            fc.BaseUrl = url;
-            
-            var request = fc.Request()
-                .AllowAnyHttpStatus();
-            
-            if (_authToken != string.Empty)
-                request.WithOAuthBearerToken(_authToken);
-            
-            return request;
-        }
 
         private void ClearAll()
         {
@@ -156,7 +156,9 @@ namespace PaymentCore.Helpers
             try
             {
                 var sw = Stopwatch.StartNew();
-                var request = CreateFlurlRequest(url);
+                
+                var request =  CreateFlurlRequest(url, withProxy);
+                
                 request = _header.Aggregate(request, (current, item)
                     => current.WithHeader(item.Key, item.Value));
                 
@@ -209,9 +211,7 @@ namespace PaymentCore.Helpers
                 var sw = Stopwatch.StartNew();
                 var urlWithQuery = $"{url}?{query}";
                 
-                var request = withProxy
-                    ? CreateFlurlRequestWithProxy(urlWithQuery)
-                    : CreateFlurlRequest(urlWithQuery);
+                var request =  CreateFlurlRequest(urlWithQuery, withProxy);
                 
                 request = _header.Aggregate(request, (current, item)
                     => current.WithHeader(item.Key, item.Value));
