@@ -40,14 +40,17 @@ namespace PaymentService.Extensions
 
             if (!string.IsNullOrEmpty(config.ProxyHost))
             {
-                var proxy = new HttpClientHandler
-                {
-                    Proxy = new WebProxy(config.ProxyHost, config.ProxyPort),
-                    UseProxy = true
-                };
-
                 services.AddHttpClient("with_proxy")
-                    .ConfigurePrimaryHttpMessageHandler(() => proxy);
+                    .ConfigurePrimaryHttpMessageHandler(_ =>
+                    {
+                        var handler = new HttpClientHandler
+                        {
+                            Proxy = new WebProxy(config.ProxyHost, config.ProxyPort),
+                            UseProxy = true
+                        };
+                        
+                        return handler;
+                    });
             }
             else
             {
