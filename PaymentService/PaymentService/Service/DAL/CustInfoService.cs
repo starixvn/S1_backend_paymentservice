@@ -8,31 +8,29 @@ namespace PaymentService.Service.DAL
 {
     public class CustInfoService
     {
-        private readonly MySqlClient _reportDbClient;
         private readonly MySqlClient _mainDbClient;
         
         public CustInfoService(IServiceProvider provider)
-        {
-            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
+        {            
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
         
         public int GetPointLevel(int custId)
         {
-            return _reportDbClient.ExecuteScalar<int>("Member_PointLevel_Get", new { CustId = custId });
+            return _mainDbClient.ExecuteScalar<int>("Member_PointLevel_Get", new { CustId = custId });
         }
         public Customer GetCustInfo(int custId)
         {
-            return _reportDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
+            return _mainDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
         }
         public decimal GetBalance(int custId)
         {
-            return _reportDbClient.ExecuteScalar<decimal>("Balance_Get", new { CustId = custId });
+            return _mainDbClient.ExecuteScalar<decimal>("Balance_Get", new { CustId = custId });
         }
         
         public CustVerificationReward GetCustVerificationReward(int custId)
         {
-            return _reportDbClient.QueryFirst<CustVerificationReward>("Service_CustVerificationRewardByCustId_Get", new { _CustId = custId });
+            return _mainDbClient.QueryFirst<CustVerificationReward>("Service_CustVerificationRewardByCustId_Get", new { _CustId = custId });
         }
         
         public int InsertQueueJob(int custId, QueueJob type, string data)
