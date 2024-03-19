@@ -14,13 +14,15 @@ namespace PaymentService.Service.Library
     public sealed class MySqlClient
     {
         public DataBase DataBase { get; set; }
+
         private readonly string _connectionString;
         private readonly ILogger<MySqlClient> _logger;
 
-        public MySqlClient(string connectionString, ILogger<MySqlClient> logger)
+        public MySqlClient(IServiceProvider provider, DataBase dataBase, string connectionString)
         {
+            DataBase = dataBase;
+            _logger = provider.GetRequiredService<ILogger<MySqlClient>>();
             _connectionString = connectionString;
-            _logger = logger;
         }
 
         public MySqlConnection GetMySqlConnection()
@@ -28,32 +30,7 @@ namespace PaymentService.Service.Library
             return new MySqlConnection(_connectionString);
         }
 
-        #region Query
-
-        public async Task<T> QueryFirstAsync<T>(string name, object parameters)
-        {
-            T result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                await using var connection = new MySqlConnection(_connectionString);
-                result = await connection.QueryFirstOrDefaultAsync<T>(name, parameters,
-                    commandType: CommandType.StoredProcedure);
-                await connection.CloseAsync();
-                await connection.DisposeAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        public T QueryFirst<T>(string name, object parameters)
+        public T QueryFirst<T>(string name, object parameters = null)
         {
             T result;
             var sw = Stopwatch.StartNew();
@@ -79,32 +56,7 @@ namespace PaymentService.Service.Library
             return result;
         }
 
-        public IEnumerable<T> Query<T>(string name)
-        {
-            IEnumerable<T> result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name,
-                    commandType: CommandType.StoredProcedure,
-                    flags: CommandFlags.NoCache);
-                result = connection.Query<T>(command);
-                connection.Close();
-                connection.Dispose();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug(name);
-            return result.ToList();
-        }
-
-        public IEnumerable<T> Query<T>(string name, object parameters)
+        public IEnumerable<T> Query<T>(string name, object parameters = null)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
@@ -129,114 +81,13 @@ namespace PaymentService.Service.Library
             return result.ToList();
         }
 
-        public IEnumerable<T> Query<T>(string sql, object parameters, CommandType commandType = CommandType.StoredProcedure)
+        public IEnumerable<T> QueryUseCommandDefinition<T>(string name, object parameters = null, int? commandTimeout = null)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(sql, parameters,
-                    commandType: commandType,
-                    flags: CommandFlags.NoCache);
-                result = connection.Query<T>(command);
-                connection.Close();
-                connection.Dispose();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, sql);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{sql} {sw.Elapsed:c}");
-            return result.ToList();
-        }
-
-        public T Query<T>(string name, object parameters, Func<SqlMapper.GridReader, T> func)
-        {
-            T result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name, parameters,
-                    commandType: CommandType.StoredProcedure,
-                    flags: CommandFlags.NoCache);
-                var multiple = connection.QueryMultiple(command);
-                result = func.Invoke(multiple);
-                connection.Close();
-                connection.Dispose();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        public async Task<IEnumerable<T>> QueryAsync<T>(string name, object parameters)
-        {
-            IEnumerable<T> result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                await using var connection = new MySqlConnection(_connectionString);
-                result = await connection.QueryAsync<T>(name, parameters, commandType: CommandType.StoredProcedure);
-                await connection.CloseAsync();
-                await connection.DisposeAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result.ToList();
-        }
-
-        public async Task<T> QueryAsync<T>(string name, object parameters, Func<SqlMapper.GridReader, T> func)
-        {
-            T result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                await using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name, parameters, // 使用 CommandDefinition 不讓 Dapper 用預設值建立
-                    commandType: CommandType.StoredProcedure,
-                    flags: CommandFlags.NoCache);
-                var multiple = connection.QueryMultipleAsync(command);
-                result = func.Invoke(await multiple);
-
-                await connection.CloseAsync();
-                await connection.DisposeAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        public IEnumerable<T> QueryUseCommandDefinition<T>(string name, SqlMapper.IDynamicParameters parameters, int? commandTimeout = null)
-        {
-            IEnumerable<T> result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                var connectionString = $"{_connectionString}ProcedureCacheSize=0;";
-                using var connection = new MySqlConnection(connectionString);
                 if (connection.State != ConnectionState.Open) connection.Open();// 自己 Control connection open close，不要讓 ORM 自己做
 
                 var command = new CommandDefinition(name, parameters, // 使用 CommandDefinition 不讓
@@ -259,11 +110,7 @@ namespace PaymentService.Service.Library
             return result.ToList();
         }
 
-        #endregion
-
-        #region Execute
-
-        public int Execute(string name, object parameters)
+        public int Execute(string name, object parameters = null)
         {
             var result = 0;
             var sw = Stopwatch.StartNew();
@@ -304,29 +151,7 @@ namespace PaymentService.Service.Library
             return result;
         }
 
-        public int Execute(string command)
-        {
-            var result = 0;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                result = connection.Execute(command, CommandType.Text);
-                connection.Close();
-                connection.Dispose();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, command);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug(command);
-            return result;
-        }
-
-        public async Task<int> ExecuteAsync(string name, object parameters)
+        public async Task<int> ExecuteAsync(string name, object parameters = null)
         {
             var result = 0;
             var sw = Stopwatch.StartNew();
@@ -370,30 +195,5 @@ namespace PaymentService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-
-        public async Task<T> ExecuteScalarAsync<T>(string name, object parameters)
-        {
-            T result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                await using var connection = new MySqlConnection(_connectionString);
-                result = await connection.ExecuteScalarAsync<T>(name, parameters,
-                    commandType: CommandType.StoredProcedure);
-                await connection.CloseAsync();
-                await connection.DisposeAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        #endregion
     }
 }
