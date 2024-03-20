@@ -65,6 +65,7 @@ namespace PaymentCore.Helpers
         }
 
         public (TResult Result, HttpStatusCode StatusCode) PostUrlEncoded<TBody, TResult>(string url, TBody body, bool withProxy = false)
+            where TResult : class
         {
             var result = PostUrlEncodedAsync<TBody, TResult>(url, body, withProxy)
                 .ConfigureAwait(false)
@@ -99,7 +100,32 @@ namespace PaymentCore.Helpers
             
             return (result, statusCode);
         }
+        public (TResult Result, HttpStatusCode StatusCode) PostFormData<TBody, TResult>(string url, TBody body, bool withProxy = false)
+            where TResult : class
+        {
+            var result = PostFormDataAsync<TBody, TResult>(url, body, withProxy)
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
 
+            return result;
+        }
+        
+        private async Task<(TResult Result, HttpStatusCode StatusCode)> PostFormDataAsync<TBody, TResult>(
+            string url, TBody body, bool withProxy = false)
+        {
+            var (str, statusCode) = await PostDataAsync(url, body, ContentType.FormData, withProxy);
+            
+            if (!JsonExtension.IsJson(str))
+            {
+                throw new CustomException("Invalid JSON string, Cannot DeserializeObject.");
+            }
+            
+            var result = JsonExtension.DeserializeObject<TResult>(str);
+            
+            return (result, statusCode);
+        }
+        
         public IFlurlHttpHelper WithOAuthBearerToken(string token)
         {
             _authToken = token;
@@ -180,6 +206,10 @@ namespace PaymentCore.Helpers
                         }
                     case ContentType.UrlEncoded:
                         response = await request.PostUrlEncodedAsync(data);
+                        break;
+                    
+                    case ContentType.FormData:
+                        response = await request.PostMultipartAsync(mp => mp.AddStringParts(data));
                         break;
                 }
 
