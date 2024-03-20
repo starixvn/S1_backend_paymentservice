@@ -37,7 +37,7 @@ namespace Payment.FPay
                 var amount = decimal.Parse(inputs["Amount"]);
                 req = new Dictionary<string, string>
                 {
-                    {"username", inputs["Username"]},
+                    {"username", inputs["UserName"]},
                     {"auth", authResp.Auth},
                     {"amount", amount.ToString("G29")},
                     {"currency", payCurrency},
