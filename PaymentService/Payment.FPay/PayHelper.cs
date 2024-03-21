@@ -73,7 +73,7 @@ namespace Payment.FPay
         
         /* staging 可從後台回調
          * https://sandbox2.fpay.support/login
-         * acc: Nova88_test
+         * acc: Nova88test
          * pw: 1234abcd
          */
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
@@ -164,6 +164,11 @@ namespace Payment.FPay
             }
         }
 
+        /* staging 可從後台回調
+         * https://sandbox2.fpay.support/login
+         * acc: Nova88_test
+         * pw: 1234abcd
+         */
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(bodyContent);
