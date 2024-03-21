@@ -14,6 +14,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
 {
     private readonly IFlurlHttpHelper _httpHelper;
     private readonly ILogger<PayHelper> _logger;
+    private const decimal AmountFix = 10000;
 
     public PayHelper(IServiceProvider provider)
     {
@@ -78,13 +79,18 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
             if (rateInfo == null)
                 throw new CustomException("CryptoRateInfo is empty.");
             
+            var rate = rateInfo.ExchangeRate.ToString("G29");
+            var amount = rateInfo.ExchangeAmount.ToString("F4");
+            
             var formData = new Dictionary<string, string>
             {
                 { "DepositAmount", reqAmount },
-                { "Rate", rateInfo.ExchangeRate.ToString("G29") },
-                { "RequestAmount", rateInfo.ExchangeAmount.ToString("G29") },
+                { "Rate", rate },
+                { "RequestAmount", amount },
                 { "Token", payCode }
             };
+            
+            depositInfo = depositInfo.AddOrSetExchangeInfo(rate, amount);
 
             return new DepositResult
             {
@@ -92,7 +98,8 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
                 ErrorCode = "0",
                 Url = GetWalletAddress(input),
                 FormData = formData,
-                ThirdId = string.Empty
+                ThirdId = string.Empty,
+                DepositInfo = depositInfo
             };
         }
         catch (CustomException ex)
@@ -175,13 +182,20 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
             if (rateInfo == null)
                 throw new CustomException("CryptoRateInfo is empty.");
 
-            var withdrawalResp = Payout(inputs, rateInfo.ExchangeAmount.ToString("G29"));
+            var rate = rateInfo.ExchangeRate.ToString("G29");
+            var strAmount = rateInfo.ExchangeAmount.ToString("F4");
+            var reqAmount = decimal.Parse(strAmount) * AmountFix;
+            
+            var withdrawalResp = Payout(inputs, strAmount);
+
+            withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rate, reqAmount.ToString("G29"));
 
             var response = new WithdrawResult
             {
                 Success = true,
                 WithdrawId = transId,
-                RawContent = JsonConvert.SerializeObject(withdrawalResp)
+                RawContent = JsonConvert.SerializeObject(withdrawalResp),
+                WithdrawalInfo = withdrawalInfo
             };
 
             return response;
@@ -366,11 +380,13 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
         decimal receivedCryptoAmount,
         decimal exchangeRate)
     {
-        if (receivedCryptoAmount == requestCryptoAmount)
+        var amount = receivedCryptoAmount / AmountFix;
+        
+        if (amount == requestCryptoAmount)
             return requestAmount;
 
         // 使用匯率回推平台金額，保留小數 2 位
-        var actualAmount = decimal.Round(receivedCryptoAmount / exchangeRate, 2);
+        var actualAmount = decimal.Round(amount / exchangeRate, 2);
         return actualAmount;
     }
 
