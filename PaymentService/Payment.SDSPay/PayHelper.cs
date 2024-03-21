@@ -106,10 +106,10 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> input)
     {
         var key = input["Key"];
-        var dic = FromJson<Dictionary<string, string>>(bodyContent);
+        var req = FromJson<CallbackReq>(bodyContent);
         var transId = input["TransID"];
 
-        if (!VerifySign(dic, key))
+        if (!VerifySign(req.Data, key))
         {
             _logger.LogError($"{transId}, signature verification failed.");
 
@@ -141,9 +141,9 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
         var requestAmount = decimal.Parse(input["RequestAmount"]);
         var result = new NotifyDepositResult
         {
-            ActualAmount = GetActualAmount(requestAmount, rateInfo.ExchangeAmount, decimal.Parse(dic["amount"]), rateInfo.ExchangeRate),
+            ActualAmount = GetActualAmount(requestAmount, rateInfo.ExchangeAmount, decimal.Parse(req.Data["amount"]), rateInfo.ExchangeRate),
             DepositId = transId,
-            ThirdId = dic["hash"],
+            ThirdId = req.Data["hash"],
             TransStatus = TransStatus.Success,
             Response = CallbackResponse.Success
         };
@@ -201,10 +201,10 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> input)
     {
         var key = input["Key"];
-        var dic = FromJson<Dictionary<string, string>>(bodyContent);
+        var req = FromJson<CallbackReq>(bodyContent);
         var transId = input["TransId"];
 
-        if (!VerifySign(dic, key))
+        if (!VerifySign(req.Data, key))
         {
             _logger.LogError($"{transId}, signature verification failed.");
 
@@ -220,7 +220,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
         return new NotifyWithdrawResult
         {
             WithdrawId = transId,
-            TransStatus = Definition.GetPayoutTransStatus(dic["status"]),
+            TransStatus = Definition.GetPayoutTransStatus(req.Data["status"]),
             Message = bodyContent,
             Response = CallbackResponse.Success
         };
@@ -235,9 +235,9 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
     
     public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
     {
-        var dic = FromJson<Dictionary<string, string>>(bodyContent);
+        var req = FromJson<CallbackReq>(bodyContent);
 
-        return dic["loginName"];
+        return req.Data["loginName"];
     }
 
     public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
