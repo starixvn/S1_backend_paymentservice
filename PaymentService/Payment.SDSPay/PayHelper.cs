@@ -182,13 +182,13 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
             if (rateInfo == null)
                 throw new CustomException("CryptoRateInfo is empty.");
 
-            var rate = rateInfo.ExchangeRate.ToString("G29");
-            var strAmount = rateInfo.ExchangeAmount.ToString("F4");
+            var rate = rateInfo.TempExchangeRate.ToString("G29");
+            var strAmount = rateInfo.TempExchangeAmount.ToString("F4");
             var reqAmount = decimal.Parse(strAmount) * AmountFix;
             
-            var withdrawalResp = Payout(inputs, strAmount);
+            var withdrawalResp = Payout(inputs, reqAmount.ToString("G29"));
 
-            withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rate, reqAmount.ToString("G29"));
+            withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rate, strAmount);
 
             var response = new WithdrawResult
             {
