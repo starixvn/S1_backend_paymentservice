@@ -224,9 +224,9 @@ namespace PaymentService.Service.DAL
                 });
         }
 
-        public IEnumerable<DepositAutoCancel> GetDepositAutoCancelList(int limit)
+        public IEnumerable<int> GetDepositAutoCancelList(int limit)
         {
-            return _reportDbClient.QueryUseCommandDefinition<DepositAutoCancel>("Service_DepositAutoCancel_Get",
+            return _reportDbClient.QueryUseCommandDefinition<int>("Service_DepositAutoCancel_Get",
                 new DynamicParameters(new { _Limit = limit }));
         }
 

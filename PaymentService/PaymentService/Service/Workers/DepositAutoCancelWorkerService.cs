@@ -45,15 +45,15 @@ namespace PaymentService.Service.Workers
                 var list = depositAutoCancelList.ToList();
                 
                 _logger.LogInformation($"GetDepositAutoCancelList Data Count：{list.Count}");
-                foreach (var depositAutoCancel in list)
+                foreach (var depositId in list)
                 {
                     try
                     {
-                        _paymentBll.DepositAutoCancel(depositAutoCancel.DepositId, "System");
+                        _paymentBll.DepositAutoCancel(depositId, "System");
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"DepositAutoCancel Fail\r\nDepositId: {depositAutoCancel.DepositId}\r\n{ex.Message}");
+                        _logger.LogError(ex, $"DepositAutoCancel Fail\r\nDepositId: {depositId}\r\n{ex.Message}");
                     }
                 }
             }
