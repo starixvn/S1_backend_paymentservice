@@ -26,12 +26,12 @@ namespace PaymentService.Service.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            LogContext.PushProperty("WorkId", Guid.NewGuid());
             timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
         private void DoWork(object state)
         {
+            LogContext.PushProperty("WorkId", Guid.NewGuid());
             try
             {
                 var depositRequesList = paymentBLL.GetDepositRequesPayEnquiry();

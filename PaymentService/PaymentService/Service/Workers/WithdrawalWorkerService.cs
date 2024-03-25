@@ -30,12 +30,12 @@ namespace PaymentService.Service.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            LogContext.PushProperty("WorkId", Guid.NewGuid());
             _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
         private void DoWork(object state)
         {
+            LogContext.PushProperty("WorkId", Guid.NewGuid());
             try
             {
                 var withdrawalList = _paymentBll.GetWithdrawalRequesPayEnquiry(_payIds);
