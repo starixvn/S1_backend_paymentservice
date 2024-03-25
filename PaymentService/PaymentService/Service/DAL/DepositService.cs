@@ -12,7 +12,6 @@ namespace PaymentService.Service.DAL
     public class DepositService
     {
         private readonly MySqlClient _mainDbClient;
-        private readonly MySqlClient _reportDbClient;
         private readonly WalletService _walletService;
         private readonly WithdrawalLimitService _withdrawalLimitService;
         private readonly CustInfoService _custInfoService;
@@ -226,9 +225,9 @@ namespace PaymentService.Service.DAL
                 });
         }
 
-        public IEnumerable<int> GetDepositAutoCancelList(int limit)
+        public IEnumerable<DepositAutoCancel> GetDepositAutoCancelList(int limit)
         {
-            return _reportDbClient.QueryUseCommandDefinition<int>("Service_DepositAutoCancel_Get",
+            return _mainDbClient.QueryUseCommandDefinition<DepositAutoCancel>("Service_DepositAutoCancel_Get",
                 new DynamicParameters(new { _Limit = limit }));
         }
 

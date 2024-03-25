@@ -270,7 +270,7 @@ namespace PaymentService.Service.BLL
             return _withdrawalService.GetWithdrawalInfo(transId);
         }
 
-        public IEnumerable<int> GetDepositAutoCancelList(int limit)
+        public IEnumerable<DepositAutoCancel> GetDepositAutoCancelList(int limit)
         {
             return _depositService.GetDepositAutoCancelList(limit);
         }

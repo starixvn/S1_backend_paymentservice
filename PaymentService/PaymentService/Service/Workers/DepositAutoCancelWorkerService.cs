@@ -34,26 +34,18 @@ namespace PaymentService.Service.Workers
                 var r = _random.Next(950, 1000);
                 var depositAutoCancelList = _paymentBll.GetDepositAutoCancelList(r);
 
-                _logger.LogInformation("112233");
-                
-                if (depositAutoCancelList == null)
-                {
-                    _logger.LogInformation("depositAutoCancelList is null");
-                    return;
-                }
-
                 var list = depositAutoCancelList.ToList();
                 
                 _logger.LogInformation($"GetDepositAutoCancelList Data Count：{list.Count}");
-                foreach (var depositId in list)
+                foreach (var deposit in list)
                 {
                     try
                     {
-                        _paymentBll.DepositAutoCancel(depositId, "System");
+                        _paymentBll.DepositAutoCancel(deposit.DepositId, "System");
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"DepositAutoCancel Fail\r\nDepositId: {depositId}\r\n{ex.Message}");
+                        _logger.LogError(ex, $"DepositAutoCancel Fail\r\nDepositId: {deposit.DepositId}\r\n{ex.Message}");
                     }
                 }
             }
