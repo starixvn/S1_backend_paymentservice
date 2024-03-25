@@ -5,6 +5,7 @@ using MySql.Data.MySqlClient;
 using PaymentCore;
 
 using PaymentService.Service.BLL;
+using Serilog.Context;
 
 namespace PaymentService.Service.Workers
 {
@@ -25,6 +26,7 @@ namespace PaymentService.Service.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            LogContext.PushProperty("WorkId", Guid.NewGuid());
             timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
