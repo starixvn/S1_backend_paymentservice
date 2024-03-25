@@ -34,12 +34,13 @@ namespace PaymentService.Service.Workers
                 var r = _random.Next(950, 1000);
                 var depositAutoCancelList = _paymentBll.GetDepositAutoCancelList(r);
 
+                _logger.LogInformation("112233");
+                
                 if (depositAutoCancelList == null)
                 {
                     _logger.LogInformation("depositAutoCancelList is null");
                     return;
                 }
-                _logger.LogInformation(JsonConvert.SerializeObject(depositAutoCancelList));
 
                 var list = depositAutoCancelList.ToList();
                 

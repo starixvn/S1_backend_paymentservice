@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Dapper;
 
 using MySql.Data.MySqlClient;
-
+using Newtonsoft.Json;
 using PaymentService.Model;
 
 using Serilog.Context;
@@ -101,6 +101,7 @@ namespace PaymentService.Service.Library
                 
                 LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
                 _logger.LogDebug($"{name} {sw.Elapsed:c}");
+                _logger.LogInformation("result=" + JsonConvert.SerializeObject(result));
                 
                 return result;
             }
