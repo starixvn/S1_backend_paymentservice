@@ -31,18 +31,18 @@ namespace PaymentService.Service.Workers
                 _logger.LogInformation("Deposit Auto Cancel Task Start");
                 var r = _random.Next(950, 1000);
                 
-                _logger.LogInformation("r="+r);
-                
-                var depositAutoCancelList = _paymentBll.GetDepositAutoCancelList(r)?.ToList();
+                var depositAutoCancelList = _paymentBll.GetDepositAutoCancelList(r);
 
                 if (depositAutoCancelList == null)
                 {
                     _logger.LogInformation("depositAutoCancelList is null");
                     return;
                 }
+
+                var list = depositAutoCancelList.ToList();
                 
-                _logger.LogInformation($"GetDepositAutoCancelList Data Count：{depositAutoCancelList.Count}");
-                foreach (var depositAutoCancel in depositAutoCancelList)
+                _logger.LogInformation($"GetDepositAutoCancelList Data Count：{list.Count}");
+                foreach (var depositAutoCancel in list)
                 {
                     try
                     {
