@@ -19,27 +19,32 @@ namespace PaymentService.Service.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            LogContext.PushProperty("WorkId", Guid.NewGuid());
             _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
         private void DoWork(object state)
         {
+            LogContext.PushProperty("WorkId", Guid.NewGuid());
             try
             {
                 _logger.LogInformation("Deposit Auto Cancel Task Start");
-                var depositAutoCancelList = _paymentBll.GetDepositAutoCancelList(_random.Next(950, 1000)).ToList();
-                _logger.LogInformation($"GetDepositAutoCancelList Data Count：{depositAutoCancelList.Count}");
-                foreach (var depositAutoCancel in depositAutoCancelList)
+                
+                var r = _random.Next(950, 1000);
+                var depositAutoCancelList = _paymentBll.GetDepositAutoCancelList(r);
+
+                var list = depositAutoCancelList.ToList();
+                
+                _logger.LogInformation($"GetDepositAutoCancelList Data Count：{list.Count}");
+                foreach (var deposit in list)
                 {
                     try
                     {
-                        _paymentBll.DepositAutoCancel(depositAutoCancel.DepositId, "System");
+                        _paymentBll.DepositAutoCancel(deposit.DepositId, "System");
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"DepositAutoCancel Fail\r\nDepositId: {depositAutoCancel.DepositId}\r\n{ex.Message}");
+                        _logger.LogError(ex, $"DepositAutoCancel Fail\r\nDepositId: {deposit.DepositId}\r\n{ex.Message}");
                     }
                 }
             }
