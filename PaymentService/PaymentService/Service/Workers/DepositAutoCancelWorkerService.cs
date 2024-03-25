@@ -54,7 +54,7 @@ namespace PaymentService.Service.Workers
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(1);
+                var dueTimeSpan = TimeSpan.FromMinutes(5);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
