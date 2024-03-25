@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using PaymentCore;
 
 using PaymentService.Service.BLL;
+using Serilog.Context;
 
 namespace PaymentService.Service.Workers
 {
@@ -29,6 +30,7 @@ namespace PaymentService.Service.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            LogContext.PushProperty("WorkId", Guid.NewGuid());
             _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
