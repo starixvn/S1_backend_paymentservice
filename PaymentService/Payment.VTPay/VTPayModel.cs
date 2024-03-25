@@ -1,4 +1,6 @@
-﻿namespace Payment.VTPay;
+﻿using Newtonsoft.Json;
+
+namespace Payment.VTPay;
 
 internal class VTPayModel
 {
@@ -6,6 +8,15 @@ internal class VTPayModel
     {
         public Content Content { get; set; }
         public int ResultCode { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+
+    internal class WithdrawalResponse
+    {
+        [JsonProperty("ResultCode")]
+        public int ResultCode { get; set; }
+
+        [JsonProperty("ErrorMessage")]
         public string ErrorMessage { get; set; }
     }
 

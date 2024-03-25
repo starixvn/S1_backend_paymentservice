@@ -8,6 +8,7 @@ using static Payment.VTPay.VTPayModel;
 using static Payment.VTPay.VTPayDefinition;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
+using Newtonsoft.Json;
 
 
 namespace Payment.VTPay
@@ -109,7 +110,7 @@ namespace Payment.VTPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
-            var payCode = dicReq["MerchantID"];
+            var merchantID = dicReq["MerchantID"];
             var authenticateCode = dicReq["AuthenticateCode"];
             var passKey = "";
             string transId;
@@ -118,7 +119,7 @@ namespace Payment.VTPay
             string status;
             Dictionary<string, string> req;
 
-            switch (payCode)
+            switch (merchantID)
             {
                 case "883DB1A81B"://QRIS
                     passKey = payResource["PassKeyForQR"];
@@ -133,7 +134,7 @@ namespace Payment.VTPay
 
             req = new Dictionary<string, string>
             {
-                { "MerchantID",dicReq["MerchantID"] },
+                { "MerchantID",merchantID },
                 { "MerchantTransactionID",dicReq["MerchantTransactionID"]},
                 { "Amount",dicReq["Amount"] },
                 { "Status",dicReq["Status"]},
@@ -195,13 +196,121 @@ namespace Payment.VTPay
         #region Credit
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var baseUrl = inputs["host"];
+            var currency = inputs["PayCurrencyId"];
+            var transId = inputs["TransID"];
+            var callbackUrl = inputs["CallBackUrl"];
+            var accountName = inputs["AccountName"];
+            var accountNo = inputs["AccountNo"];
+            var amount = inputs["Amount"];
+            var dateTime = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-d HH:mm:ss");//+7時區
+            var IPAddress = inputs["ClientIP"];
+            var bankCode = inputs["BankCode"];
+            var merchantId = inputs["MerchantIDForP2P"];
+            var passKey = inputs["PassKeyForP2P"];
+
+            try
+            {
+                var req = new Dictionary<string, string>
+                {
+                    { "MerchantID",merchantId},
+                    { "Amount",amount},
+                    { "BankCode",bankCode},
+                    { "DateRequest",dateTime},
+                };
+
+                req.Add("Signature",GetSign(req,passKey));
+                req.Add("MerchantTransactionID", transId);
+                req.Add("RequestURL", callbackUrl);
+                req.Add("Language","en-US");
+                req.Add("IPAddress", IPAddress);
+                req.Add("Currency", currency);
+                req.Add("BankAccountName", accountName);
+                req.Add("BankAccountNo", accountNo);
+                req.Add("BankBranch","?");
+                req.Add("BankCity","?");
+                req.Add("BankProvince","?");
+                req.Add("ParamOptional", "");
+
+                var (response, statusCode) = _httpHelper
+                    .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{baseUrl}{VTPayDefinition.Path.Withdrawal}", req);
+
+                if (!statusCode.IsSuccessStatus())
+                {
+                    throw new CustomException($"VTpay withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
+                }
+
+                if (!ErrorCode.Success.Equals(response.ResultCode))
+                {
+                    throw new CustomException(response.ErrorMessage, response.ResultCode.ToString());
+                }
+
+                return new WithdrawResult
+                {
+                    Success = true,
+                    RawContent = JsonConvert.SerializeObject(response)
+                };
+            }
+            catch (CustomException ex)
+            {
+                _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
+
+                return new WithdrawResult
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
             Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+            var transID = dicReq["MerchantTransactionID"];
+            var apiKey = payResource["PassKeyForP2P"];
+            var req = new Dictionary<string, string>
+            {
+                { "MerchantID",dicReq["MerchantID"]},
+                { "MerchantTransactionID",transID},
+                { "Amount",dicReq["Amount"]},
+                { "Status",dicReq["Status"]},
+                { "Currency",dicReq["Currency"]},
+            };
+
+            if (!VerifySign(req, apiKey, dicReq["Signature"]))
+            {
+                return new NotifyWithdrawResult
+                {
+                    ThirdId = dicReq["PGTransactionID"],
+                    TransStatus = TransStatus.Pending,
+                    Response = "Signature does not match."
+                };
+            }
+
+            var transStatus = VTPayDefinition.GetTransStatus(dicReq["Status"]);
+
+            var response = new DepositResponse
+            {
+                ResultCode = 1,
+                ErrorMessage = "",
+                Content = new Content
+                {
+                    Status = "success",
+                    MerchantTransactionID = transID,
+                    AuthenticateCode = dicReq["PGTransactionID"]
+                }
+            };
+            string responseString = ToJson(response);
+
+            return new NotifyWithdrawResult
+            {
+                ThirdId = dicReq["PGTransactionID"],
+                TransStatus = transStatus,
+                Message = dicReq["Status"],
+                Response = responseString,
+                WithdrawId = transID
+            };
         }
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
