@@ -88,7 +88,10 @@ namespace PaymentService.Service.Library
             var sw = Stopwatch.StartNew();
             try
             {
+                _logger.LogInformation("test 1");
                 using var connection = new MySqlConnection(_connectionString);
+                
+                _logger.LogInformation("conn=" + _connectionString);
                 if (connection.State != ConnectionState.Open) connection.Open();// 自己 Control connection open close，不要讓 ORM 自己做
 
                 var command = new CommandDefinition(name, parameters, // 使用 CommandDefinition 不讓
@@ -99,6 +102,8 @@ namespace PaymentService.Service.Library
                 result = connection.Query<T>(command);
                 connection.Close();
                 connection.Dispose();
+                
+                _logger.LogInformation("test 2");
             }
             catch (Exception e)
             {
