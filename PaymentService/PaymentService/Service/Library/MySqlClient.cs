@@ -85,6 +85,7 @@ namespace PaymentService.Service.Library
             var sw = Stopwatch.StartNew();
             try
             {
+                _logger.LogInformation($"QueryUseCommandDefinition:{name}:{JsonConvert.SerializeObject(parameters)}");
                 using var connection = new MySqlConnection(_connectionString);
                 if (connection.State != ConnectionState.Open)
                     connection.Open();// 自己 Control connection open close，不要讓 ORM 自己做
@@ -96,11 +97,12 @@ namespace PaymentService.Service.Library
 
                 var result = connection.Query<T>(command);
                 connection.Close();
+                _logger.LogInformation("After Close");
                 connection.Dispose();
+                _logger.LogInformation("After Dispose");
                 
                 LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
                 _logger.LogDebug($"{name} {sw.Elapsed:c}");
-                _logger.LogInformation("result=" + JsonConvert.SerializeObject(result));
                 
                 return result;
             }
