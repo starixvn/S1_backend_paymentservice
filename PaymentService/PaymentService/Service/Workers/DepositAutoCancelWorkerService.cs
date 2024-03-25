@@ -1,4 +1,5 @@
-﻿using PaymentService.Service.BLL;
+﻿using Newtonsoft.Json;
+using PaymentService.Service.BLL;
 using Serilog.Context;
 
 namespace PaymentService.Service.Workers
@@ -38,6 +39,7 @@ namespace PaymentService.Service.Workers
                     _logger.LogInformation("depositAutoCancelList is null");
                     return;
                 }
+                _logger.LogInformation(JsonConvert.SerializeObject(depositAutoCancelList));
 
                 var list = depositAutoCancelList.ToList();
                 
