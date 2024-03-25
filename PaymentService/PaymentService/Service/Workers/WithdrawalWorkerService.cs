@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using PaymentCore;
 
 using PaymentService.Service.BLL;
+using Serilog.Context;
 
 namespace PaymentService.Service.Workers
 {
@@ -34,6 +35,7 @@ namespace PaymentService.Service.Workers
         }
         private void DoWork(object state)
         {
+            LogContext.PushProperty("WorkId", Guid.NewGuid());
             try
             {
                 var withdrawalList = _paymentBll.GetWithdrawalRequesPayEnquiry(_payIds);

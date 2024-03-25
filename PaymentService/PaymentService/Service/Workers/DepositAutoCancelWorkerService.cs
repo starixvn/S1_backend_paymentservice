@@ -1,4 +1,5 @@
 ﻿using PaymentService.Service.BLL;
+using Serilog.Context;
 
 namespace PaymentService.Service.Workers
 {
@@ -24,10 +25,22 @@ namespace PaymentService.Service.Workers
 
         private void DoWork(object state)
         {
+            LogContext.PushProperty("WorkId", Guid.NewGuid());
             try
             {
                 _logger.LogInformation("Deposit Auto Cancel Task Start");
-                var depositAutoCancelList = _paymentBll.GetDepositAutoCancelList(_random.Next(950, 1000)).ToList();
+                var r = _random.Next(950, 1000);
+                
+                _logger.LogInformation("r="+r);
+                
+                var depositAutoCancelList = _paymentBll.GetDepositAutoCancelList(r)?.ToList();
+
+                if (depositAutoCancelList == null)
+                {
+                    _logger.LogInformation("depositAutoCancelList is null");
+                    return;
+                }
+                
                 _logger.LogInformation($"GetDepositAutoCancelList Data Count：{depositAutoCancelList.Count}");
                 foreach (var depositAutoCancel in depositAutoCancelList)
                 {
@@ -47,7 +60,7 @@ namespace PaymentService.Service.Workers
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(5);
+                var dueTimeSpan = TimeSpan.FromMinutes(1);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
