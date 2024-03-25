@@ -29,8 +29,8 @@ namespace PaymentService.Service.Workers
             try
             {
                 _logger.LogInformation("Deposit Auto Cancel Task Start");
-                var r = _random.Next(950, 1000);
                 
+                var r = _random.Next(950, 1000);
                 var depositAutoCancelList = _paymentBll.GetDepositAutoCancelList(r);
 
                 if (depositAutoCancelList == null)
