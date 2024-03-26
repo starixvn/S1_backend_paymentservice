@@ -357,7 +357,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
     private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
     {
         var str = string.Join("&", param
-            .Where(x => !_exceptKeys.Contains(x.Key))
+            .Where(x => !_exceptKeys.Contains(x.Key) && !string.IsNullOrEmpty(x.Value))
             .OrderBy(x => x.Key)
             .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
 
