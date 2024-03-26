@@ -94,9 +94,6 @@ namespace Payment.VTPay
                 (response, statusCode) = _httpHelper
                     .PostJson<DepositRequestData, DepositResponse>($"{baseUrl}{VTPayDefinition.Path.Deposit}", reqData);
 
-                redirectURL = response.Content.URL;
-
-
                 if (!statusCode.IsSuccessStatus())
                 {
                     throw new CustomException($"VTPay deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
@@ -107,6 +104,7 @@ namespace Payment.VTPay
                     throw new CustomException(response.ErrorMessage);
                 }
 
+                redirectURL = response.Content.URL;
                 return new DepositResult
                 {
                     Success = true,
@@ -128,10 +126,12 @@ namespace Payment.VTPay
             var merchantID = dicReq["MerchantID"];
             var authenticateCode = dicReq["AuthenticateCode"];
             var passKey = "";
-            string transId;
-            decimal amount;
-            string sign;
-            string status;
+            var transId = dicReq["MerchantTransactionID"];
+            var amount = decimal.Parse(dicReq["Amount"]);
+            var sign = dicReq["Signature"];
+            var status = dicReq["Status"];
+            var currency = dicReq["Currency"];
+
             Dictionary<string, string> req;
 
             switch (merchantID)
@@ -150,29 +150,39 @@ namespace Payment.VTPay
             req = new Dictionary<string, string>
             {
                 { "MerchantID",merchantID },
-                { "MerchantTransactionID",dicReq["MerchantTransactionID"]},
-                { "Amount",dicReq["Amount"] },
-                { "Status",dicReq["Status"]},
-                { "Currency",dicReq["Currency"]},
+                { "MerchantTransactionID",transId},
+                { "Amount",amount.ToString("F4") },
+                { "Status",status},
+                { "Currency",currency},
             };
 
-            transId = dicReq["MerchantTransactionID"];
-            amount = decimal.Parse(dicReq["Amount"]);
-            sign = dicReq["Signature"];
-            status = dicReq["Status"];
 
             if (!VerifySign(req, passKey, sign))
             {
+                var depositResponse = new DepositResponse
+                {
+                    ResultCode = 0,
+                    ErrorMessage = "Signature does not match.",
+                    Content = new Content
+                    {
+                        Status = "failed",
+                        MerchantTransactionID = transId,
+                        AuthenticateCode = authenticateCode
+                    }
+                };
+                string json = ToJson(depositResponse);
+
                 return new NotifyDepositResult
                 {
                     DepositId = transId,
                     TransStatus = TransStatus.Pending,
-                    Response = "Signature does not match."
+                    Response = json
                 };
             }
 
             var transStatus = GetTransStatus(status);
 
+            #region VTPay規範response
             var response = new DepositResponse
             {
                 ResultCode = 1,
@@ -185,6 +195,7 @@ namespace Payment.VTPay
                 }
             };
             string responseString = ToJson(response);
+            #endregion
 
             return new NotifyDepositResult
             {
