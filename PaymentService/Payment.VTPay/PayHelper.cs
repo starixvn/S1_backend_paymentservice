@@ -32,7 +32,7 @@ namespace Payment.VTPay
             var transId = inputs["TransID"];
             var returnUrl = inputs["ReturnUrl"];
             var callbackUrl = inputs["CallBackUrl"];
-            var amount = inputs["Amount"];
+            var amount = decimal.Parse(inputs["Amount"]);
             var dateTime = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-d HH:mm:ss");//+7時區
             var IPAddress = inputs["ClientIP"];
             var bankCode = "";
@@ -68,7 +68,7 @@ namespace Payment.VTPay
                 req = new Dictionary<string, string>
                     {
                         { "MerchantID",merchantId },
-                        { "Amount",amount},
+                        { "Amount",amount.ToString("F4")},
                         { "BankCode",bankCode},
                         { "DateRequest",dateTime}
                     };
@@ -202,7 +202,7 @@ namespace Payment.VTPay
             var callbackUrl = inputs["CallBackUrl"];
             var accountName = inputs["AccountName"];
             var accountNo = inputs["AccountNo"];
-            var amount = inputs["Amount"];
+            var amount = decimal.Parse(inputs["Amount"]);
             var dateTime = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-d HH:mm:ss");//+7時區
             var IPAddress = inputs["ClientIP"];
             var bankCode = inputs["BankCode"];
@@ -214,7 +214,7 @@ namespace Payment.VTPay
                 var req = new Dictionary<string, string>
                 {
                     { "MerchantID",merchantId},
-                    { "Amount",amount},
+                    { "Amount",amount.ToString("F4")},
                     { "BankCode",bankCode},
                     { "DateRequest",dateTime},
                 };
