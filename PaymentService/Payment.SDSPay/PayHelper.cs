@@ -14,6 +14,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
 {
     private readonly IFlurlHttpHelper _httpHelper;
     private readonly ILogger<PayHelper> _logger;
+    private const decimal AmountFix = 10000;
 
     public PayHelper(IServiceProvider provider)
     {
@@ -78,13 +79,18 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
             if (rateInfo == null)
                 throw new CustomException("CryptoRateInfo is empty.");
             
+            var rate = rateInfo.ExchangeRate.ToString("G29");
+            var amount = rateInfo.ExchangeAmount.ToString("F4");
+            
             var formData = new Dictionary<string, string>
             {
                 { "DepositAmount", reqAmount },
-                { "Rate", rateInfo.ExchangeRate.ToString("G29") },
-                { "RequestAmount", rateInfo.ExchangeAmount.ToString("G29") },
+                { "Rate", rate },
+                { "RequestAmount", amount },
                 { "Token", payCode }
             };
+            
+            depositInfo = depositInfo.AddOrSetExchangeInfo(rate, amount);
 
             return new DepositResult
             {
@@ -92,7 +98,8 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
                 ErrorCode = "0",
                 Url = GetWalletAddress(input),
                 FormData = formData,
-                ThirdId = string.Empty
+                ThirdId = string.Empty,
+                DepositInfo = depositInfo
             };
         }
         catch (CustomException ex)
@@ -106,10 +113,10 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> input)
     {
         var key = input["Key"];
-        var dic = FromJson<Dictionary<string, string>>(bodyContent);
+        var req = FromJson<CallbackReq>(bodyContent);
         var transId = input["TransID"];
 
-        if (!VerifySign(dic, key))
+        if (!VerifySign(req.Data, key))
         {
             _logger.LogError($"{transId}, signature verification failed.");
 
@@ -141,9 +148,9 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
         var requestAmount = decimal.Parse(input["RequestAmount"]);
         var result = new NotifyDepositResult
         {
-            ActualAmount = GetActualAmount(requestAmount, rateInfo.ExchangeAmount, decimal.Parse(dic["amount"]), rateInfo.ExchangeRate),
+            ActualAmount = GetActualAmount(requestAmount, rateInfo.ExchangeAmount, decimal.Parse(req.Data["amount"]), rateInfo.ExchangeRate),
             DepositId = transId,
-            ThirdId = dic["hash"],
+            ThirdId = req.Data["hash"],
             TransStatus = TransStatus.Success,
             Response = CallbackResponse.Success
         };
@@ -175,13 +182,20 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
             if (rateInfo == null)
                 throw new CustomException("CryptoRateInfo is empty.");
 
-            var withdrawalResp = Payout(inputs, rateInfo.ExchangeAmount.ToString("G29"));
+            var rate = rateInfo.TempExchangeRate.ToString("G29");
+            var strAmount = rateInfo.TempExchangeAmount.ToString("F4");
+            var reqAmount = decimal.Parse(strAmount) * AmountFix;
+            
+            var withdrawalResp = Payout(inputs, reqAmount.ToString("G29"));
+
+            withdrawalInfo = withdrawalInfo.AddOrSetExchangeInfo(rate, strAmount);
 
             var response = new WithdrawResult
             {
                 Success = true,
                 WithdrawId = transId,
-                RawContent = JsonConvert.SerializeObject(withdrawalResp)
+                RawContent = JsonConvert.SerializeObject(withdrawalResp),
+                WithdrawalInfo = withdrawalInfo
             };
 
             return response;
@@ -201,10 +215,10 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> input)
     {
         var key = input["Key"];
-        var dic = FromJson<Dictionary<string, string>>(bodyContent);
+        var req = FromJson<CallbackReq>(bodyContent);
         var transId = input["TransId"];
 
-        if (!VerifySign(dic, key))
+        if (!VerifySign(req.Data, key))
         {
             _logger.LogError($"{transId}, signature verification failed.");
 
@@ -220,7 +234,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
         return new NotifyWithdrawResult
         {
             WithdrawId = transId,
-            TransStatus = Definition.GetPayoutTransStatus(dic["status"]),
+            TransStatus = Definition.GetPayoutTransStatus(req.Data["status"]),
             Message = bodyContent,
             Response = CallbackResponse.Success
         };
@@ -235,9 +249,9 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
     
     public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
     {
-        var dic = FromJson<Dictionary<string, string>>(bodyContent);
+        var req = FromJson<CallbackReq>(bodyContent);
 
-        return dic["loginName"];
+        return req.Data["loginName"];
     }
 
     public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
@@ -343,7 +357,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
     private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
     {
         var str = string.Join("&", param
-            .Where(x => !_exceptKeys.Contains(x.Key))
+            .Where(x => !_exceptKeys.Contains(x.Key) && !string.IsNullOrEmpty(x.Value))
             .OrderBy(x => x.Key)
             .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
 
@@ -366,11 +380,13 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
         decimal receivedCryptoAmount,
         decimal exchangeRate)
     {
-        if (receivedCryptoAmount == requestCryptoAmount)
+        var amount = receivedCryptoAmount / AmountFix;
+        
+        if (amount == requestCryptoAmount)
             return requestAmount;
 
         // 使用匯率回推平台金額，保留小數 2 位
-        var actualAmount = decimal.Round(receivedCryptoAmount / exchangeRate, 2);
+        var actualAmount = decimal.Round(amount / exchangeRate, 2);
         return actualAmount;
     }
 
