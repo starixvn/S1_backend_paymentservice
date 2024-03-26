@@ -72,7 +72,7 @@ namespace Payment.VTPay
                         { "BankCode",bankCode},
                         { "DateRequest",dateTime}
                     };
-                req.Add("Signtrue", GetSign(req, passKey));
+                req.Add("Signature", GetSign(req, passKey));
                 req.Add("Currency", currency);
                 req.Add("MerchantTransactionID", transId);
                 req.Add("ReturnUrl", returnUrl);
