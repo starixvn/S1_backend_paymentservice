@@ -4,6 +4,40 @@ namespace Payment.VTPay;
 
 internal class VTPayModel
 {
+    public class DepositRequestData
+    {
+        public string MerchantID { get; set; }
+        public decimal Amount { get; set; }
+        public string BankCode { get; set; }
+        public string DateRequest { get; set; }
+        public string Currency { get; set; }
+        public string MerchantTransactionID { get; set; }
+        public string ReturnUrl { get; set; }
+        public string RequestUrl { get; set; }
+        public string Language { get; set; }
+        public string IPAddress { get; set; }
+        public string ParamOptional { get; set; }
+        public string Signature { get; set; }
+    }
+    public class WithdrawalRequestData
+    {
+        public string MerchantID { get; set; }
+        public decimal Amount { get; set; }
+        public string BankCode { get; set; }
+        public string DateRequest { get; set; }
+        public string MerchantTransactionID { get; set; }
+        public string RequestURL { get; set; }
+        public string Language { get; set; }
+        public string IPAddress { get; set; }
+        public string Currency { get; set; }
+        public string BankAccountName { get; set; }
+        public string BankAccountNo { get; set; }
+        public string BankBranch { get; set; }
+        public string BankCity { get; set; }
+        public string BankProvince { get; set; }
+        public string ParamOptional { get; set; }
+        public string Signature { get; set; }
+    }
     internal class DepositResponse
     {
         public Content Content { get; set; }
