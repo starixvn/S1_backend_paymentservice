@@ -13,7 +13,7 @@ internal class VTPayDefinition
 
     internal class ErrorCode
     {
-        public const string Success = "1";
+        public const int Success = 1;
     }
 
     public class CallbackResponse

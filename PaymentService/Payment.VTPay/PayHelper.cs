@@ -9,6 +9,7 @@ using static Payment.VTPay.VTPayDefinition;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 
 
 namespace Payment.VTPay
@@ -34,6 +35,7 @@ namespace Payment.VTPay
             var callbackUrl = inputs["CallBackUrl"];
             var amount = decimal.Parse(inputs["Amount"]);
             var dateTime = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-d HH:mm:ss");//+7時區
+            string cleanedDate = Regex.Replace(dateTime, "[^0-9]", "");
             var IPAddress = inputs["ClientIP"];
             var bankCode = "";
             var merchantId = "";
@@ -69,7 +71,7 @@ namespace Payment.VTPay
                         { "MerchantID",merchantId },
                         { "Amount",amount.ToString("F4")},
                         { "BankCode",bankCode},
-                        { "DateRequest",dateTime}
+                        { "DateRequest",cleanedDate}
                     };
                 var signature = GetSign(sign, passKey);
 
@@ -100,10 +102,15 @@ namespace Payment.VTPay
                     throw new CustomException($"VTPay deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
                 }
 
+                if (response.ResultCode != ErrorCode.Success)
+                {
+                    throw new CustomException(response.ErrorMessage);
+                }
+
                 return new DepositResult
                 {
                     Success = true,
-                    ErrorCode = ErrorCode.Success,
+                    ErrorCode = ErrorCode.Success.ToString(),
                     Url = redirectURL,
                 };
             }
@@ -212,6 +219,7 @@ namespace Payment.VTPay
             var accountNo = inputs["AccountNo"];
             var amount = decimal.Parse(inputs["Amount"]);
             var dateTime = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-d HH:mm:ss");//+7時區
+            string cleanedDate = Regex.Replace(dateTime, "[^0-9]", "");
             var IPAddress = inputs["ClientIP"];
             var bankCode = inputs["BankCode"];
             var merchantId = inputs["MerchantIDForP2P"];
@@ -224,7 +232,7 @@ namespace Payment.VTPay
                     { "MerchantID",merchantId},
                     { "Amount",amount.ToString("F4")},
                     { "BankCode",bankCode},
-                    { "DateRequest",dateTime},
+                    { "DateRequest",cleanedDate},
                 };
                 var signature = GetSign(sign, passKey);
 
