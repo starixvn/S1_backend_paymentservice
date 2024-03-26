@@ -42,7 +42,6 @@ namespace Payment.VTPay
 
             try
             {
-                Dictionary<string, string> req;
                 DepositResponse response;
                 HttpStatusCode statusCode;
 
@@ -65,24 +64,33 @@ namespace Payment.VTPay
                         break;
                 }
 
-                req = new Dictionary<string, string>
+                var sign = new Dictionary<string, string>
                     {
                         { "MerchantID",merchantId },
                         { "Amount",amount.ToString("F4")},
                         { "BankCode",bankCode},
                         { "DateRequest",dateTime}
                     };
-                req.Add("Signature", GetSign(req, passKey));
-                req.Add("Currency", currency);
-                req.Add("MerchantTransactionID", transId);
-                req.Add("ReturnUrl", returnUrl);
-                req.Add("RequestUrl", callbackUrl);
-                req.Add("Language", "en-US");
-                req.Add("IPAddress", IPAddress);
-                req.Add("ParamOptional", "");
+                var signature = GetSign(sign, passKey);
+
+                var reqData = new DepositRequestData
+                {
+                    MerchantID = merchantId,
+                    Currency = currency,
+                    BankCode = bankCode,
+                    MerchantTransactionID = transId,
+                    ReturnUrl = returnUrl,
+                    RequestUrl = callbackUrl,
+                    Language = "en-US",
+                    Amount = decimal.Parse(amount.ToString("F4")),
+                    DateRequest = dateTime,
+                    IPAddress = IPAddress,
+                    ParamOptional = "",
+                    Signature = signature,
+                };
 
                 (response, statusCode) = _httpHelper
-                    .PostJson<Dictionary<string, string>, DepositResponse>($"{baseUrl}{VTPayDefinition.Path.Deposit}", req);
+                    .PostJson<DepositRequestData, DepositResponse>($"{baseUrl}{VTPayDefinition.Path.Deposit}", reqData);
 
                 redirectURL = response.Content.URL;
 
@@ -211,29 +219,38 @@ namespace Payment.VTPay
 
             try
             {
-                var req = new Dictionary<string, string>
+                var sign = new Dictionary<string, string>
                 {
                     { "MerchantID",merchantId},
                     { "Amount",amount.ToString("F4")},
                     { "BankCode",bankCode},
                     { "DateRequest",dateTime},
                 };
+                var signature = GetSign(sign, passKey);
 
-                req.Add("Signature",GetSign(req,passKey));
-                req.Add("MerchantTransactionID", transId);
-                req.Add("RequestURL", callbackUrl);
-                req.Add("Language","en-US");
-                req.Add("IPAddress", IPAddress);
-                req.Add("Currency", currency);
-                req.Add("BankAccountName", accountName);
-                req.Add("BankAccountNo", accountNo);
-                req.Add("BankBranch","?");
-                req.Add("BankCity","?");
-                req.Add("BankProvince","?");
-                req.Add("ParamOptional", "");
+                var reqData = new WithdrawalRequestData
+                {
+                    MerchantID = merchantId,
+                    Amount = decimal.Parse(amount.ToString("F4")),
+                    MerchantTransactionID = transId,
+                    RequestURL = callbackUrl,
+                    DateRequest = dateTime,
+                    Language = "en-US",
+                    IPAddress = IPAddress,
+                    Currency = currency,
+                    BankCode = bankCode,
+                    BankAccountName = accountName,
+                    BankAccountNo = accountNo,
+                    BankBranch = "",
+                    BankCity = "",
+                    BankProvince = "",
+                    ParamOptional = "",
+                    Signature = signature,
+                };
+                
 
                 var (response, statusCode) = _httpHelper
-                    .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{baseUrl}{VTPayDefinition.Path.Withdrawal}", req);
+                    .PostJson<WithdrawalRequestData, WithdrawalResponse>($"{baseUrl}{VTPayDefinition.Path.Withdrawal}", reqData);
 
                 if (!statusCode.IsSuccessStatus())
                 {
