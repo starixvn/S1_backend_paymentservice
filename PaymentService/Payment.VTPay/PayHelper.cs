@@ -38,9 +38,8 @@ namespace Payment.VTPay
             string cleanedDate = Regex.Replace(dateTime, "[^0-9]", "");
             var IPAddress = inputs["ClientIP"];
             var bankCode = "";
-            var merchantId = "";
-            var passKey = "";
-            var redirectURL = "";
+            var merchantId = inputs[$"MerchantIDFor{payCode}"];
+            var passKey = inputs[$"PassKeyFor{payCode}"];
 
             try
             {
@@ -50,18 +49,12 @@ namespace Payment.VTPay
                 switch (payCode)
                 {
                     case "QRIS":
-                        merchantId = inputs["MerchantIDForPQR"];
-                        passKey = inputs["PassKeyForQR"];
-                        bankCode = "QRIS";
+                        bankCode = payCode;
                         break;
                     case "P2P":
-                        merchantId = inputs["MerchantIDForP2P"];
-                        passKey = inputs["PassKeyForP2P"];
                         bankCode = inputs["BankCode"];
                         break;
                     case "VA":
-                        merchantId = inputs["MerchantIDForVA"];
-                        passKey = inputs["PassKeyForVA"];
                         bankCode = inputs["BankCode"];
                         break;
                 }
@@ -104,12 +97,11 @@ namespace Payment.VTPay
                     throw new CustomException(response.ErrorMessage);
                 }
 
-                redirectURL = response.Content.URL;
                 return new DepositResult
                 {
                     Success = true,
                     ErrorCode = ErrorCode.Success.ToString(),
-                    Url = redirectURL,
+                    Url = response.Content.URL,
                 };
             }
             catch (CustomException ex)
@@ -123,6 +115,8 @@ namespace Payment.VTPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+            var depositInfo = FromJson<Dictionary<string, string>>(payResource["DepositInfo"]);
+            var payCode = depositInfo["PayCode"];
             var merchantID = dicReq["MerchantID"];
             var authenticateCode = dicReq["AuthenticateCode"];
             var passKey = "";
@@ -134,15 +128,15 @@ namespace Payment.VTPay
 
             Dictionary<string, string> req;
 
-            switch (merchantID)
+            switch (payCode)
             {
-                case "883DB1A81B"://QRIS
-                    passKey = payResource["PassKeyForQR"];
+                case "QRIS"://QRIS
+                    passKey = payResource["PassKeyForQRIS"];
                     break;
-                case "6BDCED5AFA"://P2P
+                case "P2P"://P2P
                     passKey = payResource["PassKeyForP2P"];
                     break;
-                case "630678E2C9"://VA
+                case "VA"://VA
                     passKey = payResource["PassKeyForVA"];
                     break;
             }
