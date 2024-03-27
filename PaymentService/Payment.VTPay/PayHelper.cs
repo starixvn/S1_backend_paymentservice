@@ -254,9 +254,9 @@ namespace Payment.VTPay
                     BankCode = bankCode,
                     BankAccountName = accountName,
                     BankAccountNo = accountNo,
-                    BankBranch = "",
-                    BankCity = "",
-                    BankProvince = "",
+                    BankBranch = "BankBranch",
+                    BankCity = "BankCity",
+                    BankProvince = "BankProvince",
                     ParamOptional = "",
                     Signature = signature,
                 };
