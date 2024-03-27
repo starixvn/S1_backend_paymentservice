@@ -3,4 +3,6 @@
 public interface IPayHttpHelper
 {
     HttpClient GetClient();
+    
+    HttpClient GetClientWithProxy();
 }

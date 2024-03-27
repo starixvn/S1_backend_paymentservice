@@ -38,9 +38,10 @@ namespace PaymentService.Service.DAL
             return _mainDbClient.QueryFirst<DepositInfoModel>("Service_DepositInfo_Get", new { DepositId = depositId });
         }
 
-        public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry()
+        public IEnumerable<DepositRequest> GetDepositRequesPayEnquiry(string payIds)
         {
-            return _mainDbClient.QueryUseCommandDefinition<DepositRequest>("Service_DepositRequesPayEnquiry_Get", new DynamicParameters());
+            return _mainDbClient.QueryUseCommandDefinition<DepositRequest>("Service_DepositRequestPayEnquiry_Get",
+                new DynamicParameters(new { _PayIds = payIds }));
         }
         
         public bool SetDepositInfoV2(SetDepositInfoParams input, bool canReward = false)

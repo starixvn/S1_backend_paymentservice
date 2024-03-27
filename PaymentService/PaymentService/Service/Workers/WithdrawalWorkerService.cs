@@ -21,11 +21,11 @@ namespace PaymentService.Service.Workers
         private Timer _timer;
         public WithdrawalWorkerService(IServiceProvider provider)
         {
-            this._environment = provider.GetRequiredService<IHostEnvironment>();
-            this._logger = provider.GetRequiredService<ILogger<WithdrawalWorkerService>>();
-            this._paymentBll = provider.GetRequiredService<PaymentBLL>();
-            this._payBll = provider.GetRequiredService<PayBLL>();
-            this._payIds = new List<int> { 3, 5, 15, 25 };
+            _environment = provider.GetRequiredService<IHostEnvironment>();
+            _logger = provider.GetRequiredService<ILogger<WithdrawalWorkerService>>();
+            _paymentBll = provider.GetRequiredService<PaymentBLL>();
+            _payBll = provider.GetRequiredService<PayBLL>();
+            _payIds = new List<int> { 3, 5, 15, 25 };
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)

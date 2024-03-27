@@ -1,10 +1,7 @@
 ﻿using System.Web;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
-
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -62,7 +59,7 @@ namespace Payment.PAPay
 
                 req.Add("sign", GetSign(req, apiKey));
 
-                var res = Payout(apiUrl, req).Result;
+                var res = Payout(apiUrl, req);
                 var response = new WithdrawResult
                 {
                     Success = true,
@@ -155,7 +152,7 @@ namespace Payment.PAPay
 
                 req.Add("sign", GetSign(req, apiKey));
 
-                var res = CreateOrder(apiUrl, req).Result;
+                var res = CreateOrder(apiUrl, req);
 
                 var response = new DepositResult
                 {
@@ -224,12 +221,12 @@ namespace Payment.PAPay
 
         #region Private Methods
 
-        private async Task<PAPayCreateOrderResponse> CreateOrder(string baseApiUrl, Dictionary<string, string> req)
+        private PAPayCreateOrderResponse CreateOrder(string baseApiUrl, Dictionary<string, string> req)
         {
             var apiUrl = baseApiUrl + Path.CreatePay;
 
-            var (result, statusCode) = await _httpHelper
-                .PostJsonAsync<Dictionary<string, string>, PAPayCreateOrderResponse>(apiUrl, req);
+            var (result, statusCode) = _httpHelper
+                .PostJson<Dictionary<string, string>, PAPayCreateOrderResponse>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
             {
@@ -243,11 +240,11 @@ namespace Payment.PAPay
             return result;
         }
 
-        private async Task<PAPayPayoutResponse> Payout(string baseApiUrl, Dictionary<string, string> req)
+        private PAPayPayoutResponse Payout(string baseApiUrl, Dictionary<string, string> req)
         {
             var apiUrl = baseApiUrl + Path.CreatePayout;
-            var (result, statusCode) = await _httpHelper
-                .PostJsonAsync<Dictionary<string, string>, PAPayPayoutResponse>(apiUrl, req);
+            var (result, statusCode) = _httpHelper
+                .PostJson<Dictionary<string, string>, PAPayPayoutResponse>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
             {

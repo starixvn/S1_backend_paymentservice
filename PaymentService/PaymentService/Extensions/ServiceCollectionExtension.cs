@@ -23,23 +23,21 @@ namespace PaymentService.Extensions
         {
             var provider = services.BuildServiceProvider();
             var configBll = provider.GetRequiredService<ConfigBLL>();
-            var config = configBll.GetConfigValue<ProxySettingConfig>("ProxySetting");
+            var config = configBll.GetConfigValueFromDbByEnvironment<ProxySettingConfig>("TokyoProxy");
 
             if (!string.IsNullOrEmpty(config.ProxyHost))
             {
-                var proxy = new HttpClientHandler
-                {
-                    Proxy = new WebProxy(config.ProxyHost, config.ProxyPort),
-                    UseProxy = true
-                };
-
                 services.AddHttpClient("with_proxy")
-                    .ConfigurePrimaryHttpMessageHandler(() => proxy);
-
-                FlurlHttp.Configure(settings =>
-                {
-                    settings.HttpClientFactory = new ProxyHttpClientFactory(config.ProxyHost, config.ProxyPort);
-                });
+                    .ConfigurePrimaryHttpMessageHandler(_ =>
+                    {
+                        var handler = new HttpClientHandler
+                        {
+                            Proxy = new WebProxy(config.ProxyHost, config.ProxyPort),
+                            UseProxy = true
+                        };
+                        
+                        return handler;
+                    });
             }
             else
             {
