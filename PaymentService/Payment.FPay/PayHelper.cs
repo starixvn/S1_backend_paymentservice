@@ -85,7 +85,7 @@ namespace Payment.FPay
 
             if (!data.Token.Equals(sign))
             {
-                _logger.LogError($"{transId}, signature verification failed.");
+                _logger.LogInformation($"{transId}, signature verification failed.");
 
                 return new NotifyDepositResult
                 {
@@ -178,7 +178,7 @@ namespace Payment.FPay
 
             if (!data.Token.Equals(sign))
             {
-                _logger.LogError($"{transId}, signature verification failed.");
+                _logger.LogInformation($"{transId}, signature verification failed.");
 
                 return new NotifyWithdrawResult
                 {

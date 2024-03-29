@@ -49,14 +49,14 @@ public class ExchangeController : ControllerBase
 
             if (!cryptoList.Any())
             {
-                _logger.LogError($"Method={GetCurrentMethod()}, Invalid currency");
+                _logger.LogInformation($"Method={GetCurrentMethod()}, Invalid currency");
                 return new ApiResult<CryptoExchangeInfo>(ErrorCode.InvalidCurrency);
             }
 
             var payList = _payBll.GetPaymentList(req.SiteId);
             if (!payList.Any())
             {
-                _logger.LogError($"Method={GetCurrentMethod()}, Pay list is empty.");
+                _logger.LogInformation($"Method={GetCurrentMethod()}, Pay list is empty.");
                 return new ApiResult<CryptoExchangeInfo>(ErrorCode.SettingNotFound);
             }
 

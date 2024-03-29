@@ -118,7 +118,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
 
         if (!VerifySign(req.Data, key))
         {
-            _logger.LogError($"{transId}, signature verification failed.");
+            _logger.LogInformation($"{transId}, signature verification failed.");
 
             return new NotifyDepositResult
             {
@@ -134,7 +134,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
                 
         if (rateInfo == null)
         {
-            _logger.LogError($"{transId}, depositInfo has no exchange rate data.");
+            _logger.LogInformation($"{transId}, depositInfo has no exchange rate data.");
 
             return new NotifyDepositResult
             {
@@ -220,7 +220,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
 
         if (!VerifySign(req.Data, key))
         {
-            _logger.LogError($"{transId}, signature verification failed.");
+            _logger.LogInformation($"{transId}, signature verification failed.");
 
             return new NotifyWithdrawResult
             {

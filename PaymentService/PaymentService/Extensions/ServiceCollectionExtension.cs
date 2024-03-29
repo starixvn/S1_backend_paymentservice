@@ -44,8 +44,8 @@ namespace PaymentService.Extensions
                 services.AddHttpClient();
             }
 
-            PaymentCore.PayHelperBase.ProxyHost = config.ProxyHost;
-            PaymentCore.PayHelperBase.ProxyPort = config.ProxyPort;
+            PaymentCore.PayHelperBase.ProxyHost = string.Empty;
+            PaymentCore.PayHelperBase.ProxyPort = 0;
         }
 
         public static IServiceCollection AddOptionListByDB<T>(this IServiceCollection services, string sql, object parameters = null)

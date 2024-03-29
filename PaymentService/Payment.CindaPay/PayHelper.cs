@@ -55,7 +55,7 @@ namespace Payment.CindaPay
             }
             catch (CustomException ex)
             {
-                _logger.LogError($"SpeedPay deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+                _logger.LogInformation($"SpeedPay deposit failed, Code:{ex.Code}, Message:{ex.Message}");
 
                 return new DepositResult(false, ex.Code, ex.Message);
             }

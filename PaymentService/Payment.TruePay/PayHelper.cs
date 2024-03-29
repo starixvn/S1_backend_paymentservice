@@ -217,7 +217,7 @@ namespace Payment.TruePay
             var currencyId = setting["CurrencyId"];
             if (!infos.ContainsKey(currencyId))
             {
-                _logger.LogError($"No {currencyId} MerchantInfo");
+                _logger.LogInformation($"No {currencyId} MerchantInfo");
             }
 
             return JsonConvert.DeserializeObject<MerchantInfo>(infos[currencyId]);
