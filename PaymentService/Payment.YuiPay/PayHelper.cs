@@ -81,7 +81,7 @@ namespace Payment.YuiPay
             }
             catch (CustomException ex)
             {
-                _logger.LogError($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+                _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
 
                 return new DepositResult(false, ex.Code, ex.Message);
             }

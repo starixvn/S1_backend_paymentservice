@@ -96,7 +96,7 @@ namespace Payment.Coin2Pay
 
             if (!VerifySign(str, dic["sign"], mPublicKey))
             {
-                _logger.LogError($"Coin2Pay {transId}, signature verification failed.");
+                _logger.LogInformation($"Coin2Pay {transId}, signature verification failed.");
 
                 return new NotifyDepositResult
                 {
@@ -242,7 +242,7 @@ namespace Payment.Coin2Pay
 
             if (!VerifySign(str, dic["sign"], mPublicKey))
             {
-                _logger.LogError($"Coin2Pay {transId}, signature verification failed.");
+                _logger.LogInformation($"Coin2Pay {transId}, signature verification failed.");
 
                 return new NotifyWithdrawResult
                 {

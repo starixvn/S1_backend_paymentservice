@@ -87,7 +87,7 @@ namespace Payment.Super7Pay
 
             if (!jObj.TryGetValue("PayCode", StringComparison.OrdinalIgnoreCase, out var jPayCode))
             {
-                _logger.LogError($"{transId} DepositInfo has no PayCode information.");
+                _logger.LogInformation($"{transId} DepositInfo has no PayCode information.");
 
                 return new NotifyDepositResult
                 {

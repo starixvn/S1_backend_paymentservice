@@ -42,7 +42,7 @@ public class ExceptionFilter : IExceptionFilter
                 paymentException.Code,
                 Message = message
             });
-            _logger.LogError(exception, message);
+            _logger.LogInformation(exception, message);
         }
         else
         {
