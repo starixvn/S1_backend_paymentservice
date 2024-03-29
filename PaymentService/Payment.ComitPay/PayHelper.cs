@@ -4,11 +4,12 @@ using Newtonsoft.Json;
 
 using PaymentCore;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.ComitPay
 {
-    class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
+    class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl, IVerifyTransaction
     {
         private class CallBackWithdrawReq
         {
@@ -233,6 +234,25 @@ namespace Payment.ComitPay
         {
             var data = FromJson<CallBackDebitReq>(bodyContent);
             return data.Reference;
+        }
+        
+        public (string TransId, IDictionary<string, string> Data) FetchTransIdAndDataBeforeVerify(IDictionary<string, string> formData, string bodyContent,
+            Dictionary<string, string> headers)
+        {
+            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+
+            return (dicReq["TransID"], dicReq);
+        }
+
+        public VerifyTransactionResult VerifyTransaction(IDictionary<string, string> data, IDictionary<string, string> input)
+        {
+            var transExists = bool.Parse(input["TransIdExists"]);
+
+            return new VerifyTransactionResult
+            {
+                ContentType = ContentType.Text,
+                Response = transExists ? "true" : "false"
+            };
         }
     }
 }
