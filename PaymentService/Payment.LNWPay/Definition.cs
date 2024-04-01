@@ -1,7 +1,20 @@
+using PaymentCore;
+
 namespace Payment.LNWPay;
 
 internal class Definition
 {
+    private static Dictionary<string, TransStatus> StatusMap =>
+        new()
+        {
+            { "Pending", TransStatus.Pending },
+            { "Success", TransStatus.Success },
+            { "Unsuccess", TransStatus.Fail }
+        };
+    
+    public static TransStatus GetTransStatus(string status)
+        => StatusMap.GetValueOrDefault(status, TransStatus.Pending);
+    
     public const string SuccessStatus = "success";
 }
 

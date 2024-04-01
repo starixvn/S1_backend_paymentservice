@@ -51,7 +51,7 @@ public class DepositV2Controller : ControllerBase
         _getDepositInputMapper = new Dictionary<DepositType, Func<DepositInfoModel, Customer, (IPayInfo, Dictionary<string, string>)>>
         {
             {DepositType.OnlineBanking, GetOnlineBankDepositInput},
-            {DepositType.BankAutoChannel, GetOnlineBankDepositInput},
+            {DepositType.BankAutoChannel, GetOnlineBankDepositInputWithAccount},
             {DepositType.QuickTransfer, GetOnlineBankDepositInput},
             {DepositType.MobilePay, GetMobilePayDepositInput},
             {DepositType.CryptoPay, GetGenericDepositInput},
@@ -208,6 +208,12 @@ public class DepositV2Controller : ControllerBase
     #region GetDepositInput
 
     private (IPayInfo, Dictionary<string, string>) GetOnlineBankDepositInput(DepositInfoModel depositInfo, Customer custInfo)
+        => OnlineBankDepositInput(depositInfo, custInfo, Array.Empty<string>());
+    
+    private (IPayInfo, Dictionary<string, string>) GetOnlineBankDepositInputWithAccount(DepositInfoModel depositInfo, Customer custInfo)
+        => OnlineBankDepositInput(depositInfo, custInfo, new[] { "PayAccount" });
+    
+    private (IPayInfo, Dictionary<string, string>) OnlineBankDepositInput(DepositInfoModel depositInfo, Customer custInfo, string[] extraKeys)
     {
         var onlineBankList = _payBll.GetOnlineBankList(custInfo.SiteId, depositInfo.DepositType);
         var vipLevel = _custInfoBll.GetPointLevelWithCache(custInfo.CustId);
@@ -218,9 +224,9 @@ public class DepositV2Controller : ControllerBase
 
         var payInfo = onlineBankList?.OrderByDescending(x => x.CurrencyId)
             .FirstOrDefault(x => x.PayId == payId
-                && (sysId == x.SysId || !x.SelBank)
-                && x.PointLevel <= vipLevel
-                && x.CurrencyId == custInfo.CurrencyId);
+                                 && (sysId == x.SysId || !x.SelBank)
+                                 && x.PointLevel <= vipLevel
+                                 && x.CurrencyId == custInfo.CurrencyId);
 
         if (payInfo == null)
         {
@@ -234,6 +240,15 @@ public class DepositV2Controller : ControllerBase
             {"BankName", payInfo.BankName},
             {"BankCode", payInfo.BankCode},
         };
+        
+        if (extraKeys.Any())
+        {
+            foreach (var key in extraKeys)
+            {
+                if (dicDepositInfo.TryGetValue(key, out var value))
+                    input.Add(key, value);
+            }
+        }
 
         return (payInfo, input);
     }

@@ -56,83 +56,56 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
-        var data = FromJson<CallBackDebitReq>(bodyContent);
-        var transId = data.TransId;
-        var str = payResource[$"{data.Currency}DepositSecretKey"] + data.TransId;
-        var sign = ToMD5(str).ToLower();
-
-        if (!data.Token.Equals(sign))
+        // 這家callback沒有驗簽
+        return new NotifyDepositResult
         {
-            _logger.LogError($"{transId}, signature verification failed.");
-
-            return new NotifyDepositResult
-            {
-                DepositId = transId,
-                TransStatus = TransStatus.Pending,
-                Comment = "Signature verification failed.",
-                Response = CallbackResponse.Failed
-            };
-        }
-
-        var result = new NotifyDepositResult
-        {
-            ActualAmount = decimal.Parse(data.Amount),
-            DepositId = transId,
-            ThirdId = transId,
-            TransStatus = TransStatus.Success,
-            Response = CallbackResponse.Success
+            ActualAmount = decimal.Parse(formData["amount"]),
+            DepositId = formData["ref1"],
+            ThirdId = formData["Id"],
+            TransStatus = Definition.GetTransStatus(formData["status"]),
+            Response = string.Empty
         };
-
-        return result;
     }
     
-    public override WithdrawResult Credit(Dictionary<string, string> inputs)
+    public override WithdrawResult Credit(Dictionary<string, string> input)
     {
-        var apiHost = inputs["Host"];
-        var payCurrency = inputs["PayCurrencyId"];
+        var payCode = input["PayCode"];
+        var apiUrl = input[$"{payCode}ApiUrl"];
         
         try
         {
-            var req = new Dictionary<string, string>
+            var req = new PayoutReq
             {
-                {"username", inputs[$"{payCurrency}PayoutUsername"]},
-                {"api_key", inputs[$"{payCurrency}PayoutApiKey"]}
+                Amount = decimal.Parse(input["Amount"]),
+                ClientAccount = input["AccountNo"],
+                ClientAccountName = input["AccountName"],
+                ClientBank = input["BankCode"],
+                TransId = input["TransID"]
             };
-            
-            var authResp = GetAuthToken(apiHost, req);
-            var amount = decimal.Parse(inputs["Amount"]);
-            req = new Dictionary<string, string>
-            {
-                { "auth", authResp.Auth },
-                { "amount", amount.ToString("G29") },
-                { "currency", inputs["PayCurrencyId"] },
-                { "orderid", inputs["TransID"] },
-                { "bank_id", inputs["BankCode"] },
-                { "bank_branch", "" },
-                { "holder_name", inputs["AccountName"] },
-                { "account_no", inputs["AccountNo"] }
-            };
-            
-            var (resp, statusCode) = _httpHelper
-                .PostFormData<Dictionary<string, string>, WithdrawResp>(apiHost + Path.CreatePayout, req);
+        
+            var authToken = GetAuthToken(input);
+        
+            var (result, statusCode) = _httpHelper
+                .WithOAuthBearerToken(authToken)
+                .PostJson<PayoutReq, PayResp<PayoutData>>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
                 throw new CustomException(
-                    $"Create payout orders failed, HttpStatus: {(int)statusCode} {statusCode}");
+                    $"Create payout failed, HttpStatus: {(int)statusCode} {statusCode}");
 
-            if (!resp.Status)
-                throw new CustomException("Create payout orders failed, msg=" + resp.Message);
+            if (!result.Status.Equals(Definition.SuccessStatus))
+                throw new CustomException("Create payout failed, msg=" + result.Message);
 
             return new WithdrawResult
             {
                 Success = true,
-                WithdrawId = inputs["TransID"],
-                RawContent = JsonConvert.SerializeObject(resp)
+                WithdrawId = input["TransID"],
+                RawContent = JsonConvert.SerializeObject(result)
             };
         }
         catch (CustomException ex)
         {
-            _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+            _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
 
             return new WithdrawResult
             {
@@ -144,31 +117,14 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
 
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
-        var data = FromJson<CallBackCreditReq>(bodyContent);
-        var transId = data.TransId;
-        var str = payResource[$"{data.Currency}PayoutSecretKey"] + data.TransId;
-        var sign = ToMD5(str).ToLower();
-
-        if (!data.Token.Equals(sign))
-        {
-            _logger.LogError($"{transId}, signature verification failed.");
-
-            return new NotifyWithdrawResult
-            {
-                WithdrawId = transId,
-                TransStatus = TransStatus.Pending,
-                Message = "Signature verification failed.",
-                Response = CallbackResponse.Failed
-            };
-        }
-        
+        // 這家callback沒有驗簽
         return new NotifyWithdrawResult
         {
-            WithdrawId = transId,
-            ThirdId = transId,
-            Message = data.Remarks,
-            TransStatus = TransStatus.Success,
-            Response = CallbackResponse.Success
+            WithdrawId = formData["ref1"],
+            ThirdId = formData["id"],
+            Message = formData["status"],
+            TransStatus = Definition.GetTransStatus(formData["status"]),
+            Response = string.Empty
         };
     }
     
@@ -189,8 +145,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
 
     public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
     {
-        var data = FromJson<CallBackDebitReq>(bodyContent);
-        return data.TransId;
+        return formData["ref1"];
     }
 
     private string GetAuthToken(IDictionary<string, string> input)
@@ -216,43 +171,28 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     }
     
     private IDepositData CreateDepositAuto(IDictionary<string, string> input)
-    {
-        var result = CreateDeposit<DepositDataAuto>(input, 
-            new DepositReq
-            {
-                
-            });
-        
-        return result;
-    }
+        => CreateDeposit<DepositDataAuto>(input);
+
     
     private IDepositData CreateDepositQr(IDictionary<string, string> input)
-    {
-        var result = CreateDeposit<DepositDataQr>(input, 
-            new DepositReq
-            {
-                
-            });
-        
-        return result;
-    }
+        => CreateDeposit<DepositDataQr>(input);
     
     private IDepositData CreateDepositTrue(IDictionary<string, string> input)
-    {
-        var result = CreateDeposit<DepositDataTrue>(input, 
-            new DepositReq
-            {
-                
-            });
-        
-        return result;
-    }
+        => CreateDeposit<DepositDataTrue>(input);
     
-    private IDepositData CreateDeposit<TResult>(IDictionary<string, string> input, DepositReq req)
+    private IDepositData CreateDeposit<TResult>(IDictionary<string, string> input)
         where TResult: IDepositData
     {
         var payCode = input["PayCode"];
         var apiUrl = input[$"{payCode}ApiUrl"];
+        
+        var req = new DepositReq
+        {
+            Amount = decimal.Parse(input["Amount"]),
+            ClientAccount = input["PayAccount"],
+            ClientAccountName = input["AccountName"],
+            TransId = input["TransID"]
+        };
         
         var authToken = GetAuthToken(input);
         
