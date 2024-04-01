@@ -159,7 +159,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         _logger.LogInformation("token orig str: " + str);
         
         var (result, statusCode) = _httpHelper
-            .WithOAuthBearerToken(token)
+            .WithHeader("Authorization", "Basic " + token)
             .PostJson<string, PayResp<AuthData>>(apiUrl + Path.Auth, string.Empty);
 
         if (!statusCode.IsSuccessStatus())
