@@ -21,15 +21,11 @@ public class WhitelistBLL
         _logger.LogInformation($"Method={methodName}, Request: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
 
         var officeIps = _configBll.GetConfigValueFromDbByEnvironment<string[]>("OfficeIP", configType: "Whitelist");
-
         if (officeIps.Any(x => x == clientIp))
-        {
             return true;
-        }
 
         var whiteList = _configBll.GetConfigValueFromDb<string[]>(paymentName, configType: "Whitelist");
-
-        if (whiteList.Any(x => x.Equals(clientIp)))
+        if (whiteList.Any(x => x.Equals("Pass") || x.Equals(clientIp)))
             return true;
 
         _logger.LogInformation($"Method={methodName}, Reject: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
