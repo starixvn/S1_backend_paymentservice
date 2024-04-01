@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 
 namespace Payment.VTPay
 {
-    public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
+    public class PayHelper : PayHelperBase
     {
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
@@ -34,8 +34,8 @@ namespace Payment.VTPay
             var returnUrl = inputs["ReturnUrl"];
             var callbackUrl = inputs["CallBackUrl"];
             var amount = decimal.Parse(inputs["Amount"]);
-            var dateTime = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-d HH:mm:ss");//+7時區
-            string cleanedDate = Regex.Replace(dateTime, "[^0-9]", "");
+            var dateTime = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7));//+7時區
+            var cleanedDate = dateTime.ToString("yyyyMMddHHmmss");
             var IPAddress = inputs["ClientIP"];
             var bankCode = "";
             var merchantId = inputs[$"MerchantIDFor{payCode}"];
@@ -78,7 +78,7 @@ namespace Payment.VTPay
                     RequestUrl = callbackUrl,
                     Language = "en-US",
                     Amount = decimal.Parse(amount.ToString("F4")),
-                    DateRequest = dateTime,
+                    DateRequest = dateTime.ToString("yyyy-MM-dd HH:mm:ss"),
                     IPAddress = IPAddress,
                     ParamOptional = "",
                     Signature = signature,
@@ -119,7 +119,7 @@ namespace Payment.VTPay
             var payCode = depositInfo["PayCode"];
             var merchantID = dicReq["MerchantID"];
             var authenticateCode = dicReq["AuthenticateCode"];
-            var passKey = "";
+            var passKey = payResource[$"PassKeyFor{payCode}"];
             var transId = dicReq["MerchantTransactionID"];
             var amount = decimal.Parse(dicReq["Amount"]);
             var sign = dicReq["Signature"];
@@ -127,19 +127,6 @@ namespace Payment.VTPay
             var currency = dicReq["Currency"];
 
             Dictionary<string, string> req;
-
-            switch (payCode)
-            {
-                case "QRIS"://QRIS
-                    passKey = payResource["PassKeyForQRIS"];
-                    break;
-                case "P2P"://P2P
-                    passKey = payResource["PassKeyForP2P"];
-                    break;
-                case "VA"://VA
-                    passKey = payResource["PassKeyForVA"];
-                    break;
-            }
 
             req = new Dictionary<string, string>
             {
@@ -223,8 +210,8 @@ namespace Payment.VTPay
             var accountName = inputs["AccountName"];
             var accountNo = inputs["AccountNo"];
             var amount = decimal.Parse(inputs["Amount"]);
-            var dateTime = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-d HH:mm:ss");//+7時區
-            string cleanedDate = Regex.Replace(dateTime, "[^0-9]", "");
+            var dateTime = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7));//+7時區
+            var cleanedDate = dateTime.ToString("yyyyMMddHHmmss");
             var IPAddress = inputs["ClientIP"];
             var bankCode = inputs["BankCode"];
             var merchantId = inputs["MerchantIDForP2P"];
@@ -247,7 +234,7 @@ namespace Payment.VTPay
                     Amount = decimal.Parse(amount.ToString("F4")),
                     MerchantTransactionID = transId,
                     RequestURL = callbackUrl,
-                    DateRequest = dateTime,
+                    DateRequest = dateTime.ToString("yyyy-MM-dd HH:mm:ss"),
                     Language = "en-US",
                     IPAddress = IPAddress,
                     Currency = currency,
@@ -350,23 +337,6 @@ namespace Payment.VTPay
         #endregion
 
         #region private
-        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
-        {
-            //string result = "";
-            ////QR callback
-            //if (formData.Count == 0)
-            //{
-            //    var data = FromJson<DepositCallbackRequest>(bodyContent);
-            //    result = data.RefId;
-            //}
-            //else//bank transfer callback
-            //{
-            //    result = formData["RefId"];
-            //}
-
-            //return result;
-            throw new NotImplementedException();
-        }
 
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiKey)
         {
