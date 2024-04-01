@@ -63,7 +63,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
             DepositId = formData["ref1"],
             ThirdId = formData["Id"],
             TransStatus = Definition.GetTransStatus(formData["status"]),
-            Response = string.Empty
+            Response = Definition.CallbackResponse
         };
     }
     
@@ -87,7 +87,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         
             var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(authToken)
-                .PostJson<PayoutReq, PayResp<PayoutData>>(apiUrl, req);
+                .PostJson<PayoutReq, PayResp<PayoutData>>(apiUrl + Path.CreatePayout, req);
 
             if (!statusCode.IsSuccessStatus())
                 throw new CustomException(
@@ -124,7 +124,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
             ThirdId = formData["id"],
             Message = formData["status"],
             TransStatus = Definition.GetTransStatus(formData["status"]),
-            Response = string.Empty
+            Response = Definition.CallbackResponse
         };
     }
     
@@ -153,12 +153,14 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         var payCode = input["PayCode"];
         var apiUrl = input[$"{payCode}ApiUrl"];
         var apiToken = input[$"{payCode}Token"];
-        
-        var token = ToBase64Encode($"{input["Prefix"]}:{apiToken}:{DateTimeOffset.Now:yyyyMMddHHmmss}");
+
+        var str = $"{input["Prefix"]}:{apiToken}:{DateTimeOffset.Now:yyyyMMddHHmmss}";
+        var token = ToBase64Encode(str);
+        _logger.LogInformation("token orig str: " + str);
         
         var (result, statusCode) = _httpHelper
             .WithOAuthBearerToken(token)
-            .Get<PayResp<AuthData>>(apiUrl + Path.Auth, string.Empty);
+            .PostJson<string, PayResp<AuthData>>(apiUrl + Path.Auth, string.Empty);
 
         if (!statusCode.IsSuccessStatus())
             throw new CustomException(
@@ -171,16 +173,16 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     }
     
     private IDepositData CreateDepositAuto(IDictionary<string, string> input)
-        => CreateDeposit<DepositDataAuto>(input);
+        => CreateDeposit<DepositDataAuto>(input, Path.CreateDepositAuto);
 
     
     private IDepositData CreateDepositQr(IDictionary<string, string> input)
-        => CreateDeposit<DepositDataQr>(input);
+        => CreateDeposit<DepositDataQr>(input, Path.CreateDepositQr);
     
     private IDepositData CreateDepositTrue(IDictionary<string, string> input)
-        => CreateDeposit<DepositDataTrue>(input);
+        => CreateDeposit<DepositDataTrue>(input, Path.CreateDepositTrue);
     
-    private IDepositData CreateDeposit<TResult>(IDictionary<string, string> input)
+    private IDepositData CreateDeposit<TResult>(IDictionary<string, string> input, string path)
         where TResult: IDepositData
     {
         var payCode = input["PayCode"];
@@ -198,7 +200,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         
         var (result, statusCode) = _httpHelper
             .WithOAuthBearerToken(authToken)
-            .PostJson<DepositReq, PayResp<TResult>>(apiUrl, req);
+            .PostJson<DepositReq, PayResp<TResult>>(apiUrl + path, req);
 
         if (!statusCode.IsSuccessStatus())
             throw new CustomException(

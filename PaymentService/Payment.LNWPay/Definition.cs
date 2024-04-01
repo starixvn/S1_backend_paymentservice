@@ -16,6 +16,7 @@ internal class Definition
         => StatusMap.GetValueOrDefault(status, TransStatus.Pending);
     
     public const string SuccessStatus = "success";
+    public const string CallbackResponse = "success";
 }
 
 internal class Path
@@ -25,9 +26,5 @@ internal class Path
     public const string CreateDepositAuto = "/api/v1/account-request";
     public const string CreateDepositQr = "/api/v1/qrcode-request";
     public const string CreateDepositTrue = "/api/v1/wallet-request";
-
-    /// <summary>
-    /// 創建代付
-    /// </summary>
-    public const string CreatePayout = "/merchant/withdraw_orders";
+    public const string CreatePayout = "/api/v1/withdraw-request";
 }
