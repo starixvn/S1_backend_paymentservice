@@ -213,25 +213,10 @@ public class DepositV2Controller : ControllerBase
     
     private (IPayInfo, Dictionary<string, string>) OnlineBankDepositInput(DepositInfoModel depositInfo, Customer custInfo, string[] extraKeys)
     {
-        var onlineBankList = _payBll.GetOnlineBankList(custInfo.SiteId, depositInfo.DepositType);
-        var vipLevel = _custInfoBll.GetPointLevelWithCache(custInfo.CustId);
         var keys = new[] { "PayId", "SysId" };
         var dicDepositInfo = GetDicDepositInfo(depositInfo.DepositInfo, keys);
-        var payId = int.Parse(dicDepositInfo["PayId"]);
-        var sysId = int.Parse(dicDepositInfo["SysId"]);
 
-        var payInfo = onlineBankList?.OrderByDescending(x => x.CurrencyId)
-            .FirstOrDefault(x => x.PayId == payId
-                                 && (sysId == x.SysId || !x.SelBank)
-                                 && x.PointLevel <= vipLevel
-                                 && x.CurrencyId == custInfo.CurrencyId);
-
-        if (payInfo == null)
-        {
-            throw new PaymentException(
-                $"PayId={payId}, SysId={sysId}, VipLevel={vipLevel}, CurrencyId={custInfo.CurrencyId}, no support bank.",
-                ErrorCode.BankNotFound);
-        }
+        var payInfo = GetBankInfoPay(custInfo, depositInfo.DepositType, dicDepositInfo);
 
         var input = new Dictionary<string, string>
         {
@@ -257,7 +242,7 @@ public class DepositV2Controller : ControllerBase
 
     private (IPayInfo, Dictionary<string, string>) GetMobilePayDepositInput(DepositInfoModel depositInfo,
         Customer custInfo)
-        => GenericDepositInput(depositInfo, custInfo, new[] { "PayAccount" });
+        => GenericDepositInput(depositInfo, custInfo, new[] { "PayAccount", "SysId" });
 
     private (IPayInfo, Dictionary<string, string>) GetLoadCardDepositInput(DepositInfoModel depositInfo,
         Customer custInfo)
@@ -276,7 +261,7 @@ public class DepositV2Controller : ControllerBase
             .FirstOrDefault(x => x.ChannelId == channelId
                 && x.PointLevel <= vipLevel
                 && x.CurrencyId == custInfo.CurrencyId);
-
+        
         if (payInfo == null)
         {
             throw new PaymentException(
@@ -287,7 +272,38 @@ public class DepositV2Controller : ControllerBase
         var input = extraKeys
             .ToDictionary(key => key, key => dicDepositInfo[key]);
 
+        if (extraKeys.Contains("SysId"))
+        {
+            var bankInfo = GetBankInfoPay(custInfo, depositInfo.DepositType, dicDepositInfo);
+            
+            input.Add("BankName", bankInfo.BankName);
+            input.Add("BankCode", bankInfo.BankCode);
+        }
+
         return (payInfo, input);
+    }
+
+    private BankInfoPay GetBankInfoPay(Customer custInfo, DepositType depositType, IDictionary<string, string> dicDepositInfo)
+    {
+        var onlineBankList = _payBll.GetOnlineBankList(custInfo.SiteId, depositType);
+        var vipLevel = _custInfoBll.GetPointLevelWithCache(custInfo.CustId);
+        var payId = int.Parse(dicDepositInfo["PayId"]);
+        var sysId = int.Parse(dicDepositInfo["SysId"]);
+        
+        var payInfo = onlineBankList?.OrderByDescending(x => x.CurrencyId)
+            .FirstOrDefault(x => x.PayId == payId
+                                 && (sysId == x.SysId || !x.SelBank)
+                                 && x.PointLevel <= vipLevel
+                                 && x.CurrencyId == custInfo.CurrencyId);
+
+        if (payInfo == null)
+        {
+            throw new PaymentException(
+                $"PayId={payId}, SysId={sysId}, VipLevel={vipLevel}, CurrencyId={custInfo.CurrencyId}, no support bank.",
+                ErrorCode.BankNotFound);
+        }
+
+        return payInfo;
     }
 
     #endregion

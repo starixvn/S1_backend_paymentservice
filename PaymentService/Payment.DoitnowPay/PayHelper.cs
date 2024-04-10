@@ -28,11 +28,12 @@ namespace Payment.DoitnowPay
         {
             try
             {
+                var currencyId = inputs["CurrencyId"];
                 var hostDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(inputs["Host"]);
-                hostDic.TryGetValue(inputs["CurrencyId"], out var hostUrl);
+                hostDic.TryGetValue(currencyId, out var hostUrl);
                 var sUrl = hostUrl + DoitnowPayDefinition.Path.CreateOrder;
                 var amount = decimal.Parse(inputs["Amount"]);
-                var formData = new Dictionary<string, string>()
+                var formData = new Dictionary<string, string>
                 {
                     { "clientId", inputs["ClientId"] },
                     { "transactionId", inputs["TransID"] },
@@ -42,6 +43,13 @@ namespace Payment.DoitnowPay
                     { "callbackUrl", inputs["CallBackUrl"] },
                     { "paymentMethod", inputs["PayCode"] }
                 };
+
+                if (currencyId == "4") // THB
+                {
+                    formData.Add("bankAcc", inputs["PayAccount"]);
+                    formData.Add("custBank", inputs["BankCode"]);
+                }
+
                 formData.Add("hashVal", Hash(formData, inputs["ClientSecret"]));
 
                 var oDepositResult = new DepositResult
