@@ -176,7 +176,7 @@ namespace PaymentCore
                 var bytes = Encoding.UTF8.GetBytes(encodeStr);
                 var hash = cryptoMD5.ComputeHash(bytes);
                 var md5 = BitConverter.ToString(hash)
-                  .Replace("-", String.Empty);
+                  .Replace("-", string.Empty);
 
                 return md5;
             }
