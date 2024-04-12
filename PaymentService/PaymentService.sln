@@ -101,6 +101,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.TongsPay", "Payment
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.SDSPay", "Payment.SDSPay\Payment.SDSPay.csproj", "{BFDDF9A5-8DB0-4C94-8FBF-A3C413B79CE3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.TengLongPay", "Payment.TengLongPay\Payment.TengLongPay.csproj", "{76E11D03-24E6-4EE9-A6FF-4AB1D81D3B68}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -299,6 +301,10 @@ Global
 		{BFDDF9A5-8DB0-4C94-8FBF-A3C413B79CE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFDDF9A5-8DB0-4C94-8FBF-A3C413B79CE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BFDDF9A5-8DB0-4C94-8FBF-A3C413B79CE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76E11D03-24E6-4EE9-A6FF-4AB1D81D3B68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76E11D03-24E6-4EE9-A6FF-4AB1D81D3B68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76E11D03-24E6-4EE9-A6FF-4AB1D81D3B68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76E11D03-24E6-4EE9-A6FF-4AB1D81D3B68}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -349,6 +355,7 @@ Global
 		{C6247F20-4B1B-4ACB-99B3-1612D312A2B7} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{3AB50867-D874-4897-AD71-51CFAD3E2714} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{BFDDF9A5-8DB0-4C94-8FBF-A3C413B79CE3} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{76E11D03-24E6-4EE9-A6FF-4AB1D81D3B68} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
