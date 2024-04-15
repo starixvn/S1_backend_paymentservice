@@ -1,54 +1,77 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using PaymentCore;
+using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
+using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
 namespace Payment.TengLongPay;
 
 public class PayHelper : PayHelperBase
 {
-    //private readonly IFlurlHttpHelper _httpHelper;
+    private readonly IFlurlHttpHelper _httpHelper;
     private readonly ILogger<PayHelper> _logger;
-    private readonly decimal _amountFix = 100;
+    private const decimal AmountFix = 100;
 
     public PayHelper(IServiceProvider provider)
     {
         _logger = provider.GetRequiredService<ILogger<PayHelper>>();
-        //_httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
+        _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
     }
 
     public override DepositResult Debit(Dictionary<string, string> inputs)
     {
-        var apiHost = inputs["Host"];
-        var key = inputs["Key"];
+        var apiHost = inputs["DHost"];
+        var key = inputs["DKey"];
         var amount = decimal.Parse(inputs["Amount"]);
-       
-        var req = new Dictionary<string, string>
+
+        try
         {
-            {"mch", inputs["MerchantNo"]},
-            {"sn", inputs["TransID"]},
-            {"amount", (amount * _amountFix).ToString("#")},
-            {"type", inputs["PayCode"]},
-            {"date", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()}
-        };
-        
-        req.Add("sign", GetSign(req, key));
-        req.Add("callback", inputs["CallBackUrl"]);
-        req.Add("goods", inputs["AccountName"]);
-        
-        return new DepositResult
+            var req = new Dictionary<string, string>
+            {
+                {"mch", inputs["DMerchantNo"]},
+                {"sn", inputs["TransID"]},
+                {"amount", (amount * AmountFix).ToString("#")},
+                {"type", inputs["PayCode"]},
+                {"date", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()}
+            };
+            
+            req.Add("sign", GetSign(req, key));
+            req.Add("callback", inputs["CallBackUrl"]);
+            req.Add("goods", inputs["AccountName"]);
+            
+            var (resp, statusCode) = _httpHelper
+                .PostFormData<Dictionary<string, string>, DepositResp>(apiHost + Path.CreateOrder, req);
+
+            if (!statusCode.IsSuccessStatus())
+                throw new CustomException(
+                    $"Generate orders failed, HttpStatus: {(int)statusCode} {statusCode}");
+
+            if (!resp.Code.Equals(200))
+                throw new CustomException("Generate orders failed, msg=" + resp.Message);
+
+            return new DepositResult
+            {
+                Success = true,
+                ErrorCode = "0",
+                Url = resp.Data
+            };
+        }
+        catch (CustomException ex)
         {
-            Success = true,
-            ErrorCode = "0",
-            Url = apiHost + "?" + ToQueryStr(req)
-        };
+            _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+
+            return new DepositResult(false, ex.Code, ex.Message);
+        }
     }
 
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
         var data = FromJson<Dictionary<string, string>>(bodyContent);
         var transId = data["sn"];
-        var key = payResource["Key"];
+        var key = payResource["DKey"];
         var keys = new []{ "mch", "sn", "amount", "mch_sn", "type", "date" };
         
         if (!VerifySign(data, key, data["sign"], keys))
@@ -66,7 +89,7 @@ public class PayHelper : PayHelperBase
 
         var result = new NotifyDepositResult
         {
-            ActualAmount = decimal.Parse(data["amount"]) / _amountFix,
+            ActualAmount = decimal.Parse(data["amount"]) / AmountFix,
             DepositId = transId,
             ThirdId = data["mch_sn"],
             TransStatus = data["status"] == "1" ? TransStatus.Success : TransStatus.Fail,
@@ -79,13 +102,83 @@ public class PayHelper : PayHelperBase
 
     public override WithdrawResult Credit(Dictionary<string, string> inputs)
     {
-        throw new NotImplementedException();
+        var apiHost = inputs["WHost"];
+        var key = inputs["WKey"];
+        var amount = decimal.Parse(inputs["Amount"]);
+        
+        try
+        {
+            var req = new Dictionary<string, string>
+            {
+                {"mchid", inputs["WMerchantNo"]},
+                {"out_trade_no", inputs["TransID"]},
+                {"money", amount.ToString("F2")},
+                {"notifyurl", inputs["CallBackUrl"]},
+                {"bankname", inputs["BankName"]},
+                {"subbranch", "subbranch"},
+                {"accountname", inputs["AccountName"]},
+                {"cardnumber", inputs["AccountNo"]}
+            };
+            
+            req.Add("sign", GetSign(req, key));
+            
+            var (resp, statusCode) = _httpHelper
+                .PostFormData<Dictionary<string, string>, WithdrawResp>(apiHost + Path.CreatePayout, req);
+
+            if (!statusCode.IsSuccessStatus())
+                throw new CustomException(
+                    $"Create payout orders failed, HttpStatus: {(int)statusCode} {statusCode}");
+
+            if (!resp.Status.Equals("success"))
+                throw new CustomException("Create payout orders failed, msg=" + resp.Message);
+
+            return new WithdrawResult
+            {
+                Success = true,
+                WithdrawId = inputs["TransID"],
+                RawContent = JsonConvert.SerializeObject(resp)
+            };
+        }
+        catch (CustomException ex)
+        {
+            _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+
+            return new WithdrawResult
+            {
+                Success = false,
+                Message = ex.Message
+            };
+        }
     }
     
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
         Dictionary<string, string> payResource)
     {
-        throw new NotImplementedException();
+        var key = payResource["WKey"];
+        var transId = formData["out_trade_no"];
+        var keys = new []{ "mchid", "out_trade_no", "amount", "transaction_id", "refCode", "refMsg" };
+
+        if (!VerifySign(formData, key, formData["sign"], keys))
+        {
+            _logger.LogInformation($"{transId}, signature verification failed.");
+
+            return new NotifyWithdrawResult
+            {
+                WithdrawId = transId,
+                TransStatus = TransStatus.Pending,
+                Message = "Signature verification failed.",
+                Response = CallbackResponse.Failed
+            };
+        }
+            
+        return new NotifyWithdrawResult
+        {
+            WithdrawId = transId,
+            ThirdId = formData["transaction_id"],
+            Message = JsonConvert.SerializeObject(formData),
+            TransStatus = Definition.GetPayoutStatus(formData["refCode"]),
+            Response = CallbackResponse.Success
+        };
     }
 
     public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
