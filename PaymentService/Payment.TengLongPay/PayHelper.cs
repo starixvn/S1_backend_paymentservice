@@ -41,9 +41,10 @@ public class PayHelper : PayHelperBase
             req.Add("sign", GetSign(req, key));
             req.Add("callback", inputs["CallBackUrl"]);
             req.Add("goods", inputs["AccountName"]);
+            req.Add("ip", inputs["ClientIP"]);
             
             var (resp, statusCode) = _httpHelper
-                .PostFormData<Dictionary<string, string>, DepositResp>(apiHost + Path.CreateOrder, req);
+                .PostUrlEncoded<Dictionary<string, string>, DepositResp>(apiHost + Path.CreateOrder, req);
 
             if (!statusCode.IsSuccessStatus())
                 throw new CustomException(
@@ -123,7 +124,7 @@ public class PayHelper : PayHelperBase
             req.Add("sign", GetSign(req, key));
             
             var (resp, statusCode) = _httpHelper
-                .PostFormData<Dictionary<string, string>, WithdrawResp>(apiHost + Path.CreatePayout, req);
+                .PostUrlEncoded<Dictionary<string, string>, WithdrawResp>(apiHost + Path.CreatePayout, req);
 
             if (!statusCode.IsSuccessStatus())
                 throw new CustomException(
