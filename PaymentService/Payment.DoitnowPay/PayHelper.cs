@@ -38,17 +38,13 @@ namespace Payment.DoitnowPay
                     { "clientId", inputs["ClientId"] },
                     { "transactionId", inputs["TransID"] },
                     { "custName", inputs["AccountName"] },
+                    { "custBank", inputs.TryGetValue("BankCode", out var input) ? input : string.Empty},
                     { "amount", amount.ToString("#") },
                     { "returnUrl", inputs["ReturnUrl"] },
                     { "callbackUrl", inputs["CallBackUrl"] },
-                    { "paymentMethod", inputs["PayCode"] }
+                    { "paymentMethod", inputs["PayCode"] },
+                    { "bankAcc", inputs.TryGetValue("PayAccount", out input) ? input : string.Empty }
                 };
-
-                if (currencyId == "4") // THB
-                {
-                    formData.Add("bankAcc", inputs["PayAccount"]);
-                    formData.Add("custBank", inputs["BankCode"]);
-                }
 
                 formData.Add("hashVal", Hash(formData, inputs["ClientSecret"]));
 
