@@ -270,6 +270,7 @@ public class DepositV2Controller : ControllerBase
         }
 
         var input = extraKeys
+            .Where(x => dicDepositInfo.ContainsKey(x))
             .ToDictionary(key => key, key => dicDepositInfo[key]);
 
         if (extraKeys.Contains("SysId"))
