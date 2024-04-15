@@ -188,7 +188,19 @@ namespace Payment.FPay
                     Response = CallbackResponse.Failed
                 };
             }
-            
+
+            if (data.OrderStatus == "fail") //Reject
+            {
+                return new NotifyWithdrawResult
+                {
+                    WithdrawId = transId,
+                    ThirdId = transId,
+                    Message = data.Remarks,
+                    TransStatus = TransStatus.Fail, //讓提款單回 verify
+                    Response = CallbackResponse.Success
+                };
+            }
+
             return new NotifyWithdrawResult
             {
                 WithdrawId = transId,
