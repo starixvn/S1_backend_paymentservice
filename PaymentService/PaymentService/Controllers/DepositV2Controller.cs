@@ -273,7 +273,7 @@ public class DepositV2Controller : ControllerBase
             .Where(x => dicDepositInfo.ContainsKey(x))
             .ToDictionary(key => key, key => dicDepositInfo[key]);
 
-        if (extraKeys.Contains("SysId"))
+        if (input.ContainsKey("SysId"))
         {
             var bankInfo = GetBankInfoPay(custInfo, depositInfo.DepositType, dicDepositInfo);
             
