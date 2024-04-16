@@ -130,28 +130,38 @@ namespace PaymentService.Service.DAL
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set_V2", p, trans);
+                
+                var action = "Admin_WithdrawalInfo_Set_V2";
+                result = _mainDbClient.Execute(action, p, trans);
                 if (result > 0)
                 {
+                    action = "Admin_WithdrawalInfo_FlowEndTime_Set";
+                    result = _mainDbClient.Execute(action, new { _WithdrawalId = withdrawalId }, trans);
+                    
                     if (result > 0)
                     {
-                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set", new { _WithdrawalId = withdrawalId }, trans);
-                    }
+                        // 如果是從 Reject 到 Approved 要再扣玩家一次錢，因為狀態變更成 Reject 的時候有把錢還給玩家
+                        if (withdrawalRequest.Status == WithdrawalStatus.Rejected)
+                        {
+                            action = "SetBalance";
+                            const int financialType = 1001;
+                            _walletService.SetBalance(withdrawalRequest.CustId, withdrawalRequest.SiteId, withdrawalRequest.UserName, -1 * withdrawalRequest.Amount, financialType,
+                                $"Manual Withdrawal Approved: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out _, out _, trans);
+                        }
 
-                    // 如果是從 Reject 到 Approved 要再扣玩家一次錢，因為狀態變更成 Reject 的時候有把錢還給玩家
-                    if (withdrawalRequest.Status == WithdrawalStatus.Rejected)
-                    {
-                        const int financialType = 1001;
-                        _walletService.SetBalance(withdrawalRequest.CustId, withdrawalRequest.SiteId, withdrawalRequest.UserName, -1 * withdrawalRequest.Amount, financialType,
-                            $"Manual Withdrawal Approved: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out _, out _, trans);
-                    }
-
-                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, trans);
-                    if (result > 0)
-                    {
-                        trans.Commit();
+                        action = "SetWithdrawalLog";
+                        result = SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, trans);
+                        
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
                     }
                 }
+                
+                if (result <= 0)
+                    _logger.LogInformation(action + "result=" + result);
+                
                 conn.Close();
                 conn.Dispose();
             }
@@ -167,17 +177,7 @@ namespace PaymentService.Service.DAL
         /// <summary>
         /// 提款單手動 Reject
         /// </summary>
-        /// <param name="transId"></param>
-        /// <param name="siteId"></param>
-        /// <param name="pay"></param>
-        /// <param name="comment"></param>
-        /// <param name="refId"></param>
-        /// <param name="Operator"></param>
-        /// <param name="forStatus"></param>
-        /// <param name="status"></param>
-        /// <param name="withdrawalRequest"></param>
-        /// <returns></returns>
-        public int SetWithdrawalInfoByManualReject(string transId, int siteId, IPay pay, string comment, string refId, string Operator, IEnumerable<int> forStatus, WithdrawalStatus status, WithdrawalRequest withdrawalRequest)
+        public int SetWithdrawalInfoReject(string transId, int siteId, string comment, string refId, string @operator, IEnumerable<int> forStatus, WithdrawalStatus status, WithdrawalRequest withdrawalRequest, bool isManual)
         {
             var withdrawalId = _common.GetId(transId);
             var result = 0;
@@ -194,7 +194,7 @@ namespace PaymentService.Service.DAL
                     _WithdrawalInfo = (string)null,
                     _WithdrawalType = (int?)null,
                     _RefId = refId,
-                    _Operator = Operator,
+                    _Operator = @operator,
                     _ChargeFee = 0
                 });
                 p.Add("_CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
@@ -204,25 +204,38 @@ namespace PaymentService.Service.DAL
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                result = _mainDbClient.Execute("Admin_WithdrawalInfo_Set_V2", p, trans);
+                
+                var action = "Admin_WithdrawalInfo_Set_V2";
+                result = _mainDbClient.Execute(action, p, trans);
+                
                 if (result > 0)
                 {
+                    action = "Admin_WithdrawalInfo_FlowEndTime_Set";
+                    result = _mainDbClient.Execute(action, new { _WithdrawalId = withdrawalId }, trans);
+                    
                     if (result > 0)
                     {
-                        result = _mainDbClient.Execute("Admin_WithdrawalInfo_FlowEndTime_Set", new { _WithdrawalId = withdrawalId }, trans);
-                    }
+                        action = "SetBalance";
+                        // 提款單狀態變成 Reject 都要退玩家錢
+                        const int financialType = 1002;
+                        result = _walletService.SetBalance(withdrawalRequest.CustId, withdrawalRequest.SiteId, withdrawalRequest.UserName, withdrawalRequest.Amount, financialType,
+                            (isManual ? "Manual" : withdrawalRequest.PayName) + $" Withdrawal Rejected: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out _, out _, trans);
+                        if (result > 0)
+                        {
+                            action = "SetWithdrawalLog";
+                            result = SetWithdrawalLog(withdrawalId, siteId, comment, (int) status, @operator, trans);
 
-                    // 提款單狀態變成 Reject 都要退玩家錢
-                    const int financialType = 1002;
-                    _walletService.SetBalance(withdrawalRequest.CustId, withdrawalRequest.SiteId, withdrawalRequest.UserName, withdrawalRequest.Amount, financialType,
-                        $"Manual Withdrawal Rejected: {withdrawalRequest.Amount}", withdrawalRequest.TransId, out _, out _, trans);
-
-                    SetWithdrawalLog(withdrawalId, siteId, comment, (int)status, Operator, trans);
-                    if (result > 0)
-                    {
-                        trans.Commit();
+                            if (result > 0)
+                            {
+                                trans.Commit();
+                            }
+                        }
                     }
                 }
+                
+                if (result <= 0)
+                    _logger.LogInformation(action + "result=" + result);
+                
                 conn.Close();
                 conn.Dispose();
             }

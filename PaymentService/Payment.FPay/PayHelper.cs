@@ -188,13 +188,13 @@ namespace Payment.FPay
                     Response = CallbackResponse.Failed
                 };
             }
-            
+
             return new NotifyWithdrawResult
             {
                 WithdrawId = transId,
                 ThirdId = transId,
                 Message = data.Remarks,
-                TransStatus = TransStatus.Success,
+                TransStatus = Definition.GetTransStatus(data.OrderStatus),
                 Response = CallbackResponse.Success
             };
         }

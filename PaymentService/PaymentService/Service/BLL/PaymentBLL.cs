@@ -201,7 +201,7 @@ namespace PaymentService.Service.BLL
         /// <param name="comment"></param>
         /// <param name="refId"></param>
         /// <param name="operator"></param>
-        public void WithdrawalManualReject(WithdrawalRequest withdrawalRequest, string comment, string refId, string @operator)
+        public void WithdrawalReject(WithdrawalRequest withdrawalRequest, string comment, string refId, string @operator, bool isManual)
         {
             var forStatus = new List<int>
             {
@@ -216,13 +216,12 @@ namespace PaymentService.Service.BLL
                 (int)WithdrawalStatus.Error
             };
 
-            _withdrawalService.SetWithdrawalInfoByManualReject(withdrawalRequest.TransId,
+            _withdrawalService.SetWithdrawalInfoReject(withdrawalRequest.TransId,
                 withdrawalRequest.SiteId,
-                withdrawalRequest,
                 comment,
                 refId,
                 @operator,
-                forStatus, WithdrawalStatus.Rejected, withdrawalRequest);
+                forStatus, WithdrawalStatus.Rejected, withdrawalRequest, isManual);
         }
 
         public void WithdrawalFail(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
