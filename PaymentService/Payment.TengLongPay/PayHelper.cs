@@ -92,7 +92,7 @@ public class PayHelper : PayHelperBase
         {
             ActualAmount = decimal.Parse(data["amount"]) / AmountFix,
             DepositId = transId,
-            ThirdId = data["mch_sn"],
+            ThirdId = data["sn"],
             TransStatus = data["status"] == "1" ? TransStatus.Success : TransStatus.Fail,
             Message = bodyContent,
             Response = CallbackResponse.Success
