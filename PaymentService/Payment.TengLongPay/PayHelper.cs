@@ -71,7 +71,7 @@ public class PayHelper : PayHelperBase
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
         var data = FromJson<Dictionary<string, string>>(bodyContent);
-        var transId = data["sn"];
+        var transId = data["mch_sn"];
         var key = payResource["DKey"];
         var keys = new []{ "mch", "sn", "amount", "mch_sn", "type", "date" };
         
