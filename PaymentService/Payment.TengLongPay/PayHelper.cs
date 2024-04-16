@@ -121,7 +121,7 @@ public class PayHelper : PayHelperBase
                 {"cardnumber", inputs["AccountNo"]}
             };
             
-            req.Add("sign", GetSign(req, key));
+            req.Add("sign", GetSign(req, key).ToUpper());
             
             var (resp, statusCode) = _httpHelper
                 .PostUrlEncoded<Dictionary<string, string>, WithdrawResp>(apiHost + Path.CreatePayout, req);
@@ -159,7 +159,7 @@ public class PayHelper : PayHelperBase
         var transId = formData["out_trade_no"];
         var keys = new []{ "mchid", "out_trade_no", "amount", "transaction_id", "refCode", "refMsg" };
 
-        if (!VerifySign(formData, key, formData["sign"], keys))
+        if (!VerifySign(formData, key, formData["sign"].ToLower(), keys))
         {
             _logger.LogInformation($"{transId}, signature verification failed.");
 
