@@ -26,5 +26,5 @@ internal class Path
 {
     public const string CreateOrder = "/api/index/orderdoing";
     
-    public const string CreatePayout = "v1/dfapi/add";
+    public const string CreatePayout = "/v1/dfapi/add";
 }
