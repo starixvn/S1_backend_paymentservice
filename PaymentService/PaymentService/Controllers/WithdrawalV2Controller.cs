@@ -350,7 +350,10 @@ public class WithdrawalV2Controller : ControllerBase
                     break;
 
                 case TransStatus.Fail:
-                    _paymentBll.WithdrawalFail(withdrawalInfo, result);
+                    if (withdrawalInfo.Status == WithdrawalStatus.Approved) //提款沖正
+                        _paymentBll.WithdrawalReject(withdrawalInfo, withdrawalInfo.PayName + " Refund", result.ThirdId, withdrawalInfo.PayName, false);
+                    else
+                        _paymentBll.WithdrawalFail(withdrawalInfo, result);
                     break;
 
                 case TransStatus.Pending:

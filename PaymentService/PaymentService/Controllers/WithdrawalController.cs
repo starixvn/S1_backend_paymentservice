@@ -179,11 +179,11 @@ namespace PaymentService.Controllers
             #endregion
 
             // ELK log 紀錄原本的狀態變更至 Rejected
-            _logger.LogInformation($"{withdrawalRequest.TransId} old status is {withdrawalRequest.Status},prepare change status to {WithdrawalStatus.Approved}");
+            _logger.LogInformation($"{withdrawalRequest.TransId} old status is {withdrawalRequest.Status},prepare change status to {WithdrawalStatus.Rejected}");
 
             try
             {
-                _paymentBll.WithdrawalManualReject(withdrawalRequest, "Manual Rejected", request.ThirdId, request.Operator);
+                _paymentBll.WithdrawalReject(withdrawalRequest, "Manual Rejected", request.ThirdId, request.Operator, true);
             }
             catch (Exception ex)
             {
