@@ -40,6 +40,7 @@ namespace Payment.VTPay
             var bankCode = "";
             var merchantId = inputs[$"MerchantIDFor{payCode}"];
             var passKey = inputs[$"PassKeyFor{payCode}"];
+            var paramOptional = "";
 
             try
             {
@@ -56,6 +57,7 @@ namespace Payment.VTPay
                         break;
                     case "VA":
                         bankCode = inputs["BankCode"];
+                        paramOptional = $"FirstName={inputs["AccountName"]};";
                         break;
                 }
 
@@ -80,7 +82,7 @@ namespace Payment.VTPay
                     Amount = decimal.Parse(amount.ToString("F4")),
                     DateRequest = dateTime.ToString("yyyy-MM-dd HH:mm:ss"),
                     IPAddress = IPAddress,
-                    ParamOptional = "",
+                    ParamOptional = paramOptional,
                     Signature = signature,
                 };
 
