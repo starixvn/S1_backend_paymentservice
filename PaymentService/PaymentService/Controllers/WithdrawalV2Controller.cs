@@ -323,7 +323,9 @@ public class WithdrawalV2Controller : ControllerBase
             if (result.RequestAmount == 0)
                 result.RequestAmount = withdrawalInfo.Amount;
 
-            if (withdrawalInfo.Status is WithdrawalStatus.Approved or WithdrawalStatus.Rejected)
+            // 已是最終狀態的單，除了沖正以外不可變更
+            if ((withdrawalInfo.Status == WithdrawalStatus.Approved && result.TransStatus != TransStatus.Fail)
+                || withdrawalInfo.Status == WithdrawalStatus.Rejected)
             {
                 var status = result.TransStatus switch
                 {
