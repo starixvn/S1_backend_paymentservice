@@ -159,7 +159,7 @@ public class PayHelper : PayHelperBase
         var transId = formData["out_trade_no"];
         var keys = new []{ "mchid", "out_trade_no", "amount", "transaction_id", "refCode", "refMsg" };
 
-        if (!VerifySign(formData, key, formData["sign"].ToLower(), keys))
+        if (!VerifySign(formData, key, formData["sign"], keys))
         {
             _logger.LogInformation($"{transId}, signature verification failed.");
 
@@ -201,7 +201,7 @@ public class PayHelper : PayHelperBase
     {
         var signKvp = input.Where(x => signKeys.Contains(x.Key));
 
-        return GetSign(signKvp, key).Equals(target);
+        return GetSign(signKvp, key).Equals(target, StringComparison.OrdinalIgnoreCase);
     }
     
     private string GetSign(IEnumerable<KeyValuePair<string, string>> input, string key)
