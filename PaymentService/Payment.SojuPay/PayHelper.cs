@@ -1,0 +1,165 @@
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using PaymentCore;
+using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
+using PaymentCore.Interface;
+using PaymentCore.Models.Result;
+using Newtonsoft.Json;
+using System.Net;
+using static Payment.SojuPay.SojuPayDefinition;
+using static Payment.SojuPay.SojuPayModel;
+using System.Net.NetworkInformation;
+
+namespace Payment.SojuPay
+{
+    public class PayHelper : PayHelperBase
+    {
+        private readonly IFlurlHttpHelper _httpHelper;
+        private readonly ILogger<PayHelper> _logger;
+        public PayHelper(IServiceProvider provider)
+        {
+            _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+            _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
+        }
+
+        #region Debit
+        public override DepositResult Debit(Dictionary<string, string> inputs)
+        {
+            var host = inputs["host"];
+            var apiURL = inputs["DepositURL"];
+            var platfromId = inputs["MerchantID"];
+            var serviceId = inputs["ServiceId"];
+            var transId = inputs["TransID"];
+            var apikey = inputs["APIKey"];
+            try
+            {
+                var req = new Dictionary<string, string>()
+                {
+                    {"platfrom_id", platfromId},
+                    {"service_id", serviceId},
+                    {"payment_cl_id", transId},
+                    {"name", inputs["AccountName"]},
+                    {"amount", inputs["Amount"]},
+                    {"notify_url", inputs["CallbackURL"]},
+                    {"request_time", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
+                };
+
+                req.Add("Sign", GetSign(req, apikey));
+
+                var (response, statusCode) = _httpHelper
+                    .PostJson<Dictionary<string, string>, DepositResponse>($"{host}{SojuPayDefinition.Path.Deposit}", req);
+
+                if (!statusCode.IsSuccessStatus())
+                {
+                    throw new CustomException($"SojuPay deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
+                }
+
+                if (!ErrorCode.Success.Equals(response.ErrorCode))
+                {
+                    throw new CustomException(response.ErrorMessage, response.ErrorCode);
+                }
+
+                return new DepositResult()
+                {
+                    Success = true,
+                    ErrorCode = ErrorCode.Success,
+                    Url = response.Data.Link
+                };
+            }
+            catch (CustomException ex)
+            {
+                _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+
+                return new DepositResult(false, ex.Code, ex.Message);
+            }
+        }
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
+        {
+            var apiKey = payResource["APIKey"];
+            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+            var transId = dicReq["payment_cl_id"];
+            var status = dicReq["status"];
+            var actualAmount = dicReq["real_amount"];
+            var sign = new Dictionary<string, string>()
+            {
+                {"payment_id",dicReq["payment_id"] },
+                {"payment_cl_id",transId },
+                {"platform_id",dicReq["platform_id"] },
+                {"amount",dicReq["amount"] },
+                {"real_amount",actualAmount },
+                {"fee",dicReq["fee"] },
+                {"status",status },
+                {"create_time",dicReq["create_time"] },
+                {"update_time",dicReq["update_time"] },
+            };
+
+            if (VerifySign(sign,apiKey ,dicReq["sign"]))
+            {
+                return new NotifyDepositResult
+                {
+                    DepositId = transId,
+                    TransStatus = TransStatus.Pending,
+                    Response = "Signature does not match."
+                };
+            }
+
+            var transStatus = SojuPayDefinition.GetTransStatus(status);
+
+            return new NotifyDepositResult
+            {
+                DepositId = transId,
+                ActualAmount = Convert.ToDecimal(actualAmount),
+                ThirdId = transId,
+                Comment = status,
+                TransStatus = transStatus,
+                Response = SojuPayDefinition.CallbackResponse
+            };
+        }
+        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
+
+        #region Credit
+        public override WithdrawResult Credit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
+        {
+            throw new NotImplementedException();
+        }
+        public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
+
+        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        #region privite
+        private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiKey)
+        {
+            param = param.OrderBy(x => x.Key, StringComparer.Ordinal);
+            var str = string.Join("&", param
+                .Select(x => x.Value));
+
+            var sign = ToMD5($"{str}&{apiKey}");
+
+            return sign;
+        }
+
+        private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)
+        {
+            var sign = GetSign(param, apiKey);
+
+            return sign.Equals(target);
+        }
+        #endregion
+    }
+}
