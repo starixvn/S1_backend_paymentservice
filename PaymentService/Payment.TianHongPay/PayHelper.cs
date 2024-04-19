@@ -27,7 +27,7 @@ public class PayHelper: PayHelperBase
             {"amount", amount.ToString("G29")},
             {"bankCode", string.Empty},
             {"notifyUrl", inputs["CallBackUrl"]},
-            {"frontUrl", string.Empty}
+            {"frontUrl", inputs["ReturnUrl"]}
         };
         
         req.Add("sign", GetSign(req, inputs["Key"]));
