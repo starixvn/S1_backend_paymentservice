@@ -66,7 +66,7 @@ public class PayHelper: PayHelperBase
         var transId = formData["orderId"];
         var sign = GetSign(formData, payResource["Key"]);
 
-        if (!formData["sign"].Equals(sign))
+        if (!formData["sign"].Equals(sign, StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogInformation($"{transId}, signature verification failed.");
 
