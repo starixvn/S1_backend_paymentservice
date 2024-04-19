@@ -81,7 +81,7 @@ public class PayHelper: PayHelperBase
 
         var result = new NotifyDepositResult
         {
-            ActualAmount = decimal.Parse(formData["cnyMoney"]) / AmountFix,
+            ActualAmount = decimal.Parse(formData["amount"]) / AmountFix,
             DepositId = transId,
             ThirdId = transId,
             TransStatus = Definition.GetTransStatus(formData["orderStatus"]),
