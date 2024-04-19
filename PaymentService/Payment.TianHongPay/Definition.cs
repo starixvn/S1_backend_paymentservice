@@ -18,7 +18,7 @@ public class Definition
 
 internal static class CallbackResponse
 {
-    public const string Success = "success";
+    public const string Success = "ok";
     public const string Failed = "failed";
 }
 
