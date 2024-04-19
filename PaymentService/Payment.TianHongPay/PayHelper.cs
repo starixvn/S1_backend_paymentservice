@@ -101,7 +101,7 @@ public class PayHelper: PayHelperBase
     {
         var str = string.Join("&", param
                 .Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase))
-                .OrderBy(x => x.Key)
+                .OrderByDescending(x => x.Key)
                 .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
 
         _logger.LogInformation(str);
