@@ -100,8 +100,7 @@ public class PayHelper: PayHelperBase
     private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
     {
         var str = string.Join("&", param
-                .Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase) 
-                            && !string.IsNullOrEmpty(x.Value))
+                .Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(x => x.Key)
                 .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
 
