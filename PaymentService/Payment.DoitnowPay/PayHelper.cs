@@ -28,20 +28,24 @@ namespace Payment.DoitnowPay
         {
             try
             {
+                var currencyId = inputs["CurrencyId"];
                 var hostDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(inputs["Host"]);
-                hostDic.TryGetValue(inputs["CurrencyId"], out var hostUrl);
+                hostDic.TryGetValue(currencyId, out var hostUrl);
                 var sUrl = hostUrl + DoitnowPayDefinition.Path.CreateOrder;
                 var amount = decimal.Parse(inputs["Amount"]);
-                var formData = new Dictionary<string, string>()
+                var formData = new Dictionary<string, string>
                 {
                     { "clientId", inputs["ClientId"] },
                     { "transactionId", inputs["TransID"] },
                     { "custName", inputs["AccountName"] },
+                    { "custBank", inputs.TryGetValue("BankCode", out var input) ? input : string.Empty},
                     { "amount", amount.ToString("#") },
                     { "returnUrl", inputs["ReturnUrl"] },
                     { "callbackUrl", inputs["CallBackUrl"] },
-                    { "paymentMethod", inputs["PayCode"] }
+                    { "paymentMethod", inputs["PayCode"] },
+                    { "bankAcc", inputs.TryGetValue("PayAccount", out input) ? input : string.Empty }
                 };
+
                 formData.Add("hashVal", Hash(formData, inputs["ClientSecret"]));
 
                 var oDepositResult = new DepositResult

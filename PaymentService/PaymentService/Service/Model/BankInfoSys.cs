@@ -33,6 +33,7 @@ namespace PaymentService.Service.Model
         public int PointLevel { get; set; }
         public string PayName { get; set; }
         public string PayCode { get; set; }
+        public int ExtraDataType { get; set; }
         public int MSort { get; set; }
         public int SSort { get; set; }
         public bool SelBank { get; set; }
@@ -51,6 +52,7 @@ namespace PaymentService.Service.Model
         public string ChannelName { get; set; }
         public int Mode { get; set; }
         public DepositType DepositType { get; set; }
+        public int ExtraDataType { get; set; }
         public int PointLevel { get; set; }
         public string PayCode { get; set; }
         public int CurrencyId { get; set; }
@@ -64,53 +66,7 @@ namespace PaymentService.Service.Model
         public int GSort { get; set; }
         public int SSort { get; set; }
     }
-    public class CryptoPayInfo : IPayInfo
-    {
-        public int PayId { get; set; }
-        public string PayName { get; set; }
-        public int GroupId { get; set; }
-        public string GroupName { get; set; }
-        public int ChannelId { get; set; }
-        public string ChannelName { get; set; }
-        public string CurrencyName => ChannelName?.Split('-').FirstOrDefault();
-        public int Mode { get; set; }
-        public int PointLevel { get; set; }
-        public int CurrencyId { get; set; }
-        public string PayCurrencyId { get; set; }
-        public decimal MinAmount { get; set; }
-        public decimal MaxAmount { get; set; }
-        public int AmountRule { get; set; }
-        public string AmountShow { get; set; }
-        public IEnumerable<decimal> AmountList => AmountShow == null ? null : Newtonsoft.Json.JsonConvert.DeserializeObject<IEnumerable<decimal>>(AmountShow);
-        public string PayCode { get; set; }
-        public int GSort { get; set; }
-        public int SSort { get; set; }
-    }
-    public class LoadCardPayInfo : IPayInfo
-    {
-        public int PayId { get; set; }
-        public string PayName { get; set; }
-        public int GroupId { get; set; }
-        public string GroupName { get; set; }
-        public int ChannelId { get; set; }
-        public string ChannelName { get; set; }
-        public int Mode { get; set; }
-        public int PointLevel { get; set; }
-        public int CurrencyId { get; set; }
-        public string PayCurrencyId { get; set; }
-        public decimal MinAmount { get; set; }
-        public decimal MaxAmount { get; set; }
-        public int AmountRule { get; set; }
-        public string AmountShow { get; set; }
-        public IEnumerable<decimal> AmountList => AmountShow == null ? null : Newtonsoft.Json.JsonConvert.DeserializeObject<IEnumerable<decimal>>(AmountShow);
-        public string PayCode { get; set; }
-        public int GSort { get; set; }
-        public int SSort { get; set; }
-        public long Updated_timestamp { get; set; }
-        public string Code { get; set; }
-        public string Serial { get; set; }
-    }
-
+    
     public class CryptoExchangeSetting
     {
         public int PayId { get; set; }
