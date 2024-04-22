@@ -10,6 +10,7 @@ using System.Net;
 using static Payment.SojuPay.SojuPayDefinition;
 using static Payment.SojuPay.SojuPayModel;
 using System.Net.NetworkInformation;
+using Org.BouncyCastle.Ocsp;
 
 namespace Payment.SojuPay
 {
@@ -125,11 +126,98 @@ namespace Payment.SojuPay
         #region Credit
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var host = inputs["host"];
+            var apikey = inputs["APIKey"];
+            var platfromId = inputs["MerchantID"];
+            var transId = inputs["TransID"];
+            var serviceId = inputs["ServiceId"];
+            try
+            {
+                var req = new Dictionary<string, string>()
+                {
+                    { "amount" , inputs["Amount"]},
+                    { "bank_name", inputs["BankName"] },
+                    { "name", inputs["AccountName"] },
+                    { "notify_url", inputs["CallbackURL"] },
+                    { "number", inputs["AccountNo"] },
+                    { "payout_cl_id", transId},
+                    { "platform_channel_id", ""},
+                    { "platform_id", platfromId},
+                    { "request_time", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()},
+                    { "service_id", serviceId}
+                };
+
+                req.Add("sign", GetSign(req, apikey));
+
+                var (response, statusCode) = _httpHelper
+                    .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{host}{SojuPayDefinition.Path.Withdrawal}", req);
+
+                if (!statusCode.IsSuccessStatus())
+                {
+                    throw new CustomException($"SojuPay Withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
+                }
+
+                if (!ErrorCode.Success.Equals(response.ErrorCode))
+                {
+                    throw new CustomException(response.ErrorMessage, response.ErrorCode);
+                }
+
+                return new WithdrawResult
+                {
+                    Success = true,
+                    RawContent = JsonConvert.SerializeObject(response)
+                };
+
+            }
+            catch (CustomException ex)
+            {
+                _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
+
+                return new WithdrawResult
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
         }
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            var apikey = payResource["APIKey"];
+            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
+            var thirdId = dicReq["payout_id"];
+            var transId = dicReq["payout_cl_id"];
+            var status = dicReq["status"];
+            var reqforsign = new Dictionary<string, string>()
+            {
+                { "payout_id", thirdId},
+                { "payout_cl_id", transId },
+                { "platform_id", dicReq["platform_id"]},
+                { "amount", dicReq["amount"]},
+                { "fee", dicReq["fee"]},
+                { "status", status},
+                { "create_time", dicReq["create_time"] },
+                { "update_time", dicReq["update)time"]}
+            };
+
+            if (!VerifySign(dicReq, apikey, dicReq["sign"]))
+            {
+                return new NotifyWithdrawResult
+                {
+                    ThirdId = transId,
+                    TransStatus = TransStatus.Pending,
+                    Response = "Signature does not match."
+                };
+            }
+
+            var transStatus = SojuPayDefinition.GetTransStatus(status);
+
+            return new NotifyWithdrawResult
+            {
+                ThirdId = thirdId,
+                TransStatus = transStatus,
+                Response = SojuPayDefinition.CallbackResponse,
+                WithdrawId = transId
+            };
         }
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {

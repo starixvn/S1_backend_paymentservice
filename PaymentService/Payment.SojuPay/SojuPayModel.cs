@@ -19,6 +19,18 @@ namespace Payment.SojuPay
             [JsonProperty("date")]
             public Data Data { get; set; }
         }
+
+        public class WithdrawalResponse
+        {
+            [JsonProperty("error_code")]
+            public string ErrorCode { get; set; }
+            [JsonProperty("error_msg")]
+            public string ErrorMessage { get; set; }
+            [JsonProperty("date")]
+            public Data Data { get; set; }
+        }
+
+
         public class Data
         {
             [JsonProperty("payout_id")]
