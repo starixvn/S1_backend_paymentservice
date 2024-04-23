@@ -11,7 +11,7 @@ namespace Payment.SojuPay
     {
         internal class Path
         {
-            public const string Deposit = "/gateway/api/v2/payouts";
+            public const string Deposit = "/gateway/api/v1/payments";
 
             public const string Withdrawal = "/gateway/api/v2/payouts";
         }

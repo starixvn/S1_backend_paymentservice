@@ -42,7 +42,7 @@ namespace Payment.SojuPay
                     {"payment_cl_id", transId},
                     {"name", inputs["AccountName"]},
                     {"amount", inputs["Amount"]},
-                    {"notify_url", inputs["CallbackURL"]},
+                    {"notify_url", inputs["CallBackUrl"]},
                     {"request_time", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
                 };
 
@@ -95,7 +95,7 @@ namespace Payment.SojuPay
                 {"update_time",dicReq["update_time"] },
             };
 
-            if (VerifySign(sign,apiKey ,dicReq["sign"]))
+            if (!VerifySign(sign,apiKey ,dicReq["sign"]))
             {
                 return new NotifyDepositResult
                 {
