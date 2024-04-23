@@ -148,8 +148,9 @@ public class DepositV2Controller : ControllerBase
 
             _paymentBll.SimpleDepositFail(depositInfo.TransId, depositInfo.SiteId, payInfo, result.Message);
 
-            return new ApiResult<PayResult>(ErrorCode.Fail)
+            return new ApiResult<PayResult>(new PayResult{Mode = payInfo.Mode, Message = result.Message})
             {
+                ErrorCode = (int)ErrorCode.Fail,
                 RawErrorCode = result.ErrorCode,
                 RawMessage = result.Message
             };
