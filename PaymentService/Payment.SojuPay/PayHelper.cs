@@ -37,7 +37,7 @@ namespace Payment.SojuPay
             {
                 var req = new Dictionary<string, string>()
                 {
-                    {"platfrom_id", platfromId},
+                    {"platform_id", platfromId},
                     {"service_id", serviceId},
                     {"payment_cl_id", transId},
                     {"name", inputs["AccountName"]},
@@ -46,7 +46,7 @@ namespace Payment.SojuPay
                     {"request_time", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
                 };
 
-                req.Add("Sign", GetSign(req, apikey));
+                req.Add("sign", GetSign(req, apikey));
 
                 var (response, statusCode) = _httpHelper
                     .PostJson<Dictionary<string, string>, DepositResponse>($"{host}{SojuPayDefinition.Path.Deposit}", req);
