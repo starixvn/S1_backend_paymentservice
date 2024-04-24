@@ -26,9 +26,9 @@ namespace Payment.HonorPay
 
         public override DepositResult Debit(Dictionary<string, string> input)
         {
-            var baseApiUrl = input["host"];
-            var key = input["key"];
-            var apiToken = input["access_token"];
+            var payCurrency = input["PayCurrency"];
+            var baseApiUrl = input[$"{payCurrency}host"];
+            var apiToken = input[$"{payCurrency}access_token"];
             var payCode = input["PayCode"];
             var transId = input["TransID"];
 
@@ -37,13 +37,20 @@ namespace Payment.HonorPay
                 var (payType, bankCode) = ParseDepositPayCode(payCode);
                 var formData = new Dictionary<string, string>
                 {
-                    { "account", input["merchant_no"] },
+                    { "account", input[$"{payCurrency}merchant_no"] },
                     { "payType", payType },
                     { "payMoney", input["Amount"] },
                     { "ip", input["ClientIP"] },
                     { "notifyURL", input["CallBackUrl"] },
                     { "orderNo", transId }
                 };
+                
+                if (payCurrency == "KRW")
+                {
+                    formData.Add("playerName", input["AccountName"]);
+                    formData.Add("bankName", input["BankName"]);
+                    formData.Add("bankNumber", input["PayAccount"]);
+                }
 
                 if (NeedBankCode(payType))
                 {
@@ -76,8 +83,7 @@ namespace Payment.HonorPay
                     Success = true,
                     ErrorCode = ErrorCode.Success,
                     Url = response.RedirectUrl,
-                    ThirdId = response.TpTransId,
-                    FormData = formData
+                    ThirdId = response.TpTransId
                 };
             }
             catch (CustomException ex)
