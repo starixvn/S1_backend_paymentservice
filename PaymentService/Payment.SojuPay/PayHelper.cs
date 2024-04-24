@@ -235,10 +235,9 @@ namespace Payment.SojuPay
         {
             param = param.OrderBy(x => x.Key, StringComparer.Ordinal);
             var str = string.Join("&", param
-                .Select(x => x.Value));
+                .Select(x => $"{x.Key}={x.Value}"));
 
             var sign = ToMD5($"{str}&{apiKey}");
-
             return sign;
         }
 
