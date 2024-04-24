@@ -7,13 +7,13 @@ internal class Definition
     private static Dictionary<string, TransStatus> StatusMap =>
         new()
         {
-            { "Pending", TransStatus.Pending },
-            { "Success", TransStatus.Success },
-            { "Unsuccess", TransStatus.Fail }
+            { "pending", TransStatus.Pending },
+            { "success", TransStatus.Success },
+            { "unsuccess", TransStatus.Fail }
         };
     
     public static TransStatus GetTransStatus(string status)
-        => StatusMap.GetValueOrDefault(status, TransStatus.Pending);
+        => StatusMap.GetValueOrDefault(status.ToLower(), TransStatus.Pending);
     
     public const string SuccessStatus = "success";
     public const string CallbackResponse = "success";
