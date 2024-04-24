@@ -16,7 +16,7 @@ namespace Payment.SojuPay
             public string ErrorCode { get; set; }
             [JsonProperty("error_msg")]
             public string ErrorMessage { get; set; }
-            [JsonProperty("date")]
+            [JsonProperty("data")]
             public Data Data { get; set; }
         }
 
