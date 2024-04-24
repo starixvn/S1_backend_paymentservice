@@ -115,6 +115,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.TengLongPay", "Paym
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.TianHongPay", "Payment.TianHongPay\Payment.TianHongPay.csproj", "{7874E0F6-8020-4D4E-8F44-22A5854957CD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.TopPayWorld", "Payment.TopPayWorld\Payment.TopPayWorld.csproj", "{79FB0B47-6FFB-4793-933A-D8FEC6792DE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -337,6 +339,10 @@ Global
 		{7874E0F6-8020-4D4E-8F44-22A5854957CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7874E0F6-8020-4D4E-8F44-22A5854957CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7874E0F6-8020-4D4E-8F44-22A5854957CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79FB0B47-6FFB-4793-933A-D8FEC6792DE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79FB0B47-6FFB-4793-933A-D8FEC6792DE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79FB0B47-6FFB-4793-933A-D8FEC6792DE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79FB0B47-6FFB-4793-933A-D8FEC6792DE7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -393,6 +399,7 @@ Global
 		{49E603BE-87AE-4613-8D19-D2964D9C87FA} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{76E11D03-24E6-4EE9-A6FF-4AB1D81D3B68} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{7874E0F6-8020-4D4E-8F44-22A5854957CD} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{79FB0B47-6FFB-4793-933A-D8FEC6792DE7} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
