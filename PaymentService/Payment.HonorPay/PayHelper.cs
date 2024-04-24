@@ -26,7 +26,7 @@ namespace Payment.HonorPay
 
         public override DepositResult Debit(Dictionary<string, string> input)
         {
-            var payCurrency = input["PayCurrency"];
+            var payCurrency = input["PayCurrencyId"];
             var baseApiUrl = input[$"{payCurrency}host"];
             var apiToken = input[$"{payCurrency}access_token"];
             var payCode = input["PayCode"];
@@ -141,10 +141,10 @@ namespace Payment.HonorPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var baseApiUrl = inputs["host"];
-            var key = inputs["key"];
-            var apiToken = inputs["access_token"];
-            var merchant = inputs["merchant_no"];
+            var payCurrency = inputs["PayCurrencyId"];
+            var baseApiUrl = inputs[$"{payCurrency}host"];
+            var apiToken = inputs[$"{payCurrency}access_token"];
+            var merchant = inputs[$"{payCurrency}merchant_no"];
             var reqAmount = inputs["Amount"];
             var transId = inputs["TransID"];
 
@@ -163,7 +163,7 @@ namespace Payment.HonorPay
                     { "notifyURL", inputs["CallBackUrl"] }
                 };
 
-                formData.Add("sign", GetSign(formData, key));
+                formData.Add("sign", GetSign(formData, inputs[$"{payCurrency}key"]));
 
                 var (response, statusCode) = _httpHelper
                     .WithOAuthBearerToken(apiToken)
