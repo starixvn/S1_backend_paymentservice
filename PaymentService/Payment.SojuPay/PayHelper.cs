@@ -18,6 +18,7 @@ namespace Payment.SojuPay
     {
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
+        private const decimal AmountFixed = 100;
         public PayHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
@@ -33,6 +34,8 @@ namespace Payment.SojuPay
             var serviceId = inputs["ServiceId"];
             var transId = inputs["TransID"];
             var apikey = inputs["APIKey"];
+            var reqAmount = decimal.Parse(inputs["Amount"]) * AmountFixed;
+            var strAmount = Math.Floor(reqAmount).ToString("#");
             try
             {
                 var req = new Dictionary<string, string>()
@@ -41,7 +44,7 @@ namespace Payment.SojuPay
                     {"service_id", serviceId},
                     {"payment_cl_id", transId},
                     {"name", inputs["AccountName"]},
-                    {"amount", inputs["Amount"]},
+                    {"amount", strAmount},
                     {"notify_url", inputs["CallBackUrl"]},
                     {"request_time", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
                 };
@@ -81,14 +84,15 @@ namespace Payment.SojuPay
             var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
             var transId = dicReq["payment_cl_id"];
             var status = dicReq["status"];
-            var actualAmount = dicReq["real_amount"];
+            var actualAmount = decimal.Parse(dicReq["real_amount"]) / AmountFixed;
+            var strActualAmount = Math.Floor(actualAmount).ToString("#");
             var sign = new Dictionary<string, string>()
             {
                 {"payment_id",dicReq["payment_id"] },
                 {"payment_cl_id",transId },
                 {"platform_id",dicReq["platform_id"] },
                 {"amount",dicReq["amount"] },
-                {"real_amount",actualAmount },
+                {"real_amount",strActualAmount },
                 {"fee",dicReq["fee"] },
                 {"status",status },
                 {"create_time",dicReq["create_time"] },
@@ -110,7 +114,7 @@ namespace Payment.SojuPay
             return new NotifyDepositResult
             {
                 DepositId = transId,
-                ActualAmount = Convert.ToDecimal(actualAmount),
+                ActualAmount = actualAmount,
                 ThirdId = transId,
                 Comment = status,
                 TransStatus = transStatus,
