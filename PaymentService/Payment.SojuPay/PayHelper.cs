@@ -237,7 +237,7 @@ namespace Payment.SojuPay
             var str = string.Join("&", param
                 .Select(x => $"{x.Key}={x.Value}"));
             _logger.LogInformation($"string:{str}&{apiKey}");
-            var sign = ToMD5($"{str}&{apiKey}");
+            var sign = ToMD5($"{str}&{apiKey}").ToLower();
             return sign;
         }
 
