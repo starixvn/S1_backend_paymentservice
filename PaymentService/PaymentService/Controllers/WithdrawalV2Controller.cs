@@ -213,11 +213,13 @@ public class WithdrawalV2Controller : ControllerBase
         var dicWithdrawalInfo = GetDicWithdrawalInfo(withdrawalInfo.WithdrawalInfo, keys);
         _logger.LogInformation("WithdrawalInfo:" + JsonConvert.SerializeObject(dicWithdrawalInfo));
         var channelId = int.Parse(dicWithdrawalInfo["ChannelId"]);
+        var sysId = int.Parse(dicWithdrawalInfo["EWalletSysId"]);
 
         var payInfo = _payBll.GetEWalletPayListForPayout(custInfo.SiteId)?.FirstOrDefault(x =>
             x.ChannelId == channelId
+            && x.SysId == sysId
             && x.CurrencyId == custInfo.CurrencyId);
-
+        
         if (payInfo == null)
         {
             throw new PaymentException(

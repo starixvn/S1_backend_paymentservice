@@ -21,7 +21,7 @@ namespace Payment.TopPayWorld
     {
     }
     
-    public class DebitCallBackRequest : TopPayWorldBase<DebitCallBackDetail>
+    public class CallBackRequest : TopPayWorldBase<CallBackDetail>
     {
     }
     
@@ -61,7 +61,7 @@ namespace Payment.TopPayWorld
         public string Status { get; set; }
     }
     
-    public class DebitCallBackDetail
+    public class CallBackDetail
     {
         [JsonProperty("feeAmount")]
         public string FeeAmount { get; set; }
