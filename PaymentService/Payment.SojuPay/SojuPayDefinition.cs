@@ -23,8 +23,9 @@ namespace Payment.SojuPay
         private static Dictionary<string, TransStatus> SojuPayStatusMap =>
             new()
             {
+                { SojuPayStatus.Reserved, TransStatus.Pending },
                 { SojuPayStatus.Pending, TransStatus.Pending },
-                { SojuPayStatus.Processing, TransStatus.Pending },
+                { SojuPayStatus.InProgress, TransStatus.Pending },
                 { SojuPayStatus.Success, TransStatus.Success },
                 { SojuPayStatus.Cancelled, TransStatus.Fail },
                 { SojuPayStatus.Failed, TransStatus.Fail }
@@ -37,11 +38,12 @@ namespace Payment.SojuPay
                 ? result : TransStatus.Pending;
         private class SojuPayStatus
         {
-            public const string Pending = "0";
-            public const string Processing = "1";
-            public const string Success = "2";
-            public const string Cancelled = "3";
-            public const string Failed = "4";
+            public const string Reserved = "0";      
+            public const string Pending = "1";       
+            public const string InProgress = "2";    
+            public const string Success = "3";       
+            public const string Cancelled = "4";     
+            public const string Failed = "5";        
         }
     }
 }
