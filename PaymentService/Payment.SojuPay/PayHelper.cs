@@ -141,10 +141,9 @@ namespace Payment.SojuPay
                     { "amount" , strAmount},
                     { "bank_name", inputs["BankName"] },
                     { "name", inputs["AccountName"] },
-                    { "notify_url", inputs["CallbackURL"] },
+                    { "notify_url", inputs["CallBackUrl"] },
                     { "number", inputs["AccountNo"] },
                     { "payout_cl_id", transId},
-                    { "platform_channel_id", ""},
                     { "platform_id", platfromId},
                     { "request_time", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()},
                     { "service_id", serviceId}
