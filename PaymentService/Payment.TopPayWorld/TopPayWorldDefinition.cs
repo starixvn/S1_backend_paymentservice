@@ -9,14 +9,9 @@ namespace Payment.TopPayWorld
         internal class Path
         {
             /// <summary>
-            /// 創建代收
+            /// 創建代收,代付
             /// </summary>
             public const string CreateOrder = "/gateway/online/transaction";
-
-            /// <summary>
-            /// 創建代付
-            /// </summary>
-            public const string CreatePayout = "/gateway/online/transaction";
         }
         
         private static Dictionary<string, TransStatus> TopPayWorldStatusMap =>
@@ -32,7 +27,7 @@ namespace Payment.TopPayWorld
                 
             };
         
-        public static TransStatus GetPayInTransStatus(string status)
+        public static TransStatus GetPaymentTransStatus(string status)
             => TopPayWorldStatusMap.GetValueOrDefault(status, TransStatus.Pending);
         
     }

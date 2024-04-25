@@ -2,6 +2,7 @@
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Exceptions;
@@ -80,16 +81,10 @@ namespace Payment.TopPayWorld
         {
             var transId = payResource["TransID"];
             var paymentPublicKey = payResource["TopPayPublicKey"];
+
+            var (dic, req ,signature) = GetCallBackRequest(bodyContent);
             
-            var req = FromJson<DebitCallBackRequest>(bodyContent);
-            var sign = req.Data.Signature;
-            
-            var jsonObj = JObject.Parse(bodyContent);
-            var dataOut = jsonObj["data"]?.ToObject<JObject>();
-            var dic = dataOut?.Properties().ToDictionary(x => x.Name, x => x.Value.ToString());
-            dic?.Remove("signature");
-            
-            if (!VerifySign(dic, paymentPublicKey ,sign))
+            if (!VerifySign(dic, paymentPublicKey ,signature))
             {
                 return new NotifyDepositResult
                 {
@@ -99,7 +94,7 @@ namespace Payment.TopPayWorld
                 };
             }
             
-            var transStatus = TopPayWorldDefinition.GetPayInTransStatus(req.Data.Status);
+            var transStatus = TopPayWorldDefinition.GetPaymentTransStatus(req.Data.Status);
             
             var result = new NotifyDepositResult
             {
@@ -120,104 +115,83 @@ namespace Payment.TopPayWorld
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            // var apiUrl = inputs["Host"];
-            // var merchantPrivateKey = inputs["MerchantPrivateKey"];
-            // var merchantNo = inputs["MerchantNo"];
-            // var reqAmount = decimal.Parse(inputs["Amount"]);
-            // var strAmount = reqAmount.ToString("G29");
-            // var transId = inputs["TransID"];
-            // var accountName = inputs["AccountName"];
-            // var notifyUrl = inputs["CallBackUrl"];
-            // var bankCode = inputs["BankCode"];
-            // var accountNo = inputs["AccountNo"];
-            //
-            // try
-            // {
-            //     var req = new Dictionary<string, string>
-            //     {
-            //         { "merchantCode", merchantNo },
-            //         { "orderType", "0" },
-            //         { "method", "Transfer" },
-            //         { "orderNum", transId },
-            //         { "money", strAmount },
-            //         { "feeType", "1"}, 
-            //         { "bankCode", bankCode },
-            //         { "number", accountNo },
-            //         { "name", accountName},
-            //         { "mobile", "" },
-            //         { "email", "" },
-            //         { "notifyUrl", notifyUrl },
-            //         { "dateTime", DateTime.Now.ToString("yyyyMMddHHmmss") },
-            //         { "description", transId },
-            //     };
-            //     
-            //     req.Add("sign" , GetSign(req,merchantPrivateKey)); ;
-            //     
-            //     var res = Payout(apiUrl, req);
-            //     var response = new WithdrawResult
-            //     {
-            //         Success = true,
-            //         RawContent = JsonConvert.SerializeObject(res)
-            //     };
-            //
-            //     return response;
-            // }
-            // catch (CustomException ex)
-            // {
-            //     _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
-            //
-            //     return new WithdrawResult
-            //     {
-            //         Success = false,
-            //         Message = ex.Message
-            //     };
-            // }
-            return null;
+            var apiUrl = inputs["Host"];
+            var merchantPrivateKey = inputs["MerchantPrivateKey"];
+            var merchantNo = inputs["MerchantCode"];
+            var reqAmount = inputs["Amount"];
+            var transId = inputs["TransID"];
+            var payCode = inputs["PayCode"];
+            var notifyUrl = inputs["CallBackUrl"];
+            var bankCode = inputs["BankCode"];
+            var accountNo = inputs["AccountNo"];
+            
+            try
+            {
+                var req = new Dictionary<string, string>
+                {
+                    { "merchantCode", merchantNo },
+                    { "outTradeNo", transId },
+                    { "requestNo", transId },
+                    { "version", "v1" },
+                    { "payType", "PAYMENT" },
+                    { "payAmount", reqAmount},
+                    { "payProductCode", payCode },
+                    { "payCategory", "BANK" },
+                    { "accountNo", accountNo },
+                    { "accountType", bankCode },
+                    { "notifyUrl", notifyUrl }
+                };
+                req.Add("signature" , GetSign(req,merchantPrivateKey));
+                
+                var res = CreateOrder(apiUrl, req);
+                var response = new WithdrawResult 
+                {
+                    Success = true,
+                    RawContent = JsonConvert.SerializeObject(res)
+                };
+                
+                return response;
+            }
+            catch (CustomException ex)
+            {
+                _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
+            
+                return new WithdrawResult
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers,
             Dictionary<string, string> payResource)
         {
-            // var key = payResource["TopPayPublicKey"];
-            // var req = FromJson<PayOutCallBackResponse>(bodyContent);
-            // var dic4Sign = new Dictionary<string, string> 
-            // {
-            //     { "platOrderNum", req.PlatOrderNum },
-            //     { "orderNum", req.OrderNum },
-            //     { "money", req.Money },
-            //     { "fee", req.Fee },
-            //     { "feeType", req.FeeType },
-            //     { "name", req.Name },
-            //     { "number", req.Number },
-            //     { "bankCode", req.BankCode },
-            //     { "status", req.Status },
-            //     { "statusMsg", req.StatusMsg },
-            //     { "description", req.Description },
-            //     { "platSign", req.PlatSign }
-            // };
-            //
-            // if (!VerifySign(dic4Sign, key))
-            // {
-            //     return new NotifyWithdrawResult
-            //     {
-            //         ThirdId = req.OrderNum,
-            //         TransStatus = TransStatus.Pending,
-            //         Response = "Signature does not match."
-            //     };
-            // }
-            //
-            // var transStatus = TopPayWorldDefinition.GetPayoutTransStatus(req.Status);
-            //
-            // return new NotifyWithdrawResult
-            // {
-            //     ThirdId = req.PlatOrderNum,
-            //     TransStatus = transStatus,
-            //     Message = req.StatusMsg,
-            //     Response = TopPayWorldDefinition.CallbackResponse,
-            //     WithdrawId = req.OrderNum
-            // };
-            return null;
+            var paymentPublicKey = payResource["TopPayPublicKey"];
+            
+            var (dic, req ,signature) = GetCallBackRequest(bodyContent);
+            
+            if (!VerifySign(dic, paymentPublicKey ,signature))
+            {
+                return new NotifyWithdrawResult
+                {
+                    ThirdId = req.Data.TradeNo,
+                    TransStatus = TransStatus.Pending,
+                    Response = "Signature does not match."
+                };
+            }
+            
+            var transStatus = TopPayWorldDefinition.GetPaymentTransStatus(req.Data.Status);
+            
+            return new NotifyWithdrawResult
+            {
+                ThirdId = req.Data.TradeNo,
+                TransStatus = transStatus,
+                Message = req.Msg,
+                WithdrawId = req.Data.OutTradeNo,
+                Response = TopPayWorldDefinition.CallbackResponse,
+            };
         }
 
         #endregion
@@ -245,7 +219,7 @@ namespace Payment.TopPayWorld
         
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string rsaKey)
         {
-            var signStr = string.Join("&", param.OrderBy(x => x.Key).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var signStr = string.Join("&", param.OrderBy(x => x.Key ,StringComparer.Ordinal).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             try
             {
                  //将PKCS8格式的私钥转换为C#中的RSA对象
@@ -307,6 +281,19 @@ namespace Payment.TopPayWorld
             }
             
             return result;
+        }
+
+        private (Dictionary<string,string>?, CallBackRequest ,string) GetCallBackRequest(string bodyContent)
+        {
+            var requestModel = FromJson<CallBackRequest>(bodyContent);
+            var sign = requestModel.Data.Signature;
+            
+            var jsonObj = JObject.Parse(bodyContent);
+            var dataOut = jsonObj["data"]?.ToObject<JObject>();
+            var dic = dataOut?.Properties().ToDictionary(x => x.Name, x => x.Value.ToString());
+            dic?.Remove("signature");
+
+            return (dic, requestModel, sign);
         }
         
         #endregion

@@ -218,7 +218,7 @@ public class WithdrawalV2Controller : ControllerBase
             x.ChannelId == channelId
             && x.SysId == sysId
             && x.CurrencyId == custInfo.CurrencyId);
-
+        
         if (payInfo == null)
         {
             throw new PaymentException(
