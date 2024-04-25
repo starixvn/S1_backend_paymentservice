@@ -100,7 +100,7 @@ namespace Payment.TopPayWorld
             {
                 ThirdId = req.Data.TradeNo,
                 DepositId = req.Data.OutTradeNo,
-                Comment = req.Msg,
+                Comment = req.Data.Status,
                 TransStatus = transStatus,
                 ActualAmount = decimal.Parse(req.Data.PayAmount),
                 Response = TopPayWorldDefinition.CallbackResponse
@@ -188,7 +188,7 @@ namespace Payment.TopPayWorld
             {
                 ThirdId = req.Data.TradeNo,
                 TransStatus = transStatus,
-                Message = req.Msg,
+                Message = req.Data.Status,
                 WithdrawId = req.Data.OutTradeNo,
                 Response = TopPayWorldDefinition.CallbackResponse,
             };
