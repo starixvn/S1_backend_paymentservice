@@ -2,6 +2,7 @@
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -83,8 +84,10 @@ namespace Payment.TopPayWorld
             var req = FromJson<DebitCallBackRequest>(bodyContent);
             var sign = req.Data.Signature;
             
-            var dic = FromJson<Dictionary<string, string>>(bodyContent);
-            dic.Remove("platSign");
+            var jsonObj = JObject.Parse(bodyContent);
+            var dataOut = jsonObj["data"]?.ToObject<JObject>();
+            var dic = dataOut?.Properties().ToDictionary(x => x.Name, x => x.Value.ToString());
+            dic?.Remove("signature");
             
             if (!VerifySign(dic, paymentPublicKey ,sign))
             {
@@ -247,8 +250,7 @@ namespace Payment.TopPayWorld
             {
                  //将PKCS8格式的私钥转换为C#中的RSA对象
                  var rsa = RSA.Create();
-                 var test = Convert.FromBase64String(rsaKey);
-                 rsa.ImportPkcs8PrivateKey(test, out _);
+                 rsa.ImportPkcs8PrivateKey(Convert.FromBase64String(rsaKey), out _);
                  
                  //初始化算法SHA256
                  using var sha256 = SHA256.Create();
@@ -271,8 +273,18 @@ namespace Payment.TopPayWorld
         
         private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)
         {
-            var sign = GetSign(param, apiKey);
-            return sign.Equals(target, StringComparison.OrdinalIgnoreCase);
+            var signStr = string.Join("&", param.OrderBy(x => x.Key, StringComparer.Ordinal).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+             
+            // 待验证签名值base64解码
+            var sign = Convert.FromBase64String(target);
+            // 初始化算法SHA256
+            using var sha256 = SHA256.Create();
+            var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(signStr));
+            using var rsa = RSA.Create();
+            rsa.ImportSubjectPublicKeyInfo(Convert.FromBase64String(apiKey), out _);
+            var result = rsa.VerifyHash(hash, sign, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+            return result;
         }
         
         private CreatOrderResponse CreateOrder(string baseApiUrl, Dictionary<string, string> req)
