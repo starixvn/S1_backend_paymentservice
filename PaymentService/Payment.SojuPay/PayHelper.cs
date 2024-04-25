@@ -6,11 +6,9 @@ using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 using Newtonsoft.Json;
-using System.Net;
 using static Payment.SojuPay.SojuPayDefinition;
 using static Payment.SojuPay.SojuPayModel;
-using System.Net.NetworkInformation;
-using Org.BouncyCastle.Ocsp;
+
 
 namespace Payment.SojuPay
 {
@@ -85,14 +83,13 @@ namespace Payment.SojuPay
             var transId = dicReq["payment_cl_id"];
             var status = dicReq["status"];
             var actualAmount = decimal.Parse(dicReq["real_amount"]) / AmountFixed;
-            var strActualAmount = Math.Floor(actualAmount).ToString("#");
             var sign = new Dictionary<string, string>()
             {
                 {"payment_id",dicReq["payment_id"] },
                 {"payment_cl_id",transId },
                 {"platform_id",dicReq["platform_id"] },
                 {"amount",dicReq["amount"] },
-                {"real_amount",strActualAmount },
+                {"real_amount",dicReq["real_amount"] },
                 {"fee",dicReq["fee"] },
                 {"status",status },
                 {"create_time",dicReq["create_time"] },
@@ -118,7 +115,7 @@ namespace Payment.SojuPay
                 ThirdId = transId,
                 Comment = status,
                 TransStatus = transStatus,
-                Response = SojuPayDefinition.CallbackResponse
+                Response = ToJson(new { error_code = "0000" })
             };
         }
         public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
@@ -135,11 +132,13 @@ namespace Payment.SojuPay
             var platfromId = inputs["MerchantID"];
             var transId = inputs["TransID"];
             var serviceId = inputs["ServiceId"];
+            var reqAmount = decimal.Parse(inputs["Amount"]) * AmountFixed;
+            var strAmount = Math.Floor(reqAmount).ToString("#");
             try
             {
                 var req = new Dictionary<string, string>()
                 {
-                    { "amount" , inputs["Amount"]},
+                    { "amount" , strAmount},
                     { "bank_name", inputs["BankName"] },
                     { "name", inputs["AccountName"] },
                     { "notify_url", inputs["CallbackURL"] },
@@ -219,7 +218,7 @@ namespace Payment.SojuPay
             {
                 ThirdId = thirdId,
                 TransStatus = transStatus,
-                Response = SojuPayDefinition.CallbackResponse,
+                Response = ToJson(new { error_code = "0000" }),
                 WithdrawId = transId
             };
         }
