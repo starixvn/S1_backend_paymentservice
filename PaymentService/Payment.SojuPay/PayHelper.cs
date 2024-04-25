@@ -198,10 +198,10 @@ namespace Payment.SojuPay
                 { "fee", dicReq["fee"]},
                 { "status", status},
                 { "create_time", dicReq["create_time"] },
-                { "update_time", dicReq["update)time"]}
+                { "update_time", dicReq["update_time"]}
             };
 
-            if (!VerifySign(dicReq, apikey, dicReq["sign"]))
+            if (!VerifySign(reqforsign, apikey, dicReq["sign"]))
             {
                 return new NotifyWithdrawResult
                 {
