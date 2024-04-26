@@ -163,7 +163,7 @@ public class DepositV2Controller : ControllerBase
         {
             _logger.LogError(ex, $"Exception: Method={GetCurrentMethod()}, TransId={req.TransId}, Message={ex.Message}");
 
-            return new ApiResult<PayResult>(ErrorCode.Fail);
+            return new ApiResult<PayResult>(ErrorCode.SystemException);
         }
     }
 

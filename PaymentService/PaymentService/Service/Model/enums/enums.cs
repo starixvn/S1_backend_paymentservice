@@ -46,7 +46,8 @@ namespace PaymentService.Service.Model.enums
         //Unhandle Error
         SystemError = 9000,
         #endregion
-        UM = 10
+        UM = 10,
+        SystemException = 999
     }
     public enum Direction
     {
