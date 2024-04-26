@@ -26,9 +26,9 @@ namespace Payment.HonorPay
 
         public override DepositResult Debit(Dictionary<string, string> input)
         {
-            var payCurrency = input["PayCurrencyId"];
-            var baseApiUrl = input[$"{payCurrency}host"];
-            var apiToken = input[$"{payCurrency}access_token"];
+            var currency = input["CurrencyId"];
+            var baseApiUrl = input[$"host_{currency}"];
+            var apiToken = input[$"access_token_{currency}"];
             var payCode = input["PayCode"];
             var transId = input["TransID"];
 
@@ -37,7 +37,7 @@ namespace Payment.HonorPay
                 var (payType, bankCode) = ParseDepositPayCode(payCode);
                 var formData = new Dictionary<string, string>
                 {
-                    { "account", input[$"{payCurrency}merchant_no"] },
+                    { "account", input[$"merchant_no_{currency}"] },
                     { "payType", payType },
                     { "payMoney", input["Amount"] },
                     { "ip", input["ClientIP"] },
@@ -45,7 +45,7 @@ namespace Payment.HonorPay
                     { "orderNo", transId }
                 };
                 
-                if (payCurrency == "KRW")
+                if (currency == "45") // KRW
                 {
                     formData.Add("playerName", input["AccountName"]);
                     formData.Add("bankName", input["BankName"]);
@@ -96,22 +96,9 @@ namespace Payment.HonorPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> input)
         {
+            var currency = input["CurrencyId"];
             var transId = input["TransID"];
-            var jObj = JObject.Parse(input["DepositInfo"]);
-
-            if (!jObj.TryGetValue("PayCurrencyId", StringComparison.OrdinalIgnoreCase, out var payCurrency))
-            {
-                _logger.LogInformation($"{transId} DepositInfo has no PayCurrencyId information.");
-
-                return new NotifyDepositResult
-                {
-                    DepositId = transId,
-                    TransStatus = TransStatus.Pending,
-                    Response = HonorPayDefinition.CallbackResponseFailed
-                };
-            }
-            
-            var apiKey = input[$"{payCurrency}key"];
+            var apiKey = input[$"key_{currency}"];
             var req = FromJson<DepositCallbackRequest>(JsonConvert.SerializeObject(formData));
 
             if (!VerifySign(formData, apiKey, req.sign))
@@ -155,10 +142,10 @@ namespace Payment.HonorPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var payCurrency = inputs["PayCurrencyId"];
-            var baseApiUrl = inputs[$"{payCurrency}host"];
-            var apiToken = inputs[$"{payCurrency}access_token"];
-            var merchant = inputs[$"{payCurrency}merchant_no"];
+            var currency = inputs["CurrencyId"];
+            var baseApiUrl = inputs[$"host_{currency}"];
+            var apiToken = inputs[$"access_token_{currency}"];
+            var merchant = inputs[$"merchant_no_{currency}"];
             var reqAmount = inputs["Amount"];
             var transId = inputs["TransID"];
 
@@ -177,7 +164,7 @@ namespace Payment.HonorPay
                     { "notifyURL", inputs["CallBackUrl"] }
                 };
 
-                formData.Add("sign", GetSign(formData, inputs[$"{payCurrency}key"]));
+                formData.Add("sign", GetSign(formData, inputs[$"key_{currency}"]));
 
                 var (response, statusCode) = _httpHelper
                     .WithOAuthBearerToken(apiToken)
@@ -214,22 +201,8 @@ namespace Payment.HonorPay
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var transId = payResource["TransID"];
-            var jObj = JObject.Parse(payResource["WithdrawalInfo"]);
-
-            if (!jObj.TryGetValue("PayCurrencyId", StringComparison.OrdinalIgnoreCase, out var payCurrency))
-            {
-                _logger.LogInformation($"{transId} WithdrawalInfo has no PayCurrencyId information.");
-
-                return new NotifyWithdrawResult
-                {
-                    TransStatus = TransStatus.Pending,
-                    Message = "Failed.",
-                    Response = HonorPayDefinition.CallbackResponseFailed
-                };
-            }
-            
-            var key = payResource[$"{payCurrency}key"];
+            var currency = payResource["CurrencyId"];
+            var key = payResource[$"key_{currency}"];
             var req = FromJson<WithdrawalCallbackRequest>(JsonConvert.SerializeObject(formData));
 
             if (!VerifySign(formData, key, req.sign))
