@@ -237,7 +237,7 @@ namespace Payment.HonorPay
         {
             var str = string.Join('&', input
                 .Where(x => !string.IsNullOrEmpty(x.Value) && !x.Key.Equals("sign"))
-                .OrderBy(x => x.Key)
+                .OrderBy(x => x.Key, StringComparer.Ordinal)
                 .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
 
             var sign = ToHMACSHA256(str, key).ToUpper();
