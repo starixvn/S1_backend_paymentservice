@@ -47,7 +47,7 @@ namespace Payment.TopPay
                 {
                     { "merchantCode", merchantNo },
                     { "orderType", "0" },
-                    { "method", bankCode },
+                    { "method", payCode.Equals("OnlineBanking") ? bankCode : payCode},
                     { "orderNum", transId },
                     { "payMoney", strAmount },
                     { "productDetail", transId },

@@ -61,7 +61,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         {
             ActualAmount = decimal.Parse(formData["amount"]),
             DepositId = formData["ref1"],
-            ThirdId = formData["Id"],
+            ThirdId = formData["id"],
             TransStatus = Definition.GetTransStatus(formData["status"]),
             Response = Definition.CallbackResponse
         };
