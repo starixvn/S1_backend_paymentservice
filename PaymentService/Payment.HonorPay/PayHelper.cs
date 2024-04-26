@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
-
+using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -96,7 +96,22 @@ namespace Payment.HonorPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> input)
         {
-            var apiKey = input["key"];
+            var transId = input["TransID"];
+            var jObj = JObject.Parse(input["DepositInfo"]);
+
+            if (!jObj.TryGetValue("PayCurrencyId", StringComparison.OrdinalIgnoreCase, out var payCurrency))
+            {
+                _logger.LogInformation($"{transId} DepositInfo has no PayCurrencyId information.");
+
+                return new NotifyDepositResult
+                {
+                    DepositId = transId,
+                    TransStatus = TransStatus.Pending,
+                    Response = HonorPayDefinition.CallbackResponseFailed
+                };
+            }
+            
+            var apiKey = input[$"{payCurrency}key"];
             var req = FromJson<DepositCallbackRequest>(JsonConvert.SerializeObject(formData));
 
             if (!VerifySign(formData, apiKey, req.sign))
@@ -105,11 +120,10 @@ namespace Payment.HonorPay
                 {
                     TransStatus = TransStatus.Pending,
                     Comment = "Signature does not match.",
-                    Response = HonorPayDefinition.CallbackResponse
+                    Response = HonorPayDefinition.CallbackResponseFailed
                 };
             }
 
-            var transId = input["TransID"];
             var transStatus = DepositStatus.Success.Equals(req.payStatus)
                 ? TransStatus.Success
                 : TransStatus.Pending;
@@ -200,7 +214,22 @@ namespace Payment.HonorPay
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var key = payResource["key"];
+            var transId = payResource["TransID"];
+            var jObj = JObject.Parse(payResource["WithdrawalInfo"]);
+
+            if (!jObj.TryGetValue("PayCurrencyId", StringComparison.OrdinalIgnoreCase, out var payCurrency))
+            {
+                _logger.LogInformation($"{transId} WithdrawalInfo has no PayCurrencyId information.");
+
+                return new NotifyWithdrawResult
+                {
+                    TransStatus = TransStatus.Pending,
+                    Message = "Failed.",
+                    Response = HonorPayDefinition.CallbackResponseFailed
+                };
+            }
+            
+            var key = payResource[$"{payCurrency}key"];
             var req = FromJson<WithdrawalCallbackRequest>(JsonConvert.SerializeObject(formData));
 
             if (!VerifySign(formData, key, req.sign))
@@ -209,7 +238,7 @@ namespace Payment.HonorPay
                 {
                     TransStatus = TransStatus.Pending,
                     Message = "Signature does not match.",
-                    Response = HonorPayDefinition.CallbackResponse
+                    Response = HonorPayDefinition.CallbackResponseFailed
                 };
             }
 
@@ -237,7 +266,7 @@ namespace Payment.HonorPay
         {
             var str = string.Join('&', input
                 .Where(x => !string.IsNullOrEmpty(x.Value) && !x.Key.Equals("sign"))
-                .OrderBy(x => x.Key, StringComparer.Ordinal)
+                .OrderBy(x => x.Key)
                 .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
 
             var sign = ToHMACSHA256(str, key).ToUpper();
