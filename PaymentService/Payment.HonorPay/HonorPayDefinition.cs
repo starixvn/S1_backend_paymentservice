@@ -66,6 +66,7 @@ internal class HonorPayDefinition
         };
 
     public const string CallbackResponse = "888888";
+    public const string CallbackResponseFailed = "failed";
 
     public static TransStatus GetWithdrawalTransStatus(string status)
     {
