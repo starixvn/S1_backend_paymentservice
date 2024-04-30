@@ -1,12 +1,4 @@
-﻿
-using System.Text;
-
-using Elastic.Apm.AspNetCore;
-using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.SqlClient;
-using Elastic.Apm.StackExchange.Redis;
-
-using PaymentCore;
+﻿using System.Text;
 using PaymentCore.Helpers;
 using PaymentCore.Interface;
 using PaymentService.Exceptions;
@@ -35,7 +27,6 @@ namespace PaymentService
             services.AddMemoryCache();
             services.AddDatabaseConnection(Configuration);
             var redisConnection = ConnectionMultiplexer.Connect(Configuration.GetValue<string>("RedisConnection"));
-            redisConnection.UseElasticApm();
             services.AddSingleton<IConnectionMultiplexer>(redisConnection);
             services.AddSingleton<ICacheHelper, RedisCacheHelper>();
 
@@ -87,12 +78,7 @@ namespace PaymentService
             {
                 app.UseDeveloperExceptionPage();
             }
-            if (!env.IsEnvironment("Local"))
-            {
-                app.UseElasticApm(Configuration,
-                    new HttpDiagnosticsSubscriber(),
-                    new SqlClientDiagnosticSubscriber());
-            }
+          
             app.UseRouting();
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 

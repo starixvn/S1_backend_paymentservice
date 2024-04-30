@@ -11,10 +11,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.123" />
-	<PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.22.0" />
-	<PackageReference Include="Elastic.Apm.SerilogEnricher" Version="8.6.0" />
-	<PackageReference Include="Elastic.Apm.SqlClient" Version="1.22.0" />
-	<PackageReference Include="Elastic.Apm.StackExchange.Redis" Version="1.22.0" />
 	<PackageReference Include="Elastic.CommonSchema.Serilog" Version="8.6.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
