@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Security.Cryptography;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
+using PaymentCore.Helpers;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
@@ -57,7 +58,7 @@ public class PayHelper : PayHelperBase
                 throw new CustomException(response.Message);
             }
 
-            var resp = JsonConvert.DeserializeObject<PayPlusResp<DepositResp>>(response.Data);
+            var resp = FromJson<PayPlusResp<DepositResp>>(response.Data);
             
             if (resp == null)
             {
@@ -85,7 +86,30 @@ public class PayHelper : PayHelperBase
 
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
-        throw new NotImplementedException();
+        var publicKey = payResource["PublicKey"];
+        var req = FromJson<PayPlusResp<DepositCallbackReq>>(bodyContent);
+        var reqDic = FromJson<PayPlusResp<Dictionary<string, string>>>(bodyContent);
+        var str = GetVerifyStr(reqDic.Data, new []{"sign"});
+        
+        if (!VerifySign(str, req.Data.Sign, publicKey))
+        {
+            return new NotifyDepositResult
+            {
+                TransStatus = TransStatus.Pending,
+                Comment = "Signature does not match.",
+                Response = CallbackResponse.Failed
+            };
+        }
+        
+        return new NotifyDepositResult
+        {
+            DepositId = req.Data.TransId,
+            ActualAmount = req.Data.Amount / AmountFix,
+            ThirdId = req.Data.ThirdId,
+            Comment = req.Data.Status,
+            TransStatus = Definition.GetPayinTransStatus(req.Data.Status),
+            Response = CallbackResponse.Success
+        };
     }
 
     public override WithdrawResult Credit(Dictionary<string, string> inputs)
@@ -123,7 +147,7 @@ public class PayHelper : PayHelperBase
                 throw new CustomException(response.Message);
             }
 
-            var resp = JsonConvert.DeserializeObject<PayPlusResp<object>>(response.Data);
+            var resp = FromJson<PayPlusResp<object>>(response.Data);
             
             if (resp == null)
             {
@@ -158,7 +182,29 @@ public class PayHelper : PayHelperBase
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
         Dictionary<string, string> payResource)
     {
-        throw new NotImplementedException();
+        var publicKey = payResource["PublicKey"];
+        var req = FromJson<PayPlusResp<PayoutCallbackReq>>(bodyContent);
+        var reqDic = FromJson<PayPlusResp<Dictionary<string, string>>>(bodyContent);
+        var str = GetVerifyStr(reqDic.Data, new []{"sign"});
+        
+        if (!VerifySign(str, req.Data.Sign, publicKey))
+        {
+            return new NotifyWithdrawResult
+            {
+                TransStatus = TransStatus.Pending,
+                Message = "Signature does not match.",
+                Response = CallbackResponse.Failed
+            };
+        }
+        
+        return new NotifyWithdrawResult
+        {
+            ThirdId = req.Data.ThirdId,
+            TransStatus = Definition.GetPayoutTransStatus(req.Data.Status),
+            Message = req.Data.Status,
+            Response = CallbackResponse.Success,
+            WithdrawId = req.Data.TransId
+        };
     }
 
     public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
@@ -176,15 +222,21 @@ public class PayHelper : PayHelperBase
         throw new NotImplementedException();
     }
     
-    private static string GetSign(IEnumerable<KeyValuePair<string, string>> input, string key)
+    private static string GetVerifyStr(IEnumerable<KeyValuePair<string, string>> param, IEnumerable<string> ignoreKeys)
     {
-        var str = string.Join('&', input
-                .OrderBy(x => x.Key, StringComparer.Ordinal)
-                .Select(x => $"{x.Key}={x.Value}"));
-
-        var sign = RsaEncryptWithPublic(str, key);
-
-        return sign;
+        var str = string.Join("&", param
+            .Where(x => ignoreKeys.All(k => !x.Key.Equals(k, StringComparison.OrdinalIgnoreCase)))
+            .OrderBy(x => x.Key, StringComparer.Ordinal)
+            .Select(x => $"{x.Key}={x.Value}"));
+            
+        return str;
+    }
+    
+    private static bool VerifySign(string str, string targetBase64Str, string publicKey)
+    {
+        var result = RsaHelper.RsaVerifyData(str, targetBase64Str, publicKey, HashAlgorithmName.SHA256);
+            
+        return result;
     }
 
     private static (string payType, string payModel) ParsePayCode(string payCode)
