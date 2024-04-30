@@ -65,7 +65,7 @@ public class PayHelper : PayHelperBase
                 throw new CustomException("PayPlus deposit resp is null.");
             }
             
-            if (!resp.Meta.Success)
+            if (!resp.Meta.Success && !resp.Meta.Code.Equals("0000"))
             {
                 throw new CustomException(resp.Meta.Message);
             }
@@ -154,7 +154,7 @@ public class PayHelper : PayHelperBase
                 throw new CustomException("PayPlus withdrawal resp is null.");
             }
             
-            if (!resp.Meta.Success)
+            if (!resp.Meta.Success && !resp.Meta.Code.Equals("0000"))
             {
                 throw new CustomException(resp.Meta.Message);
             }
