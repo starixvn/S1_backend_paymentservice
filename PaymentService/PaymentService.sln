@@ -91,8 +91,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.Super7Pay", "Paymen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.BigPayz", "Payment.BigPayz\Payment.BigPayz.csproj", "{F6A67EF3-32A1-486A-9C30-42B8FF0B380C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.QuickPay", "Payment.QuickPay\Payment.QuickPay.csproj", "{8853E671-00E9-4593-AC26-5A3B38054A82}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.QuickPay", "Payment.QuickPay\Payment.QuickPay.csproj", "{8853E671-00E9-4593-AC26-5A3B38054A82}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.DouDouPay", "Payment.DouDouPay\Payment.DouDouPay.csproj", "{297FA91E-1BB8-4C68-8917-97194D15F283}"
@@ -101,11 +99,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.TopPay", "Payment.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.TongsPay", "Payment.TongsPay\Payment.TongsPay.csproj", "{3AB50867-D874-4897-AD71-51CFAD3E2714}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.VTPay", "Payment.VTPay\Payment.VTPay.csproj", "{03E6B62D-EE72-4D5B-8921-F27785AF3587}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.VTPay", "Payment.VTPay\Payment.VTPay.csproj", "{03E6B62D-EE72-4D5B-8921-F27785AF3587}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.SDSPay", "Payment.SDSPay\Payment.SDSPay.csproj", "{BFDDF9A5-8DB0-4C94-8FBF-A3C413B79CE3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.SDSPay", "Payment.SDSPay\Payment.SDSPay.csproj", "{BFDDF9A5-8DB0-4C94-8FBF-A3C413B79CE3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.LNWPay", "Payment.LNWPay\Payment.LNWPay.csproj", "{49E603BE-87AE-4613-8D19-D2964D9C87FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.LNWPay", "Payment.LNWPay\Payment.LNWPay.csproj", "{49E603BE-87AE-4613-8D19-D2964D9C87FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
