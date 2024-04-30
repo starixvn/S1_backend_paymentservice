@@ -112,3 +112,27 @@ public class DepositResp
     [JsonProperty("webUrl")]
     public string Url { get; set; }
 }
+
+public class DepositCallbackReq
+{
+    [JsonProperty("merchantNo")]
+    public string ThirdId { get; set; }
+    [JsonProperty("merchantOrderNo")]
+    public string TransId { get; set; }
+    [JsonProperty("orderStatus")]
+    public string Status { get; set; }
+    [JsonProperty("orderAmount")]
+    public decimal Amount { get; set; }
+    public string Sign { get; set; }
+}
+
+public class PayoutCallbackReq
+{
+    [JsonProperty("orderNo")]
+    public string ThirdId { get; set; }
+    [JsonProperty("merchantOrderNo")]
+    public string TransId { get; set; }
+    [JsonProperty("orderStatus")]
+    public string Status { get; set; }
+    public string Sign { get; set; }
+}
