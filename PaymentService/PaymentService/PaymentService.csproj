@@ -72,6 +72,7 @@
     <ProjectReference Include="..\Payment.SBPay\Payment.SBPay.csproj" />
     <ProjectReference Include="..\Payment.SDSPay\Payment.SDSPay.csproj" />
     <ProjectReference Include="..\Payment.Super7Pay\Payment.Super7Pay.csproj" />
+    <ProjectReference Include="..\Payment.PayPlus\Payment.PayPlus.csproj" />
     <ProjectReference Include="..\Payment.QuickPay\Payment.QuickPay.csproj" />
     <ProjectReference Include="..\Payment.TengLongPay\Payment.TengLongPay.csproj" />
     <ProjectReference Include="..\Payment.TopPay\Payment.TopPay.csproj" />
