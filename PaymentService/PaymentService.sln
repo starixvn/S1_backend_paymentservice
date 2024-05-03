@@ -117,6 +117,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.TopPayWorld", "Paym
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.PayPlus", "Payment.PayPlus\Payment.PayPlus.csproj", "{4060EDF7-0C45-4704-916A-595154B7583D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.SulifuPay", "Payment.SulifuPay\Payment.SulifuPay.csproj", "{4166A177-7849-4939-BD2A-12FB0C015B85}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -347,6 +349,10 @@ Global
 		{4060EDF7-0C45-4704-916A-595154B7583D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4060EDF7-0C45-4704-916A-595154B7583D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4060EDF7-0C45-4704-916A-595154B7583D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4166A177-7849-4939-BD2A-12FB0C015B85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4166A177-7849-4939-BD2A-12FB0C015B85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4166A177-7849-4939-BD2A-12FB0C015B85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4166A177-7849-4939-BD2A-12FB0C015B85}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -405,6 +411,7 @@ Global
 		{7874E0F6-8020-4D4E-8F44-22A5854957CD} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{79FB0B47-6FFB-4793-933A-D8FEC6792DE7} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{4060EDF7-0C45-4704-916A-595154B7583D} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{4166A177-7849-4939-BD2A-12FB0C015B85} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
