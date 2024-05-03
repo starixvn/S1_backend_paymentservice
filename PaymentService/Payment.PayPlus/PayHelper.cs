@@ -87,11 +87,11 @@ public class PayHelper : PayHelperBase
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
         var publicKey = payResource["PublicKey"];
-        var req = FromJson<PayPlusResp<DepositCallbackReq>>(bodyContent);
-        var reqDic = FromJson<PayPlusResp<Dictionary<string, string>>>(bodyContent);
-        var str = GetVerifyStr(reqDic.Data, new []{"sign"});
+        var req = FromJson<DepositCallbackReq>(formData["data"]);
+        var reqDic = FromJson<Dictionary<string, string>>(formData["data"]);
+        var str = GetVerifyStr(reqDic, new []{"sign"});
         
-        if (!VerifySign(str, req.Data.Sign, publicKey))
+        if (!VerifySign(str, req.Sign, publicKey))
         {
             return new NotifyDepositResult
             {
@@ -103,11 +103,11 @@ public class PayHelper : PayHelperBase
         
         return new NotifyDepositResult
         {
-            DepositId = req.Data.TransId,
-            ActualAmount = req.Data.Amount / AmountFix,
-            ThirdId = req.Data.ThirdId,
-            Comment = req.Data.Status,
-            TransStatus = Definition.GetPayinTransStatus(req.Data.Status),
+            DepositId = req.TransId,
+            ActualAmount = req.Amount / AmountFix,
+            ThirdId = req.ThirdId,
+            Comment = req.Status,
+            TransStatus = Definition.GetPayinTransStatus(req.Status),
             Response = CallbackResponse.Success
         };
     }
@@ -183,11 +183,11 @@ public class PayHelper : PayHelperBase
         Dictionary<string, string> payResource)
     {
         var publicKey = payResource["PublicKey"];
-        var req = FromJson<PayPlusResp<PayoutCallbackReq>>(bodyContent);
-        var reqDic = FromJson<PayPlusResp<Dictionary<string, string>>>(bodyContent);
-        var str = GetVerifyStr(reqDic.Data, new []{"sign"});
+        var req = FromJson<PayoutCallbackReq>(formData["data"]);
+        var reqDic = FromJson<Dictionary<string, string>>(formData["data"]);
+        var str = GetVerifyStr(reqDic, new []{"sign"});
         
-        if (!VerifySign(str, req.Data.Sign, publicKey))
+        if (!VerifySign(str, req.Sign, publicKey))
         {
             return new NotifyWithdrawResult
             {
@@ -199,11 +199,11 @@ public class PayHelper : PayHelperBase
         
         return new NotifyWithdrawResult
         {
-            ThirdId = req.Data.ThirdId,
-            TransStatus = Definition.GetPayoutTransStatus(req.Data.Status),
-            Message = req.Data.Status,
+            ThirdId = req.ThirdId,
+            TransStatus = Definition.GetPayoutTransStatus(req.Status),
+            Message = req.Status,
             Response = CallbackResponse.Success,
-            WithdrawId = req.Data.TransId
+            WithdrawId = req.TransId
         };
     }
 
