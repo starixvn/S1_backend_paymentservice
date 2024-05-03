@@ -29,7 +29,7 @@ public class DepositReq
     public string Currency { get; set; }
 
     [JsonProperty("timeStamp")] public string TimeStamp
-        => DateTimeOffset.UtcNow.Ticks.ToString();
+        => DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
     
     [JsonProperty("productDetail")]
     public string UserName { get; set; }
@@ -61,7 +61,7 @@ public class PayoutReq
     public string MerchantNo { get; set; }
 
     [JsonProperty("timeStamp")] public string TimeStamp
-        => DateTimeOffset.UtcNow.Ticks.ToString();
+        => DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
     
     [JsonProperty("subjectType")]
     public string SubjectType { get; set; }
