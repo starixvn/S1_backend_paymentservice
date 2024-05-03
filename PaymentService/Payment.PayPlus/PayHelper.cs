@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PaymentCore;
@@ -95,6 +96,7 @@ public class PayHelper : PayHelperBase
         {
             return new NotifyDepositResult
             {
+                DepositId = req.TransId,
                 TransStatus = TransStatus.Pending,
                 Comment = "Signature does not match.",
                 Response = CallbackResponse.Failed
@@ -191,6 +193,7 @@ public class PayHelper : PayHelperBase
         {
             return new NotifyWithdrawResult
             {
+                ThirdId = req.ThirdId,
                 TransStatus = TransStatus.Pending,
                 Message = "Signature does not match.",
                 Response = CallbackResponse.Failed
@@ -225,7 +228,8 @@ public class PayHelper : PayHelperBase
     private static string GetVerifyStr(IEnumerable<KeyValuePair<string, string>> param, IEnumerable<string> ignoreKeys)
     {
         var str = string.Join("&", param
-            .Where(x => ignoreKeys.All(k => !x.Key.Equals(k, StringComparison.OrdinalIgnoreCase)))
+            .Where(x => ignoreKeys.All(k => !x.Key.Equals(k, StringComparison.OrdinalIgnoreCase))
+                && !string.IsNullOrEmpty(x.Value))
             .OrderBy(x => x.Key, StringComparer.Ordinal)
             .Select(x => $"{x.Key}={x.Value}"));
             
@@ -234,7 +238,8 @@ public class PayHelper : PayHelperBase
     
     private static bool VerifySign(string str, string targetBase64Str, string publicKey)
     {
-        var result = RsaHelper.RsaVerifyData(str, targetBase64Str, publicKey, HashAlgorithmName.SHA256);
+        var target = HttpUtility.HtmlDecode(targetBase64Str);
+        var result = RsaHelper.RsaVerifyData(str, target, publicKey, HashAlgorithmName.SHA1);
             
         return result;
     }
