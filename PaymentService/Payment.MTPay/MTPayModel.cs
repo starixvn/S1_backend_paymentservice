@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 namespace Payment.MTPay
 {
@@ -46,7 +46,7 @@ namespace Payment.MTPay
         [JsonProperty("coin")]
         public decimal Amount { get; set; } // 支付的金额，单位为分
 
-        [JsonProperty("merchantOrder")]
+        [JsonProperty("merchant_order")]
         public string TransId { get; set; } // 你的订单号
 
         [JsonProperty("serial_number")]
