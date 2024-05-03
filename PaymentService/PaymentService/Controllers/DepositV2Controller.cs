@@ -77,7 +77,7 @@ public class DepositV2Controller : ControllerBase
     public ApiResult<PayResult> Create(DepositReq req)
     {
         LogContext.PushProperty("TransId", req.TransId);
-        var depositInfo = _paymentBll.GetDepositInfo(req.TransId);
+        var depositInfo = _paymentBll.GetDepositInfo(req.TransId); 
         var custInfo = _custInfoBll.GetCustInfoWithCache(depositInfo.CustId);
 
         try
@@ -108,7 +108,11 @@ public class DepositV2Controller : ControllerBase
             input.Add("CallBackUrl", $"{_callBackUrl}/Payment/DepositCallBack/{req.TransId}");
             input.Add("IsTest", _common.IsTest());
             input.Add("DepositInfo", depositInfo.DepositInfo);
-            input.Add("DeviceType", ((int) req.DeviceType).ToString());
+            input.Add("DeviceType", ((int)req.DeviceType).ToString());
+            input.Add("PhoneNo", custInfo.PhoneNo);
+            input.Add("Birth_d", custInfo.Birth_d);
+            input.Add("Birth_m", custInfo.Birth_m);
+            input.Add("Birth_y", custInfo.Birth_y);
 
             if (!input.ContainsKey("BankCode"))
             {

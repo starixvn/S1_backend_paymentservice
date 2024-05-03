@@ -25,6 +25,9 @@
         public string Aff { get; set; }
         public string AffCode { get; set; }
         public string Token { get; set; }
+        public string Birth_d { get; set; }
+        public string Birth_m { get; set; }
+        public string Birth_y { get; set; }
     }
 
     public class CustVerificationReward
