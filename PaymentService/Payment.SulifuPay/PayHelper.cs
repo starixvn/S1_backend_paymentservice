@@ -262,11 +262,25 @@ namespace Payment.SulifuPay
             var toMD5Data = req.tradeNo + req.orderAmount.ToString() + ApiKey;
             var sign = ToMD5(toMD5Data).ToLower();
 
+            if (sign != req.sign)
+            {
+                return new NotifyWithdrawResult
+                {
+                    WithdrawId = req.tradeNo,
+                    TransStatus = TransStatus.Pending,
+                    Message = "sign does not match.",
+                };
+            }
+
+            var (comment, transStatus) = GetWithdrawStatusAndComment(req.tradeStatus);
+
             return new NotifyWithdrawResult
             {
-                WithdrawId = req.tradeNo,
-                TransStatus = TransStatus.Pending,
-                Message = "sign does not match.",
+                ThirdId = req.tradeNo,
+                TransStatus = transStatus,
+                Message = req.message,
+                Response = "SUCCESS",
+                WithdrawId = req.tradeNo
             };
         }
         #endregion
