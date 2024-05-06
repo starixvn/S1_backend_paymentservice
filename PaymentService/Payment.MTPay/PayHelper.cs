@@ -67,7 +67,7 @@ public class PayHelper : PayHelperBase
             }
             catch (CustomException ex)
             {
-                _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+                _logger.LogInformation($"MTPay Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
 
                 return new DepositResult(false, ex.Code, ex.Message);
             }
@@ -124,7 +124,12 @@ public class PayHelper : PayHelperBase
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-
+            var response = new WithdrawResult
+            {
+                Success = false,
+                RawContent = "System Error"
+            };
+            
             var apiUrl = inputs["Host"];
             var reqAmount = decimal.Parse(inputs["Amount"]);
             var strAmount = reqAmount.ToString("G29");
@@ -156,17 +161,29 @@ public class PayHelper : PayHelperBase
                 req.Add("sign", GetSign(req, secretKey));
 
                 var res = Payout(apiUrl, req);
-                var response = new WithdrawResult
+                
+                if(res.code == 1)
+                { 
+                    response = new WithdrawResult
+                    {
+                        Success = true,
+                        RawContent = JsonConvert.SerializeObject(res)
+                    };
+                }
+                else
                 {
-                    Success = true,
-                    RawContent = JsonConvert.SerializeObject(res)
-                };
+                    response = new WithdrawResult
+                    {
+                        Success = false,
+                        RawContent = JsonConvert.SerializeObject(res)
+                    };
+                }
 
                 return response;
             }
             catch (CustomException ex)
             {
-                _logger.LogInformation($"Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
+                _logger.LogInformation($"MTPay Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
 
                 return new WithdrawResult
                 {
@@ -261,7 +278,7 @@ public class PayHelper : PayHelperBase
                     $"MTPay create payout failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
-            if (!result.Success)
+            if (result.code != 1)
                 throw new CustomException("MTPay create payout failed.");
 
             return result;
