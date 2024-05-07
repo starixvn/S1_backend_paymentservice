@@ -87,7 +87,7 @@ public class PayHelper : PayHelperBase
 
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
-        var publicKey = payResource["PublicKey"];
+        /*var publicKey = payResource["PublicKey"];
         var req = FromJson<DepositCallbackReq>(formData["data"]);
         var reqDic = FromJson<Dictionary<string, string>>(formData["data"]);
         var str = GetVerifyStr(reqDic, new []{"sign"});
@@ -110,6 +110,12 @@ public class PayHelper : PayHelperBase
             ThirdId = req.ThirdId,
             Comment = req.Status,
             TransStatus = Definition.GetPayinTransStatus(req.Status),
+            Response = CallbackResponse.Success
+        };*/
+        
+        return new NotifyDepositResult
+        {
+            TransStatus = TransStatus.Pending,
             Response = CallbackResponse.Success
         };
     }
@@ -184,7 +190,7 @@ public class PayHelper : PayHelperBase
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
         Dictionary<string, string> payResource)
     {
-        var publicKey = payResource["PublicKey"];
+        /*var publicKey = payResource["PublicKey"];
         var req = FromJson<PayoutCallbackReq>(formData["data"]);
         var reqDic = FromJson<Dictionary<string, string>>(formData["data"]);
         var str = GetVerifyStr(reqDic, new []{"sign"});
@@ -193,7 +199,6 @@ public class PayHelper : PayHelperBase
         {
             return new NotifyWithdrawResult
             {
-                ThirdId = req.ThirdId,
                 TransStatus = TransStatus.Pending,
                 Message = "Signature does not match.",
                 Response = CallbackResponse.Failed
@@ -207,6 +212,12 @@ public class PayHelper : PayHelperBase
             Message = req.Status,
             Response = CallbackResponse.Success,
             WithdrawId = req.TransId
+        };*/
+        
+        return new NotifyWithdrawResult
+        {
+            TransStatus = TransStatus.Pending,
+            Response = CallbackResponse.Success
         };
     }
 
@@ -217,12 +228,118 @@ public class PayHelper : PayHelperBase
 
     public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var req = new PayPlusReq<Dictionary<string, string>>
+            {
+                Action = "CardQuery",
+                ActionValue = new Dictionary<string, string>
+                {
+                    {"merchantOrderNo", inputs["TransID"]},
+                    {"merchantNo", inputs["MerchantNo"]},
+                    {"timeStamp", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString()}
+                }
+            };
+            
+            var (response, statusCode) = _httpHelper
+                .PostJson<PayPlusReq<Dictionary<string, string>>, PayPlusOutResp>(inputs["Host"], req);
+
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException($"PayPlus deposit query failed, HttpStatus: {(int)statusCode} {statusCode}");
+            }
+
+            if (!response.Code.Equals(200))
+            {
+                throw new CustomException(response.Message);
+            }
+
+            var resp = FromJson<PayPlusResp<DepositCallbackReq>>(response.Data);
+            
+            if (resp == null)
+            {
+                throw new CustomException("PayPlus deposit query resp is null.");
+            }
+            
+            if (!resp.Meta.Success && !resp.Meta.Code.Equals("0000"))
+            {
+                throw new CustomException(resp.Meta.Message);
+            }
+
+            return new EnquiryDepositResult
+            {
+                TransStatus = Definition.GetPayinTransStatus(resp.Data.Status),
+                DepositId = resp.Data.TransId,
+                ThirdId = resp.Data.ThirdId,
+                RawContent = response.Data,
+                ActualAmount = resp.Data.Amount / AmountFix,
+                Message = resp.Meta.Message,
+                Comment = resp.Data.Status
+            };
+        }
+        catch (CustomException ex)
+        {
+            _logger.LogInformation($"PayPlus deposit query failed, Code:{ex.Code}, Message:{ex.Message}");
+
+            throw;
+        }
     }
 
     public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var req = new PayPlusReq<Dictionary<string, string>>
+            {
+                Action = "PaymentQueryOrder",
+                ActionValue = new Dictionary<string, string>
+                {
+                    {"merchantOrderNo", inputs["TransID"]},
+                    {"merchantNo", inputs["MerchantNo"]},
+                    {"timeStamp", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString()}
+                }
+            };
+            
+            var (response, statusCode) = _httpHelper
+                .PostJson<PayPlusReq<Dictionary<string, string>>, PayPlusOutResp>(inputs["Host"], req);
+
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException($"PayPlus payout query failed, HttpStatus: {(int)statusCode} {statusCode}");
+            }
+
+            if (!response.Code.Equals(200))
+            {
+                throw new CustomException(response.Message);
+            }
+
+            var resp = FromJson<PayPlusResp<PayoutCallbackReq>>(response.Data);
+            
+            if (resp == null)
+            {
+                throw new CustomException("PayPlus payout query resp is null.");
+            }
+            
+            if (!resp.Meta.Success && !resp.Meta.Code.Equals("0000"))
+            {
+                throw new CustomException(resp.Meta.Message);
+            }
+
+            return new EnquiryWithdrawResult
+            {
+                TransStatus = Definition.GetPayoutTransStatus(resp.Data.Status),
+                WithdrawId = resp.Data.TransId,
+                ThirdId = resp.Data.ThirdId,
+                RawContent = response.Data,
+                Message = resp.Data.Status
+            };
+        }
+        catch (CustomException ex)
+        {
+            _logger.LogInformation($"PayPlus deposit query failed, Code:{ex.Code}, Message:{ex.Message}");
+
+            throw;
+        }
     }
     
     private static string GetVerifyStr(IEnumerable<KeyValuePair<string, string>> param, IEnumerable<string> ignoreKeys)
