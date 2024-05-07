@@ -131,7 +131,7 @@ public class PayHelper : PayHelperBase
                 Action = "PaymentCreateOrder",
                 ActionValue = new PayoutReq
                 {
-                    TransId = inputs["TransId"],
+                    TransId = inputs["TransID"],
                     SubjectType = "TO_PRIVATE",
                     Currency = inputs["PayCurrencyId"],
                     Amount = (reqAmount * AmountFix).ToString("G29"),
