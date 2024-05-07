@@ -106,7 +106,7 @@ namespace Payment.SojuPay
                 };
             }
 
-            var transStatus = SojuPayDefinition.GetTransStatus(status);
+            var transStatus = SojuPayDefinition.GetDepositTransStatus(status);
 
             return new NotifyDepositResult
             {
@@ -211,7 +211,7 @@ namespace Payment.SojuPay
                 };
             }
 
-            var transStatus = SojuPayDefinition.GetTransStatus(status);
+            var transStatus = SojuPayDefinition.GetWithdrawalTransStatus(status);
 
             return new NotifyWithdrawResult
             {
