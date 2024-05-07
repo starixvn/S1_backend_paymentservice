@@ -10,8 +10,7 @@ public class Definition
             { "PENDING", TransStatus.Pending },
             { "SUCCESS", TransStatus.Success },
             { "FAIL", TransStatus.Fail },
-            { "CANCEL", TransStatus.Fail },
-            { "PENDING", TransStatus.Fail }
+            { "CANCEL", TransStatus.Fail }
         };
     private static Dictionary<string, TransStatus> PayoutStatusMap =>
         new()
