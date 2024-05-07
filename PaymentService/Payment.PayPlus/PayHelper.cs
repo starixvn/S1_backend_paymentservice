@@ -123,6 +123,7 @@ public class PayHelper : PayHelperBase
     public override WithdrawResult Credit(Dictionary<string, string> inputs)
     {
         var reqAmount = decimal.Parse(inputs["Amount"]);
+        var transId = inputs["TransID"];
         
         try
         {
@@ -131,7 +132,7 @@ public class PayHelper : PayHelperBase
                 Action = "PaymentCreateOrder",
                 ActionValue = new PayoutReq
                 {
-                    TransId = inputs["TransID"],
+                    TransId = transId,
                     SubjectType = "TO_PRIVATE",
                     Currency = inputs["PayCurrencyId"],
                     Amount = (reqAmount * AmountFix).ToString("G29"),
@@ -170,7 +171,7 @@ public class PayHelper : PayHelperBase
             return new WithdrawResult
             {
                 Success = true,
-                WithdrawId = inputs["TransId"],
+                WithdrawId = transId,
                 RawContent = response.Data
             };
         }
@@ -181,7 +182,7 @@ public class PayHelper : PayHelperBase
             return new WithdrawResult
             {
                 Success = false,
-                WithdrawId = inputs["TransId"],
+                WithdrawId = transId,
                 Message = ex.Message
             };
         }
