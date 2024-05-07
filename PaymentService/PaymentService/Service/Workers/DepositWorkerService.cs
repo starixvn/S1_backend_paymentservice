@@ -23,7 +23,7 @@ namespace PaymentService.Service.Workers
             _logger = logger;
             _paymentBll = paymentBll;
             _payBll = payBll;
-            _payIds = new List<int> { 3, 4, 5, 32, 63 };
+            _payIds = new List<int> { 3, 4, 32, 63, 74 };
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
