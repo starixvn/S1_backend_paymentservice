@@ -200,6 +200,10 @@ namespace Payment.SojuPay
                 { "create_time", dicReq["create_time"] },
                 { "update_time", dicReq["update_time"]}
             };
+            if (dicReq.ContainsKey("error_msg") && !string.IsNullOrEmpty(dicReq["error_msg"]))
+            {
+                reqforsign.Add("error_msg", dicReq["error_msg"]);
+            }
 
             if (!VerifySign(reqforsign, apikey, dicReq["sign"]))
             {
