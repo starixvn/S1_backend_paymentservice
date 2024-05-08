@@ -197,18 +197,35 @@ public class PayHelper : PayHelperBase
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var result = new NotifyWithdrawResult();
+            var dic = new Dictionary<string, string>();
             var secretKey = payResource["SecretKey"];
             var req = FromJson<CallBackRequest>(bodyContent);
-            var dic = new Dictionary<string, string>
+
+            if (req.code == 1)
             {
-                { "code", req.code.ToString() },
-                { "merchant_num", req.merchantNum },
-                { "coin", req.Amount.ToString() },
-                { "merchant_order", req.TransId },
-                { "serial_number", req.ThirdId },
-                { "order_time", req.orderTime },
-                { "success_time", req.successTime },
-            };
+                dic = new Dictionary<string, string>
+                {
+                    { "code", req.code.ToString() },
+                    { "merchant_num", req.merchantNum },
+                    { "coin", req.Amount.ToString() },
+                    { "merchant_order", req.TransId },
+                    { "serial_number", req.ThirdId },
+                    { "order_time", req.orderTime },
+                    { "success_time", req.successTime },
+                };
+            }
+            else
+            {
+                dic = new Dictionary<string, string>
+                {
+                    { "merchant_num", req.merchantNum },
+                    { "coin", req.Amount.ToString() },
+                    { "merchant_order", req.TransId },
+                    { "serial_number", req.ThirdId },
+                    { "order_time", req.orderTime },
+                    { "success_time", req.successTime },
+                };
+            }
 
             if (!VerifySign(req.Sign, dic, secretKey))
             {
