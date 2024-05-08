@@ -5,6 +5,8 @@ namespace Payment.MTPay
     public class MTPayDefinition
     {
         public const string CallbackResponse = "SUCCESS";
+        
+        public const string CallbackFailResponse = "FAIL";
 
         internal class Path
         {

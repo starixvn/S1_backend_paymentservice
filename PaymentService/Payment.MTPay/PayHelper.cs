@@ -196,6 +196,7 @@ public class PayHelper : PayHelperBase
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
+            var result = new NotifyWithdrawResult();
             var secretKey = payResource["SecretKey"];
             var req = FromJson<CallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
@@ -218,15 +219,28 @@ public class PayHelper : PayHelperBase
                     Response = "Signature verification failed."
                 };
             }
-            
-            
-            var result = new NotifyWithdrawResult
+
+
+            if (req.code == 1)
             {
-                ThirdId = req.ThirdId,
-                TransStatus = TransStatus.Success,
-                Response = MTPayDefinition.CallbackResponse,
-                WithdrawId = req.TransId,
-            };
+                result = new NotifyWithdrawResult
+                {
+                    ThirdId = req.ThirdId,
+                    TransStatus = TransStatus.Success,
+                    Response = MTPayDefinition.CallbackResponse,
+                    WithdrawId = req.TransId,
+                };
+            }
+            else
+            {
+                result = new NotifyWithdrawResult
+                {
+                    ThirdId = req.ThirdId,
+                    TransStatus = TransStatus.Fail,
+                    Response = MTPayDefinition.CallbackFailResponse,
+                    WithdrawId = req.TransId,
+                };
+            }
 
             return result;
         }
