@@ -150,7 +150,7 @@ public class PayHelper : PayHelperBase
                     {"uid", uid},
                     {"merchant_num", merchantNo},
                     {"order", transId},
-                    {"coin", strAmount + 00}, // 代付的金额，单位为分
+                    {"coin", strAmount + "00"}, // 代付的金额，单位为分
                     {"target_bank", accountNo},
                     {"bank_name", bankCode},
                     {"target_bank_user", accountName},
