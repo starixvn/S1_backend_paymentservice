@@ -51,7 +51,7 @@ public class DepositV2Controller : ControllerBase
         _getDepositInputMapper = new Dictionary<DepositType, Func<DepositInfoModel, Customer, (IPayInfo, Dictionary<string, string>)>>
         {
             {DepositType.OnlineBanking, GetOnlineBankDepositInput},
-            {DepositType.BankAutoChannel, GetOnlineBankDepositInputWithAccount},
+            {DepositType.BankAutoChannel, GetOnlineBankDepositInput},
             {DepositType.QuickTransfer, GetOnlineBankDepositInput},
             {DepositType.MobilePay, GetMobilePayDepositInput},
             {DepositType.CryptoPay, GetGenericDepositInput},
@@ -165,7 +165,7 @@ public class DepositV2Controller : ControllerBase
         {
             _logger.LogError(ex, $"Exception: Method={GetCurrentMethod()}, TransId={req.TransId}, Message={ex.Message}");
 
-            return new ApiResult<PayResult>(ErrorCode.Fail);
+            return new ApiResult<PayResult>(ErrorCode.SystemException);
         }
     }
 
@@ -209,9 +209,6 @@ public class DepositV2Controller : ControllerBase
     #region GetDepositInput
 
     private (IPayInfo, Dictionary<string, string>) GetOnlineBankDepositInput(DepositInfoModel depositInfo, Customer custInfo)
-        => OnlineBankDepositInput(depositInfo, custInfo, Array.Empty<string>());
-    
-    private (IPayInfo, Dictionary<string, string>) GetOnlineBankDepositInputWithAccount(DepositInfoModel depositInfo, Customer custInfo)
         => OnlineBankDepositInput(depositInfo, custInfo, new[] { "PayAccount" });
     
     private (IPayInfo, Dictionary<string, string>) OnlineBankDepositInput(DepositInfoModel depositInfo, Customer custInfo, string[] extraKeys)

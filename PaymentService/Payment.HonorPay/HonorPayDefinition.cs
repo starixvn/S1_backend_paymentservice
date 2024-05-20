@@ -36,6 +36,8 @@ internal class HonorPayDefinition
             { "-102", "充值金额超过或低於限额" },
             { "-103", "接口参数有误" },
             { "-104", "通道尚未部署" },
+            { "-105", "重复订单号" },
+            { "-106", "签名验证错误" },
             { "-200", "交易逾时" },
             { "-201", "提交请求服务器 IP 不在白名单内" },
             { "-202", "请求数据验证失败，请检查 header 设置或更新 token" }
@@ -64,6 +66,7 @@ internal class HonorPayDefinition
         };
 
     public const string CallbackResponse = "888888";
+    public const string CallbackResponseFailed = "failed";
 
     public static TransStatus GetWithdrawalTransStatus(string status)
     {
