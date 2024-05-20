@@ -111,6 +111,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.TianHongPay", "Paym
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.MTPay", "Payment.MTPay\Payment.MTPay.csproj", "{684EB569-301B-4C0E-AF13-3DD4FCE5F7B2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.BetcatPay", "Payment.BetcatPay\Payment.BetcatPay.csproj", "{3B16C51A-5963-412C-B663-27F7CD52ECBA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -329,6 +331,10 @@ Global
 		{684EB569-301B-4C0E-AF13-3DD4FCE5F7B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{684EB569-301B-4C0E-AF13-3DD4FCE5F7B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{684EB569-301B-4C0E-AF13-3DD4FCE5F7B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B16C51A-5963-412C-B663-27F7CD52ECBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B16C51A-5963-412C-B663-27F7CD52ECBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B16C51A-5963-412C-B663-27F7CD52ECBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B16C51A-5963-412C-B663-27F7CD52ECBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -384,6 +390,7 @@ Global
 		{76E11D03-24E6-4EE9-A6FF-4AB1D81D3B68} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{7874E0F6-8020-4D4E-8F44-22A5854957CD} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{684EB569-301B-4C0E-AF13-3DD4FCE5F7B2} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{3B16C51A-5963-412C-B663-27F7CD52ECBA} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}

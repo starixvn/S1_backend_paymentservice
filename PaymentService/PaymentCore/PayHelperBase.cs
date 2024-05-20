@@ -234,12 +234,12 @@ namespace PaymentCore
         protected string ToSHA256(string encodeStr)
         {
             var bytes = Encoding.UTF8.GetBytes(encodeStr);
-            var hash = SHA256Managed.Create().ComputeHash(bytes);
+            var hash = SHA256.Create().ComputeHash(bytes);
 
             var builder = new StringBuilder();
-            for (var i = 0; i < hash.Length; i++)
+            foreach (var t in hash)
             {
-                builder.Append(hash[i].ToString("X2"));
+                builder.Append(t.ToString("X2"));
             }
 
             return builder.ToString();
