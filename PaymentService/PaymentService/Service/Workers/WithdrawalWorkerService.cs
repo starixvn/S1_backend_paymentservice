@@ -25,7 +25,7 @@ namespace PaymentService.Service.Workers
             _logger = provider.GetRequiredService<ILogger<WithdrawalWorkerService>>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
             _payBll = provider.GetRequiredService<PayBLL>();
-            _payIds = new List<int> { 3, 5, 15, 25 };
+            _payIds = new List<int> { 3, 5, 15, 25, 74 };
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)

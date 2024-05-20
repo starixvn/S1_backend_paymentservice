@@ -57,7 +57,7 @@ namespace PaymentService.Extensions.Middlewares
                 }
 
                 var log = new StringBuilder();
-                log.AppendLine($"REQUEST URL: {url}, Method: {context.Request.Method}, CodePage: {codePage},");
+                log.AppendLine($"REQUEST URL: {url},Method: {context.Request.Method} {context.Request.ContentType}, CodePage: {codePage},");
                 log.AppendLine($"REQUEST BODY: {content}");
                 _logger.LogInformation(log.ToString());
             }

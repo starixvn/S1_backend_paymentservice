@@ -23,7 +23,7 @@ namespace PaymentService.Service.Workers
             _logger = logger;
             _paymentBll = paymentBll;
             _payBll = payBll;
-            _payIds = new List<int> { 3, 4, 5, 32, 63 };
+            _payIds = new List<int> { 3, 4, 32, 74 };
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -42,28 +42,28 @@ namespace PaymentService.Service.Workers
                     try
                     {
                         var payHelper = _payBll.GetPayHelper(depositRequest.PayName);
-                        var DepReq = depositRequest.ISetting;
-                        if (!DepReq.ContainsKey("TransID"))
+                        var depReq = depositRequest.ISetting;
+                        if (!depReq.ContainsKey("TransID"))
                         {
-                            DepReq.Add("TransID", depositRequest.TransId);
+                            depReq.Add("TransID", depositRequest.TransId);
                         }
 
-                        if (!DepReq.ContainsKey("Amount"))
+                        if (!depReq.ContainsKey("Amount"))
                         {
-                            DepReq.Add("Amount", depositRequest.Amount.ToString());
+                            depReq.Add("Amount", depositRequest.Amount.ToString());
                         }
 
-                        if (!DepReq.ContainsKey("CurrencyId"))
+                        if (!depReq.ContainsKey("CurrencyId"))
                         {
-                            DepReq.Add("CurrencyId", depositRequest.CurrencyId.ToString());
+                            depReq.Add("CurrencyId", depositRequest.CurrencyId.ToString());
                         }
 
-                        if (!DepReq.ContainsKey("ThirdId"))
+                        if (!depReq.ContainsKey("ThirdId"))
                         {
-                            DepReq.Add("ThirdID", depositRequest.ThirdId);
+                            depReq.Add("ThirdID", depositRequest.ThirdId);
                         }
 
-                        var enquiryDepositResult = payHelper.EnquiryForDebit(DepReq);
+                        var enquiryDepositResult = payHelper.EnquiryForDebit(depReq);
 
                         if (enquiryDepositResult.TransStatus == TransStatus.Success)
                         {
@@ -100,19 +100,13 @@ namespace PaymentService.Service.Workers
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogError(ex, $"PayName: {depositRequest.PayName}\r\n{ex.Message}");
-                                continue;
+                                _logger.LogError(ex, $"PayName: {depositRequest.PayName} {ex.Message}");
                             }
                         }
                     }
-                    catch (NotImplementedException niex)
-                    {
-                        continue;
-                    }
                     catch (Exception ex1)
                     {
-                        //logger.LogError($"PayName: {depositRequest.PayName}\r\n{ex1.ToString()}");
-                        continue;
+                        _logger.LogError(ex1, $"PayName: {depositRequest.PayName} {ex1.Message}");
                     }
                 }
             }
