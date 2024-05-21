@@ -51,7 +51,7 @@ public class DepositV2Controller : ControllerBase
         _getDepositInputMapper = new Dictionary<DepositType, Func<DepositInfoModel, Customer, (IPayInfo, Dictionary<string, string>)>>
         {
             {DepositType.OnlineBanking, GetOnlineBankDepositInput},
-            {DepositType.BankAutoChannel, GetOnlineBankDepositInputWithAccount},
+            {DepositType.BankAutoChannel, GetOnlineBankDepositInput},
             {DepositType.QuickTransfer, GetOnlineBankDepositInput},
             {DepositType.MobilePay, GetMobilePayDepositInput},
             {DepositType.CryptoPay, GetGenericDepositInput},
@@ -77,7 +77,7 @@ public class DepositV2Controller : ControllerBase
     public ApiResult<PayResult> Create(DepositReq req)
     {
         LogContext.PushProperty("TransId", req.TransId);
-        var depositInfo = _paymentBll.GetDepositInfo(req.TransId);
+        var depositInfo = _paymentBll.GetDepositInfo(req.TransId); 
         var custInfo = _custInfoBll.GetCustInfoWithCache(depositInfo.CustId);
 
         try
@@ -108,7 +108,11 @@ public class DepositV2Controller : ControllerBase
             input.Add("CallBackUrl", $"{_callBackUrl}/Payment/DepositCallBack/{req.TransId}");
             input.Add("IsTest", _common.IsTest());
             input.Add("DepositInfo", depositInfo.DepositInfo);
-            input.Add("DeviceType", ((int) req.DeviceType).ToString());
+            input.Add("DeviceType", ((int)req.DeviceType).ToString());
+            input.Add("PhoneNo", custInfo.PhoneNo);
+            input.Add("Birth_d", custInfo.Birth_d);
+            input.Add("Birth_m", custInfo.Birth_m);
+            input.Add("Birth_y", custInfo.Birth_y);
 
             if (!input.ContainsKey("BankCode"))
             {
@@ -165,7 +169,7 @@ public class DepositV2Controller : ControllerBase
         {
             _logger.LogError(ex, $"Exception: Method={GetCurrentMethod()}, TransId={req.TransId}, Message={ex.Message}");
 
-            return new ApiResult<PayResult>(ErrorCode.Fail);
+            return new ApiResult<PayResult>(ErrorCode.SystemException);
         }
     }
 
@@ -209,9 +213,6 @@ public class DepositV2Controller : ControllerBase
     #region GetDepositInput
 
     private (IPayInfo, Dictionary<string, string>) GetOnlineBankDepositInput(DepositInfoModel depositInfo, Customer custInfo)
-        => OnlineBankDepositInput(depositInfo, custInfo, Array.Empty<string>());
-    
-    private (IPayInfo, Dictionary<string, string>) GetOnlineBankDepositInputWithAccount(DepositInfoModel depositInfo, Customer custInfo)
         => OnlineBankDepositInput(depositInfo, custInfo, new[] { "PayAccount" });
     
     private (IPayInfo, Dictionary<string, string>) OnlineBankDepositInput(DepositInfoModel depositInfo, Customer custInfo, string[] extraKeys)

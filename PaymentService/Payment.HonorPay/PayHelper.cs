@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
-
+using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -26,9 +26,9 @@ namespace Payment.HonorPay
 
         public override DepositResult Debit(Dictionary<string, string> input)
         {
-            var baseApiUrl = input["host"];
-            var key = input["key"];
-            var apiToken = input["access_token"];
+            var currency = input["CurrencyId"];
+            var baseApiUrl = input[$"host_{currency}"];
+            var apiToken = input[$"access_token_{currency}"];
             var payCode = input["PayCode"];
             var transId = input["TransID"];
 
@@ -37,13 +37,20 @@ namespace Payment.HonorPay
                 var (payType, bankCode) = ParseDepositPayCode(payCode);
                 var formData = new Dictionary<string, string>
                 {
-                    { "account", input["merchant_no"] },
+                    { "account", input[$"merchant_no_{currency}"] },
                     { "payType", payType },
                     { "payMoney", input["Amount"] },
                     { "ip", input["ClientIP"] },
                     { "notifyURL", input["CallBackUrl"] },
                     { "orderNo", transId }
                 };
+                
+                if (currency == "45") // KRW
+                {
+                    formData.Add("playerName", input["AccountName"]);
+                    formData.Add("bankName", input["BankName"]);
+                    formData.Add("bankNumber", input["PayAccount"]);
+                }
 
                 if (NeedBankCode(payType))
                 {
@@ -76,8 +83,7 @@ namespace Payment.HonorPay
                     Success = true,
                     ErrorCode = ErrorCode.Success,
                     Url = response.RedirectUrl,
-                    ThirdId = response.TpTransId,
-                    FormData = formData
+                    ThirdId = response.TpTransId
                 };
             }
             catch (CustomException ex)
@@ -90,7 +96,9 @@ namespace Payment.HonorPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> input)
         {
-            var apiKey = input["key"];
+            var currency = input["CurrencyId"];
+            var transId = input["TransID"];
+            var apiKey = input[$"key_{currency}"];
             var req = FromJson<DepositCallbackRequest>(JsonConvert.SerializeObject(formData));
 
             if (!VerifySign(formData, apiKey, req.sign))
@@ -99,11 +107,10 @@ namespace Payment.HonorPay
                 {
                     TransStatus = TransStatus.Pending,
                     Comment = "Signature does not match.",
-                    Response = HonorPayDefinition.CallbackResponse
+                    Response = HonorPayDefinition.CallbackResponseFailed
                 };
             }
 
-            var transId = input["TransID"];
             var transStatus = DepositStatus.Success.Equals(req.payStatus)
                 ? TransStatus.Success
                 : TransStatus.Pending;
@@ -135,10 +142,10 @@ namespace Payment.HonorPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var baseApiUrl = inputs["host"];
-            var key = inputs["key"];
-            var apiToken = inputs["access_token"];
-            var merchant = inputs["merchant_no"];
+            var currency = inputs["CurrencyId"];
+            var baseApiUrl = inputs[$"host_{currency}"];
+            var apiToken = inputs[$"access_token_{currency}"];
+            var merchant = inputs[$"merchant_no_{currency}"];
             var reqAmount = inputs["Amount"];
             var transId = inputs["TransID"];
 
@@ -157,7 +164,7 @@ namespace Payment.HonorPay
                     { "notifyURL", inputs["CallBackUrl"] }
                 };
 
-                formData.Add("sign", GetSign(formData, key));
+                formData.Add("sign", GetSign(formData, inputs[$"key_{currency}"]));
 
                 var (response, statusCode) = _httpHelper
                     .WithOAuthBearerToken(apiToken)
@@ -194,7 +201,8 @@ namespace Payment.HonorPay
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var key = payResource["key"];
+            var currency = payResource["CurrencyId"];
+            var key = payResource[$"key_{currency}"];
             var req = FromJson<WithdrawalCallbackRequest>(JsonConvert.SerializeObject(formData));
 
             if (!VerifySign(formData, key, req.sign))
@@ -203,7 +211,7 @@ namespace Payment.HonorPay
                 {
                     TransStatus = TransStatus.Pending,
                     Message = "Signature does not match.",
-                    Response = HonorPayDefinition.CallbackResponse
+                    Response = HonorPayDefinition.CallbackResponseFailed
                 };
             }
 
