@@ -76,10 +76,10 @@ namespace Payment.JYMPay
         public int Status { get; set; }
 
         [JsonProperty("create_time")]
-        public DateTime CreateTime { get; set; }
+        public string CreateTime { get; set; }
 
         [JsonProperty("update_time")]
-        public DateTime UpdateTime { get; set; }
+        public string UpdateTime { get; set; }
 
         [JsonProperty("sign")]
         public string Sign { get; set; }
@@ -101,10 +101,10 @@ namespace Payment.JYMPay
         public int Status { get; set; }
 
         [JsonProperty("create_time")]
-        public DateTime CreateTime { get; set; }
+        public string CreateTime { get; set; }
 
         [JsonProperty("update_time")]
-        public DateTime UpdateTime { get; set; }
+        public string UpdateTime { get; set; }
 
         [JsonProperty("sign")]
         public string Sign { get; set; }
