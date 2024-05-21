@@ -269,7 +269,6 @@ public class PayHelper : PayHelperBase
                 { "payout_cl_id", req.PayoutClId },
                 { "platform_id", req.PlatformId },
                 { "amount", req.Amount.ToString() },
-                { "real_amount", req.RealAmount.ToString() },
                 { "fee", req.Fee.ToString() },
                 { "status", req.Status.ToString() },
                 { "create_time", req.CreateTime },
