@@ -91,8 +91,8 @@ public class PayHelper : PayHelperBase
                 { "real_amount", req.RealAmount.ToString() },
                 { "fee", req.Fee.ToString() },
                 { "status", req.Status.ToString() },
-                { "create_time", req.CreateTime.ToString("yyyy-MM-ddTHH:mm:ss") },
-                { "update_time", req.UpdateTime.ToString("yyyy-MM-ddTHH:mm:ss") },
+                { "create_time", req.CreateTime },
+                { "update_time", req.UpdateTime },
             };
             
             if (!VerifySign(req.Sign, dic,secretKey))
@@ -272,8 +272,8 @@ public class PayHelper : PayHelperBase
                 { "real_amount", req.RealAmount.ToString() },
                 { "fee", req.Fee.ToString() },
                 { "status", req.Status.ToString() },
-                { "create_time", req.CreateTime.ToString("yyyy-MM-ddTHH:mm:ss") },
-                { "update_time", req.UpdateTime.ToString("yyyy-MM-ddTHH:mm:ss") },
+                { "create_time", req.CreateTime },
+                { "update_time", req.UpdateTime },
             };
 
             if (!VerifySign(req.Sign, dic, secretKey))
