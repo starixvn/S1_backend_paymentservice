@@ -52,7 +52,13 @@ namespace PaymentService.Service.DAL
 
         public IEnumerable<PayInfo> GetPayInfo(int siteId, DepositType depositType)
         {
-            return _mainDbClient.Query<PayInfo>("Service_PayInfo_Get_V2", new { _SiteId = siteId, _DepositType = (int)depositType });
+            return _mainDbClient.Query<PayInfo>("Service_PayInfo_Get_V3", 
+                new
+                {
+                    _SiteId = siteId,
+                    _DepositType = (int)depositType,
+                    _Lang = string.Empty
+                });
         }
 
         public IEnumerable<CryptoExchangeSetting> GetCryptoExchangeSetting(int siteId)
