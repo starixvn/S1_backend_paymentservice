@@ -119,6 +119,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.SojuPay", "Payment.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.SulifuPay", "Payment.SulifuPay\Payment.SulifuPay.csproj", "{4166A177-7849-4939-BD2A-12FB0C015B85}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.JYMPay", "Payment.JYMPay\Payment.JYMPay.csproj", "{071765ED-A6AD-4B88-BBD0-3B71122762AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -353,6 +355,10 @@ Global
 		{4166A177-7849-4939-BD2A-12FB0C015B85}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4166A177-7849-4939-BD2A-12FB0C015B85}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4166A177-7849-4939-BD2A-12FB0C015B85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{071765ED-A6AD-4B88-BBD0-3B71122762AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{071765ED-A6AD-4B88-BBD0-3B71122762AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{071765ED-A6AD-4B88-BBD0-3B71122762AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{071765ED-A6AD-4B88-BBD0-3B71122762AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -412,6 +418,7 @@ Global
 		{4060EDF7-0C45-4704-916A-595154B7583D} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{B987EDA3-6F37-40F8-8B6B-470FE0BE4245} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{4166A177-7849-4939-BD2A-12FB0C015B85} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{071765ED-A6AD-4B88-BBD0-3B71122762AA} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
