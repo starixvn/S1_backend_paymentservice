@@ -33,6 +33,7 @@ public class PayHelper : PayHelperBase
             var transId = input["TransID"];
             var accountName = input["AccountName"];
             var notifyUrl = input["CallBackUrl"];
+            var res = new CreateOrderResponse();
             
             try
             {
@@ -49,8 +50,27 @@ public class PayHelper : PayHelperBase
                 
                 req.Add("sign", GetSign(req, secretKey));
 
-                var res = CreateOrder(apiUrl, req);
+                res = CreateOrder(apiUrl, req, payCode);
 
+                if (res.Code == "0058" && payCode == "2")
+                {
+                    //改UPI喚醒
+                    payCode = "3";
+                    var reqUPIWakeUp = new Dictionary<string, string>
+                    {
+                        {"merchantCode", merchantCode},
+                        {"merchantOrderId", transId},
+                        {"amount", strAmount},
+                        {"notifyUrl",notifyUrl},
+                        {"channelTypeId",payCode},
+                        {"payerName",accountName},
+                        {"requestTime",unixTimestamp}
+                    };
+                    
+                    reqUPIWakeUp.Add("sign", GetSign(reqUPIWakeUp, secretKey));
+                    res = CreateOrder(apiUrl, reqUPIWakeUp, payCode);
+                }
+                
                 var response = new DepositResult
                 {
                     Success = true,
@@ -352,7 +372,7 @@ public class PayHelper : PayHelperBase
 
         #region Private Methods
 
-        private CreateOrderResponse CreateOrder(string baseApiUrl, Dictionary<string, string> req)
+        private CreateOrderResponse CreateOrder(string baseApiUrl, Dictionary<string, string> req,string payCode)
         {
             var apiUrl = baseApiUrl + JYMPayDefinition.Path.CreateOrder;
 
@@ -366,8 +386,21 @@ public class PayHelper : PayHelperBase
                     $"JYMPay creat order failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
-            if (result.Code != "0000")
-                throw new CustomException("JYMPay creat order failed Failed.");
+            if (payCode == "2")
+            {
+                if (result.Code != "0000" && result.Code != "0058")
+                {
+                    throw new CustomException("JYMPay creat order failed Failed.");
+                }
+            }
+            else
+            {
+                if (result.Code != "0000")
+                {
+                    throw new CustomException("JYMPay creat order failed Failed.");
+                }
+            }
+
 
             return result;
         }
