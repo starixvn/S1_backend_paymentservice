@@ -35,6 +35,7 @@ public class PayHelper : PayHelperBase
             var custId = input["CustId"];
             var notifyUrl = input["CallBackUrl"];
             var depositInfo = input["DepositInfo"];
+            var bankCode = input["BankCode"];
             
             try
             {
@@ -50,6 +51,12 @@ public class PayHelper : PayHelperBase
                     {"pay_type",payCode},
                     {"userinfo",custId}
                 };
+                
+                //銀行轉帳且bankCode不為空再帶銀行選項
+                if (payCode == "4" && !string.IsNullOrEmpty(bankCode))
+                {
+                    req.Add("bank_code", bankCode);
+                }
                 
                 req.Add("sign", GetSign(req, secretKey));
 
