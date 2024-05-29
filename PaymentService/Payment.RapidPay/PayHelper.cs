@@ -95,6 +95,7 @@ namespace Payment.RapidPay
             public bool status { set; get; }
             public string token { set; get; }
             public string charge { set; get; }
+            public string payment_type { get; set; }
         }
         #endregion
 
@@ -151,21 +152,21 @@ namespace Payment.RapidPay
 
             var oNotify = new NotifyDepositResult();
             oNotify.DepositId = data.order_id;
-            var QRISSecretkey = payResource["QRISSecret"];
-            var secretkey = data.currency switch
+
+            var secretKeyName = GetDebitCallBackSecretKey(data.currency, data.payment_type);
+            if (secretKeyName.Contains("Error"))
             {
-                "MYR" => payResource["dMYRSecret"],
-                "THB" => payResource["dTHBSecret"],
-                "IDR" => payResource["dIDRSecret"]
-            };
-
-            var p = secretkey + data.order_id;
-            var sign = ToMD5(p).ToLower();
-
-            var t = QRISSecretkey + data.order_id;
-            var QRISsign = ToMD5(t).ToLower();
-
-            if (sign == data.token || QRISsign == data.token)
+                oNotify.TransStatus = TransStatus.Pending;
+                oNotify.ThirdId = data.order_id;
+                oNotify.Comment = "PaymentType error";
+                oNotify.Message = "PaymentType error";
+                oNotify.Response = secretKeyName;
+                return oNotify;
+            }
+            var s = payResource[secretKeyName] + data.order_id;
+            var sign = ToMD5(s).ToLower();
+            
+            if (sign == data.token)
             {
                 if (data.order_status == "completed")
                 {
@@ -309,30 +310,74 @@ namespace Payment.RapidPay
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
+            var currencyReq = new CurrencyReq();
+            var authReq = new AuthReq();
+            var oDepositResult = new DepositResult();
+            var currencyEWalletData = new Dictionary<string, string>();
+            var currencyData = new Dictionary<string, string>();
+            
             var PayCurrencyId = inputs["PayCurrencyId"];
             var payCode = inputs["PayCode"];
-            bool isQRIS = payCode == "QRIS";
+            var isEWallet = !string.IsNullOrEmpty(payCode);
 
-            var currencyData = PayCurrencyId switch
+
+            if (isEWallet)
             {
-                "MYR" => new Dictionary<string, string> {
-                { "User", inputs["dMYRUser"] },{ "APIKey", inputs["dMYRAPI"]}
-                },
-                "THB" => new Dictionary<string, string> {
-                { "User", inputs["dTHBUser"] },{ "APIKey", inputs["dTHBAPI"]}
-                },
-                "IDR" => new Dictionary<string, string> {
-                { "User", inputs["dIDRUser"] },{ "APIKey", inputs["dIDRAPI"]}
-                }
-            };
+                currencyEWalletData = PayCurrencyId switch
+                {
+                    "MYR" => new Dictionary<string, string>
+                    {
+                        { "User", inputs["DuitNowUser"] }, { "APIKey", inputs["DuitNowAPI"] }
+                    },
+                    "THB" => new Dictionary<string, string>
+                    {
+                        { "User", inputs["PromptPayUser"] }, { "APIKey", inputs["PromptPayAPI"] }
+                    },
+                    "IDR" => new Dictionary<string, string>
+                    {
+                        { "User", inputs["QRISUser"] }, { "APIKey", inputs["QRISAPI"] }
+                    },
+                    "INR" => new Dictionary<string,string>()
+                    {
+                        { "User", inputs["UPIUser"] }, { "APIKey", inputs["UPIAPI"] }
+                    }
+                };
+            }
+            else
+            {
+                currencyData = PayCurrencyId switch
+                {
+                    "MYR" => new Dictionary<string, string>
+                    {
+                        { "User", inputs["dMYRUser"] }, { "APIKey", inputs["dMYRAPI"] }
+                    },
+                    "THB" => new Dictionary<string, string>
+                    {
+                        { "User", inputs["dTHBUser"] }, { "APIKey", inputs["dTHBAPI"] }
+                    },
+                    "IDR" => new Dictionary<string, string>
+                    {
+                        { "User", inputs["dIDRUser"] }, { "APIKey", inputs["dIDRAPI"] }
+                    }
+                };
+            }
+            
+
+            if (isEWallet)
+            {
+                currencyReq.username = currencyEWalletData["User"];
+                authReq.username = currencyEWalletData["User"];
+                authReq.api_key = currencyEWalletData["APIKey"]; 
+            }
+            else
+            {
+                currencyReq.username = currencyData["User"];
+                authReq.username = currencyData["User"];
+                authReq.api_key = currencyData["APIKey"];
+            }
+            
             var sUrl = inputs["host"];
-            var currencyReq = new CurrencyReq();
-            currencyReq.username = isQRIS ? inputs["QRISUser"] : currencyData["User"];
-            var authReq = new AuthReq();
-            authReq.username = isQRIS ? inputs["QRISUser"] : currencyData["User"];
-            authReq.api_key = isQRIS ? inputs["QRISAPI"] : currencyData["APIKey"];
             string sResponse = null;
-            var oDepositResult = new DepositResult();
             oDepositResult.Success = false;
             var amount = decimal.Parse(inputs["Amount"]);
             try
@@ -377,7 +422,7 @@ namespace Payment.RapidPay
                 if (authResp.status)
                 {
                     var depositReq = new DepositReq();
-                    depositReq.username = currencyData["User"];
+                    depositReq.username = isEWallet ? currencyEWalletData["User"] :currencyData["User"];
                     depositReq.auth = authResp.auth;
                     depositReq.amount = amount.ToString("#");
                     depositReq.currency = inputs["PayCurrencyId"];
@@ -442,6 +487,34 @@ namespace Payment.RapidPay
         {
             var data = FromJson<CallBackDebitReq>(bodyContent);
             return data.order_id;
+        }
+
+
+        private string GetDebitCallBackSecretKey(string currency, string paymentType)
+        {
+            return paymentType switch
+            {
+                "EWallet" => currency switch
+                {
+                    "MYR" => "DuitNowSecret",
+                    "INR" => "UPISecret",
+                    _ => "Error - Invalid currency for EWallet"
+                },
+                "QR" => currency switch
+                {
+                    "THB" => "PromptPaySecret",
+                    "IDR" => "QRISSecret",
+                    _ => "Error - Invalid currency for QR"
+                },
+                "Online Banking" => currency switch
+                {
+                    "MYR" => "dMYRSecret",
+                    "THB" => "dTHBSecret",
+                    "IDR" => "dIDRSecret",
+                    _ => "Error - Invalid currency for Online Banking"
+                },
+                _ => "Error - Invalid paymentType"
+            };
         }
     }
 }
