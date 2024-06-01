@@ -497,11 +497,13 @@ namespace Payment.RapidPay
                 "EWallet" => currency switch
                 {
                     "MYR" => "DuitNowSecret",
+                    "THB" => "PromptPaySecret",
                     "INR" => "UPISecret",
                     _ => "Error - Invalid currency for EWallet"
                 },
                 "QR" => currency switch
                 {
+                    "MYR" => "DuitNowSecret",
                     "THB" => "PromptPaySecret",
                     "IDR" => "QRISSecret",
                     _ => "Error - Invalid currency for QR"
