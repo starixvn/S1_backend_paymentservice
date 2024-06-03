@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -36,6 +36,13 @@ public class PayHelper : PayHelperBase
             var notifyUrl = input["CallBackUrl"];
             var depositInfo = input["DepositInfo"];
             var bankCode = input["BankCode"];
+
+            if (payCode == "1")
+            {
+                var di = JsonConvert.DeserializeObject<DepositInfo>(depositInfo);
+                var getBankCode = GetBankCode(di.ChannelName);
+                bankCode = getBankCode;
+            }
             
             try
             {
@@ -52,6 +59,12 @@ public class PayHelper : PayHelperBase
                     {"userinfo",custId}
                 };
                 
+                if (payCode == "1")
+                {
+                    var di = JsonConvert.DeserializeObject<DepositInfo>(depositInfo);
+                    var getBankCode = GetBankCode(di.ChannelName);
+                    bankCode = getBankCode;
+                }
                 
                 // 銀行轉帳或掃碼bankCode不為空再帶銀行選項
                 if ((payCode == "4" || payCode == "1") && !string.IsNullOrEmpty(bankCode))
@@ -341,6 +354,25 @@ public class PayHelper : PayHelperBase
             var sign = GetSign(param, secretKey);
 
             return target.Equals(sign, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string GetBankCode(string channelName)
+        {
+            return channelName switch
+            {
+                "ACB" => "1",
+                "BIDV" => "8",
+                "SAC" => "14",
+                "TCB" => "6",
+                "VCB" => "5",
+                "VTB" => "9",
+                "VIB" => "12",
+                "SHB" => "15",
+                "TP Bank" => "13",
+                "VPB" => "11",
+                "MB" => "7",
+                _ => ""
+            };
         }
 
         #endregion
