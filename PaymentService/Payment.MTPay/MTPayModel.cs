@@ -71,4 +71,8 @@ namespace Payment.MTPay
         public string msg { get; set; } // 商户号
     }
     
+    public class DepositInfo
+    {
+        public string ChannelName { get; set; }
+    }
 }
