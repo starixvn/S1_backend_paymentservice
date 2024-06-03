@@ -36,13 +36,6 @@ public class PayHelper : PayHelperBase
             var notifyUrl = input["CallBackUrl"];
             var depositInfo = input["DepositInfo"];
             var bankCode = input["BankCode"];
-
-            if (payCode == "1")
-            {
-                var di = JsonConvert.DeserializeObject<DepositInfo>(depositInfo);
-                var getBankCode = GetBankCode(di.ChannelName);
-                bankCode = getBankCode;
-            }
             
             try
             {
