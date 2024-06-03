@@ -52,8 +52,9 @@ public class PayHelper : PayHelperBase
                     {"userinfo",custId}
                 };
                 
-                //銀行轉帳且bankCode不為空再帶銀行選項
-                if (payCode == "4" && !string.IsNullOrEmpty(bankCode))
+                
+                // 銀行轉帳或掃碼bankCode不為空再帶銀行選項
+                if ((payCode == "4" || payCode == "1") && !string.IsNullOrEmpty(bankCode))
                 {
                     req.Add("bank_code", bankCode);
                 }
