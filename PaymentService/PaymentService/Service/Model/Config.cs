@@ -7,3 +7,8 @@ public class Config
     public string ConfigKey { get; set; }
     public string ConfigValue { get; set; }
 }
+
+public class ServiceHostConfig
+{
+    public string CommonService { get; set; }
+}
