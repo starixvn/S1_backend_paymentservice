@@ -375,16 +375,19 @@ public class DepositV2Controller : ControllerBase
                 case TransStatus.Success when depositRequest.Amount > 0:
                     _paymentBll.DepositSuccess(depositRequest, result);
                     #region 埋點
-                    _ = Task.Run(() =>
+                    if (depositRequest.SiteId == 1)
                     {
-                        var pixelEvent = new List<FaceBookPixel>
+                        _ = Task.Run(() =>
                         {
+                            var pixelEvent = new List<FaceBookPixel>
+                            {
                             FaceBookPixel.Purchase,
                             depositRequest.FirstDeposit == 1 ? FaceBookPixel.firstDeposit : FaceBookPixel.redeposit
-                        };
-                        var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.CustId, depositRequest.CurrencyId, depositRequest.ActualDeposit, pixelEvent);
-                        _ = _faceBookPixelBll.Send(pixelRequest);
-                    });
+                            };
+                            var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.CustId, depositRequest.CurrencyId, depositRequest.ActualDeposit, pixelEvent);
+                            _ = _faceBookPixelBll.Send(pixelRequest);
+                        });
+                    }
                     #endregion
                     break;
 
