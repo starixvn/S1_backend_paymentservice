@@ -381,7 +381,7 @@ public class DepositV2Controller : ControllerBase
                     {
                         var pixelEvent = new List<FaceBookPixel>
                         {
-                            FaceBookPixel.deposit,
+                            FaceBookPixel.Purchase,
                             depositRequest.FirstDeposit == 1 ? FaceBookPixel.firstDeposit : FaceBookPixel.redeposit
                         };
                         var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.CustId, depositRequest.CurrencyId, depositRequest.ActualDeposit, pixelEvent);
