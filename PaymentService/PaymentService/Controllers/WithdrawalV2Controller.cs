@@ -31,6 +31,7 @@ public class WithdrawalV2Controller : ControllerBase
     private readonly WhitelistBLL _whitelistBll;
     private readonly ICacheHelper _redisHelper;
     private readonly string _callBackUrl;
+    private readonly FaceBookPixelBLL _faceBookPixelBll;
 
     private readonly IDictionary<WithdrawalType, Func<WithdrawalRequest, Customer, (IPayInfo, Dictionary<string, string>)>>
         _getWithdrawalInputMapper;
@@ -47,6 +48,7 @@ public class WithdrawalV2Controller : ControllerBase
         _paymentBll = provider.GetRequiredService<PaymentBLL>();
         _whitelistBll = provider.GetRequiredService<WhitelistBLL>();
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
+        _faceBookPixelBll = provider.GetRequiredService<FaceBookPixelBLL>();
 
         #region ActionMapper
 
@@ -349,6 +351,17 @@ public class WithdrawalV2Controller : ControllerBase
             {
                 case TransStatus.Success when withdrawalInfo.Amount > 0:
                     _paymentBll.WithdrawalSuccess(withdrawalInfo, result);
+                    #region 埋點
+                    if (withdrawalInfo.SiteId == 1)
+                    {
+                        _ = Task.Run(() =>
+                        {
+                            var pixelEvent = new List<FaceBookPixel> { FaceBookPixel.withdraw };
+                            var pixelRequest = _faceBookPixelBll.CreatePixelRequest(withdrawalInfo.CustId, withdrawalInfo.CurrencyId, withdrawalInfo.Amount, pixelEvent);
+                            _ = _faceBookPixelBll.Send(pixelRequest);
+                        });
+                    }
+                    #endregion
                     break;
 
                 case TransStatus.Fail:

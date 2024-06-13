@@ -30,6 +30,7 @@ public class DepositV2Controller : ControllerBase
     private readonly Common _common;
     private readonly ICacheHelper _redisHelper;
     private readonly string _callBackUrl;
+    private readonly FaceBookPixelBLL _faceBookPixelBll;
 
     private readonly IDictionary<DepositType, Func<DepositInfoModel, Customer, (IPayInfo, Dictionary<string, string>)>>
         _getDepositInputMapper;
@@ -45,6 +46,7 @@ public class DepositV2Controller : ControllerBase
         _common = provider.GetRequiredService<Common>();
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
         _callBackUrl = configBll.GetConfigValue("CallBack");
+        _faceBookPixelBll = provider.GetRequiredService<FaceBookPixelBLL>();
 
         #region ActionMapper
 
@@ -374,6 +376,21 @@ public class DepositV2Controller : ControllerBase
             {
                 case TransStatus.Success when depositRequest.Amount > 0:
                     _paymentBll.DepositSuccess(depositRequest, result);
+                    #region 埋點
+                    if (depositRequest.SiteId == 1)
+                    {
+                        _ = Task.Run(() =>
+                        {
+                            var pixelEvent = new List<FaceBookPixel>
+                            {
+                            FaceBookPixel.Purchase,
+                            depositRequest.FirstDeposit == 1 ? FaceBookPixel.firstDeposit : FaceBookPixel.redeposit
+                            };
+                            var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.CustId, depositRequest.CurrencyId, depositRequest.ActualDeposit, pixelEvent);
+                            _ = _faceBookPixelBll.Send(pixelRequest);
+                        });
+                    }
+                    #endregion
                     break;
 
                 case TransStatus.Fail:
