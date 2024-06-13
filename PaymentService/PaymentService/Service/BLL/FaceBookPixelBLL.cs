@@ -6,14 +6,12 @@ namespace PaymentService.Service.BLL;
 public class FaceBookPixelBLL
 {
     private readonly string _commonServiceUrl;
-    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly CourierAdapter _courierAdapter;
 
     public FaceBookPixelBLL(IServiceProvider provider)
     {
         var configBll = provider.GetRequiredService<ConfigBLL>();
         _commonServiceUrl = configBll.GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").CommonService;
-        _httpContextAccessor = provider.GetRequiredService<IHttpContextAccessor>();
         _courierAdapter = provider.GetRequiredService<CourierAdapter>();
     }
 
