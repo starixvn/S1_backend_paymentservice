@@ -31,7 +31,7 @@ namespace PaymentService.Service.DAL
 
         public DepositRequest GetDepositRequest(int depositId)
         {
-            return _mainDbClient.QueryFirst<DepositRequest>("DepositCallBack_Get", new { DepositId = depositId });
+            return _mainDbClient.QueryFirst<DepositRequest>("DepositCallBack_Get_V2", new { DepositId = depositId });
         }
 
         public DepositInfoModel GetDepositInfo(int depositId)

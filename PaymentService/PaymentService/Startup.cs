@@ -55,6 +55,8 @@ namespace PaymentService
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<PaymentBLL>();
             services.AddSingleton<WhitelistBLL>();
+            services.AddSingleton<FaceBookPixelBLL>();
+
 
             /*SiteConfig*/
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
