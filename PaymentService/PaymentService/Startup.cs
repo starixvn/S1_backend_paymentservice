@@ -9,7 +9,7 @@ using PaymentService.Service.Library;
 using PaymentService.Service.Model;
 
 using StackExchange.Redis;
-
+ 
 namespace PaymentService
 {
     public class Startup
