@@ -374,15 +374,16 @@ public class DepositV2Controller : ControllerBase
             {
                 case TransStatus.Success when depositRequest.Amount > 0:
                     _paymentBll.DepositSuccess(depositRequest, result);
+                    var refreshDepositInfoData = _paymentBll.GetDepositRequest(transId);
                     #region 埋點
-                    if (depositRequest.SiteId == 1)
+                    if (depositRequest.SiteId == 1 && refreshDepositInfoData.Status == DepositStatus.Approved)
                     {
                         _ = Task.Run(() =>
                         {
                             var pixelEvent = new List<FaceBookPixel>
                             {
-                            FaceBookPixel.Purchase,
-                            depositRequest.FirstDeposit == 1 ? FaceBookPixel.firstDeposit : FaceBookPixel.redeposit
+                            FaceBookPixel.purchase,
+                            refreshDepositInfoData.FirstDeposit == 1 ? FaceBookPixel.startTrial : FaceBookPixel.redeposit
                             };
                             var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.CustId, depositRequest.CurrencyId, depositRequest.Amount, pixelEvent);
                             _ = _faceBookPixelBll.Send(pixelRequest);
