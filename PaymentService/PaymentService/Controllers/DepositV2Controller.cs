@@ -55,10 +55,10 @@ public class DepositV2Controller : ControllerBase
             {DepositType.OnlineBanking, GetOnlineBankDepositInput},
             {DepositType.BankAutoChannel, GetOnlineBankDepositInput},
             {DepositType.QuickTransfer, GetOnlineBankDepositInput},
-            {DepositType.MobilePay, GetMobilePayDepositInput},
-            {DepositType.CryptoPay, GetGenericDepositInput},
-            {DepositType.LoadCard, GetLoadCardDepositInput},
-            {DepositType.QrPay, GetGenericDepositInput},
+            {DepositType.MobilePayment, GetMobilePayDepositInput},
+            {DepositType.CryptoPayment, GetGenericDepositInput},
+            {DepositType.LoadCardPayment, GetLoadCardDepositInput},
+            {DepositType.QrPayPayment, GetGenericDepositInput},
             {DepositType.ChatTransfer,  GetGenericDepositInput}
         };
 
