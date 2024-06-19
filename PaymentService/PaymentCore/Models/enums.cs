@@ -41,11 +41,11 @@ namespace PaymentCore.Models
     public enum DepositType
     {
         OnlineBanking = 1,
-        MobilePay = 2,
+        MobilePayment = 2,
         LocalBank = 3,
-        CryptoPay = 4,
-        LoadCard = 5,
-        QrPay = 6,
+        CryptoPayment = 4,
+        LoadCardPayment = 5,
+        QrPayPayment = 6,
         BankAutoChannel = 7,
         CryptoWallet = 8,
         QuickTransfer = 9,
