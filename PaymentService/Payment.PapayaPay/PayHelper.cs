@@ -9,7 +9,7 @@ using PaymentCore.Models.Result;
 
 namespace Payment.PapayaPay;
 
-public class PayHelper: PayHelperBase
+public class PayHelper: PayHelperBase, IPayHelperNoCallBackUrl
 {
     private readonly IFlurlHttpHelper _httpHelper;
     private readonly ILogger<PayHelper> _logger;
@@ -25,24 +25,24 @@ public class PayHelper: PayHelperBase
     public override DepositResult Debit(Dictionary<string, string> input)
     {
         var baseApiUrl = input["Host"];
-        var key = input["DepositKey"];
-        var appId = input["DepositAppId"];
+        var token = input["Token"];
         var transId = input["TransID"];
     
         try
         {
             var req = new Dictionary<string, string>
             {
-                { "appId", appId },
-                { "merOrderNo", transId },
-                { "currency", input["PayCurrencyId"] },
+                { "qrCodeTransactionId", transId },
                 { "amount", GetRequestAmount(input["Amount"]) },
-                { "notifyUrl", input["CallBackUrl"] }
+                { "currency", input["PayCurrencyId"] },
+                { "bankCode", input["BankCode"] },
+                { "accountNumber", input["PayAccount"] },
+                { "accountName", input["AccountName"] },
+                { "description", string.Empty }
             };
             
-            req.Add("sign", GetSign(req, key));
-            
             var (response, statusCode) = _httpHelper
+                .WithHeader("transactiontoken", token)
                 .PostJson<Dictionary<string, string>, DepositResponse>($"{baseApiUrl}{Path.Deposit}", req);
     
             if (!statusCode.IsSuccessStatus())
@@ -50,17 +50,16 @@ public class PayHelper: PayHelperBase
                 throw new CustomException($"HttpStatus: {statusCode}", ((int) statusCode).ToString());
             }
     
-            if (response.Code != Definition.SuccessCode)
+            if (response.StatusCode != Definition.SuccessCode)
             {
-                throw new CustomException(response.ErrorMessage, response.Code);
+                throw new CustomException(response.Message, response.StatusCode);
             }
     
             return new DepositResult
             {
                 Success = true,
                 ErrorCode = "0",
-                Url = response.Data.Params.Url,
-                ThirdId = response.Data.ThirdId
+                Url = response.Url
             };
         }
         catch (CustomException ex)
@@ -74,30 +73,21 @@ public class PayHelper: PayHelperBase
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
         Dictionary<string, string> headers, Dictionary<string, string> input)
     {
-        var key = input["DepositKey"];
-        var req = FromJson<CallbackRequest>(bodyContent);
-        var dic = FromJson<Dictionary<string, string>>(bodyContent);
-    
-        if (!VerifySign(dic, key, req.Sign))
-        {
-            return new NotifyDepositResult
-            {
-                DepositId = req.TransId,
-                TransStatus = TransStatus.Pending,
-                Response = "Signature does not match."
-            };
-        }
-    
-        var transStatus = Definition.GetTransStatus(req.Status);
-    
+        var req = FromJson<DepositCallbackRequest>(bodyContent);
+        
         return new NotifyDepositResult
         {
             DepositId = req.TransId,
             ActualAmount = req.Amount,
             ThirdId = req.TransId,
-            Comment = req.Message,
-            TransStatus = transStatus,
-            Response = CallbackResponse.Success
+            Comment = bodyContent,
+            TransStatus = Definition.GetDepositTransStatus(req.Status),
+            Response = ToJson(new DepositCallbackResponse
+            {
+                TransId = req.TransId,
+                Status = 200,
+                Message = "Success"
+            })
         };
     }
     
@@ -118,57 +108,36 @@ public class PayHelper: PayHelperBase
     public override WithdrawResult Credit(Dictionary<string, string> input)
     {
         var baseApiUrl = input["Host"];
-        var key = input["PayoutKey"];
-        var appId = input["PayoutAppId"];
+        var token = input["Token"];
         var transId = input["TransID"];
-        var reqAmount = GetRequestAmount(input["Amount"]);
     
         try
         {
-            var req = new WithdrawalRequest
+            var req = new Dictionary<string, string>
             {
-                AppId = appId,
-                RequestAmount = reqAmount,
-                Currency = input["PayCurrencyId"],
-                TransId = transId,
-                CallBackUrl = input["CallBackUrl"],
-                Data = new WithdrawalRequestData
-                {
-                    BankCode = input["BankCode"],
-                    AccountName = input["AccountName"],
-                    AccountNo = input["AccountNo"]
-                }
+                { "currencyCode", input["PayCurrencyId"] },
+                { "fundOutPaymentReference", transId },
+                { "accountNumber", input["AccountNo"] },
+                { "accountName", input["AccountName"] },
+                { "bankCode", input["BankCode"] },
+                { "bankName", input["BankName"] },
+                { "amount", GetRequestAmount(input["Amount"]) }
             };
             
-            var dic4Sign = new Dictionary<string, string>
-            {
-                { "appId", appId },
-                { "merOrderNo", transId },
-                { "currency", input["PayCurrencyId"] },
-                { "amount", GetRequestAmount(input["Amount"]) },
-                { "notifyUrl", input["CallBackUrl"] },
-                { "extra", $"accountName={req.Data.AccountName}&accountNo={req.Data.AccountNo}&bankCode={req.Data.BankCode}" }
-            };
-            
-            req.Sign = GetSign(dic4Sign, key);
-    
             var (response, statusCode) = _httpHelper
-                .PostJson<WithdrawalRequest, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", req);
+                .WithHeader("transactiontoken", token)
+                .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", req);
     
             if (!statusCode.IsSuccessStatus())
             {
-                throw new CustomException($"HttpStatus: {statusCode}", ((int) statusCode).ToString());
+                throw new CustomException($"HttpStatus: {(int) statusCode}", response.Message);
             }
-    
-            if (response.Code != Definition.SuccessCode)
-            {
-                throw new CustomException(response.ErrorMessage, response.Code);
-            }
-    
+            
             return new WithdrawResult
             {
                 Success = true,
                 WithdrawId = transId,
+                Message = response.Message,
                 RawContent = JsonConvert.SerializeObject(response)
             };
         }
@@ -188,29 +157,19 @@ public class PayHelper: PayHelperBase
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
         Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
-        var key = payResource["PayoutKey"];
-        var req = FromJson<CallbackRequest>(bodyContent);
-        var dic = FromJson<Dictionary<string, string>>(bodyContent);
+        var req = FromJson<PayoutCallbackRequest>(bodyContent);
     
-        if (!VerifySign(dic, key, req.Sign))
-        {
-            return new NotifyWithdrawResult
-            {
-                ThirdId = req.ThirdId,
-                WithdrawId = req.TransId,
-                TransStatus = TransStatus.Pending,
-                Response = "Signature does not match."
-            };
-        }
-    
-        var transStatus = Definition.GetTransStatus(req.Status);
 
         return new NotifyWithdrawResult
         {
             ThirdId = req.TransId,
-            TransStatus = transStatus,
-            Message = req.Message,
-            Response = CallbackResponse.Success,
+            TransStatus = Definition.GetPayoutTransStatus(req.Status),
+            Message = req.Status,
+            Response = ToJson(new PayoutCallbackResponse
+            {
+                Status = 200,
+                Message = "Success"
+            }),
             WithdrawId = req.TransId
         };
     }
@@ -227,32 +186,19 @@ public class PayHelper: PayHelperBase
     private static string GetRequestAmount(string strAmount)
         => decimal.Parse(strAmount).ToString("F2");
     
-    private string GetSign(IEnumerable<KeyValuePair<string, string>> input, string key)
-    {
-        var str = string.Join('&', input
-            .Where(x => !x.Key.Equals("sign"))
-            .OrderBy(x => x.Key)
-            .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
-    
-        _logger.LogInformation(str);
-        
-        var sign = ToSHA256(str).ToLower();
-    
-        return sign;
-    }
-    
-    private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string key, string target)
-    {
-        var sign = GetSign(param, key);
-        var result = sign.Equals(target);
+    #endregion
 
-        if (!result)
+    public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+    {
+        if (formData["CurrentCallbackType"].Equals("Deposit"))
         {
-            _logger.LogInformation($"Signature dose not match, result={sign}, target sign={target}");
+            var reqD = FromJson<DepositCallbackRequest>(bodyContent);
+            
+            return reqD.TransId;
         }
         
-        return result;
+        var reqW = FromJson<PayoutCallbackRequest>(bodyContent);
+            
+        return reqW.TransId;
     }
-    
-    #endregion
 }
