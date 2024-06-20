@@ -36,6 +36,7 @@ public class PayHelper: PayHelperBase, IPayHelperNoCallBackUrl
                 { "amount", GetRequestAmount(input["Amount"]) },
                 { "currency", input["PayCurrencyId"] },
                 { "bankCode", input["BankCode"] },
+                { "payMethod", input["PayCode"] },
                 { "accountNumber", input["PayAccount"] },
                 { "accountName", input["AccountName"] },
                 { "description", string.Empty }
