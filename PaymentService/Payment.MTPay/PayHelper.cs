@@ -138,12 +138,6 @@ public class PayHelper : PayHelperBase
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var response = new WithdrawResult
-            {
-                Success = false,
-                RawContent = "System Error"
-            };
-            
             var apiUrl = inputs["Host"];
             var reqAmount = decimal.Parse(inputs["Amount"]);
             var strAmount = reqAmount.ToString("G29");
@@ -175,25 +169,13 @@ public class PayHelper : PayHelperBase
                 req.Add("sign", GetSign(req, secretKey));
 
                 var res = Payout(apiUrl, req);
-                
-                if(res.code == 1)
-                { 
-                    response = new WithdrawResult
-                    {
-                        Success = true,
-                        RawContent = JsonConvert.SerializeObject(res)
-                    };
-                }
-                else
-                {
-                    response = new WithdrawResult
-                    {
-                        Success = false,
-                        RawContent = JsonConvert.SerializeObject(res)
-                    };
-                }
 
-                return response;
+                return new WithdrawResult
+                {
+                    Success = true,
+                    WithdrawId = transId,
+                    RawContent = JsonConvert.SerializeObject(res)
+                };
             }
             catch (CustomException ex)
             {
@@ -324,7 +306,7 @@ public class PayHelper : PayHelperBase
             }
 
             if (result.code != 1)
-                throw new CustomException("MTPay create payout failed.");
+                throw new CustomException("MTPay create payout failed, msg=" + result.msg);
 
             return result;
         }
