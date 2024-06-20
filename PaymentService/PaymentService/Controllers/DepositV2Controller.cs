@@ -187,6 +187,9 @@ public class DepositV2Controller : ControllerBase
 
             var depositId = _common.GetId(transId);
             var tmpTransId = $"D{_common.GetEnv()}{depositId}";
+            
+            dicParams.Add("CurrentCallbackType", "Deposit");
+            
             if (tmpTransId != transId)
             {
                 var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)_payBll.GetPayHelper(transId);
