@@ -35,7 +35,8 @@ namespace PaymentCore.Models
         LocalBank = 2,
         EWalletPayment = 3,
         CryptoPayment = 4,
-        CryptoWallet = 5
+        CryptoWallet = 5,
+        Settlement = 6
     }
     
     public enum DepositType
