@@ -123,12 +123,13 @@ namespace Payment.SBPay
                 };
             }
 
+            var transStatus = SBPayDefinition.GetTransStatus(req.State);
             var result = new NotifyDepositResult
             {
                 ThirdId = req.ThirdId,
                 DepositId = req.TransId,
                 Comment = req.State,
-                TransStatus = TransStatus.Success, // SBPay只回調成功的單
+                TransStatus = transStatus, // SBPay只回調成功的單
                 ActualAmount = decimal.Parse(req.Amount),
                 Response = SBPayDefinition.CallbackResponse
             };

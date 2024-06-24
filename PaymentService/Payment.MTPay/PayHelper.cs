@@ -119,7 +119,7 @@ public class PayHelper : PayHelperBase
             {
                 ThirdId = req.ThirdId,
                 DepositId = req.TransId,
-                TransStatus = TransStatus.Success, // MTPay只回調成功的單
+                TransStatus = req.code == 1 ? TransStatus.Success : TransStatus.Pending, // MTPay只回調成功的單
                 ActualAmount = req.Amount / 100, //單位是分 除以 100就是 實際總金額
                 Response = MTPayDefinition.CallbackResponse
             };
