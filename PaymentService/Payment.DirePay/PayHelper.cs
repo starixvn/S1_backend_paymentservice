@@ -311,6 +311,15 @@ namespace Payment.DirePay
             var splitMethod = method.Split("-");
 
             var accessToken = GetAccessToken(inputs);
+            var method0 = splitMethod[0];
+            var bank_code = splitMethod.Length > 1 ? splitMethod[1] : inputs["BankCode"];
+
+            // 目前设定方面 method = qr 时， bank_code 只需要放空就可以
+            if (method0 == "qr")
+            {
+                bank_code = "";
+            }
+
             var req = new Dictionary<string, string>
             {
                 { "command", Command.FiatPayment },
@@ -318,12 +327,12 @@ namespace Payment.DirePay
                 { "callback_url", inputs["CallBackUrl"] },
                 { "redirect_url", inputs["ReturnUrl"] },
                 { "currency", payCurrency },
-                { "method", splitMethod[0] },
+                { "method", method0 },
                 { "customer_uid", inputs["CustId"] },
                 { "depositor_name", inputs["AccountName"] },
                 { "amount", amount.ToString("G29") },
                 { "txid", inputs["TransID"] },
-                { "bank_code", splitMethod.Length > 1 ? splitMethod[1] : inputs["BankCode"] }
+                { "bank_code", bank_code }
             };
 
             var (resp, statusCode) = _httpHelper
