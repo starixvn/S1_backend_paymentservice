@@ -30,7 +30,7 @@ public class PayHelper: PayHelperBase, IPayHelperNoCallBackUrl
     
         try
         {
-            var req = new Dictionary<string, string>
+            var req = new Dictionary<string, object>
             {
                 { "qrCodeTransactionId", transId },
                 { "amount", GetRequestAmount(input["Amount"]) },
@@ -44,7 +44,7 @@ public class PayHelper: PayHelperBase, IPayHelperNoCallBackUrl
             
             var (response, statusCode) = _httpHelper
                 .WithHeader("transactiontoken", token)
-                .PostJson<Dictionary<string, string>, DepositResponse>($"{baseApiUrl}{Path.Deposit}", req);
+                .PostJson<Dictionary<string, object>, DepositResponse>($"{baseApiUrl}{Path.Deposit}", req);
     
             if (!statusCode.IsSuccessStatus())
             {
@@ -114,7 +114,7 @@ public class PayHelper: PayHelperBase, IPayHelperNoCallBackUrl
     
         try
         {
-            var req = new Dictionary<string, string>
+            var req = new Dictionary<string, object>
             {
                 { "currencyCode", input["PayCurrencyId"] },
                 { "fundOutPaymentReference", transId },
@@ -127,7 +127,7 @@ public class PayHelper: PayHelperBase, IPayHelperNoCallBackUrl
             
             var (response, statusCode) = _httpHelper
                 .WithHeader("transactiontoken", token)
-                .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", req);
+                .PostJson<Dictionary<string, object>, WithdrawalResponse>($"{baseApiUrl}{Path.Withdrawal}", req);
     
             if (!statusCode.IsSuccessStatus())
             {
@@ -184,8 +184,8 @@ public class PayHelper: PayHelperBase, IPayHelperNoCallBackUrl
     
     #region Private
 
-    private static string GetRequestAmount(string strAmount)
-        => decimal.Parse(strAmount).ToString("F2");
+    private static decimal GetRequestAmount(string strAmount)
+        => decimal.Parse(strAmount);
     
     #endregion
 
