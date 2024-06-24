@@ -130,12 +130,13 @@ namespace Payment.QuickPay
                 };
             }
 
+            var transStatus = QuickPayDefinition.GetTransStatus(req.Status);
             var result = new NotifyDepositResult
             {
                 ThirdId = req.TradeNo,
                 DepositId = req.OrderNo,
                 Comment = req.Extra,
-                TransStatus = TransStatus.Success, // QuickPay只回調成功的單
+                TransStatus = transStatus, // QuickPay只回調成功的單
                 ActualAmount = req.Paid,
                 Response = QuickPayDefinition.CallbackResponse
             };

@@ -146,7 +146,7 @@ namespace Payment.MegaPay
 
             if (sign == data.sign)
             {
-                oNotify.TransStatus = TransStatus.Success;
+                oNotify.TransStatus = data.state == "completed" ? TransStatus.Success : TransStatus.Pending;
                 oNotify.RequestAmount = decimal.Parse(data.request_amount);
                 oNotify.ActualAmount = decimal.Parse(data.request_amount);
                 oNotify.ThirdId = data.trade_no;

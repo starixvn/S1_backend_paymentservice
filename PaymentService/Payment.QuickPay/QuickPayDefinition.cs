@@ -23,6 +23,7 @@ namespace Payment.QuickPay
             new()
             {
                 { PayoutStatus.Completed, TransStatus.Success },
+                 { PayoutStatus.ManualCompleted, TransStatus.Success },
                 { PayoutStatus.Canceled, TransStatus.Fail }
             };
 
@@ -41,6 +42,7 @@ namespace Payment.QuickPay
         {
 
             public const string Completed = "PAID";
+            public const string ManualCompleted = "MANUAL PAID";
             public const string Canceled = "CANCELLED";
         }
     }

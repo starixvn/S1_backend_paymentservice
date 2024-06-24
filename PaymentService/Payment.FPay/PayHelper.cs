@@ -101,7 +101,7 @@ namespace Payment.FPay
                 ActualAmount = decimal.Parse(data.Amount),
                 DepositId = transId,
                 ThirdId = transId,
-                TransStatus = TransStatus.Success,
+                TransStatus = Definition.GetTransStatus(data.OrderStatus),
                 Response = CallbackResponse.Success
             };
 
