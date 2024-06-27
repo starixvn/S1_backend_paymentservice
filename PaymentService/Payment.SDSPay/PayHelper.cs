@@ -247,7 +247,7 @@ public class PayHelper : PayHelperBase, IExchangeHelper, IPayHelperNoCallBackUrl
 
     #endregion
     
-    public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+    public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
     {
         var req = FromJson<CallbackReq>(bodyContent);
 

@@ -143,7 +143,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         throw new NotImplementedException();
     }
 
-    public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+    public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
     {
         return formData["ref1"];
     }
