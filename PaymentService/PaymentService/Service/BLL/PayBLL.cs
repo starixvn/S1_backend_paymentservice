@@ -30,8 +30,8 @@ namespace PaymentService.Service.BLL
 
         public IEnumerable<BankInfoPay> GetOnlineBankList(int siteId, DepositType depositType)
         {
-            var key = $"PaySetting:OnlineBanking:{siteId}:{depositType}";
-            return _redisHelper.TryGetOrCreate<IEnumerable<BankInfoPay>>(key, TimeSpan.FromMinutes(5),
+            var key = $"PaySetting:{siteId}:{DepositType.OnlineBanking}:{depositType}";
+            return _redisHelper.TryGetOrCreate<IEnumerable<BankInfoPay>>(key, TimeSpan.FromSeconds(30),
                 () => payService.GetBankInfoPayList(siteId, depositType)
                     .OrderBy(x => x.MSort).ThenBy(x => x.SSort),
                 RedisDataBase.Shared);
@@ -40,26 +40,26 @@ namespace PaymentService.Service.BLL
         public IEnumerable<PayInfo> GetPayInfoList(int siteId, DepositType depositType)
         {
             var key = $"PaySetting:{siteId}:{depositType}";
-            return _redisHelper.TryGetOrCreate<IEnumerable<PayInfo>>(key, TimeSpan.FromMinutes(5),
+            return _redisHelper.TryGetOrCreate<IEnumerable<PayInfo>>(key, TimeSpan.FromSeconds(30),
                 () => payService.GetPayInfo(siteId, depositType).OrderBy(x => x.GSort).ThenBy(x => x.SSort),
                 RedisDataBase.Shared);
         }
 
         public IEnumerable<BankInfoPay> GetOnlineBankListForPayout(int siteId)
         {
-            return _redisHelper.TryGetOrCreate($"PaySetting:OnlineBank:Payout:{siteId}", TimeSpan.FromMinutes(5),
+            return _redisHelper.TryGetOrCreate($"PaySetting:{siteId}:Payout:{WithdrawalType.OnlineBanking}", TimeSpan.FromSeconds(30),
                 () => payService.GetOnlineBankListForPayout(siteId));
         }
 
         public IEnumerable<BankInfoPay> GetCryptoListForPayout(int siteId)
         {
-            return _redisHelper.TryGetOrCreate($"PaySetting:Crypto:Payout:{siteId}", TimeSpan.FromMinutes(5),
+            return _redisHelper.TryGetOrCreate($"PaySetting:{siteId}:Payout:{WithdrawalType.CryptoPayment}", TimeSpan.FromSeconds(30),
                 () => payService.GetCryptoListForPayout(siteId));
         }
 
         public IEnumerable<BankInfoPay> GetEWalletPayListForPayout(int siteId)
         {
-            return _redisHelper.TryGetOrCreate($"PaySetting:EWallet:Payout:{siteId}", TimeSpan.FromMinutes(5),
+            return _redisHelper.TryGetOrCreate($"PaySetting:{siteId}:Payout:{WithdrawalType.EWalletPayment}", TimeSpan.FromSeconds(30),
                 () => payService.GetEWalletPayListForPayout(siteId));
         }
 
@@ -80,17 +80,13 @@ namespace PaymentService.Service.BLL
         }
 
         public IEnumerable<Pay> GetPaymentList(int siteId)
-        {
-            var key = $"PaymentSetting:{siteId}";
-            return _redisHelper.TryGetOrCreate(key, TimeSpan.FromMinutes(5),
-                () => payService.GetPaymentList(siteId)
-                    .Where(x => x.PayStatus == PayStatusEnum.Enabled
-                                && x.SitePayStatus == PayStatusEnum.Enabled));
-        }
+        => GetPaymentAllList(siteId)
+            .Where(x => x.PayStatus == PayStatusEnum.Enabled 
+                        && x.SitePayStatus == PayStatusEnum.Enabled);
 
         public IEnumerable<Pay> GetPaymentAllList(int siteId)
         {
-            var key = $"PaymentSetting:AllStatus:{siteId}";
+            var key = $"PayList:{siteId}";
             return _redisHelper.TryGetOrCreate(key, TimeSpan.FromMinutes(5),
                 () => payService.GetPaymentList(siteId));
         }
@@ -119,7 +115,7 @@ namespace PaymentService.Service.BLL
 
         public IEnumerable<CryptoExchangeSetting> GetCryptoExchangeSetting(int siteId)
         {
-            return _redisHelper.TryGetOrCreate($"PaySetting:Crypto:Exchange:{siteId}", TimeSpan.FromMinutes(5),
+            return _redisHelper.TryGetOrCreate($"PaySetting:{siteId}:Exchange:CryptoPayment", TimeSpan.FromSeconds(30),
                 () => payService.GetCryptoExchangeSetting(siteId));
         }
 

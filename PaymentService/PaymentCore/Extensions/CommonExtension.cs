@@ -51,6 +51,7 @@ namespace PaymentCore.Extensions
         public static bool IsNotOnlinePayment(this WithdrawalType type)
             => type is (WithdrawalType.LocalBank
                 or WithdrawalType.CryptoWallet
+                or WithdrawalType.Settlement
                 or WithdrawalType.Undefined);
         
         public static bool IsNotOnlinePayment(this DepositType type)

@@ -120,12 +120,13 @@ namespace Payment.Super7Pay
                 };
             }
 
+            var transStatus = Super7PayDefinition.GetTransStatus(req.State);
             var result = new NotifyDepositResult
             {
                 ThirdId = req.ThirdId,
                 DepositId = req.TransId,
                 Comment = req.State,
-                TransStatus = TransStatus.Success, // Super7Pay只回調成功的單
+                TransStatus = transStatus,
                 ActualAmount = decimal.Parse(req.Amount),
                 Response = Super7PayDefinition.CallbackResponse
             };
