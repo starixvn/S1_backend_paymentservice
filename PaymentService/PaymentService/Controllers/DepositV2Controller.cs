@@ -193,7 +193,7 @@ public class DepositV2Controller : ControllerBase
                 var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)_payBll.GetPayHelper(transId);
                 var payResource = new Dictionary<string, string>
                 {
-                    { "CurrentCallbackType", "Withdrawal" }
+                    { "CurrentCallbackType", "Deposit" }
                 };
                 
                 transId = payHelperNoCallBackUrl.FetchTransId(dicParams, bodyContent, payResource);
