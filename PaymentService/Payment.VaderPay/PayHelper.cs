@@ -295,7 +295,7 @@ namespace Payment.VaderPay
             throw new NotImplementedException();
         }
 
-        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             string refId;
             if (formData != null && formData.Count > 0)

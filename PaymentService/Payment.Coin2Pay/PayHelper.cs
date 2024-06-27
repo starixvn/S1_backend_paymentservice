@@ -281,7 +281,7 @@ namespace Payment.Coin2Pay
             throw new NotImplementedException();
         }
 
-        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             var req = FormJsonHandling<DepositCallBackReq>(formData, bodyContent);
 

@@ -156,12 +156,15 @@ public class WithdrawalV2Controller : ControllerBase
             var withdrawalId = _common.GetId(transId);
             var tmpTransId = $"W{_common.GetEnv()}{withdrawalId}";
             
-            dicParams.Add("CurrentCallbackType", "Withdrawal");
-            
             if (tmpTransId != transId)
             {
                 var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)_payBll.GetPayHelper(transId);
-                transId = payHelperNoCallBackUrl.FetchTransId(dicParams, bodyContent);
+                var payResource = new Dictionary<string, string>
+                {
+                    { "CurrentCallbackType", "Deposit" }
+                };
+                
+                transId = payHelperNoCallBackUrl.FetchTransId(dicParams, bodyContent, payResource);
             }
 
             var responseToPay = CallBackHandler(transId, dicParams, bodyContent, headers);
