@@ -142,7 +142,7 @@ namespace Payment.NAP3SPay
             };
         }
 
-        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             return formData["request_id"];
         }

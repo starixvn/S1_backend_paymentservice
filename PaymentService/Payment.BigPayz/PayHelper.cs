@@ -332,7 +332,7 @@ namespace Payment.BigPayz
             return sign.Equals(target);
         }
 
-        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             string result = "";
             //QR callback

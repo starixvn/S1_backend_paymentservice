@@ -260,7 +260,7 @@ namespace Payment.PowerBankPay
             throw new NotImplementedException();
         }
 
-        public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+        public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             throw new NotImplementedException();
         }

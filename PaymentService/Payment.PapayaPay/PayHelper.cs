@@ -189,9 +189,9 @@ public class PayHelper: PayHelperBase, IPayHelperNoCallBackUrl
     
     #endregion
 
-    public string FetchTransId(Dictionary<string, string> formData, string bodyContent)
+    public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
     {
-        if (formData["CurrentCallbackType"].Equals("Deposit"))
+        if (payResource["CurrentCallbackType"].Equals("Deposit"))
         {
             var reqD = FromJson<DepositCallbackRequest>(bodyContent);
             
