@@ -65,6 +65,12 @@ namespace Payment.QuickPay
                     req.Add("bankName", input["BankName"]);
                 }
 
+                if (payCode.Equals("QRIS"))
+                {
+                    req.Add("bankName", input["BankName"]);
+                    req.Add("userName", input["AccountName"]);
+                }
+
                 var res = CreateOrder(apiUrl, req);
 
                 depositInfo = depositInfo.AddOrSetJProperty("PayCode", payCode);
