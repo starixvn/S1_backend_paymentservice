@@ -67,7 +67,7 @@ namespace Payment.QuickPay
 
                 if (payCode.Equals("QRIS"))
                 {
-                    req.Add("bankName", input["BankName"]);
+                    req.Add("bankName", "");
                     req.Add("userName", input["AccountName"]);
                 }
 
