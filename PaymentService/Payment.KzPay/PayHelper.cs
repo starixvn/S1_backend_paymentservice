@@ -30,7 +30,7 @@ public class PayHelper : PayHelperBase
 
         try
         {
-            var req = new Dictionary<string, string>
+            var req = new Dictionary<string, object>
             {
                 {"mchNo", input["MerchantNo"]},
                 {"mchMemberNo", input["UserName"]},
@@ -38,8 +38,8 @@ public class PayHelper : PayHelperBase
                 {"paymentMethod", input["PayCode"]},
                 {"bankCode", input["BankCode"]},
                 {"amount", GetRequestAmount(input["Amount"])},
-                {"changePrice", "1"}, // 允許改變金額
-                {"notifyurl", input["CallBackUrl"]},
+                {"changePrice", 1}, // 允許改變金額
+                {"notifyUrl", input["CallBackUrl"]},
                 {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()}
             };
 
@@ -69,7 +69,7 @@ public class PayHelper : PayHelperBase
         var apiKey = input["Key"];
         var req = FromJson<CallbackRequest>(bodyContent);
 
-        if (!VerifySign(FromJson<Dictionary<string, string>>(bodyContent), apiKey, req.Sign))
+        if (!VerifySign(FromJson<Dictionary<string, object>>(bodyContent), apiKey, req.Sign))
         {
             return new NotifyDepositResult
             {
@@ -110,7 +110,7 @@ public class PayHelper : PayHelperBase
 
         try
         {
-            var req = new Dictionary<string, string>
+            var req = new Dictionary<string, object>
             {
                 {"mchNo", input["MerchantNo"]},
                 {"mchMemberNo", input["UserName"]},
@@ -121,7 +121,7 @@ public class PayHelper : PayHelperBase
                 {"accountNum", input["AccountNo"]},
                 {"extra", string.Empty},
                 {"amount", GetRequestAmount(input["Amount"])},
-                {"notifyurl", input["CallBackUrl"]},
+                {"notifyUrl", input["CallBackUrl"]},
                 {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()}
             };
 
@@ -155,7 +155,7 @@ public class PayHelper : PayHelperBase
         var apiKey = payResource["Key"];
         var req = FromJson<CallbackRequest>(bodyContent);
 
-        if (!VerifySign(FromJson<Dictionary<string, string>>(bodyContent), apiKey, req.Sign))
+        if (!VerifySign(FromJson<Dictionary<string, object>>(bodyContent), apiKey, req.Sign))
         {
             return new NotifyWithdrawResult
             {
@@ -194,13 +194,13 @@ public class PayHelper : PayHelperBase
     private static string GetRequestAmount(string strAmount)
         => decimal.Parse(strAmount).ToString("F2");
     
-    private CreateDeposit CreateOrder(string baseApiUrl, Dictionary<string, string> req)
+    private CreateDeposit CreateOrder(string baseApiUrl, Dictionary<string, object> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePay;
 
         var (result, statusCode) = _httpHelper
             .WithHeader("version", "1")
-            .PostUrlEncoded<Dictionary<string, string>, KzPayResponse<CreateDeposit>>(apiUrl, req);
+            .PostJson<Dictionary<string, object>, KzPayResponse<CreateDeposit>>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -214,12 +214,12 @@ public class PayHelper : PayHelperBase
         return result.Data;
     }
 
-    private KzPayResponse<string> Payout(string baseApiUrl, Dictionary<string, string> req)
+    private KzPayResponse<string> Payout(string baseApiUrl, Dictionary<string, object> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePayout;
         var (result, statusCode) = _httpHelper
             .WithHeader("version", "1")
-            .PostUrlEncoded<Dictionary<string, string>, KzPayResponse<string>>(apiUrl, req);
+            .PostJson<Dictionary<string, object>, KzPayResponse<string>>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -234,7 +234,7 @@ public class PayHelper : PayHelperBase
         return result;
     }
 
-    private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
+    private string GetSign(IEnumerable<KeyValuePair<string, object>> param, string key)
     {
         var str = string.Join("&", param
             .Where(x => !x.Key.Equals("sign"))
@@ -248,7 +248,7 @@ public class PayHelper : PayHelperBase
         return sign;
     }
 
-    private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)
+    private bool VerifySign(IEnumerable<KeyValuePair<string, object>> param, string apiKey, string target)
     {
         var sign = GetSign(param, apiKey);
         return sign.Equals(target);
