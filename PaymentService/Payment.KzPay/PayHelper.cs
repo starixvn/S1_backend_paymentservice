@@ -229,7 +229,7 @@ public class PayHelper : PayHelperBase
 
         if (result.Code != Definition.SuccessCode)
             throw new CustomException(
-                $"KzPay Payout response error: {result.Code} {result.Data}");
+                $"KzPay Payout response error: {result.Code} {result.Message}");
 
         return result;
     }
