@@ -26,7 +26,7 @@ internal class Path
     /// <summary>
     /// 創建代收
     /// </summary>
-    public const string CreatePay = "/api/pay";
+    public const string CreatePay = "/api/payment";
 
     /// <summary>
     /// 創建代付
