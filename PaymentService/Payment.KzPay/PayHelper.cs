@@ -214,12 +214,12 @@ public class PayHelper : PayHelperBase
         return result.Data;
     }
 
-    private KzPayResponse<string> Payout(string baseApiUrl, Dictionary<string, string> req)
+    private CreatePayout Payout(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePayout;
         var (result, statusCode) = _httpHelper
             .WithHeader("version", "1")
-            .PostJson<Dictionary<string, string>, KzPayResponse<string>>(apiUrl, req);
+            .PostJson<Dictionary<string, string>, KzPayResponse<CreatePayout>>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -231,7 +231,7 @@ public class PayHelper : PayHelperBase
             throw new CustomException(
                 $"KzPay Payout response error: {result.Code} {result.Data}");
 
-        return result;
+        return result.Data;
     }
 
     private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
