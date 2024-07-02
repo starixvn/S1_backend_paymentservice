@@ -36,7 +36,7 @@ public class PayHelper : PayHelperBase
                 {"mchMemberNo", input["UserName"]},
                 {"mchOrderNo", input["TransID"]},
                 {"paymentMethod", input["PayCode"]},
-                {"bankCode", input["BankCode"]},
+                //{"bankCode", input["BankCode"]},
                 {"amount", GetRequestAmount(input["Amount"])},
                 {"changePrice", "1"}, // 允許改變金額
                 {"notifyUrl", input["CallBackUrl"]},
