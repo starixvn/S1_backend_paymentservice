@@ -40,3 +40,9 @@ public class CallbackRequest
     [JsonProperty("sign")]
     public string Sign { get; set; }
 }
+
+public class CreatePayout
+{
+    [JsonProperty("sysOrderNo")]
+    public string ThirdId { get; set; }
+}
