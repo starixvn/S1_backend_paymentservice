@@ -39,7 +39,7 @@ public class PayHelper : PayHelperBase
                 {"bankCode", input["BankCode"]},
                 {"amount", GetRequestAmount(input["Amount"])},
                 {"changePrice", "1"}, // 允許改變金額
-                {"notifyurl", input["CallBackUrl"]},
+                {"notifyUrl", input["CallBackUrl"]},
                 {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()}
             };
 
@@ -121,7 +121,7 @@ public class PayHelper : PayHelperBase
                 {"accountNum", input["AccountNo"]},
                 {"extra", string.Empty},
                 {"amount", GetRequestAmount(input["Amount"])},
-                {"notifyurl", input["CallBackUrl"]},
+                {"notifyUrl", input["CallBackUrl"]},
                 {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()}
             };
 
@@ -200,7 +200,7 @@ public class PayHelper : PayHelperBase
 
         var (result, statusCode) = _httpHelper
             .WithHeader("version", "1")
-            .PostUrlEncoded<Dictionary<string, string>, KzPayResponse<CreateDeposit>>(apiUrl, req);
+            .PostJson<Dictionary<string, string>, KzPayResponse<CreateDeposit>>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -219,7 +219,7 @@ public class PayHelper : PayHelperBase
         var apiUrl = baseApiUrl + Path.CreatePayout;
         var (result, statusCode) = _httpHelper
             .WithHeader("version", "1")
-            .PostUrlEncoded<Dictionary<string, string>, KzPayResponse<string>>(apiUrl, req);
+            .PostJson<Dictionary<string, string>, KzPayResponse<string>>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -237,7 +237,7 @@ public class PayHelper : PayHelperBase
     private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
     {
         var str = string.Join("&", param
-            .Where(x => !x.Key.Equals("sign"))
+            .Where(x => !x.Key.Equals("sign") && !string.IsNullOrEmpty(x.Value))
             .OrderBy(x => x.Key, StringComparer.Ordinal)
             .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
 

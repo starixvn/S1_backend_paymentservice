@@ -26,12 +26,12 @@ internal class Path
     /// <summary>
     /// 創建代收
     /// </summary>
-    public const string CreatePay = "/pay";
+    public const string CreatePay = "/api/pay";
 
     /// <summary>
     /// 創建代付
     /// </summary>
-    public const string CreatePayout = "/transfer";
+    public const string CreatePayout = "/api/transfer";
 }
 
 
