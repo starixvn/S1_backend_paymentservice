@@ -26,7 +26,7 @@ public class PayHelper : PayHelperBase
 
     public override DepositResult Debit(Dictionary<string, string> input)
     {
-        var apiHost = input["Host"];
+        var apiHost = input["DepositHost"];
         var key = input["Key"];
 
         try
@@ -107,7 +107,7 @@ public class PayHelper : PayHelperBase
 
     public override WithdrawResult Credit(Dictionary<string, string> input)
     {
-        var apiHost = input["Host"];
+        var apiHost = input["PayoutHost"];
         var key = input["Key"];
         var transId = input["TransID"];
 
@@ -128,7 +128,7 @@ public class PayHelper : PayHelperBase
                 {"accountNo", input["AccountNo"]},
                 {"province", "province"},
                 {"city", "city"},
-                {"param2", "param2"}
+                {"param2", input["PayKey"]}
             };
 
             req.Add("sign", GetSign(req, key));
