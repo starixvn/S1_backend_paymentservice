@@ -13,6 +13,7 @@ namespace Payment.HeroPay;
 
 public class PayHelper : PayHelperBase
 {
+    private const decimal AmountFix = 100;
     private readonly IFlurlHttpHelper _httpHelper;
     private readonly ILogger<PayHelper> _logger;
     public PayHelper(IServiceProvider provider)
@@ -32,27 +33,29 @@ public class PayHelper : PayHelperBase
         {
             var req = new Dictionary<string, string>
             {
-                {"mchNo", input["MerchantNo"]},
-                {"mchMemberNo", input["UserName"]},
+                {"mchId", input["MerchantId"]},
+                {"appId", input["AppId"]},
+                {"productId", input["PayCode"]},
                 {"mchOrderNo", input["TransID"]},
-                {"paymentMethod", input["PayCode"]},
-                {"bankCode", input["BankCode"]},
-                {"amount", GetRequestAmount(input["Amount"])},
-                {"changePrice", "1"}, // 允許改變金額
+                {"currency", input["PayCurrency"]},
+                {"amount", GetRequestAmount(input["Amount"]).ToString("F0")},
+                {"clientIp", input["ClientIP"]},
                 {"notifyUrl", input["CallBackUrl"]},
-                {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()}
+                {"subject", "subject"},
+                {"body", "body"},
             };
 
             req.Add("sign", GetSign(req, key));
 
             var res = CreateOrder(apiHost, req);
+            var data = FromJson<CreateDeposit>(res.JsonData);
 
             return new DepositResult
             {
                 Success = true,
                 ErrorCode = "0",
-                Url = res.Url,
-                ThirdId = res.ThirdId
+                Url = data.Url,
+                ThirdId = res.DepositThirdId
             };
         }
         catch (CustomException ex)
@@ -66,10 +69,10 @@ public class PayHelper : PayHelperBase
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
         Dictionary<string, string> headers, Dictionary<string, string> input)
     {
-        var apiKey = input["Key"];
-        var req = FromJson<CallbackRequest>(bodyContent);
+        var key = input["Key"];
+        var req = FromJson<DepositCallbackRequest>(bodyContent);
 
-        if (!VerifySign(FromJson<Dictionary<string, string>>(bodyContent), apiKey, req.Sign))
+        if (!VerifySign(formData, key, req.Sign))
         {
             return new NotifyDepositResult
             {
@@ -85,8 +88,8 @@ public class PayHelper : PayHelperBase
             ThirdId = req.ThirdId,
             DepositId = req.TransId,
             Comment = bodyContent,
-            TransStatus = Definition.GetTransStatus(req.Status),
-            ActualAmount = decimal.Parse(req.Amount),
+            TransStatus = Definition.GetDepositTransStatus(req.Status),
+            ActualAmount = decimal.Parse(req.Amount) / AmountFix,
             Response = CallbackResponse.Success
         };
 
@@ -114,16 +117,18 @@ public class PayHelper : PayHelperBase
             {
                 {"mchId", input["MerchantId"]},
                 {"appId", input["AppId"]},
-                {"productId", input["PayCode"]},
-                {"mchOrderNo", transId},
+                {"mchTransOrderNo", transId},
                 {"currency", input["PayCurrency"]},
-                {"bankCode", input["BankCode"]},
-                {"customerName", input["AccountName"]},
-                {"accountNum", input["AccountNo"]},
-                {"extra", string.Empty},
-                {"amount", GetRequestAmount(input["Amount"])},
+                {"amount", GetRequestAmount(input["Amount"]).ToString("F0")},
                 {"notifyUrl", input["CallBackUrl"]},
-                {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()}
+                {"bankCode", input["BankCode"]},
+                {"bankName", input["BankName"]},
+                {"accountType", input["PayCode"]},
+                {"accountName", input["AccountName"]},
+                {"accountNo", input["AccountNo"]},
+                {"province", "province"},
+                {"city", "city"},
+                {"param2", "param2"}
             };
 
             req.Add("sign", GetSign(req, key));
@@ -134,7 +139,7 @@ public class PayHelper : PayHelperBase
             {
                 Success = true,
                 WithdrawId = transId,
-                RawContent = JsonConvert.SerializeObject(res)
+                RawContent = res.JsonData
             };
         }
         catch (CustomException ex)
@@ -153,10 +158,10 @@ public class PayHelper : PayHelperBase
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
         Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
-        var apiKey = payResource["Key"];
-        var req = FromJson<CallbackRequest>(bodyContent);
+        var key = payResource["Key"];
+        var req = FromJson<PayoutCallbackRequest>(bodyContent);
 
-        if (!VerifySign(FromJson<Dictionary<string, string>>(bodyContent), apiKey, req.Sign))
+        if (!VerifySign(formData, key, req.Sign))
         {
             return new NotifyWithdrawResult
             {
@@ -169,7 +174,7 @@ public class PayHelper : PayHelperBase
         var result = new NotifyWithdrawResult
         {
             ThirdId = req.ThirdId,
-            TransStatus = Definition.GetTransStatus(req.Status),
+            TransStatus = Definition.GetPayoutTransStatus(req.Status),
             Response = CallbackResponse.Success,
             WithdrawId = req.TransId
         };
@@ -192,15 +197,15 @@ public class PayHelper : PayHelperBase
     #region Private Methods
 
     
-    private static string GetRequestAmount(string strAmount)
-        => decimal.Parse(strAmount).ToString("F2");
+    private static decimal GetRequestAmount(string strAmount)
+        => decimal.Parse(strAmount) * AmountFix;
     
-    private CreateDeposit CreateOrder(string baseApiUrl, Dictionary<string, string> req)
+    private HeroPayResponse CreateOrder(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePay;
 
         var (result, statusCode) = _httpHelper
-            .PostUrlEncoded<Dictionary<string, string>, HeroPayResponse<CreateDeposit>>(apiUrl, req);
+            .PostUrlEncoded<Dictionary<string, string>, HeroPayResponse>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -211,14 +216,14 @@ public class PayHelper : PayHelperBase
         if (result.Code != Definition.SuccessCode)
             throw new CustomException($"HeroPay CreatOrder response error: {result.Code} {result.Message}");
 
-        return result.Data;
+        return result;
     }
 
-    private HeroPayResponse<string> Payout(string baseApiUrl, Dictionary<string, string> req)
+    private HeroPayResponse Payout(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePayout;
         var (result, statusCode) = _httpHelper
-            .PostUrlEncoded<Dictionary<string, string>, HeroPayResponse<string>>(apiUrl, req);
+            .PostUrlEncoded<Dictionary<string, string>, HeroPayResponse>(apiUrl, req);
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -228,7 +233,7 @@ public class PayHelper : PayHelperBase
 
         if (result.Code != Definition.SuccessCode)
             throw new CustomException(
-                $"HeroPay Payout response error: {result.Code} {result.Data}");
+                $"HeroPay Payout response error: {result.Code} {result.Message}");
 
         return result;
     }
