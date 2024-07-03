@@ -200,7 +200,10 @@ public class PayHelper : PayHelperBase
 
         var (result, statusCode) = _httpHelper
             .WithHeader("version", "1")
-            .PostJson<Dictionary<string, string>, KzPayResponse<CreateDeposit>>(apiUrl, req);
+            .PostJson<object, KzPayResponse<CreateDeposit>>(apiUrl, new
+            {
+                @params = ToJson(req)
+            });
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -219,7 +222,10 @@ public class PayHelper : PayHelperBase
         var apiUrl = baseApiUrl + Path.CreatePayout;
         var (result, statusCode) = _httpHelper
             .WithHeader("version", "1")
-            .PostJson<Dictionary<string, string>, KzPayResponse<string>>(apiUrl, req);
+            .PostJson<object, KzPayResponse<string>>(apiUrl, new
+            {
+                @params = ToJson(req)
+            });
 
         if (!statusCode.IsSuccessStatus())
         {
