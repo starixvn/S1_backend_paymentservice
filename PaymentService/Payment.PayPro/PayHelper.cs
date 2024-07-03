@@ -25,7 +25,6 @@ public class PayHelper :　PayHelperBase
     public override DepositResult Debit(Dictionary<string, string> inputs)
     {
         var apiUrl = inputs["Host"];
-        var merchantCode = inputs["MerchantCode"];
         var merchantId = inputs["MerchantID"];
         var merchantKey = inputs["MerchantKey"];
         var merchantPass1 = inputs["MerchantPass1"];

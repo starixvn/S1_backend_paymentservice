@@ -65,33 +65,33 @@ namespace Payment.PayPro
         [JsonProperty("referenceId")]
         public string MerchantId { get; set; } 
         [JsonProperty("status")]
-        public string TransactionId { get; set; }
+        public string Status { get; set; }
         [JsonProperty("statusDesc")]
-        public decimal Message { get; set; } 
+        public string StatusDesc { get; set; } 
         [JsonProperty("requestDate")]
-        public string MerchantId { get; set; } 
+        public string RequestDate { get; set; } 
         [JsonProperty("transactionType")]
-        public string TransactionId { get; set; }
+        public string TransactionType { get; set; }
         [JsonProperty("transactionTypeDesc")]
-        public decimal Message { get; set; } 
+        public decimal TransactionTypeDesc { get; set; } 
         [JsonProperty("currency")]
-        public string MerchantId { get; set; } 
+        public string Currency { get; set; } 
         [JsonProperty("amount")]
-        public string TransactionId { get; set; }
+        public decimal Amount { get; set; }
         [JsonProperty("transactionDate")]
-        public decimal Message { get; set; } 
+        public DateTime TransactionDate { get; set; } 
         [JsonProperty("remark")]
-        public string MerchantId { get; set; } 
+        public string Remark { get; set; } 
         [JsonProperty("designatedBank")]
         public DesignateBank DesignateBank { get; set; }
         [JsonProperty("transactionAmount")]
-        public decimal transactionAmount { get; set; } 
+        public decimal TransactionAmount { get; set; } 
         [JsonProperty("serviceFee")]
-        public decimal serviceFee { get; set; } 
+        public decimal ServiceFee { get; set; } 
         [JsonProperty("adjustment")]
-        public string adjustment { get; set; }
+        public Adjustment Adjustment { get; set; }
         [JsonProperty("refundedReason")]
-        public decimal refundedReason { get; set; } 
+        public decimal RefundedReason { get; set; } 
     }
 
     public class DesignateBank
@@ -102,7 +102,14 @@ namespace Payment.PayPro
 
     public class Adjustment
     {
-        public string 
+        [JsonProperty("refundedReason")]
+        public string RefundedReason { get; set; }
+        [JsonProperty("adjustedDate")]
+        public DateTime AdjustedDate { get; set; }
+        [JsonProperty("adjustedReason")]
+        public string AdjustedReason { get; set; }
+        [JsonProperty("serviceFeeBeforeAdjusted")]
+        public decimal ServiceFeeBeforeAdjusted { get; set; }
     }
 
     public class CreatePayoutResponse
