@@ -41,6 +41,7 @@
     <ProjectReference Include="..\Payment.FXBit\Payment.FXBit.csproj" />
     <ProjectReference Include="..\Payment.GlobalPay\Payment.GlobalPay.csproj" />
     <ProjectReference Include="..\Payment.Help2Pay\Payment.Help2Pay.csproj" />
+    <ProjectReference Include="..\Payment.HeroPay\Payment.HeroPay.csproj" />
     <ProjectReference Include="..\Payment.HonorPay\Payment.HonorPay.csproj" />
     <ProjectReference Include="..\Payment.KzPay\Payment.KzPay.csproj" />
     <ProjectReference Include="..\Payment.LionPay\Payment.LionPay.csproj" />
