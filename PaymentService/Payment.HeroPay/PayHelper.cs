@@ -69,7 +69,7 @@ public class PayHelper : PayHelperBase
         Dictionary<string, string> headers, Dictionary<string, string> input)
     {
         var key = input["Key"];
-        var req = FromJson<DepositCallbackRequest>(bodyContent);
+        var req = FromJson<DepositCallbackRequest>(ToJson(formData));
 
         if (!VerifySign(formData, key, req.Sign))
         {
@@ -158,7 +158,7 @@ public class PayHelper : PayHelperBase
         Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
         var key = payResource["Key"];
-        var req = FromJson<PayoutCallbackRequest>(bodyContent);
+        var req = FromJson<PayoutCallbackRequest>(ToJson(formData));
 
         if (!VerifySign(formData, key, req.Sign))
         {
