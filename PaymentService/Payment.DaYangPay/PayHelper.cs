@@ -219,7 +219,7 @@ namespace Payment.DaYangPay
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
             Dictionary<string, string> payResource)
         {
-            var transId = payResource["TransID"]; 
+            var transId = payResource["TransId"]; 
             var secretKey = payResource["SecretKey"];
             
             var req = FromJson<CallBackCreditRequest>(bodyContent);
