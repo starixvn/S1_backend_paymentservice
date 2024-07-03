@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace Payment.HeroPay;
 
-public class HeroPayResponse
+public class HeroPayResponse<T>
 {
     [JsonProperty("retCode")]
     public string Code { get; set; }
@@ -17,7 +17,7 @@ public class HeroPayResponse
     public string PayoutThirdId { get; set; }
 
     [JsonProperty("payParams")]
-    public string JsonData { get; set; }
+    public T Data { get; set; }
 }
 
 public class CreateDeposit
