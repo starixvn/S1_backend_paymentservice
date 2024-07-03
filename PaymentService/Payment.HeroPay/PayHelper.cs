@@ -48,7 +48,6 @@ public class PayHelper : PayHelperBase
             req.Add("sign", GetSign(req, key));
 
             var res = CreateOrder(apiHost, req);
-            var data = FromJson<CreateDeposit>(res.JsonData);
 
             return new DepositResult
             {
@@ -139,7 +138,7 @@ public class PayHelper : PayHelperBase
             {
                 Success = true,
                 WithdrawId = transId,
-                RawContent = res.JsonData
+                RawContent = res.Data
             };
         }
         catch (CustomException ex)
@@ -200,12 +199,12 @@ public class PayHelper : PayHelperBase
     private static decimal GetRequestAmount(string strAmount)
         => decimal.Parse(strAmount) * AmountFix;
     
-    private HeroPayResponse CreateOrder(string baseApiUrl, Dictionary<string, string> req)
+    private HeroPayResponse<CreateDeposit> CreateOrder(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePay;
 
         var (result, statusCode) = _httpHelper
-            .PostUrlEncoded<object, HeroPayResponse>(apiUrl, new
+            .PostUrlEncoded<object, HeroPayResponse<CreateDeposit>>(apiUrl, new
             {
                 @params = ToJson(req)
             });
@@ -222,11 +221,11 @@ public class PayHelper : PayHelperBase
         return result;
     }
 
-    private HeroPayResponse Payout(string baseApiUrl, Dictionary<string, string> req)
+    private HeroPayResponse<object> Payout(string baseApiUrl, Dictionary<string, string> req)
     {
         var apiUrl = baseApiUrl + Path.CreatePayout;
         var (result, statusCode) = _httpHelper
-            .PostUrlEncoded<object, HeroPayResponse>(apiUrl, new
+            .PostUrlEncoded<object, HeroPayResponse<object>>(apiUrl, new
             {
                 @params = ToJson(req)
             });
