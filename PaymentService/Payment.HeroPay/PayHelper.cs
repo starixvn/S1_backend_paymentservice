@@ -205,7 +205,10 @@ public class PayHelper : PayHelperBase
         var apiUrl = baseApiUrl + Path.CreatePay;
 
         var (result, statusCode) = _httpHelper
-            .PostUrlEncoded<Dictionary<string, string>, HeroPayResponse>(apiUrl, req);
+            .PostUrlEncoded<object, HeroPayResponse>(apiUrl, new
+            {
+                @params = ToJson(req)
+            });
 
         if (!statusCode.IsSuccessStatus())
         {
@@ -223,7 +226,10 @@ public class PayHelper : PayHelperBase
     {
         var apiUrl = baseApiUrl + Path.CreatePayout;
         var (result, statusCode) = _httpHelper
-            .PostUrlEncoded<Dictionary<string, string>, HeroPayResponse>(apiUrl, req);
+            .PostUrlEncoded<object, HeroPayResponse>(apiUrl, new
+            {
+                @params = ToJson(req)
+            });
 
         if (!statusCode.IsSuccessStatus())
         {
