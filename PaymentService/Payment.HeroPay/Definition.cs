@@ -10,6 +10,7 @@ public class Definition
             { "0", TransStatus.Pending },
             { "1", TransStatus.Pending },
             { "3", TransStatus.Success },
+            { "2", TransStatus.Success },
             { "5", TransStatus.Fail }
         };
     
