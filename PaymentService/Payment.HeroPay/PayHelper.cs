@@ -53,7 +53,7 @@ public class PayHelper : PayHelperBase
             {
                 Success = true,
                 ErrorCode = "0",
-                Url = data.Url,
+                Url = res.Data.Url,
                 ThirdId = res.DepositThirdId
             };
         }
@@ -138,7 +138,7 @@ public class PayHelper : PayHelperBase
             {
                 Success = true,
                 WithdrawId = transId,
-                RawContent = res.Data
+                RawContent = ToJson(res.Data)
             };
         }
         catch (CustomException ex)
