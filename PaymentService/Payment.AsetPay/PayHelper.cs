@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -25,16 +26,18 @@ public class PayHelper: PayHelperBase
     public override DepositResult Debit(Dictionary<string, string> input)
     {
         var baseApiUrl = input["Host"];
-        var key = input["Key"];
         var transId = input["TransID"];
+        var depositInfo = input["DepositInfo"];
     
         try
         {
+            var (method, payType) = SplitPayCode(input["PayCode"]);
+            var key = input[$"{method}Key"];
             var req = new Dictionary<string, string>
             {
-                { "scode", input["MerchantId"] },
+                { "scode", input[$"{method}MerchantId"] },
                 { "orderid", transId },
-                { "paytype", input["PayCode"] },
+                { "paytype", payType },
                 { "amount", GetRequestAmount(input["Amount"]) },
                 { "productname", "productname" },
                 { "currency", input["PayCurrencyId"] },
@@ -45,12 +48,15 @@ public class PayHelper: PayHelperBase
             
             req.Add("sign", GetSign(req, key));
     
+            depositInfo = depositInfo.AddOrSetJProperty("Method", method);
+            
             return new DepositResult
             {
                 Success = true,
                 ErrorCode = "0",
                 FormData = req,
-                Url = $"{baseApiUrl}{Path.Deposit}"
+                Url = $"{baseApiUrl}{Path.Deposit}",
+                DepositInfo = depositInfo
             };
         }
         catch (CustomException ex)
@@ -64,8 +70,25 @@ public class PayHelper: PayHelperBase
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
         Dictionary<string, string> headers, Dictionary<string, string> input)
     {
-        var key = input["Key"];
+        var depositInfo = input["DepositInfo"];
+        var transId = input["TransID"];
         var req = FromJson<DepositCallbackRequest>(bodyContent);
+        var jObj = JObject.Parse(depositInfo);
+
+        if (!jObj.TryGetValue("Method", StringComparison.OrdinalIgnoreCase, out var jMethod))
+        {
+            _logger.LogInformation($"{transId} DepositInfo has no PayCode information.");
+
+            return new NotifyDepositResult
+            {
+                DepositId = transId,
+                TransStatus = TransStatus.Pending,
+                Response = "Failed."
+            };
+        }
+        
+        var method = jMethod.ToObject<string>();
+        var key = input[$"{method}Key"];
         
         if (!VerifySign(FromJson<Dictionary<string, string>>(bodyContent), key, req.Sign))
         {
@@ -217,6 +240,13 @@ public class PayHelper: PayHelperBase
     {
         var sign = GetSign(param, apiKey);
         return sign.Equals(target);
+    }
+    
+    private static (string method, string payType) SplitPayCode(string payCode)
+    {
+        var result = payCode.Split('_');
+
+        return (result[0], result[1]);
     }
     
     #endregion
