@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Payment.AeePay\Payment.AeePay.csproj" />
+    <ProjectReference Include="..\Payment.AsetPay\Payment.AsetPay.csproj" />
     <ProjectReference Include="..\Payment.BetcatPay\Payment.BetcatPay.csproj" />
     <ProjectReference Include="..\Payment.BigPayz\Payment.BigPayz.csproj" />
     <ProjectReference Include="..\Payment.ChangChenPay\Payment.ChangChenPay.csproj" />
@@ -51,6 +52,7 @@
     <ProjectReference Include="..\Payment.MangoPay\Payment.MangoPay.csproj" />
     <ProjectReference Include="..\Payment.MegaPay\Payment.MegaPay.csproj" />
     <ProjectReference Include="..\Payment.NAP3SPay\Payment.NAP3SPay.csproj" />
+    <ProjectReference Include="..\Payment.OFAPay\Payment.OFAPay.csproj" />
     <ProjectReference Include="..\Payment.OnePay\Payment.OnePay.csproj" />
     <ProjectReference Include="..\Payment.PAPay\Payment.PAPay.csproj" />
     <ProjectReference Include="..\Payment.PapayaPay\Payment.PapayaPay.csproj" />
