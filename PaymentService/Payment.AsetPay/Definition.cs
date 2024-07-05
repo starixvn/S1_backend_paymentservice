@@ -35,7 +35,7 @@ internal class CallbackResponse
 
 internal class Path
 {
-    public const string Deposit = "/pay/paygate.aspx";
+    public const string Deposit = "/pay/order.aspx";
 
     public const string Withdrawal = "/betdf/df.aspx";
 }
