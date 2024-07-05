@@ -129,7 +129,7 @@ public class PayHelper: PayHelperBase
     public override WithdrawResult Credit(Dictionary<string, string> input)
     {
         var baseApiUrl = input["Host"];
-        var key = input["Key"];
+        var key = input["OB_Key"];
         var transId = input["TransID"];
     
         try
@@ -186,7 +186,7 @@ public class PayHelper: PayHelperBase
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
         Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
-        var key = payResource["Key"];
+        var key = payResource["OB_Key"];
         var req = FromJson<PayoutCallbackRequest>(bodyContent);
     
         if (!VerifySign(FromJson<Dictionary<string, string>>(bodyContent), key, req.Sign))
