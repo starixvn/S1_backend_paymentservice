@@ -39,7 +39,7 @@ public class PayHelper: PayHelperBase
                 { "productname", "productname" },
                 { "currency", input["PayCurrencyId"] },
                 { "userid", input["UserName"] },
-                { "accountName", input["AccountName"] },
+                { "accountname", input["AccountName"] },
                 { "noticeurl", input["CallBackUrl"] }
             };
             
