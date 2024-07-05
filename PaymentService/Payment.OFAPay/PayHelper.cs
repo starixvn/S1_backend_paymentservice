@@ -207,7 +207,7 @@ public class PayHelper: PayHelperBase
                 .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
 
         _logger.LogInformation(str);
-        var sign = ToMD5(str).ToUpper();
+        var sign = ToMD5(str);
         _logger.LogInformation(sign);
         
         return sign;
@@ -216,13 +216,8 @@ public class PayHelper: PayHelperBase
     private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)
     {
         var sign = GetSign(param, apiKey);
-        return sign.Equals(target);
+        return sign.Equals(target, StringComparison.OrdinalIgnoreCase);
     }
     
     #endregion
-
-    public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
-    {
-        throw new NotImplementedException();
-    }
 }
