@@ -239,7 +239,7 @@ public class PayHelper: PayHelperBase
     private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)
     {
         var sign = GetSign(param, apiKey);
-        return sign.Equals(target);
+        return sign.Equals(target, StringComparison.OrdinalIgnoreCase);
     }
     
     private static (string method, string payType) SplitPayCode(string payCode)
@@ -250,9 +250,4 @@ public class PayHelper: PayHelperBase
     }
     
     #endregion
-
-    public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
-    {
-        throw new NotImplementedException();
-    }
 }
