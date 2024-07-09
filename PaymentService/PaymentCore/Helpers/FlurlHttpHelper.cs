@@ -56,7 +56,7 @@ namespace PaymentCore.Helpers
             
             if (!JsonExtension.IsJson(str))
             {
-                throw new CustomException("Invalid JSON string, Cannot DeserializeObject.");
+                throw new CustomException($"Invalid JSON string={str}, Cannot DeserializeObject.");
             }
             
             var result = JsonExtension.DeserializeObject<TResult>(str);
@@ -93,7 +93,7 @@ namespace PaymentCore.Helpers
             
             if (!JsonExtension.IsJson(json))
             {
-                throw new CustomException("Invalid JSON string, Cannot DeserializeObject.");
+                throw new CustomException($"Invalid JSON string={json}, Cannot DeserializeObject.");
             }
             
             var result = JsonExtension.DeserializeObject<TResult>(json);
@@ -118,7 +118,7 @@ namespace PaymentCore.Helpers
             
             if (!JsonExtension.IsJson(str))
             {
-                throw new CustomException("Invalid JSON string, Cannot DeserializeObject.");
+                throw new CustomException($"Invalid JSON string={str}, Cannot DeserializeObject.");
             }
             
             var result = JsonExtension.DeserializeObject<TResult>(str);
@@ -218,14 +218,13 @@ namespace PaymentCore.Helpers
 
                 var result = await response.ResponseMessage.Content.ReadAsStringAsync();
 
-                _logger.LogInformation(result);
+                _logger.LogInformation("PostDataResponse: " + result);
 
                 return (result, response.ResponseMessage.StatusCode);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "PostDataAsync Exception"
-                    );
+                _logger.LogError(ex, "PostDataAsync Exception");
                 throw;
             }
             finally
