@@ -52,7 +52,7 @@ public class PayHelper : PayHelperBase
             {
                 MerchantCode = merchantCode,
                 Data = AesEncrypt(jsonData, aesKey),
-                Signature = RsaSign(jsonData, privateKey, HashAlgorithmName.SHA1),
+                Signature = RsaSignPkcs8PrivateKey(jsonData, privateKey, HashAlgorithmName.SHA1),
                 Version = 0
             };
 
@@ -141,7 +141,7 @@ public class PayHelper : PayHelperBase
                 { "DestinationClientAccountNumber", input["AccountNo"] },
                 { "DestinationClientAccountHolderName", input["AccountName"] },
                 { "NotifyUrl", input["CallBackUrl"] },
-                { "ReturnUrl", input["ReturnUrl"] },
+                { "ReturnUrl", input["CallBackUrl"] },
                 { "IPAddress", input["ClientIP"] },
                 { "PaymentMethodCode", input["PayCode"] }
             };
@@ -152,7 +152,7 @@ public class PayHelper : PayHelperBase
             {
                 MerchantCode = merchantCode,
                 Data = AesEncrypt(jsonData, aesKey),
-                Signature = RsaSign(jsonData, privateKey, HashAlgorithmName.SHA1),
+                Signature = RsaSignPkcs8PrivateKey(jsonData, privateKey, HashAlgorithmName.SHA1),
                 Version = 0
             };
 
