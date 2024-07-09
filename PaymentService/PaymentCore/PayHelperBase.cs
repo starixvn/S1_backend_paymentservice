@@ -351,53 +351,13 @@ namespace PaymentCore
         protected string ToBase64Encode(string str)
         {
             var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(str);
-            return System.Convert.ToBase64String(plainTextBytes);
+            return Convert.ToBase64String(plainTextBytes);
         }
 
         protected string ToBase64Decode(string str)
         {
             var base64EncodedBytes = System.Convert.FromBase64String(str);
-            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
-        }
-
-        protected static string RSAPrivateKeyJava2DotNet(string privateKey)
-        {
-            var privateKeyParam = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
-            return DotNetUtilities.ToRSA(privateKeyParam).ToXmlString(true);
-        }
-
-        protected string RSAEncryptWithPrivateKey(string privateKey, string content)
-        {
-            //加载私钥
-            var privateRsa = new RSACryptoServiceProvider();
-            privateRsa.FromXmlString(privateKey);
-
-            //转换密钥
-            var keyPair = DotNetUtilities.GetKeyPair(privateRsa);
-            var c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding"); //使用RSA/ECB/PKCS1Padding格式
-
-            //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
-            c.Init(true, keyPair.Private);
-            var DataToEncrypt = Encoding.UTF8.GetBytes(content);
-            var outBytes = c.DoFinal(DataToEncrypt);//加密
-            return Convert.ToBase64String(outBytes);
-        }
-
-        protected string RSADecryptWithPrivateKey(string privateKey, string content)
-        {
-            //加载私钥
-            var privateRsa = new RSACryptoServiceProvider();
-            privateRsa.FromXmlString(privateKey);
-
-            //转换密钥
-            var keyPair = DotNetUtilities.GetKeyPair(privateRsa);
-            var c = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding"); //使用RSA/ECB/PKCS1Padding格式
-
-            //第一个参数为true表示加密，为false表示解密；第二个参数表示密钥
-            c.Init(false, keyPair.Private);
-            var DataToEncrypt = Convert.FromBase64String(content);
-            var outBytes = c.DoFinal(DataToEncrypt);//加密
-            return Encoding.UTF8.GetString(outBytes);
+            return Encoding.UTF8.GetString(base64EncodedBytes);
         }
 
         #region rsa
@@ -417,16 +377,14 @@ namespace PaymentCore
             }
 
             var privateKeyBytes = Convert.FromBase64String(privateKey);
-            using (RSA rsa = RSA.Create())
-            {
-                rsa.ImportRSAPrivateKey(privateKeyBytes, out _);
+            using var rsa = RSA.Create();
+            rsa.ImportRSAPrivateKey(privateKeyBytes, out _);
 
-                var data = Encoding.UTF8.GetBytes(content);
+            var data = Encoding.UTF8.GetBytes(content);
 
-                var signatureBytes = rsa.SignData(data, (HashAlgorithmName)name, RSASignaturePadding.Pkcs1);
+            var signatureBytes = rsa.SignData(data, (HashAlgorithmName)name, RSASignaturePadding.Pkcs1);
 
-                return Convert.ToBase64String(signatureBytes);
-            }
+            return Convert.ToBase64String(signatureBytes);
         }
 
         /// <summary>
@@ -538,7 +496,7 @@ namespace PaymentCore
             return returnStr;
         }
 
-        protected static RSA CreateRsaProviderFromPublicKey(string publicKeyString)
+        private static RSA CreateRsaProviderFromPublicKey(string publicKeyString)
         {
             // encoded OID sequence for  PKCS #1 rsaEncryption szOID_RSA_RSA = "1.2.840.113549.1.1.1"
             byte[] seqOid = { 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01, 0x05, 0x00 };
@@ -843,26 +801,62 @@ namespace PaymentCore
 
         protected static string AesEncrypt(string str, string secretKey)
         {
-            var key = Encoding.ASCII.GetBytes(secretKey);
-            var bytes = Encoding.UTF8.GetBytes(str);
-
             using var aes = Aes.Create();
-            var ict = aes.CreateEncryptor(key, key);
-            var result = ict.TransformFinalBlock(bytes, 0, bytes.Length);
-
-            return Convert.ToBase64String(result);
+            aes.Key = new Rfc2898DeriveBytes(secretKey, Encoding.UTF8.GetBytes(secretKey)).GetBytes(256 / 8);
+            aes.Mode = CipherMode.CBC;
+            aes.Padding = PaddingMode.PKCS7;
+            
+            
+            var input = Encoding.UTF8.GetBytes(str);
+            aes.GenerateIV();
+            var iv = aes.IV;
+            using var encryptor = aes.CreateEncryptor(aes.Key, iv);
+            using var cipherStream = new MemoryStream();
+            using (var tCryptoStream = new CryptoStream(cipherStream, encryptor, CryptoStreamMode.Write))
+            using (var tBinaryWriter = new BinaryWriter(tCryptoStream))
+            {
+                cipherStream.Write(iv); 
+                tBinaryWriter.Write(input);
+                tCryptoStream.FlushFinalBlock();
+            }
+            return Convert.ToBase64String(cipherStream.ToArray());
         }
 
         protected static string AesDecrypt(string str, string secretKey)
         {
-            var key = Encoding.ASCII.GetBytes(secretKey);
-            var bytes = Convert.FromBase64String(str);
-
             using var aes = Aes.Create();
-            var cryptoTransform = aes.CreateDecryptor(key, key);
-            var result = cryptoTransform.TransformFinalBlock(bytes, 0, bytes.Length);
-
-            return Encoding.UTF8.GetString(result);
+            aes.Key = new Rfc2898DeriveBytes(secretKey, Encoding.UTF8.GetBytes(secretKey)).GetBytes(256 / 8);
+            aes.Mode = CipherMode.CBC;
+            aes.Padding = PaddingMode.PKCS7;
+            
+            var cipherTextBytes = Convert.FromBase64String(str);
+            var iv = new byte[16];
+            Array.Copy(cipherTextBytes, 0, iv, 0, iv.Length);
+            
+            using var ms = new MemoryStream();
+            using (var cs = new CryptoStream(ms, aes.CreateDecryptor(aes.Key, iv), CryptoStreamMode.Write))
+            using (var binaryWriter = new BinaryWriter(cs))
+            {
+                binaryWriter.Write(
+                    cipherTextBytes,
+                    iv.Length,
+                    cipherTextBytes.Length - iv.Length
+                );
+            }
+            
+            return Encoding.UTF8.GetString(ms.ToArray());
+        }
+        
+        public static string RsaSignPkcs8PrivateKey(string str, string privateKey, HashAlgorithmName hashAlgorithm)
+        {
+            using var rsa = RSA.Create();
+            var privateKeyBytes = Convert.FromBase64String(privateKey);
+            rsa.ImportPkcs8PrivateKey(privateKeyBytes, out _);
+            
+            var data = Encoding.UTF8.GetBytes(str);
+            var signatureBytes = rsa.SignData(data, hashAlgorithm, RSASignaturePadding.Pkcs1);
+            
+            return Convert.ToBase64String(signatureBytes);
         }
     }
 }
