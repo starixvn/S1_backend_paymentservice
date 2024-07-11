@@ -151,7 +151,7 @@ namespace Payment.VNPay
                 { "bank_number", inputs["AccountNo"] },
             };
 
-            var sign = $"{req["merchant_no"]}|{req["TransID"]}|{req["amount"]}|{req["channel"]}|{inputs["key"]}";
+            var sign = $"{req["merchant_no"]}|{req["order_no"]}|{req["amount"]}|{req["channel"]}|{inputs["key"]}";
             req.Add("sign", ToMD5(sign).ToLower());
 
             var (response, statusCode) = _httpHelper
