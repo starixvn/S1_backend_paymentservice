@@ -45,14 +45,8 @@ public class PayHelper: PayHelperBase
             var (result, statusCode) = _httpHelper
                 .PostJson<Dictionary<string, string>, Response<CreateDeposit>>(baseApiUrl + Path.Deposit, req);
 
-            if (!statusCode.IsSuccessStatus())
-            {
-                throw new CustomException(
-                    $"PPPay CreatOrder failed, HttpStatus: {(int)statusCode} {statusCode}");
-            }
-
             if (result.Code != Definition.SuccessCode)
-                throw new CustomException($"PPPay CreatOrder response error: {result.Code}");
+                throw new CustomException($"PPPay CreatOrder failed: code={result.Code}, message={result.Message}");
 
     
             return new DepositResult
@@ -139,13 +133,8 @@ public class PayHelper: PayHelperBase
             var (response, statusCode) = _httpHelper
                 .PostJson<Dictionary<string, string>, Response<CreateWithdrawal>>($"{baseApiUrl}{Path.Withdrawal}", req);
     
-            if (!statusCode.IsSuccessStatus())
-            {
-                throw new CustomException($"PPPay CreatPayout Failed, HttpStatus: {(int)statusCode} {statusCode}");
-            }
-            
             if (response.Code != Definition.SuccessCode)
-                throw new CustomException($"PPPay CreatOrder response error, Code={response.Code}");
+                throw new CustomException($"PPPay CreatPayout failed, code={response.Code}, message={response.Message}");
             
             return new WithdrawResult
             {
