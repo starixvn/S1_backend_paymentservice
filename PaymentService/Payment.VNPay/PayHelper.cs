@@ -1,15 +1,83 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 using PaymentCore;
+using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
+using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
 namespace Payment.VNPay
 {
     public class PayHelper : PayHelperBase
     {
+        private readonly IFlurlHttpHelper _httpHelper;
+        private readonly ILogger<PayHelper> _logger;
+
+        public PayHelper(IServiceProvider provider)
+        {
+            _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+            _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
+        }
+        public class PayoutCallbackRequest
+        {
+            public string merchant_no { get; set; }
+            public string order_no { get; set; }
+            public string amount { get; set; }
+            public string ylt_order_no { get; set; }
+            public int status { get; set; }
+            public string sign { get; set; }
+
+        }
+
+        public enum CallBackStatus
+        {
+            success = 1,
+            fail = 2,
+            exception =3,
+            insufficientBalance = 4,
+            reject = 5
+        }
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            var key = payResource["OBKey"];
+            var req = FromJson<PayoutCallbackRequest>(bodyContent);
+            var sign = $"{req.merchant_no}|{req.order_no}|{req.ylt_order_no}|{req.amount}|{key}";
+
+            if (req.sign != ToMD5(sign).ToLower())
+            {
+                return new NotifyWithdrawResult
+                {
+                    TransStatus = TransStatus.Pending,
+                    WithdrawId = req.order_no,
+                    Message = "Signature verification failed.",
+                    Response = "fail"
+                };
+            }
+
+            var status = req.status;
+            if (status != (int)CallBackStatus.success)
+            {
+                return new NotifyWithdrawResult
+                {
+                    TransStatus = TransStatus.Fail,
+                    WithdrawId = req.order_no,
+                    Message = ((CallBackStatus)status).ToString(),
+                    Response = "fail"
+                };
+            }
+            else
+            {
+                return new NotifyWithdrawResult
+                {
+                    ThirdId = req.ylt_order_no,
+                    TransStatus = TransStatus.Success,
+                    Message = ((CallBackStatus)status).ToString(),
+                    Response = "success",
+                    WithdrawId = req.order_no
+                };
+            }
         }
 
         public class CallBackDebitReq
@@ -24,7 +92,12 @@ namespace Payment.VNPay
             public string sign { set; get; }
             public string user_amount { set; get; }
         }
-
+        public class WithdrawResponse
+        {
+            public string message { get; set; }
+            public string status { get; set; }
+            public string info { get; set; }
+        }
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackDebitReq>(ToJson(formData));
@@ -65,7 +138,41 @@ namespace Payment.VNPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var sUrl = inputs["Withdrawhost"];
+            var amount = decimal.Parse(inputs["Amount"]);
+            var req = new Dictionary<string, string>
+            {
+                { "merchant_no", inputs["merchant_no"] },
+                { "order_no", inputs["TransID"] },
+                { "amount", amount.ToString() },
+                { "channel", "bank" },
+                { "notify_url", inputs["CallBackUrl"] },
+                { "bank_code", inputs["BankCode"] },
+                { "bank_number", inputs["AccountNo"] },
+            };
+
+            var sign = $"{req["merchant_no"]}|{req["order_no"]}|{req["amount"]}|{req["channel"]}|{inputs["key"]}";
+            req.Add("sign", ToMD5(sign).ToLower());
+
+            var (response, statusCode) = _httpHelper
+                .PostJson<Dictionary<string, string>, WithdrawResponse>($"{sUrl}/api/v2/payOut", req);
+
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException($"HttpStatus: {(int)statusCode}", response.message);
+            }
+
+            if (response.message != "success")
+                throw new CustomException(
+                    $"VNPay CreatOrder response error: status={response.status}, info={response.info}, msg={response.message}");
+
+            return new WithdrawResult
+            {
+                Success = true,
+                WithdrawId = inputs["TransID"],
+                Message = response.message,
+                RawContent = JsonConvert.SerializeObject(response)
+            };
         }
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
