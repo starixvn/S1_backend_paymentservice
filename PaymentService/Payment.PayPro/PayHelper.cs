@@ -123,6 +123,9 @@ public class PayHelper :　PayHelperBase
         var decryptDebitDate = AESDecryptContent(req.Message, merchantKey, merchantIVKey);
         var decryptDebitResult = FromJson<CallBackDebitData>(decryptDebitDate);
         
+        
+        _logger.LogInformation($"PayPro - decryptDebitResult={JsonConvert.SerializeObject(decryptDebitResult)}.");
+        
         var transStatus = PayProDefinition.GetPayInTransStatus(decryptDebitResult.Status);
 
         var response = new
@@ -224,8 +227,6 @@ public class PayHelper :　PayHelperBase
                 Message = ex.Message
             };
         }
-
-        throw new NotImplementedException();
     }
     
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
@@ -242,6 +243,8 @@ public class PayHelper :　PayHelperBase
         var decryptCreditDate = AESDecryptContent(req.Message, merchantKey, merchantIVKey);
         var decryptCreditResult = FromJson<CallBackCreditData>(decryptCreditDate);
         
+        _logger.LogInformation($"PayPro - decryptDebitResult={JsonConvert.SerializeObject(decryptCreditResult)}.");
+        
         var transStatus = PayProDefinition.GetPayOutTransStatus(decryptCreditResult.Status);
 
         var response = new
@@ -249,8 +252,6 @@ public class PayHelper :　PayHelperBase
             status = PayProDefinition.CallbackResponse,
             message = ""
         };
-        
-        
         
         var result = new NotifyWithdrawResult
         {
