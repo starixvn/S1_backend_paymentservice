@@ -45,7 +45,7 @@ public class PayHelper: PayHelperBase
         };
         
         var key = Encrypt(ToQueryStr(req), apiKey, secretKey);
-        var apiUrl = $"{apiHost}/{merchantCode}/{Path.Deposit}?key={key}";
+        var apiUrl = $"{apiHost}/{merchantCode}{Path.Deposit}?key={key}";
         
         return new DepositResult
         {
