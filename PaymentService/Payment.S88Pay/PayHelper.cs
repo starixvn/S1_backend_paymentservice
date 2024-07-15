@@ -28,6 +28,7 @@ public class PayHelper: PayHelperBase
         var apiKey = input["ApiKey"];
         var transId = input["TransID"];
         var merchantCode = input["MerchantCode"];
+        var (paymentCode, bankCode) = GetPayCode(input["PayCode"]);
     
         var req = new Dictionary<string, string>
         {
@@ -35,11 +36,11 @@ public class PayHelper: PayHelperBase
             { "merchant_api_key", apiKey },
             { "transaction_code", transId },
             { "transaction_timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
-            { "payment_code", input["PayCode"] },
+            { "payment_code", paymentCode },
             { "transaction_amount", input["Amount"]},
             { "user_id", input["UserName"] },
             { "currency_code", input["PayCurrencyId"] },
-            { "bank_code", input["BankCode"] },
+            { "bank_code", string.IsNullOrEmpty(paymentCode) ? input["BankCode"] : bankCode },
             { "callback_url", input["CallBackUrl"] }
         };
         
@@ -201,6 +202,13 @@ public class PayHelper: PayHelperBase
     
     private string Decrypt(string str, string apikey, string secretKey)
         => AesDecrypt(str, ToSHA256(apikey), ToSHA256(secretKey)[..16]);
+
+    private static (string paymentCode, string bankCode) GetPayCode(string payCode)
+    {
+        var splitPayCode = payCode.Split('-');
+
+        return (splitPayCode[0], splitPayCode[1]);
+    }
     
     #endregion
 }
