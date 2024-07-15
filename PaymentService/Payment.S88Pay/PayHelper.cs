@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Security.Cryptography;
+using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PaymentCore;
 using PaymentCore.Exceptions;
@@ -43,7 +45,7 @@ public class PayHelper: PayHelperBase
             { "bank_code", string.IsNullOrEmpty(paymentCode) ? input["BankCode"] : bankCode },
             { "callback_url", input["CallBackUrl"] }
         };
-        
+
         var key = Encrypt(ToQueryStr(req), apiKey, secretKey);
         var apiUrl = $"{apiHost}/{merchantCode}{Path.Deposit}?key={key}";
         
@@ -196,12 +198,64 @@ public class PayHelper: PayHelperBase
             .Select(item => item.Split('='))
             .ToDictionary(s => s[0], s => s[1]);
 
-    private string Encrypt(string str, string apikey, string secretKey)
-        => AesEncrypt(str, ToSHA256(apikey), ToSHA256(secretKey)[..16]);
+    private static (byte[] key, byte[] iv) GetKeys(string apikey, string secretKey)
+    {
+        using var sha256 = SHA256.Create();
+        var iv = HashSha256(secretKey)[..16];
     
+        return (sha256.ComputeHash(Encoding.ASCII.GetBytes(apikey)), Encoding.ASCII.GetBytes(iv));
+        
+        string HashSha256(string payload)
+        {
+            var sourceBytes = Encoding.UTF8.GetBytes(payload);
+            var hashBytes = sha256.ComputeHash(sourceBytes);
     
-    private string Decrypt(string str, string apikey, string secretKey)
-        => AesDecrypt(str, ToSHA256(apikey), ToSHA256(secretKey)[..16]);
+            return BitConverter.ToString(hashBytes)
+                .Replace("-", string.Empty).ToLower();
+        }
+    }
+
+    private static string Encrypt(string str, string apikey, string secretKey)
+    {
+        var (key, iv) = GetKeys(apikey, secretKey);
+        using var aes = Aes.Create();
+        aes.Mode = CipherMode.CBC;
+        aes.Key = key;
+        aes.IV = iv;
+        
+        using var encryptor = aes.CreateEncryptor();
+        using var memoryStream = new MemoryStream();
+        using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode . Write);
+        var plainBytes = Encoding.ASCII.GetBytes(str);
+        
+        cryptoStream.Write(plainBytes, 0, plainBytes . Length);
+        cryptoStream.FlushFinalBlock();
+
+        var cipherBytes = memoryStream.ToArray();
+        var cipherText = Convert.ToBase64String(cipherBytes);
+        
+        return Uri.EscapeDataString(cipherText);
+    }
+    
+    public static string Decrypt(string str, string apikey, string secretKey)
+    {
+        var (key, iv) = GetKeys(apikey, secretKey);
+        using var aes = Aes.Create();
+        aes.Mode = CipherMode.CBC;
+        aes.Key = key;
+        aes.IV = iv;
+        
+        using var encryptor = aes.CreateEncryptor();
+        using var memoryStream = new MemoryStream();
+        using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode . Write);
+        
+        var cipherBytes = Convert.FromBase64String(Uri.UnescapeDataString(str));
+        cryptoStream.Write(cipherBytes, 0, cipherBytes . Length);
+        cryptoStream.FlushFinalBlock();
+        var plainBytes = memoryStream.ToArray();
+            
+        return Encoding.ASCII.GetString(plainBytes, 0, plainBytes.Length);
+    }
 
     private static (string paymentCode, string bankCode) GetPayCode(string payCode)
     {
