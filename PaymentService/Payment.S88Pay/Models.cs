@@ -4,23 +4,14 @@ namespace Payment.S88Pay;
 
 public class CallbackRequest
 {
-    [JsonProperty("orderStatus")]
-    public int Status { get; set; }
+    [JsonProperty("key")]
+    public string EncryptData { get; set; }
     
-    [JsonProperty("orderNo")]
+    [JsonProperty("transaction_no")]
     public string ThirdId { get; set; }
     
-    [JsonProperty("merOrderNo")]
+    [JsonProperty("transaction_code")]
     public string TransId { get; set; }
-    
-    [JsonProperty("amount")]
-    public decimal Amount { get; set; }
-    
-    [JsonProperty("message")]
-    public string Message { get; set; }
-    
-    [JsonProperty("sign")]
-    public string Sign { get; set; }
 }
 
 public class WithdrawalResponse
