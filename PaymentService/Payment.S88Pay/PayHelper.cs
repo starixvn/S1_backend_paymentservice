@@ -42,7 +42,7 @@ public class PayHelper: PayHelperBase
             { "transaction_amount", input["Amount"]},
             { "user_id", input["UserName"] },
             { "currency_code", input["PayCurrencyId"] },
-            { "bank_code", string.IsNullOrEmpty(paymentCode) ? input["BankCode"] : bankCode },
+            { "bank_code", string.IsNullOrEmpty(bankCode) ? input["BankCode"] : bankCode },
             { "callback_url", input["CallBackUrl"] }
         };
 
