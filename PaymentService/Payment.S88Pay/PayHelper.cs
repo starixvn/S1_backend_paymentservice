@@ -108,20 +108,22 @@ public class PayHelper: PayHelperBase
             var req = new Dictionary<string, string>
             {
                 { "merchant_code", merchantCode },
-                { "merchant_api_key", apiKey },
                 { "transaction_code", transId },
                 { "transaction_timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
-                { "payment_code", input["PayCode"] },
+                { "payout_code", input["PayCode"] },
                 { "transaction_amount", input["Amount"]},
                 { "user_id", input["UserName"] },
                 { "currency_code", input["PayCurrencyId"] },
+                { "bank_account_number", input["AccountNo"] },
                 { "bank_code", input["BankCode"] },
+                { "bank_name", input["BankName"] },
+                { "account_name", input["AccountName"] },
                 { "callback_url", input["CallBackUrl"] }
             };
     
             var (response, statusCode) = _httpHelper
                 .PostJson<object, WithdrawalResponse>($"{apiHost}{Path.Withdrawal}/{merchantCode}",
-                    new { key = Encrypt(ToQueryStr(req), apiKey, secretKey) });
+                    new { key = Encrypt(ToJson(req), apiKey, secretKey) });
     
             if (!statusCode.IsSuccessStatus())
             {
@@ -159,7 +161,7 @@ public class PayHelper: PayHelperBase
         var apiKey = payResource["ApiKey"];
         var req = FromJson<CallbackRequest>(bodyContent);
         var decryptStr = Decrypt(req.EncryptData, apiKey, secretKey);
-        var reqDic = ParseQuery(decryptStr);
+        var reqDic = FromJson<Dictionary<string, string>>(decryptStr);
         
         _logger.LogInformation("decrypt data: " + ToJson(reqDic));
     

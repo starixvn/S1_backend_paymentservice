@@ -37,5 +37,5 @@ internal class Path
 {
     public const string Deposit = "/v2/dopayment";
 
-    public const string Withdrawal = "/api/v1/payou";
+    public const string Withdrawal = "/api/v1/payout";
 }
