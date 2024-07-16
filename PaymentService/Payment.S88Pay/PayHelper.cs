@@ -62,19 +62,19 @@ public class PayHelper: PayHelperBase
     {
         var secretKey = input["SecretKey"];
         var apiKey = input["ApiKey"];
-        var str = formData["key"];
-        var decryptStr = Decrypt(str, apiKey, secretKey);
-        var req = ParseQuery(decryptStr);
+        var req = FromJson<CallbackRequest>(bodyContent);
+        var decryptStr = Decrypt(req.EncryptData, apiKey, secretKey);
+        var reqDic = ParseQuery(decryptStr);
         
-        _logger.LogInformation(decryptStr);
+        _logger.LogInformation("decrypt data: " + ToJson(reqDic));
         
-        var transStatus = Definition.GetDepositTransStatus(req["transaction_status"]);
+        var transStatus = Definition.GetDepositTransStatus(reqDic["transaction_status"]);
     
         return new NotifyDepositResult
         {
-            DepositId = formData["transaction_code"],
-            ActualAmount = decimal.Parse(formData["transaction_actual_amount"]),
-            ThirdId = formData["transaction_amount"],
+            DepositId = req.TransId,
+            ActualAmount = decimal.Parse(reqDic["transaction_actual_amount"]),
+            ThirdId = req.ThirdId,
             Comment = decryptStr,
             TransStatus = transStatus,
             Response = CallbackResponse.Success
@@ -157,21 +157,21 @@ public class PayHelper: PayHelperBase
     {
         var secretKey = payResource["SecretKey"];
         var apiKey = payResource["ApiKey"];
-        var str = formData["key"];
-        var decryptStr = Decrypt(str, apiKey, secretKey);
-        var req = ParseQuery(decryptStr);
+        var req = FromJson<CallbackRequest>(bodyContent);
+        var decryptStr = Decrypt(req.EncryptData, apiKey, secretKey);
+        var reqDic = ParseQuery(decryptStr);
         
-        _logger.LogInformation(decryptStr);
+        _logger.LogInformation("decrypt data: " + ToJson(reqDic));
     
-        var transStatus = Definition.GetPayoutTransStatus(req["transaction_status"]);
+        var transStatus = Definition.GetPayoutTransStatus(reqDic["transaction_status"]);
 
         return new NotifyWithdrawResult
         {
-            ThirdId = req["transaction_no"],
+            ThirdId = req.ThirdId,
             TransStatus = transStatus,
             Message = decryptStr,
             Response = CallbackResponse.Success,
-            WithdrawId = req["transaction_code"]
+            WithdrawId = req.TransId
         };
     }
     
@@ -225,7 +225,7 @@ public class PayHelper: PayHelperBase
         
         using var encryptor = aes.CreateEncryptor();
         using var memoryStream = new MemoryStream();
-        using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode . Write);
+        using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
         var plainBytes = Encoding.ASCII.GetBytes(str);
         
         cryptoStream.Write(plainBytes, 0, plainBytes . Length);
@@ -237,23 +237,24 @@ public class PayHelper: PayHelperBase
         return Uri.EscapeDataString(cipherText);
     }
     
-    public static string Decrypt(string str, string apikey, string secretKey)
+    private static string Decrypt(string str, string apikey, string secretKey)
     {
         var (key, iv) = GetKeys(apikey, secretKey);
+
         using var aes = Aes.Create();
         aes.Mode = CipherMode.CBC;
         aes.Key = key;
         aes.IV = iv;
         
-        using var encryptor = aes.CreateEncryptor();
+        using var encryptor = aes.CreateDecryptor();
         using var memoryStream = new MemoryStream();
-        using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode . Write);
-        
+        using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
+    
         var cipherBytes = Convert.FromBase64String(Uri.UnescapeDataString(str));
         cryptoStream.Write(cipherBytes, 0, cipherBytes . Length);
         cryptoStream.FlushFinalBlock();
         var plainBytes = memoryStream.ToArray();
-            
+    
         return Encoding.ASCII.GetString(plainBytes, 0, plainBytes.Length);
     }
 
