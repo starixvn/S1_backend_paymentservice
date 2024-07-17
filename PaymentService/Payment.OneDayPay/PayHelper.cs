@@ -47,6 +47,7 @@ public class PayHelper : PayHelperBase
             };
 
             var jsonData = ToJson(data);
+            _logger.LogInformation(jsonData);
             
             var req = new OneDayPayRequest
             {
@@ -147,6 +148,7 @@ public class PayHelper : PayHelperBase
             };
 
             var jsonData = ToJson(data);
+            _logger.LogInformation(jsonData);
             
             var req = new OneDayPayRequest
             {
