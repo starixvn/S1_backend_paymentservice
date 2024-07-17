@@ -29,6 +29,7 @@ public class PayHelper : PayHelperBase
         var aesKey = input["AESKey"];
         var transId = input["TransID"];
         var merchantCode = input["MerchantCode"];
+        var payCode = input["PayCode"];
 
         try
         {
@@ -39,13 +40,17 @@ public class PayHelper : PayHelperBase
                 { "MerchantClientId", input["UserName"] },
                 { "CurrencyCode", input["PayCurrencyId"] },
                 { "Amount", GetRequestAmount(input["Amount"]) },
-                { "SourceClientBankCode", input["BankCode"] },
                 { "NotifyUrl", input["CallBackUrl"] },
                 { "ReturnUrl", input["ReturnUrl"] },
                 { "IPAddress", input["ClientIP"] },
-                { "PaymentMethodCode", input["PayCode"] }
+                { "PaymentMethodCode", payCode }
             };
 
+            if (payCode.Equals("BMR"))
+            {
+                data.Add("SourceClientBankCode", input["BankCode"]);
+            }
+            
             var jsonData = ToJson(data);
             _logger.LogInformation(jsonData);
             
