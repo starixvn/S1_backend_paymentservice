@@ -797,58 +797,7 @@ namespace PaymentCore
             InsertPaymentLog?.Invoke(url, input, output, transId);
         }
 
-        protected static string AesEncrypt(string str, string secretKey, string iv = null)
-        {
-            using var aes = Aes.Create();
-            aes.Key = new Rfc2898DeriveBytes(secretKey, Encoding.UTF8.GetBytes(secretKey)).GetBytes(256 / 8);
-            aes.Mode = CipherMode.CBC;
-            aes.Padding = PaddingMode.PKCS7;
-            
-            
-            var bytes = Encoding.UTF8.GetBytes(str);
-            byte[] bIv;
-
-            if (iv != null)
-            {
-                bIv = Encoding.ASCII.GetBytes(iv);
-            }
-            else
-            {
-                aes.GenerateIV();
-                bIv = aes.IV;
-            }
-            
-            using var encryptor = aes.CreateEncryptor(aes.Key, bIv);
-            var result = encryptor.TransformFinalBlock(bytes, 0, bytes.Length);
-
-        return Convert.ToBase64String(result);
-        }
-
-        protected static string AesDecrypt(string str, string secretKey, string iv = null)
-        {
-            using var aes = Aes.Create();
-            aes.Key = new Rfc2898DeriveBytes(secretKey, Encoding.UTF8.GetBytes(secretKey)).GetBytes(256 / 8);
-            aes.Mode = CipherMode.CBC;
-            aes.Padding = PaddingMode.PKCS7;
-            
-            var bytes = Convert.FromBase64String(str);
-            byte[] bIv;
-
-            if (iv != null)
-            {
-                bIv = Encoding.ASCII.GetBytes(iv);
-            }
-            else
-            {
-                aes.GenerateIV();
-                bIv = aes.IV;
-            }
-            
-            var cryptoTransform = aes.CreateDecryptor(aes.Key, bIv);
-            var result = cryptoTransform.TransformFinalBlock(bytes, 0, bytes.Length);
-
-            return Encoding.UTF8.GetString(result);
-        }
+        
         
         public static string RsaSignPkcs8PrivateKey(string str, string privateKey, HashAlgorithmName hashAlgorithm)
         {
