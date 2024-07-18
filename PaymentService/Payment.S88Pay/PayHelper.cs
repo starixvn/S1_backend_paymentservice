@@ -31,7 +31,9 @@ public class PayHelper: PayHelperBase
         var transId = input["TransID"];
         var merchantCode = input["MerchantCode"];
         var (paymentCode, bankCode) = GetPayCode(input["PayCode"]);
-    
+        
+        paymentCode = input["PayCodeFragment"] + paymentCode;
+        
         var req = new Dictionary<string, string>
         {
             { "merchant_code", merchantCode },
@@ -110,7 +112,7 @@ public class PayHelper: PayHelperBase
                 { "merchant_code", merchantCode },
                 { "transaction_code", transId },
                 { "transaction_timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() },
-                { "payout_code", input["PayCode"] },
+                { "payout_code", input["PayCodeFragment"] + input["PayCode"] },
                 { "transaction_amount", input["Amount"]},
                 { "user_id", input["UserName"] },
                 { "currency_code", input["PayCurrencyId"] },
