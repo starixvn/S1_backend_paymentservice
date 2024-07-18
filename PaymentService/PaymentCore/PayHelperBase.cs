@@ -799,53 +799,7 @@ namespace PaymentCore
             InsertPaymentLog?.Invoke(url, input, output, transId);
         }
 
-        protected static string AesEncrypt(string str, string secretKey)
-        {
-            using var aes = Aes.Create();
-            aes.Key = new Rfc2898DeriveBytes(secretKey, Encoding.UTF8.GetBytes(secretKey)).GetBytes(256 / 8);
-            aes.Mode = CipherMode.CBC;
-            aes.Padding = PaddingMode.PKCS7;
-            
-            
-            var input = Encoding.UTF8.GetBytes(str);
-            aes.GenerateIV();
-            var iv = aes.IV;
-            using var encryptor = aes.CreateEncryptor(aes.Key, iv);
-            using var cipherStream = new MemoryStream();
-            using (var tCryptoStream = new CryptoStream(cipherStream, encryptor, CryptoStreamMode.Write))
-            using (var tBinaryWriter = new BinaryWriter(tCryptoStream))
-            {
-                cipherStream.Write(iv); 
-                tBinaryWriter.Write(input);
-                tCryptoStream.FlushFinalBlock();
-            }
-            return Convert.ToBase64String(cipherStream.ToArray());
-        }
-
-        protected static string AesDecrypt(string str, string secretKey)
-        {
-            using var aes = Aes.Create();
-            aes.Key = new Rfc2898DeriveBytes(secretKey, Encoding.UTF8.GetBytes(secretKey)).GetBytes(256 / 8);
-            aes.Mode = CipherMode.CBC;
-            aes.Padding = PaddingMode.PKCS7;
-            
-            var cipherTextBytes = Convert.FromBase64String(str);
-            var iv = new byte[16];
-            Array.Copy(cipherTextBytes, 0, iv, 0, iv.Length);
-            
-            using var ms = new MemoryStream();
-            using (var cs = new CryptoStream(ms, aes.CreateDecryptor(aes.Key, iv), CryptoStreamMode.Write))
-            using (var binaryWriter = new BinaryWriter(cs))
-            {
-                binaryWriter.Write(
-                    cipherTextBytes,
-                    iv.Length,
-                    cipherTextBytes.Length - iv.Length
-                );
-            }
-            
-            return Encoding.UTF8.GetString(ms.ToArray());
-        }
+        
         
         public static string RsaSignPkcs8PrivateKey(string str, string privateKey, HashAlgorithmName hashAlgorithm)
         {
