@@ -1,4 +1,6 @@
-﻿using System.Web;
+﻿using System.Security.Cryptography;
+using System.Text;
+using System.Web;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -317,6 +319,46 @@ public class PayHelper : PayHelperBase
         if (transId.Contains("-"))
             return transId.Split("-")[1];
         return transId;
+    }
+    
+    private static string AesEncrypt(string str, string key)
+    {
+        byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
+        byte[] keyBytes = new byte[16];
+        byte[] secretKeyBytes = Encoding.UTF8.GetBytes(key);
+        Array.Copy(secretKeyBytes, keyBytes, Math.Min(keyBytes.Length, secretKeyBytes.Length));
+        RijndaelManaged rm = new RijndaelManaged
+        {
+            Mode = CipherMode.CBC,
+            Padding = PaddingMode.PKCS7,
+            KeySize = 128,
+            BlockSize = 128,
+            Key = keyBytes,
+            IV = keyBytes
+
+        };
+        byte[] resultArray = rm.CreateEncryptor().TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+        return Convert.ToHexString(resultArray, 0, resultArray.Length);
+    }
+
+    private static string AesDecrypt(string str, string secretKey)
+    {
+        byte[] toEncryptArray = Convert.FromHexString(str);
+        byte[] keyBytes = new byte[16];
+        byte[] secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
+        Array.Copy(secretKeyBytes, keyBytes, Math.Min(keyBytes.Length, secretKeyBytes.Length));
+        using RijndaelManaged rm = new RijndaelManaged
+        {
+            Mode = CipherMode.CBC,
+            Padding = PaddingMode.PKCS7,
+            KeySize = 128,
+            BlockSize = 128,
+            Key = keyBytes,
+            IV = keyBytes
+        };
+
+        byte[] resultArray = rm.CreateDecryptor().TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+        return Encoding.UTF8.GetString(resultArray);
     }
 
     #endregion

@@ -46,7 +46,7 @@ namespace Payment.FXBit
 
                 return new ExchangeResult(ErrorCode.Success, "Success", new CryptoExchangeInfo
                 {
-                    Rate = decimal.Parse(rate),
+                    Rate = decimal.Parse(GetExchangeRateString(rate)),
                     ExchangeAmount = decimal.Parse(exchangeAmount),
                     Timestamp = rateInfo.UpdatedTimestamp.ToUnixTimeSeconds()
                 });
