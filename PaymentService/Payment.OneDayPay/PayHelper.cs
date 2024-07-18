@@ -238,7 +238,7 @@ public class PayHelper : PayHelperBase
         }
 
         if (!result.IsSuccess)
-            throw new CustomException($"KzPay CreatOrder response error: {result.Code} {result.Message}");
+            throw new CustomException($"OneDayPay CreatOrder response error: {result.Code} {result.Message}");
 
         return result.Data;
     }

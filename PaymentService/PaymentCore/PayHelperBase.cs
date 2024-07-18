@@ -858,5 +858,50 @@ namespace PaymentCore
             
             return Convert.ToBase64String(signatureBytes);
         }
+        
+        protected string AESEncryptContent(string content, string key, string iv)
+        {
+            using AesManaged cipher = new AesManaged();
+            cipher.Mode = CipherMode.CBC;
+            cipher.Padding = PaddingMode.PKCS7;
+            cipher.KeySize = 128;
+            cipher.BlockSize = 128;
+            cipher.Key = Encoding.ASCII.GetBytes(key);
+            cipher.IV = Encoding.ASCII.GetBytes(iv);
+
+            ICryptoTransform encryptor = cipher.CreateEncryptor();
+
+            using MemoryStream msTemp = new MemoryStream();
+            using (CryptoStream csEncrypt = new CryptoStream(msTemp, cipher.CreateEncryptor(), CryptoStreamMode.Write))
+            using (StreamWriter sw = new StreamWriter(csEncrypt))
+            {
+                sw.Write(content);
+            }
+
+            byte[] encrypted = msTemp.ToArray();
+            return Convert.ToBase64String(encrypted);
+        }
+        
+        protected string AESDecryptContent(string encryptedMessage, string key, string iv)
+        {
+            byte[] messages = Convert.FromBase64String(encryptedMessage);
+
+            using (AesManaged cipher = new AesManaged())
+            {
+                cipher.Mode = CipherMode.CBC;
+                cipher.Padding = PaddingMode.PKCS7;
+                cipher.KeySize = 128;
+                cipher.BlockSize = 128;
+                cipher.Key = Encoding.ASCII.GetBytes(key);
+                cipher.IV = Encoding.ASCII.GetBytes(iv);
+
+                using (MemoryStream msTemp = new MemoryStream(messages))
+                using (CryptoStream csDecrypt = new CryptoStream(msTemp, cipher.CreateDecryptor(), CryptoStreamMode.Read))
+                using (StreamReader reader = new StreamReader(csDecrypt))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
     }
 }
