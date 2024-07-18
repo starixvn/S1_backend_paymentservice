@@ -200,11 +200,9 @@ namespace PaymentCore
             var encoding = new System.Text.UTF8Encoding();
             var keyByte = encoding.GetBytes(key);
             var messageBytes = encoding.GetBytes(encodeStr);
-            using (var hmacSHA256 = new HMACSHA256(keyByte))
-            {
-                var hashMessage = hmacSHA256.ComputeHash(messageBytes);
-                return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
-            }
+            using var hmacSHA256 = new HMACSHA256(keyByte);
+            var hashMessage = hmacSHA256.ComputeHash(messageBytes);
+            return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
         }
 
         protected string ToHMACSHA256(string encodeStr)

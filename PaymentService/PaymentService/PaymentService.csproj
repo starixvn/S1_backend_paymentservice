@@ -77,6 +77,7 @@
     <ProjectReference Include="..\Payment.WPPay\Payment.WPPay.csproj" />
     <ProjectReference Include="..\Payment.YPay\Payment.YPay.csproj" />
     <ProjectReference Include="..\Payment.YuiPay\Payment.YuiPay.csproj" />
+    <ProjectReference Include="..\Payment.S88Pay\Payment.S88Pay.csproj" />
     <ProjectReference Include="..\Payment.SBPay\Payment.SBPay.csproj" />
     <ProjectReference Include="..\Payment.SDSPay\Payment.SDSPay.csproj" />
     <ProjectReference Include="..\Payment.Super7Pay\Payment.Super7Pay.csproj" />

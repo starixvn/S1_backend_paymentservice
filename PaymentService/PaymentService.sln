@@ -141,6 +141,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.PPPay", "Payment.PP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.PayPro", "Payment.PayPro\Payment.PayPro.csproj", "{D2F5E303-28B1-449D-AD1D-FD6031D5477F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.S88Pay", "Payment.S88Pay\Payment.S88Pay.csproj", "{540E7554-9215-419C-9D82-0C9B94448CF4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -419,6 +421,10 @@ Global
 		{DC7F1B47-AF8B-4559-89B3-5C9A9EBD2DCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC7F1B47-AF8B-4559-89B3-5C9A9EBD2DCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC7F1B47-AF8B-4559-89B3-5C9A9EBD2DCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{540E7554-9215-419C-9D82-0C9B94448CF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{540E7554-9215-419C-9D82-0C9B94448CF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{540E7554-9215-419C-9D82-0C9B94448CF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{540E7554-9215-419C-9D82-0C9B94448CF4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -489,6 +495,7 @@ Global
 		{22AAF3AD-A03A-41A0-9429-B6784E08563D} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{B272F908-A103-47EC-9370-B07FF7117E07} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{DC7F1B47-AF8B-4559-89B3-5C9A9EBD2DCD} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{540E7554-9215-419C-9D82-0C9B94448CF4} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
