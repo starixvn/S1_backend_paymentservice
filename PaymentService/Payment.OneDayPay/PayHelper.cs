@@ -224,12 +224,6 @@ public class PayHelper : PayHelperBase
         var (result, statusCode) = _httpHelper
             .PostJson<OneDayPayRequest, Response<CreateDeposit>>(apiUrl, req);
 
-        if (!statusCode.IsSuccessStatus())
-        {
-            throw new CustomException(
-                $"OneDayPay CreatOrder failed, HttpStatus: {(int)statusCode} {statusCode}");
-        }
-
         if (!result.IsSuccess)
             throw new CustomException($"OneDayPay CreatOrder response error: {result.Code} {result.Message}");
 
@@ -241,12 +235,6 @@ public class PayHelper : PayHelperBase
         var apiUrl = baseApiUrl + Path.Withdrawal;
         var (result, statusCode) = _httpHelper
             .PostJson<OneDayPayRequest, Response<CreatePayout>>(apiUrl, req);
-
-        if (!statusCode.IsSuccessStatus())
-        {
-            throw new CustomException(
-                $"OneDayPay Payout failed, HttpStatus: {(int)statusCode} {statusCode}");
-        }
 
         if (!result.IsSuccess)
             throw new CustomException(

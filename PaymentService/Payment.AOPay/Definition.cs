@@ -32,14 +32,8 @@ public class Definition
 
 
     public static TransStatus GetTransStatus(string status)
-    {
-        if (TransStatusMap.TryGetValue(status, out var result))
-        {
-            return result;
-        }
-
-        return TransStatus.Pending;
-    }
+        => TransStatusMap.GetValueOrDefault(status, TransStatus.Pending);
+    
 
     private class PayoutStatus
     {

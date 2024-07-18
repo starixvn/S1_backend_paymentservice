@@ -101,7 +101,7 @@ namespace Payment.AOPay
             var payCode = jPayCode.ToObject<string>();
             var (method, _) = GetMethod(payCode);
             var apiToken = input[method];
-            var callbackToken = input[$"{method}_CallbackToken"];
+            var callbackToken = input[$"{method}CallbackToken"];
             var req = FromJson<CallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
             {
@@ -126,7 +126,7 @@ namespace Payment.AOPay
                 ThirdId = req.ThirdId,
                 DepositId = req.TransId,
                 Comment = req.State,
-                TransStatus = TransStatus.Success, // AOPay只回調成功的單
+                TransStatus = req.State.Equals("completed") ? TransStatus.Success : TransStatus.Pending,
                 ActualAmount = decimal.Parse(req.Amount),
                 Response = Definition.CallbackResponse
             };
@@ -147,7 +147,7 @@ namespace Payment.AOPay
         {
             var apiUrl = inputs["Host"];
             var apiToken = inputs["Card"];
-            var callbackToken = inputs["Card_CallbackToken"];
+            var callbackToken = inputs["CardCallbackToken"];
             var reqAmount = decimal.Parse(inputs["Amount"]);
             var strAmount = reqAmount.ToString("G29");
             var transId = inputs["TransID"];
