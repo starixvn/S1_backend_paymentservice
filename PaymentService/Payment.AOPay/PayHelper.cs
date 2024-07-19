@@ -47,7 +47,7 @@ namespace Payment.AOPay
 
                 if (method.Equals("Card"))
                 {
-                    req.Add("bank", input["BankCode"]);
+                    req.Add("bank_id", input["BankCode"]);
                 }
                 
                 if (method.Equals("QR"))
