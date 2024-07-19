@@ -45,7 +45,7 @@ namespace Payment.AOPay
                     {"out_trade_no", transId}
                 };
 
-                if (payCode.Equals("Card"))
+                if (method.Equals("Card"))
                 {
                     req.Add("bank", input["BankCode"]);
                 }
