@@ -29,10 +29,6 @@ namespace PaymentService.Service.Model
         public string BankName { get; set; }
         public int ChannelId { get; set; }
         public string ChannelName { get; set; }
-        public int GroupId { get; set; }
-        public string GroupName { get; set; }
-        public string DisplayChannelName { get; set; }
-        public string DisplayGroupName { get; set; }
         public int Mode { get; set; }
         public int PointLevel { get; set; }
         public string PayName { get; set; }
@@ -64,10 +60,8 @@ namespace PaymentService.Service.Model
         public string PayName { get; set; }
         public int GroupId { get; set; }
         public string GroupName { get; set; }
-        public string DisplayGroupName { get; set; }
         public int ChannelId { get; set; }
         public string ChannelName { get; set; }
-        public string DisplayChannelName { get; set; }
         public int Mode { get; set; }
         public DepositType DepositType { get; set; }
         public int ExtraDataType { get; set; }
