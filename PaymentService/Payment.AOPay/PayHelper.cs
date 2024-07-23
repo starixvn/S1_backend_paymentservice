@@ -197,7 +197,7 @@ namespace Payment.AOPay
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var apiToken = payResource["Card"];
-            var callbackToken = payResource["Card_CallbackToken"];
+            var callbackToken = payResource["CardCallbackToken"];
             var req = FromJson<CallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
             {
