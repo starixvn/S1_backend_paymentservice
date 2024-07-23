@@ -30,7 +30,7 @@ public class PayHelper : PayHelperBase
         var aesKey = input["AESKey"];
         var transId = input["TransID"];
         var merchantCode = input["MerchantCode"];
-        var payCode = input["PayCode"];
+        var (payCode, bankCode) = SplitPayCode(input["PayCode"]);
 
         try
         {
@@ -50,6 +50,11 @@ public class PayHelper : PayHelperBase
             if (payCode.Equals("BMR"))
             {
                 data.Add("SourceClientBankCode", input["BankCode"]);
+            }
+
+            if (payCode.Equals("BQR"))
+            {
+                data.Add("SourceClientBankCode", bankCode);
             }
             
             var jsonData = ToJson(data);
@@ -320,6 +325,13 @@ public class PayHelper : PayHelperBase
         }
         
         return Encoding.UTF8.GetString(ms.ToArray());
+    }
+
+    private static (string Method, string bankCode) SplitPayCode(string payCode)
+    {
+        var result = payCode.Split('-');
+
+        return (result[0], result.Length > 1 ? result[1] : string.Empty);
     }
     
     #endregion
