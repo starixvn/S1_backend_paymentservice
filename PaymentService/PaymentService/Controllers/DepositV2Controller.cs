@@ -384,7 +384,14 @@ public class DepositV2Controller : ControllerBase
                 case TransStatus.Success when depositRequest.Amount > 0:
                     _paymentBll.DepositSuccess(depositRequest, result);
                     var refreshDepositInfoData = _paymentBll.GetDepositRequest(transId);
-                    
+
+                    #region CustTaskTime
+                    if (refreshDepositInfoData.FirstDeposit == 1)
+                    {
+                        _ = _TaskSettingBll.Set(refreshDepositInfoData.CustId, TaskSetting.FirstDepositTime, refreshDepositInfoData.CreateTime);
+                    }
+                    #endregion
+
                     if (depositRequest.SiteId == 1 && refreshDepositInfoData.Status == DepositStatus.Approved)
                     {
                         _ = Task.Run(() =>
@@ -397,13 +404,6 @@ public class DepositV2Controller : ControllerBase
                             };
                             var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.CustId, depositRequest.CurrencyId, depositRequest.Amount, pixelEvent);
                             _ = _faceBookPixelBll.Send(pixelRequest);
-                            #endregion
-                            #region CustTaskTime
-
-                            if (refreshDepositInfoData.FirstDeposit == 1)
-                            {
-                                _ = _TaskSettingBll.Set(refreshDepositInfoData.CustId, TaskSetting.FirstDepositTime,refreshDepositInfoData.CreateTime);
-                            }
                             #endregion
                         });
                     }
