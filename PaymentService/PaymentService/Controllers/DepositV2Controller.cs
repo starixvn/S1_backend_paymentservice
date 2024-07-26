@@ -29,6 +29,7 @@ public class DepositV2Controller : ControllerBase
     private readonly ICacheHelper _redisHelper;
     private readonly string _callBackUrl;
     private readonly FaceBookPixelBLL _faceBookPixelBll;
+    private readonly TaskSettingBLL _TaskSettingBll;
 
     private readonly IDictionary<DepositType, Func<DepositInfoModel, Customer, (IPayInfo, Dictionary<string, string>)>>
         _getDepositInputMapper;
@@ -45,7 +46,7 @@ public class DepositV2Controller : ControllerBase
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
         _callBackUrl = configBll.GetConfigValue("CallBack");
         _faceBookPixelBll = provider.GetRequiredService<FaceBookPixelBLL>();
-
+        _TaskSettingBll = provider.GetRequiredService<TaskSettingBLL>();
         #region ActionMapper
 
         _getDepositInputMapper = new Dictionary<DepositType, Func<DepositInfoModel, Customer, (IPayInfo, Dictionary<string, string>)>>
@@ -381,11 +382,19 @@ public class DepositV2Controller : ControllerBase
                 case TransStatus.Success when depositRequest.Amount > 0:
                     _paymentBll.DepositSuccess(depositRequest, result);
                     var refreshDepositInfoData = _paymentBll.GetDepositRequest(transId);
-                    #region 埋點
+
+                    #region CustTaskTime
+                    if (refreshDepositInfoData.FirstDeposit == 1)
+                    {
+                        _ = _TaskSettingBll.Set(refreshDepositInfoData.CustId, TaskSetting.FirstDepositTime, refreshDepositInfoData.CreateTime);
+                    }
+                    #endregion
+
                     if (depositRequest.SiteId == 1 && refreshDepositInfoData.Status == DepositStatus.Approved)
                     {
                         _ = Task.Run(() =>
                         {
+                            #region 埋點
                             var pixelEvent = new List<FaceBookPixel>
                             {
                             FaceBookPixel.purchase,
@@ -393,9 +402,10 @@ public class DepositV2Controller : ControllerBase
                             };
                             var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.CustId, depositRequest.CurrencyId, depositRequest.Amount, pixelEvent);
                             _ = _faceBookPixelBll.Send(pixelRequest);
+                            #endregion
                         });
                     }
-                    #endregion
+                    
                     break;
 
                 case TransStatus.Fail:
