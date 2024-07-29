@@ -40,7 +40,7 @@ namespace Payment.GoPay
                     {"type", method},
                     {"code", method.Equals("bank_transfer") ? input["BankCode"] : code},
                     {"amount", reqAmount.ToString("G29")},
-                    {"timestamp", DateTimeOffset.Now.Second.ToString()}
+                    {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()}
                 };
 
                 req.Add("sign", GetSign(req, input["Key"]));
@@ -118,7 +118,7 @@ namespace Payment.GoPay
                     {"bankCode", input["BankCode"]},
                     {"bankCardNumber", input["AccountNo"]},
                     {"amount", reqAmount.ToString("G29")},
-                    {"timestamp", DateTimeOffset.Now.Second.ToString()}
+                    {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()}
                 };
 
                 req.Add("sign", GetSign(req, input["Key"]));
