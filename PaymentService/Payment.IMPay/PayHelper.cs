@@ -49,7 +49,7 @@ public class PayHelper : PayHelperBase
 
             if (!result.Status)
                 throw new CustomException(result.Message);
-\
+
             return new DepositResult
             {
                 Success = true,
