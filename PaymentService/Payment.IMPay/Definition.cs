@@ -13,9 +13,8 @@ internal class Definition
         };
     
     public static TransStatus GetTransStatus(string status)
-        => StatusMap.GetValueOrDefault(status.ToLower(), TransStatus.Pending);
+        => StatusMap.GetValueOrDefault(status, TransStatus.Pending);
     
-    public const string SuccessStatus = "success";
     public const string CallbackResponse = "success";
 }
 
