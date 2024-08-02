@@ -73,7 +73,7 @@ public class PayHelper : PayHelperBase
         return new NotifyDepositResult
         {
             ActualAmount = req.Amount,
-            DepositId = payResource["TransId"],
+            DepositId = payResource["TransID"],
             ThirdId = req.ThirdId,
             TransStatus = Definition.GetTransStatus(req.Status),
             Response = Definition.CallbackResponse
