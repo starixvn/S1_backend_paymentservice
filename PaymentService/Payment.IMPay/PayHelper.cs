@@ -90,7 +90,7 @@ public class PayHelper : PayHelperBase
                 {"client_name", input["IMClientName"]},
                 {"user_id", input["CustId"]},
                 {"cust_name", input["AccountName"]},
-                {"account_number", input["PayAccount"]},
+                {"account_number", input["AccountNo"]},
                 {"bank_name", input["BankCode"]},
                 {"amount", input["Amount"]},
                 {"callback_url", input["CallBackUrl"]}
