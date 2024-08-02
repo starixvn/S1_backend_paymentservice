@@ -21,6 +21,6 @@ internal class Definition
 
 internal class Path
 {
-    public const string CreateDeposit = "}/api/impay/deposit";
+    public const string CreateDeposit = "/api/impay/deposit";
     public const string CreatePayout = "/api/impay/withdrawal";
 }
