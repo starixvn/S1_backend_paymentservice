@@ -28,7 +28,7 @@ namespace Payment.PayCenter
             var apiUrl = inputs["apiUrl"];
             var token = inputs["apiToken"];
             var notifyUrl = inputs["CallBackUrl"];
-            var payCode = inputs["PayCode"];
+            var payCode = int.Parse(inputs["PayCode"]);
             var accountName = inputs["AccountName"];
             var amount = int.Parse(inputs["Amount"]);
             try
@@ -40,9 +40,9 @@ namespace Payment.PayCenter
                     PlayerWalletNum = "",
                     Amount = amount,
                     NotifyURL = notifyUrl,
-                    VendorTranId = payCode
+                    VendorTranId = inputs["TransID"],
+                    WalletNameID = payCode
                 };
-                var a = JsonConvert.SerializeObject(req);
 
                 var (result, statusCode) = _httpHelper
                     .WithHeader("Api-Token", token)
@@ -125,7 +125,7 @@ namespace Payment.PayCenter
             var apiUrl = inputs["apiUrl"];
             var token = inputs["apiToken"];
             var notifyUrl = inputs["CallBackUrl"];
-            var payCode = inputs["PayCode"];
+            var payCode = int.Parse(inputs["BankCode"]);
             var accountName = inputs["AccountName"];
             var accountNo = inputs["AccountNo"];
             var amount = int.Parse(inputs["Amount"]);
@@ -139,9 +139,9 @@ namespace Payment.PayCenter
                     PlayerWalletNum = accountNo,
                     Amount = amount,
                     NotifyURL = notifyUrl,
-                    VendorTranId = payCode
+                    VendorTranId = inputs["TransID"],
+                    WalletNameID = payCode
                 };
-                var a = JsonConvert.SerializeObject(req);
 
                 var (result, statusCode) = _httpHelper
                     .WithHeader("Api-Token", token)
@@ -177,7 +177,7 @@ namespace Payment.PayCenter
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
             Dictionary<string, string> payResource)
         {
-            var transId = payResource["TransID"];
+            var transId = payResource["TransId"];
             var amount = formData["amount"];
             var convertedAmount = decimal.Parse(amount);
             var status = formData["approved"];
@@ -236,7 +236,7 @@ namespace Payment.PayCenter
 
             var sign = ToMD5(str);
 
-            return sign;
+            return sign.ToLower();
         }
 
         private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)

@@ -20,6 +20,8 @@ namespace Payment.PayCenter
         public int Amount { get; set; }
         public string NotifyURL { get; set; }
         public string VendorTranId { get; set; }
+
+        public int WalletNameID { get; set; }
     }
     public class Result
     {
