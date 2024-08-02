@@ -31,7 +31,7 @@ public class PayHelper : PayHelperBase
                 {"user_id", input["CustId"]},
                 {"cust_name", input["AccountName"]},
                 {"account_number", input["PayAccount"]},
-                {"bank_name", input["BankName"]},
+                {"bank_name", input["BankCode"]},
                 {"amount", input["Amount"]},
                 {"return_success_url", input["ReturnUrl"]}
             };
@@ -91,7 +91,7 @@ public class PayHelper : PayHelperBase
                 {"user_id", input["CustId"]},
                 {"cust_name", input["AccountName"]},
                 {"account_number", input["PayAccount"]},
-                {"bank_name", input["BankName"]},
+                {"bank_name", input["BankCode"]},
                 {"amount", input["Amount"]},
                 {"callback_url", input["CallBackUrl"]}
             };
