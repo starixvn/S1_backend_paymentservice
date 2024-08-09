@@ -55,7 +55,7 @@ namespace Payment.EasyPay3
                 {
                     Success = true,
                     ErrorCode = "0",
-                    Url = res.Data.QrUrl,
+                    Url = res.Data.RedirectSsl,
                     ThirdId = res.Data.Id.ToString(),
                     DepositInfo = depositInfo
                 };
