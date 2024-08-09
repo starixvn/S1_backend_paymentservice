@@ -56,7 +56,7 @@ namespace Payment.EasyPay3
                     Success = true,
                     ErrorCode = "0",
                     Url = res.Data.QrUrl,
-                    ThirdId = res.Data.Id,
+                    ThirdId = res.Data.Id.ToString(),
                     DepositInfo = depositInfo
                 };
 
@@ -91,8 +91,8 @@ namespace Payment.EasyPay3
             }
 
             var payCode = jPayCode.ToObject<string>();
-            var apiToken ="";
-            var callbackToken ="";
+            var apiToken = "";
+            var callbackToken = "";
             var req = FromJson<CallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
             {
