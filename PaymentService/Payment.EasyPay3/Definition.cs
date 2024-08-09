@@ -30,7 +30,7 @@ public class Definition
 
     public class ErrorCode
     {
-        public const int Success = 0;
+        public const int Success = 1;
     }
 
     private static Dictionary<string, TransStatus> TransStatusMap =>
