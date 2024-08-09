@@ -113,7 +113,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.TengLongPay", "Paym
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.TianHongPay", "Payment.TianHongPay\Payment.TianHongPay.csproj", "{7874E0F6-8020-4D4E-8F44-22A5854957CD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.MTPay", "Payment.MTPay\Payment.MTPay.csproj", "{684EB569-301B-4C0E-AF13-3DD4FCE5F7B2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.BetcatPay", "Payment.BetcatPay\Payment.BetcatPay.csproj", "{3B16C51A-5963-412C-B663-27F7CD52ECBA}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.PayPlus", "Payment.PayPlus\Payment.PayPlus.csproj", "{4060EDF7-0C45-4704-916A-595154B7583D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.SojuPay", "Payment.SojuPay\Payment.SojuPay.csproj", "{B987EDA3-6F37-40F8-8B6B-470FE0BE4245}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.SulifuPay", "Payment.SulifuPay\Payment.SulifuPay.csproj", "{4166A177-7849-4939-BD2A-12FB0C015B85}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.JYMPay", "Payment.JYMPay\Payment.JYMPay.csproj", "{071765ED-A6AD-4B88-BBD0-3B71122762AA}"
 EndProject
@@ -122,10 +130,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.PapayaPay", "Payment.PapayaPay\Payment.PapayaPay.csproj", "{3BF9970A-82FE-449E-9D2A-771C5A7059A1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.DaYangPay", "Payment.DaYangPay\Payment.DaYangPay.csproj", "{9248407C-1E33-49CC-B3ED-7DB9579F7444}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.SulifuPay", "Payment.SulifuPay\Payment.SulifuPay.csproj", "{4166A177-7849-4939-BD2A-12FB0C015B85}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.MTPay", "Payment.MTPay\Payment.MTPay.csproj", "{684EB569-301B-4C0E-AF13-3DD4FCE5F7B2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.KzPay", "Payment.KzPay\Payment.KzPay.csproj", "{70F51367-335D-493D-95E5-3E2683EE26A9}"
 EndProject
@@ -150,6 +154,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.GoPay", "Payment.GoPay\Payment.GoPay.csproj", "{F99E30B3-8012-405D-83E4-1A9322894617}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.IMPay", "Payment.IMPay\Payment.IMPay.csproj", "{98B3218D-E3DB-4811-A459-A9DD58672FF6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.EasyPay3", "Payment.EasyPay3\Payment.EasyPay3.csproj", "{AF7C2921-2279-4E2E-985C-7062DEF6BF89}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -449,6 +455,10 @@ Global
 		{98B3218D-E3DB-4811-A459-A9DD58672FF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98B3218D-E3DB-4811-A459-A9DD58672FF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98B3218D-E3DB-4811-A459-A9DD58672FF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF7C2921-2279-4E2E-985C-7062DEF6BF89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF7C2921-2279-4E2E-985C-7062DEF6BF89}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF7C2921-2279-4E2E-985C-7062DEF6BF89}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF7C2921-2279-4E2E-985C-7062DEF6BF89}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -524,6 +534,7 @@ Global
 		{0C6E2791-6B36-47F1-9999-35C2F9A52640} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{F99E30B3-8012-405D-83E4-1A9322894617} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{98B3218D-E3DB-4811-A459-A9DD58672FF6} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{AF7C2921-2279-4E2E-985C-7062DEF6BF89} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
