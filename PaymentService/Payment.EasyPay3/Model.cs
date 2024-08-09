@@ -7,7 +7,7 @@ public class CreatOrderResponse
     [JsonProperty("stt")]
     public int Status { get; set; }
     [JsonProperty("ex_stt")]
-    public int ExtraStatus { get; set; }
+    public decimal ExtraStatus { get; set; }
     [JsonProperty("msg")]
     public string Msg { get; set; }
 
@@ -18,7 +18,7 @@ public class CreatOrderResponse
 public class CreatOrderData
 {
     [JsonProperty("id")]
-    public string Id { get; set; }
+    public int Id { get; set; }
 
     [JsonProperty("qr_url")]
     public string QrUrl { get; set; }
@@ -31,6 +31,9 @@ public class CreatOrderData
 
     [JsonProperty("phonName")]
     public string PhoneName { get; set; }
+
+    [JsonProperty("amount")]
+    public int Amount { get; set; }
 
     [JsonProperty("chargeType")]
     public string ChargeType { get; set; }
@@ -45,10 +48,10 @@ public class CreatOrderData
     public string BankPrivoder { get; set; }
 
     [JsonProperty("timeToExpired")]
-    public string TimeToExpired { get; set; }
+    public int TimeToExpired { get; set; }
 
     [JsonProperty("usdt_rate")]
-    public string UsdtRate { get; set; }
+    public decimal UsdtRate { get; set; }
 
     [JsonProperty("deeplink")]
     public string DeepLink { get; set; }
