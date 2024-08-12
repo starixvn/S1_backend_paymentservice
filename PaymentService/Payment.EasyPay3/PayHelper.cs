@@ -3,11 +3,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Asn1.Ocsp;
+using Org.BouncyCastle.Ocsp;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
+using System.Collections.Generic;
 using static Payment.EasyPay3.Definition;
 
 namespace Payment.EasyPay3
@@ -30,6 +33,7 @@ namespace Payment.EasyPay3
         {
             var apiUrl = input["Host"];
             var apiToken = input["Apikey"];
+            var signToken = input["SignKey"];
             var reqAmount = decimal.Parse(input["Amount"]);
             var strAmount = reqAmount.ToString("G29");
             var transId = input["TransID"];
@@ -41,12 +45,13 @@ namespace Payment.EasyPay3
             {
                 var req = new Dictionary<string, string>
                 {
-                    {"Apikey", apiToken},
-                    {"chargeType", payCode},
-                    {"callback", notifyUrl},
                     {"amount", strAmount},
+                    {"chargeType", payCode},
                     {"requestId", transId}
                 };
+                req.Add("sign", GetSign(req, signToken));
+                req.Add("Apikey", apiToken);
+                req.Add("callback", notifyUrl);
 
                 var res = CreateOrder(apiUrl, req);
 
@@ -74,35 +79,24 @@ namespace Payment.EasyPay3
             Dictionary<string, string> headers, Dictionary<string, string> input)
         {
             var depositInfo = input["DepositInfo"];
+            var apiSecret = input["ApiSecret"];
             var transId = input["TransID"];
+            var thirdId = formData["chargeId"];
+            var formStatus = formData["status"];
+            var actualAmount = formData["chargeAmount"];
 
-            var jObj = JObject.Parse(depositInfo);
-
-            if (!jObj.TryGetValue("PayCode", StringComparison.OrdinalIgnoreCase, out var jPayCode))
-            {
-                _logger.LogInformation($"{transId} DepositInfo has no PayCode information.");
-
-                return new NotifyDepositResult
-                {
-                    DepositId = transId,
-                    TransStatus = TransStatus.Pending,
-                    Response = "Failed."
-                };
-            }
-
-            var payCode = jPayCode.ToObject<string>();
-            var apiToken = "";
-            var callbackToken = "";
-            var req = FromJson<CallBackRequest>(bodyContent);
+            var signature = formData["signature"];
             var dic = new Dictionary<string, string>
             {
-                {"amount", req.Amount},
-                {"out_trade_no", req.TransId},
-                {"state", req.State},
-                {"trade_no", req.ThirdId}
+                {"chargeId",thirdId},
+                {"chargeType", formData["chargeType"]},
+                {"chargeCode", formData["chargeCode"]},
+                {"chargeAmount",actualAmount},
+                {"status",  formStatus },
+                {"transId", transId }
             };
 
-            if (!VerifySign(req.Sign, dic, apiToken, callbackToken))
+            if (!VerifySign(signature, dic, apiSecret))
             {
                 return new NotifyDepositResult
                 {
@@ -112,13 +106,14 @@ namespace Payment.EasyPay3
                 };
             }
 
+            var transStatus = Definition.GetTransStatus(formStatus);
             var result = new NotifyDepositResult
             {
-                ThirdId = req.ThirdId,
-                DepositId = req.TransId,
-                Comment = req.State,
-                TransStatus = req.State.Equals("completed") ? TransStatus.Success : TransStatus.Pending,
-                ActualAmount = decimal.Parse(req.Amount),
+                ThirdId = thirdId,
+                DepositId = transId,
+                Comment = formData["result"],
+                TransStatus = transStatus,
+                ActualAmount = decimal.Parse(actualAmount),
                 Response = Definition.CallbackResponse
             };
 
@@ -137,8 +132,8 @@ namespace Payment.EasyPay3
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var apiUrl = inputs["Host"];
-            var apiToken = inputs["Card"];
-            var callbackToken = inputs["CardCallbackToken"];
+            var apiToken = inputs["Apikey"];
+            var signToken = inputs["SignKey"];
             var reqAmount = decimal.Parse(inputs["Amount"]);
             var strAmount = reqAmount.ToString("G29");
             var transId = inputs["TransID"];
@@ -149,19 +144,17 @@ namespace Payment.EasyPay3
 
             try
             {
-
                 var req = new Dictionary<string, string>
                 {
-                    {"account_number", accountNo},
+                    {"account", accountNo},
                     {"amount", strAmount},
-                    {"bank_id", bankCode},
-                    {"bank_owner", accountName},
-                    {"callback_url", notifyUrl},
-                    {"out_trade_no", transId},
-                    {"verify_channel_no", "1"}
+                    {"requestId", transId}
                 };
 
-                req.Add("sign", GetSign(req, apiToken, callbackToken));
+                req.Add("signature", GetSign(req, apiToken));
+                req.Add("apiKey", apiToken);
+                req.Add("callback", notifyUrl);
+                req.Add("account_name", accountName);
 
                 var res = Payout(apiUrl, apiToken, req);
                 var response = new WithdrawResult
@@ -187,35 +180,41 @@ namespace Payment.EasyPay3
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var apiToken = payResource["Card"];
-            var callbackToken = payResource["CardCallbackToken"];
-            var req = FromJson<CallBackRequest>(bodyContent);
+            var apiSecret = payResource["ApiSecret"];
+            var transId = payResource["TransID"];
+            var thirdId = formData["chargeId"];
+            var formStatus = formData["status"];
+            var ActualAmount = formData["chargeAmount"];
+
+            var signature = formData["signature"];
             var dic = new Dictionary<string, string>
             {
-                {"amount", req.Amount},
-                {"out_trade_no", req.TransId},
-                {"state", req.State},
-                {"trade_no", req.ThirdId}
+                {"chargeId",thirdId},
+                {"chargeType", formData["chargeType"]},
+                {"chargeCode", formData["chargeCode"]},
+                {"chargeAmount",ActualAmount},
+                {"status",  formStatus },
+                {"transId", transId }
             };
 
-            if (!VerifySign(req.Sign, dic, apiToken, callbackToken))
+            if (!VerifySign(signature, dic, apiSecret))
             {
                 return new NotifyWithdrawResult
                 {
-                    WithdrawId = req.TransId,
+                    WithdrawId = transId,
                     TransStatus = TransStatus.Pending,
                     Response = "Signature verification failed."
                 };
             }
 
-            var transStatus = Definition.GetTransStatus(req.State);
+            var transStatus = Definition.GetTransStatus(formStatus);
             var result = new NotifyWithdrawResult
             {
-                ThirdId = req.ThirdId,
+                ThirdId = thirdId,
                 TransStatus = transStatus,
                 Response = Definition.CallbackResponse,
-                WithdrawId = req.TransId,
-                Message = req.State
+                WithdrawId = transId,
+                Message = formData["result"]
             };
 
             return result;
@@ -239,17 +238,16 @@ namespace Payment.EasyPay3
         {
             var apiUrl = baseApiUrl + Definition.Path.CreateOrder;
             var parameters = string.Join("&", req.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var (result, statusCode) = _httpHelper
-                 .Get<CreatOrderResponse>(apiUrl, parameters);
+            var (result, statusCode) = _httpHelper.Get<CreatOrderResponse>(apiUrl, parameters);
 
             if (!statusCode.IsSuccessStatus())
             {
-                throw new CustomException(
-                    $"EasyPay3 creat order failed, HttpStatus: {(int)statusCode} {statusCode}");
+                throw new CustomException($"EasyPay3 creat order failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
             if (!ErrorCode.Success.Equals(result.Status))
             {
-                throw new CustomException(result.Msg, $"{result.Status}/{result.ExtraStatus}");
+                throw new CustomException(result.Msg, $"Status={result.Status}:{StatusMsgMap[result.Status]}/" +
+                    $"ExtraStatus={result.ExtraStatus}:{ExtraStatusMsgMap[result.ExtraStatus]}");
             }
 
             return result;
@@ -258,43 +256,40 @@ namespace Payment.EasyPay3
         private CreatPayoutResponse Payout(string baseApiUrl, string token, Dictionary<string, string> req)
         {
             var apiUrl = baseApiUrl + Definition.Path.CreatePayout;
-            var (result, statusCode) = _httpHelper
-                .WithOAuthBearerToken(token)
-                .WithHeader("accept", MediaType.Json)
-                .PostUrlEncoded<Dictionary<string, string>, CreatPayoutResponse>(apiUrl, req);
+            var parameters = string.Join("&", req.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var (result, statusCode) = _httpHelper.Get<CreatPayoutResponse>(apiUrl, parameters);
 
             if (!statusCode.IsSuccessStatus())
             {
-                throw new CustomException(
-                    $"EasyPay3 create payout failed, HttpStatus: {(int)statusCode} {statusCode}");
+                throw new CustomException($"EasyPay3 create payout failed, HttpStatus: {(int)statusCode} {statusCode}");
             }
 
-            if (result.Success)
-                return result;
+            if (!ErrorCode.Success.Equals(result.Status))
+            {
+                throw new CustomException(result.Msg, $"Status={result.Status}:{StatusMsgMap[result.Status]}/" +
+                    $"ExtraStatus={result.ExtraStatus}:{ExtraStatusMsgMap[result.ExtraStatus]}/" +
+                    $"DataStatus={result.Data.Status}:{WithdrawalDataStatusMap[result.Data.Status]}");
+            }
 
-            var str = JsonConvert.SerializeObject(result.Errors);
-            var msg = System.Text.RegularExpressions.Regex.Unescape(str);
-
-            throw new CustomException(msg);
+            return result;
         }
 
-        private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiToken, string callbackToken)
+        private bool VerifySign(string target, IEnumerable<KeyValuePair<string, string>> param, string apiToken)
         {
-            var str = string.Join("&", param
-                .Select(x => $"{x.Key}={x.Value}")) + apiToken + callbackToken;
+            var sign = GetSign(param, apiToken);
+
+            return target.Equals(sign, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiToken)
+        {
+            var str = string.Join("", param.Select(x => x.Value)) + apiToken;
 
             _logger.LogInformation(str);
             var sign = base.ToMD5(str).ToLower();
             _logger.LogInformation(sign);
 
             return sign;
-        }
-
-        private bool VerifySign(string target, IEnumerable<KeyValuePair<string, string>> param, string apiToken, string callbackToken)
-        {
-            var sign = GetSign(param, apiToken, callbackToken);
-
-            return target.Equals(sign, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion

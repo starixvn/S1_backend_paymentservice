@@ -7,7 +7,7 @@ public class CreatOrderResponse
     [JsonProperty("stt")]
     public int Status { get; set; }
     [JsonProperty("ex_stt")]
-    public decimal ExtraStatus { get; set; }
+    public double ExtraStatus { get; set; }
     [JsonProperty("msg")]
     public string Msg { get; set; }
 
@@ -57,65 +57,25 @@ public class CreatOrderData
     public string DeepLink { get; set; }
 }
 
-public class CallBackRequest
-{
-    [JsonProperty("out_trade_no")]
-    public string TransId { get; set; }
-
-    [JsonProperty("amount")]
-    public string Amount { get; set; }
-
-    [JsonProperty("request_amount")]
-    public string RequestAmount { get; set; }
-
-    [JsonProperty("trade_no")]
-    public string ThirdId { get; set; }
-
-    [JsonProperty("state")]
-    public string State { get; set; }
-
-    [JsonProperty("callback_url")]
-    public string CallbackUrl { get; set; }
-
-    [JsonProperty("sign")]
-    public string Sign { get; set; }
-}
 
 public class CreatPayoutResponse
 {
-    [JsonProperty("success")]
-    public bool Success { get; set; }
+    [JsonProperty("stt")]
+    public int Status { get; set; }
+    [JsonProperty("ex_stt")]
+    public double ExtraStatus { get; set; }
+    [JsonProperty("msg")]
+    public string Msg { get; set; }
 
     [JsonProperty("data")]
     public CreatPayoutData Data { get; set; }
-
-    [JsonProperty("errors")]
-    public object Errors { get; set; }
 }
 
 public class CreatPayoutData
 {
-    [JsonProperty("trade_no")]
-    public string TransId { get; set; }
+    [JsonProperty("id")]
+    public string Id { get; set; }
 
-    [JsonProperty("amount")]
-    public string Amount { get; set; }
-
-    [JsonProperty("out_trade_no")]
-    public string ThirdId { get; set; }
-
-    [JsonProperty("bank_id")]
-    public string BankId { get; set; }
-
-    [JsonProperty("account_number")]
-    public string AccountNumber { get; set; }
-
-    [JsonProperty("bank_owner")]
-    public string BankOwner { get; set; }
-
-    [JsonProperty("callback_url")]
-    public string CallbackUrl { get; set; }
-
-    [JsonProperty("state")]
-    public string State { get; set; }
+    [JsonProperty("status")]
+    public string Status { get; set; }
 }
