@@ -2,15 +2,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Org.BouncyCastle.Asn1.Ocsp;
-using Org.BouncyCastle.Ocsp;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
-using System.Collections.Generic;
 using static Payment.EasyPay3.Definition;
 
 namespace Payment.EasyPay3
@@ -40,7 +37,8 @@ namespace Payment.EasyPay3
             var notifyUrl = input["CallBackUrl"];
             var payCode = input["PayCode"];
             var depositInfo = input["DepositInfo"];
-
+            var bankCode = input["BankCode"];
+            var depositType = Int32.Parse(input["DepositType"]);
             try
             {
                 var req = new Dictionary<string, string>
@@ -53,8 +51,10 @@ namespace Payment.EasyPay3
                 req.Add("Apikey", apiToken);
                 req.Add("callback", notifyUrl);
 
-                var res = CreateOrder(apiUrl, req);
+                if (depositType == (int)DepositType.OnlineBanking)
+                    req.Add("subType", bankCode);
 
+                var res = CreateOrder(apiUrl, req);
 
                 var response = new DepositResult
                 {
@@ -141,22 +141,33 @@ namespace Payment.EasyPay3
             var accountNo = inputs["AccountNo"];
             var notifyUrl = inputs["CallBackUrl"];
             var bankCode = inputs["BankCode"];
+            var withdrawalType = Int32.Parse(inputs["WithdrawalType"]);
 
             try
             {
-                var req = new Dictionary<string, string>
-                {
+
+                var req = new Dictionary<string, string>() {
                     {"account", accountNo},
                     {"amount", strAmount},
                     {"requestId", transId}
                 };
 
                 req.Add("signature", GetSign(req, apiSecret));
+
+                if (withdrawalType == (int)WithdrawalType.OnlineBanking)
+                {
+                    req.Add("bank_account", accountNo);
+                    req.Add("bank_code", bankCode);
+                    req.Add("bank_accountName", accountName);
+
+                    req.Remove("account");
+                }
+
                 req.Add("apiKey", apiToken);
                 req.Add("callback", notifyUrl);
                 req.Add("account_name", accountName);
 
-                var res = Payout(apiUrl, apiToken, req);
+                var res = Payout(apiUrl, withdrawalType, req);
                 var response = new WithdrawResult
                 {
                     Success = true,
@@ -253,9 +264,14 @@ namespace Payment.EasyPay3
             return result;
         }
 
-        private CreatPayoutResponse Payout(string baseApiUrl, string token, Dictionary<string, string> req)
+        private CreatPayoutResponse Payout(string baseApiUrl, int withdrawalType, Dictionary<string, string> req)
         {
-            var apiUrl = baseApiUrl + Definition.Path.CreatePayout;
+            var apiUrl = string.Empty;
+            if (withdrawalType == (int)WithdrawalType.OnlineBanking)
+                apiUrl = baseApiUrl + Definition.Path.CreateOnlineBankingPayout;
+            else
+                apiUrl = baseApiUrl + Definition.Path.CreateEWalletPayout;
+
             var parameters = string.Join("&", req.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             var (result, statusCode) = _httpHelper.Get<CreatPayoutResponse>(apiUrl, parameters);
 
