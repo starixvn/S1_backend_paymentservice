@@ -38,7 +38,6 @@ namespace Payment.EasyPay3
             var payCode = input["PayCode"];
             var depositInfo = input["DepositInfo"];
             var bankCode = input["BankCode"];
-            var depositType = Int32.Parse(input["DepositType"]);
             try
             {
                 var req = new Dictionary<string, string>
@@ -51,7 +50,7 @@ namespace Payment.EasyPay3
                 req.Add("Apikey", apiToken);
                 req.Add("callback", notifyUrl);
 
-                if (depositType == (int)DepositType.OnlineBanking)
+                if (payCode == "bank")
                     req.Add("subType", bankCode);
 
                 var res = CreateOrder(apiUrl, req);
