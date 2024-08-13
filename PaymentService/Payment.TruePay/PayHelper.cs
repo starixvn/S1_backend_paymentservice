@@ -34,14 +34,19 @@ namespace Payment.TruePay
                 {
                     { "mCode", merchantInfo.Merchant },
                     { "ts", ts },
-                    { "bCode", !string.IsNullOrEmpty(inputs["PayCode"])
-                        ? inputs["PayCode"] : inputs["BankCode"] },
+                    { "bCode", string.IsNullOrEmpty(inputs["PayCode"]) || inputs["PayCode"].Equals("FPX")
+                        ? inputs["BankCode"] : inputs["PayCode"] },
                     { "amt", inputs["Amount"] },
                     { "user", inputs["CustId"] },
                     { "trxid", inputs["TransID"] },
                     { "notifyUrl", inputs["CallBackUrl"] },
                     { "webUrl", inputs["ReturnUrl"] }
                 };
+
+                if (inputs["PayCode"].Equals("FPX"))
+                {
+                    req.Add("bMethod", inputs["PayCode"]);
+                }
 
                 var token = $"{merchantInfo.Merchant}-{merchantInfo.Key}-getDPLink-{ts}";
                 req.Add("token", ToMD5(token).ToLower());
