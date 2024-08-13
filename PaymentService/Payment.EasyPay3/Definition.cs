@@ -50,6 +50,7 @@ public class Definition
     public static Dictionary<string, string> WithdrawalDataStatusMap =>
 new()
 {
+            { "", "" },
             { "waiting", "transactions are placed in the queue and waiting for execution" },
             { "pending", "the transaction is temporarily held, needs to be confirmed again before it can be carried out" }
 };
