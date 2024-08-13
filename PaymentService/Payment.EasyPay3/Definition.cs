@@ -14,9 +14,14 @@ public class Definition
         public const string CreateOrder = "/api/MM/RegCharge";
 
         /// <summary>
-        /// 創建代付
+        /// 創建代付(EWallet Url)
         /// </summary>
-        public const string CreatePayout = "/api/MM/ChargeOut";
+        public const string CreateEWalletPayout = "/api/MM/ChargeOut";
+
+        /// <summary>
+        /// 創建代付(OnlineBanking Url)
+        /// </summary>
+        public const string CreateOnlineBankingPayout = "/api/Bank/ChargeOut";
     }
 
     public static Dictionary<int, string> StatusMsgMap =>
