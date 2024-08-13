@@ -133,7 +133,7 @@ namespace Payment.EasyPay3
         {
             var apiUrl = inputs["Host"];
             var apiToken = inputs["Apikey"];
-            var signToken = inputs["SignKey"];
+            var apiSecret = inputs["ApiSecret"];
             var reqAmount = decimal.Parse(inputs["Amount"]);
             var strAmount = reqAmount.ToString("G29");
             var transId = inputs["TransID"];
@@ -151,7 +151,7 @@ namespace Payment.EasyPay3
                     {"requestId", transId}
                 };
 
-                req.Add("signature", GetSign(req, apiToken));
+                req.Add("signature", GetSign(req, apiSecret));
                 req.Add("apiKey", apiToken);
                 req.Add("callback", notifyUrl);
                 req.Add("account_name", accountName);
@@ -181,7 +181,7 @@ namespace Payment.EasyPay3
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var apiSecret = payResource["ApiSecret"];
-            var transId = payResource["TransID"];
+            var transId = payResource["TransId"];
             var thirdId = formData["chargeId"];
             var formStatus = formData["status"];
             var ActualAmount = formData["chargeAmount"];
@@ -266,9 +266,17 @@ namespace Payment.EasyPay3
 
             if (!ErrorCode.Success.Equals(result.Status))
             {
-                throw new CustomException(result.Msg, $"Status={result.Status}:{StatusMsgMap[result.Status]}/" +
-                    $"ExtraStatus={result.ExtraStatus}:{ExtraStatusMsgMap[result.ExtraStatus]}/" +
-                    $"DataStatus={result.Data.Status}:{WithdrawalDataStatusMap[result.Data.Status]}");
+                if (result.Data is not null)
+                {
+                    throw new CustomException(result.Msg, $"Status={result.Status}:{StatusMsgMap[result.Status]}/" +
+                        $"ExtraStatus={result.ExtraStatus}:{ExtraStatusMsgMap[result.ExtraStatus]}/" +
+                        $"DataStatus={result.Data.Status}:{WithdrawalDataStatusMap[result.Data.Status]}");
+                }
+                else
+                {
+                    throw new CustomException(result.Msg, $"Status={result.Status}:{StatusMsgMap[result.Status]}/" +
+                        $"ExtraStatus={result.ExtraStatus}:{ExtraStatusMsgMap[result.ExtraStatus]}");
+                }
             }
 
             return result;
