@@ -17,8 +17,8 @@ public class FaceBookPixelBLL
 
     public async Task<object> Send(PixelRequest req)
     {
-        var Url = _commonServiceUrl + "FaceBookPixel/Send";
-        var result = await _courierAdapter.MyPostAsync<ApiResult, PixelRequest>(Url, req);
+        var url = _commonServiceUrl + "FaceBookPixel/Send";
+        var result = await _courierAdapter.MyPostAsync<ApiResult, PixelRequest>(url, req);
 
         return result;
     }
