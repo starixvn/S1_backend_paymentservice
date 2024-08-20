@@ -390,7 +390,7 @@ public class DepositV2Controller : ControllerBase
                     }
                     #endregion
 
-                    if (depositRequest.SiteId == 1 && refreshDepositInfoData.Status == DepositStatus.Approved)
+                    if (depositRequest.SiteId is 1 or 2 or 3 && refreshDepositInfoData.Status == DepositStatus.Approved)
                     {
                         _ = Task.Run(() =>
                         {
