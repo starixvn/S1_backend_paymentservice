@@ -20,7 +20,7 @@ public class TaskSettingService
         {
             _CustId = custId,
             _TaskId = (int)firstDepositTime,
-            _TaskTime = taskTime.ToString("yyyy-MM-dd HH:mm:ss")
+            _TaskTime = taskTime
         });
 
         return _mainDbClient.Execute("Service_CustTaskTime_Set", p);

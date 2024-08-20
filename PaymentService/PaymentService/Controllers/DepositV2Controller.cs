@@ -386,7 +386,7 @@ public class DepositV2Controller : ControllerBase
                     #region CustTaskTime
                     if (refreshDepositInfoData.FirstDeposit == 1)
                     {
-                        _ = _TaskSettingBll.Set(refreshDepositInfoData.CustId, TaskSetting.FirstDepositTime, refreshDepositInfoData.CreateTime);
+                        _ = _TaskSettingBll.Set(refreshDepositInfoData.CustId, TaskSetting.FirstDepositTime, refreshDepositInfoData.FlowEndTime);
                     }
                     #endregion
 
