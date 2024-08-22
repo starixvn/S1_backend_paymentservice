@@ -393,7 +393,7 @@ public class DepositV2Controller : ControllerBase
                             FaceBookPixel.purchase,
                             refreshDepositInfoData.FirstDeposit == 1 ? FaceBookPixel.startTrial : FaceBookPixel.redeposit
                             };
-                            var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.CustId, depositRequest.CurrencyId, depositRequest.Amount, pixelEvent);
+                            var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.SiteId, depositRequest.CustId, depositRequest.CurrencyId, depositRequest.Amount, pixelEvent);
                             _ = _faceBookPixelBll.Send(pixelRequest);
                         });
                     }
