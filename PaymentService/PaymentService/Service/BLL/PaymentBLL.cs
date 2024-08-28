@@ -142,7 +142,7 @@ namespace PaymentService.Service.BLL
                 (int)WithdrawalStatus.Process,
                 (int)WithdrawalStatus.Verify // 有可能送單timeout失敗退回後回調成功
             };
-            _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
+            _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
             SetWithdrawalAccountCounter(withdrawalRequest, WithdrawalStatus.Approved);
         }
 
@@ -183,9 +183,8 @@ namespace PaymentService.Service.BLL
                 (int)WithdrawalStatus.Error
             };
 
-            _withdrawalService.SetWithdrawalInfoByManualApprove(withdrawalRequest.TransId,
+            _ = _withdrawalService.SetWithdrawalInfoByManualApprove(withdrawalRequest.TransId,
                 withdrawalRequest.SiteId,
-                withdrawalRequest,
                 comment,
                 refId,
                 @operator,
@@ -215,7 +214,7 @@ namespace PaymentService.Service.BLL
                 (int)WithdrawalStatus.Error
             };
 
-            _withdrawalService.SetWithdrawalInfoReject(withdrawalRequest.TransId,
+            _ = _withdrawalService.SetWithdrawalInfoReject(withdrawalRequest.TransId,
                 withdrawalRequest.SiteId,
                 comment,
                 refId,
@@ -226,14 +225,14 @@ namespace PaymentService.Service.BLL
         public void WithdrawalFail(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
             var forStatus = new List<int> { (int)WithdrawalStatus.Process };
-            _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Verify);
+            _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Verify);
             _withdrawalService.SetWithdrawalInfoProcessWay(withdrawalRequest.TransId, WithdrawalInfoProcessWayEnum.AutoFailBackManual);
         }
 
         public void WithdrawalPending(WithdrawalRequest withdrawalRequest, IWithdrawResult notifyWithdrawResult)
         {
             var forStatus = new List<int> { (int)WithdrawalStatus.Process };
-            _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Process);
+            _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Process);
         }
 
         public void SetWithdrawalLog(string transId, int siteId, string comment, int status, string @operator)
