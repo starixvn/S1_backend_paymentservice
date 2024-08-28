@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Payment.AeePay\Payment.AeePay.csproj" />
     <ProjectReference Include="..\Payment.AsetPay\Payment.AsetPay.csproj" />
+    <ProjectReference Include="..\Payment.AOPay\Payment.AOPay.csproj" />
     <ProjectReference Include="..\Payment.BetcatPay\Payment.BetcatPay.csproj" />
     <ProjectReference Include="..\Payment.BigPayz\Payment.BigPayz.csproj" />
     <ProjectReference Include="..\Payment.ChangChenPay\Payment.ChangChenPay.csproj" />
@@ -35,12 +36,14 @@
     <ProjectReference Include="..\Payment.DirePay\Payment.DirePay.csproj" />
     <ProjectReference Include="..\Payment.DoitnowPay\Payment.DoitnowPay.csproj" />
     <ProjectReference Include="..\Payment.DouDouPay\Payment.DouDouPay.csproj" />
+    <ProjectReference Include="..\Payment.EasyPay3\Payment.EasyPay3.csproj" />
     <ProjectReference Include="..\Payment.EPay\Payment.EPay.csproj" />
     <ProjectReference Include="..\Payment.FattyPayATM\Payment.FattyPayATM.csproj" />
     <ProjectReference Include="..\Payment.FattyPay\Payment.FattyPay.csproj" />
     <ProjectReference Include="..\Payment.FPay\Payment.FPay.csproj" />
     <ProjectReference Include="..\Payment.FXBit\Payment.FXBit.csproj" />
     <ProjectReference Include="..\Payment.GlobalPay\Payment.GlobalPay.csproj" />
+    <ProjectReference Include="..\Payment.GoPay\Payment.GoPay.csproj" />
     <ProjectReference Include="..\Payment.Help2Pay\Payment.Help2Pay.csproj" />
     <ProjectReference Include="..\Payment.HeroPay\Payment.HeroPay.csproj" />
     <ProjectReference Include="..\Payment.HonorPay\Payment.HonorPay.csproj" />
@@ -58,6 +61,7 @@
     <ProjectReference Include="..\Payment.PAPay\Payment.PAPay.csproj" />
     <ProjectReference Include="..\Payment.PapayaPay\Payment.PapayaPay.csproj" />
     <ProjectReference Include="..\Payment.PattayaPay\Payment.PattayaPay.csproj" />
+    <ProjectReference Include="..\Payment.PayCenter\Payment.PayCenter.csproj" />
     <ProjectReference Include="..\Payment.PowerBankPay\Payment.PowerBankPay.csproj" />
     <ProjectReference Include="..\Payment.PPPay\Payment.PPPay.csproj" />
     <ProjectReference Include="..\Payment.RapidPay\Payment.RapidPay.csproj" />
