@@ -31,6 +31,7 @@ public class DepositV2Controller : ControllerBase
     private readonly ICacheHelper _redisHelper;
     private readonly string _callBackUrl;
     private readonly FaceBookPixelBLL _faceBookPixelBll;
+    private readonly CRMBLL _cRMBLL;
 
     private readonly IDictionary<DepositType, Func<DepositInfoModel, Customer, (IPayInfo, Dictionary<string, string>)>>
         _getDepositInputMapper;
@@ -47,6 +48,7 @@ public class DepositV2Controller : ControllerBase
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
         _callBackUrl = configBll.GetConfigValue("CallBack");
         _faceBookPixelBll = provider.GetRequiredService<FaceBookPixelBLL>();
+        _cRMBLL = provider.GetRequiredService<CRMBLL>();
 
         #region ActionMapper
 
@@ -395,6 +397,17 @@ public class DepositV2Controller : ControllerBase
                             };
                             var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.SiteId, depositRequest.CustId, depositRequest.CurrencyId, depositRequest.Amount, pixelEvent);
                             _ = _faceBookPixelBll.Send(pixelRequest);
+                        });
+
+                        _ = Task.Run(() =>
+                        {
+                            var para = new CRMRequest() { 
+                                Event = (int)CRMEvent.Deposit_successful,
+                                CustId = depositRequest.CustId,
+                                SiteId = depositRequest.SiteId,
+                                OrderAmount = depositRequest.Amount
+                            };
+                            _ = _cRMBLL.Send(para);
                         });
                     }
                     #endregion
