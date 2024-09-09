@@ -386,11 +386,11 @@ public class DepositV2Controller : ControllerBase
                     #region CustTaskTime
                     if (refreshDepositInfoData.FirstDeposit == 1)
                     {
-                        _ = _TaskSettingBll.Set(refreshDepositInfoData.CustId, TaskSetting.FirstDepositTime, refreshDepositInfoData.CreateTime);
+                        _ = _TaskSettingBll.Set(refreshDepositInfoData.CustId, TaskSetting.FirstDepositTime, refreshDepositInfoData.FlowEndTime);
                     }
                     #endregion
 
-                    if (depositRequest.SiteId == 1 && refreshDepositInfoData.Status == DepositStatus.Approved)
+                    if (depositRequest.SiteId is 1 or 2 or 3 && refreshDepositInfoData.Status == DepositStatus.Approved)
                     {
                         _ = Task.Run(() =>
                         {
@@ -400,7 +400,7 @@ public class DepositV2Controller : ControllerBase
                             FaceBookPixel.purchase,
                             refreshDepositInfoData.FirstDeposit == 1 ? FaceBookPixel.startTrial : FaceBookPixel.redeposit
                             };
-                            var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.CustId, depositRequest.CurrencyId, depositRequest.Amount, pixelEvent);
+                            var pixelRequest = _faceBookPixelBll.CreatePixelRequest(depositRequest.SiteId, depositRequest.CustId, depositRequest.CurrencyId, depositRequest.Amount, pixelEvent);
                             _ = _faceBookPixelBll.Send(pixelRequest);
                             #endregion
                         });

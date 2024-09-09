@@ -17,16 +17,17 @@ public class FaceBookPixelBLL
 
     public async Task<object> Send(PixelRequest req)
     {
-        var Url = _commonServiceUrl + "FaceBookPixel/Send";
-        var result = await _courierAdapter.MyPostAsync<ApiResult, PixelRequest>(Url, req);
+        var url = _commonServiceUrl + "FaceBookPixel/Send";
+        var result = await _courierAdapter.MyPostAsync<ApiResult, PixelRequest>(url, req);
 
         return result;
     }
 
-    public PixelRequest CreatePixelRequest(int custId, int currencyId, decimal? value, IEnumerable<FaceBookPixel> pixelEvent)
+    public PixelRequest CreatePixelRequest(int siteId, int custId, int currencyId, decimal? value, IEnumerable<FaceBookPixel> pixelEvent)
     {
         return new PixelRequest
         {
+            SiteId = siteId,
             CustId = custId,
             CurrencyId = currencyId,
             Value = value,
