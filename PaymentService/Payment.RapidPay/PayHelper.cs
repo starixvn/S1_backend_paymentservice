@@ -24,7 +24,7 @@ namespace Payment.RapidPay
         
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            var apiHost = inputs["Host"];
+            var apiHost = inputs["host"];
             var payCurrency = inputs["PayCurrencyId"];
             var (payCode, method) = GetMethod(inputs["PayCode"]);
             
@@ -126,7 +126,7 @@ namespace Payment.RapidPay
         
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var apiHost = inputs["Host"];
+            var apiHost = inputs["host"];
             var payCurrency = inputs["PayCurrencyId"];
             
             try
