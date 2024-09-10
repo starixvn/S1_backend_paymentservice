@@ -356,17 +356,6 @@ public class WithdrawalV2Controller : ControllerBase
             {
                 case TransStatus.Success when withdrawalInfo.Amount > 0:
                     _paymentBll.WithdrawalSuccess(withdrawalInfo, result);
-                    #region 埋點
-                    if (withdrawalInfo.SiteId is 1 or 2 or 3)
-                    {
-                        _ = Task.Run(() =>
-                        {
-                            var pixelEvent = new List<FaceBookPixel> { FaceBookPixel.withdraw };
-                            var pixelRequest = _faceBookPixelBll.CreatePixelRequest(withdrawalInfo.SiteId, withdrawalInfo.CustId, withdrawalInfo.CurrencyId, withdrawalInfo.Amount, pixelEvent);
-                            _ = _faceBookPixelBll.Send(pixelRequest);
-                        });
-                    }
-                    #endregion
                     break;
 
                 case TransStatus.Fail:

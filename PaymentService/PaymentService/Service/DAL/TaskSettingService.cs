@@ -14,12 +14,12 @@ public class TaskSettingService
         _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
     }
 
-    public int Set(int custId, TaskSetting firstDepositTime, DateTimeOffset taskTime)
+    public int Set(int custId, TaskSetting taskSetting, DateTimeOffset taskTime)
     {
         var p = new DynamicParameters(new
         {
             _CustId = custId,
-            _TaskId = (int)firstDepositTime,
+            _TaskId = (int)taskSetting,
             _TaskTime = taskTime.UtcDateTime
         });
 

@@ -37,6 +37,13 @@ namespace PaymentService.Service.Model
         public string Comment { set; get; }
         public string RefId { set; get; }
         public string Operator { set; get; }
+        public bool FirstDeposit {  set; get; }
+        private DateTimeOffset _flowEndTime { get; set; }
+        public DateTimeOffset FlowEndTime
+        {
+            get => _flowEndTime;
+            set => _flowEndTime = new DateTimeOffset(value.DateTime, TimeSpan.Zero);
+        }
     }
 
     public class SetDepositInfoParams

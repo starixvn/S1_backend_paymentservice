@@ -20,13 +20,6 @@ namespace PaymentCore.Model
         public decimal ActualDeposit { set; get; }
         public DateTime CreateTime { set; get; }
         public DepositStatus Status { set; get; }
-        public int FirstDeposit {  set; get; }
-        private DateTimeOffset _flowEndTime { get; set; }
-        public DateTimeOffset FlowEndTime
-        {
-            get => _flowEndTime;
-            set => _flowEndTime = new DateTimeOffset(value.DateTime, TimeSpan.Zero);
-        }
     }
 
     public class DepositAutoCancel
