@@ -12,7 +12,7 @@ public class TaskSettingBLL
         _TaskSettingService = provider.GetService<TaskSettingService>();
     }
 
-    public int Set(int custId, TaskSetting firstDepositTime, DateTime taskTime)
+    public int Set(int custId, TaskSetting firstDepositTime, DateTimeOffset taskTime)
     {
         return _TaskSettingService.Set(custId, firstDepositTime, taskTime);
     }

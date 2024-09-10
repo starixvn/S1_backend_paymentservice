@@ -21,8 +21,12 @@ namespace PaymentService.Service.Model
         public DateTime CreateTime { set; get; }
         public DepositStatus Status { set; get; }
         public int FirstDeposit {  set; get; }
-
-        public DateTime FlowEndTime { set; get; }
+        private DateTimeOffset _flowEndTime { get; set; }
+        public DateTimeOffset FlowEndTime
+        {
+            get => _flowEndTime;
+            set => _flowEndTime = new DateTimeOffset(value.DateTime, TimeSpan.Zero);
+        }
     }
 
     public class DepositAutoCancel
