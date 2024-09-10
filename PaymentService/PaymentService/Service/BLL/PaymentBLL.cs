@@ -17,14 +17,18 @@ namespace PaymentService.Service.BLL
         private readonly Common _common;
         private readonly ILogger<PaymentBLL> _logger;
         private readonly ConfigBLL _configBll;
+        private readonly FaceBookPixelBLL _pixelBll;
+        private readonly TaskSettingService _taskSettingService;
 
         public PaymentBLL(IServiceProvider provider)
         {
             _depositService = provider.GetRequiredService<DepositService>();
             _withdrawalService = provider.GetRequiredService<WithdrawalService>();
+            _taskSettingService = provider.GetRequiredService<TaskSettingService>();
             _common = provider.GetRequiredService<Common>();
             _logger = provider.GetRequiredService<ILogger<PaymentBLL>>();
             _configBll = provider.GetRequiredService<ConfigBLL>();
+            _pixelBll = provider.GetRequiredService<FaceBookPixelBLL>();
         }
 
         public DepositRequest GetDepositRequest(string transId)
@@ -87,6 +91,8 @@ namespace PaymentService.Service.BLL
                 },
                 CanRewardPoint(depositInfo.SiteId, depositInfo.CurrencyId));
 
+            AfterDepositSuccess(depositInfo.TransId);
+            
             return result;
         }
 
@@ -144,6 +150,7 @@ namespace PaymentService.Service.BLL
             };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
             SetWithdrawalAccountCounter(withdrawalRequest, WithdrawalStatus.Approved);
+            _pixelBll.Send2PixelWithdrawalSuccess(withdrawalRequest.SiteId, withdrawalRequest.CustId, withdrawalRequest.CurrencyId, withdrawalRequest.Amount);
         }
 
         private void SetWithdrawalAccountCounter(WithdrawalRequest withdrawalRequest, WithdrawalStatus changeToStatus)
@@ -189,6 +196,8 @@ namespace PaymentService.Service.BLL
                 refId,
                 @operator,
                 forStatus, WithdrawalStatus.Approved, withdrawalRequest);
+            
+            _pixelBll.Send2PixelWithdrawalSuccess(withdrawalRequest.SiteId, withdrawalRequest.CustId, withdrawalRequest.CurrencyId, withdrawalRequest.Amount);
         }
 
 
@@ -308,8 +317,26 @@ namespace PaymentService.Service.BLL
 
             if (!result)
                 _logger.LogError("Update DepositInfo failed. SetDepositInfoParams=" + JsonConvert.SerializeObject(p));
+
+            if (status == DepositStatus.Approved)
+                AfterDepositSuccess(depositRequest.TransId);
         }
 
+        private void AfterDepositSuccess(string transId)
+        {
+            var di = GetDepositInfo(transId);
+            
+            _pixelBll.Send2PixelDepositSuccess(di.SiteId, di.CustId, di.CurrencyId, di.ActualDeposit, di.FirstDeposit);
+
+            if (di.FirstDeposit)
+            {
+                var res = _taskSettingService.Set(di.CustId, TaskSetting.FirstDepositTime, di.FlowEndTime);
+                
+                if (res < 1)
+                    _logger.LogInformation($"{transId} Set FirstDeposit CustTuskTime Failed.");
+            }
+        }
+        
         private bool CanRewardPoint(int siteId, int currencyId)
         {
             var canRewardCurrency = _configBll.GetConfigValue<int[]>("CanReward", siteId);
