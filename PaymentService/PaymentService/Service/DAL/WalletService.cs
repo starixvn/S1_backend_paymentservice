@@ -22,7 +22,7 @@ namespace PaymentService.Service.DAL
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             _mainDbClient.Execute("Wallet_Set_V2", p, trans);
-            is1StDeposit = p.Get<bool?>("Is1stDepoist") ?? false;
+            is1StDeposit = (p.Get<byte?>("Is1stDepoist") ?? 0) == 1;
             afterAmount = p.Get<decimal?>("AfterAmount") ?? 0;
             return afterAmount >= 0 ? 1 : 0;
         }
