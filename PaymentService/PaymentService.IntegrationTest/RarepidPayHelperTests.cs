@@ -2,6 +2,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
 using Payment.RarepidPay;
@@ -15,6 +16,9 @@ namespace PaymentService.IntegrationTest
     {
         private PayHelper _target;
         private IFlurlHttpHelper _flurlHttpHelper;
+        private string _actualAuth;
+        private string _actualUrl;
+        private string _actualData;
 
         [SetUp]
         public void Setup()
@@ -32,9 +36,50 @@ namespace PaymentService.IntegrationTest
         public void A01_Debit_success()
         {
             // Arrange
-            var inputs = new Dictionary<string, string>
+            var inputs = GenerateInputs();
+
+            var depositResponse = GivenDepositResponse();
+
+            _flurlHttpHelper
+                .WithHeader("Authorization", Arg.Do<string>(actualAuth => _actualAuth = actualAuth ))
+                .WithHeader("accept", "application/json")
+                .PostJson<string, DepositResponse>(
+                    Arg.Do<string>(actualUrl=> _actualUrl = actualUrl ), 
+                    Arg.Do<string>(actualData => _actualData = actualData))
+                .Returns((depositResponse, HttpStatusCode.OK));
+
+            // Act
+            var actual = _target.Debit(inputs);
+
+            // Assert
+            AssertDebitShouldReturn(actual);
+
+            AssertCreateOrderUrlShouldReceive();
+            AssertCreateOrderAuthorizationShouldReceive();
+            AssertCreateOrderDataShouldReceive(inputs);
+        }
+
+        private static DepositResponse GivenDepositResponse()
+        {
+            return new DepositResponse
             {
-                { "Host", "Host" },
+                Status = "0",
+                StatusMessage = "NO_ERROR",
+                TranId = "TransID",
+                PgTranId = "D0000000001",
+                Token = "1ae3ebc1-41ab-4a4e-9ef2-0a34ec05a039",
+                Amount = "1000",
+                TotalFees = "1.15",
+                Currency = "INR",
+                RedirectTo = "https://api.{domain}.com/Api/StartWidget/1ae3ebc1-41ab-4a4e-9ef2-0a34ec05a039"
+            };
+        }
+
+        private static Dictionary<string, string> GenerateInputs()
+        {
+            return new Dictionary<string, string>
+            {
+                { "Host", "http://api/" },
                 { "Contract", "Contract" },
                 { "ApiKey", "ApiKey" },
                 { "CallBackUrl", "CallBackUrl" },
@@ -43,25 +88,44 @@ namespace PaymentService.IntegrationTest
                 { "Amount", "1000" },
                 { "TransID", "TransID" }
             };
+        }
 
-            var depositResponse = new DepositResponse
+        private void AssertCreateOrderDataShouldReceive(Dictionary<string, string> inputs)
+        {
+            var expectedData = JsonConvert.SerializeObject(new DepositRequest
             {
-                Status = "0"
-            };
-            _flurlHttpHelper
-                .WithHeader("Authorization", Arg.Any<string>())
-                .WithHeader("accept", "application/json")
-                .PostJson<string, DepositResponse>(Arg.Any<string>(), Arg.Any<string>())
-                .Returns((depositResponse, HttpStatusCode.OK));
+                HttpPostUrl = inputs["CallBackUrl"],
+                ReturnUrl = inputs["ReturnUrl"],
+                FailedReturnUrl = inputs["ReturnUrl"],
+                Depositer = inputs["CustId"],
+                Amount = int.Parse(inputs["Amount"]),
+                TranId = inputs["TransID"],
+                Remark = "service"
+            });
+            _actualData.Should().Be(expectedData);
+        }
 
-            // Act
-            var actual = _target.Debit(inputs);
+        private void AssertCreateOrderUrlShouldReceive()
+        {
+            var expectedUrl = "http://api/Api/QRDeposit";
+            _actualUrl.Should().Be(expectedUrl);
+        }
 
-            // Assert
+        private void AssertCreateOrderAuthorizationShouldReceive()
+        {
+            var expectedAuth = "Contract ApiKey";
+            _actualAuth.Should().Be(expectedAuth);
+        }
+
+        private static void AssertDebitShouldReturn(DepositResult actual)
+        {
             var expected = new DepositResult
             {
                 Success = true,
                 ErrorCode = "0",
+                ThirdId = "D0000000001",
+                Message = "NO_ERROR",
+                Url = "https://api.{domain}.com/Api/StartWidget/1ae3ebc1-41ab-4a4e-9ef2-0a34ec05a039"
             };
             actual.Should().BeEquivalentTo(expected);
         }

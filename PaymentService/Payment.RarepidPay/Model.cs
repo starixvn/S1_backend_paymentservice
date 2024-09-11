@@ -25,6 +25,9 @@ namespace Payment.RarepidPay
         [JsonProperty("total_fees")]
         public string TotalFees { get; set; }
 
+        [JsonProperty("currency")]
+        public string Currency { get; set; }
+
         [JsonProperty("redirect_to")]
         public string RedirectTo { get; set; }
 
