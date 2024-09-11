@@ -22,7 +22,7 @@ namespace Payment.RarepidPay
         {
             var url = GetUrl(inputs["Host"], Path.CreateDeposit);
             var authorization = GetAuthorization(inputs["Contract"], inputs["ApiKey"]);
-            
+
             try
             {
                 var depositRequest = new DepositRequest
@@ -104,7 +104,36 @@ namespace Payment.RarepidPay
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            var req = FromJson<DepositCallBackRequest>(bodyContent);
+            var signConcatSourceString = $"{req.Token}{req.TranId}{req.FromBankCode}{req.Amount}";
+
+            if (!VerifySign(req.Signature, signConcatSourceString, payResource["ApiKey"]))
+            {
+                return new NotifyDepositResult
+                {
+                    DepositId = req.TranId,
+                    TransStatus = TransStatus.Pending,
+                    Response = "Signature verification failed."
+                };
+            }
+
+            var result = new NotifyDepositResult
+            {
+                ThirdId = req.TranId,
+                DepositId = req.TranId,
+                Comment = req.Status,
+                TransStatus = req.Status.Equals("8") ? TransStatus.Success : TransStatus.Pending,
+                ActualAmount = decimal.Parse(req.Amount),
+                Response = Definition.CallbackResponse
+            };
+
+            return result;
+        }
+
+        private bool VerifySign(string sourceSignature, string signConcatSourceString, string apiKey)
+        {
+            var resultSignature = ToHMACSHA256(signConcatSourceString, apiKey);
+            return sourceSignature.Equals(resultSignature, StringComparison.OrdinalIgnoreCase);
         }
 
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,

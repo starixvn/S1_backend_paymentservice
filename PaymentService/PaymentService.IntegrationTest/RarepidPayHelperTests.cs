@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using NSubstitute;
 using NUnit.Framework;
 using Payment.RarepidPay;
-using PaymentCore.Exceptions;
+using PaymentCore;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
@@ -40,10 +40,10 @@ namespace PaymentService.IntegrationTest
             var depositResponse = GivenDepositResponse("0", "NO_ERROR");
 
             _flurlHttpHelper
-                .WithHeader("Authorization", Arg.Do<string>(actualAuth => _actualAuth = actualAuth ))
+                .WithHeader("Authorization", Arg.Do<string>(actualAuth => _actualAuth = actualAuth))
                 .WithHeader("accept", "application/json")
                 .PostJson<string, DepositResponse>(
-                    Arg.Do<string>(actualUrl=> _actualUrl = actualUrl ), 
+                    Arg.Do<string>(actualUrl => _actualUrl = actualUrl),
                     Arg.Do<string>(actualData => _actualData = actualData))
                 .Returns((depositResponse, HttpStatusCode.OK));
 
@@ -87,6 +87,53 @@ namespace PaymentService.IntegrationTest
             AssertCreateOrderUrlShouldReceive();
             AssertCreateOrderAuthorizationShouldReceive();
             AssertCreateOrderDataShouldReceive(inputs);
+        }
+
+        [Test]
+        public void B01_CallBackDebit_SignSuccess()
+        {
+            var formData = new Dictionary<string, string>();
+            var headers = new Dictionary<string, string>();
+            var payResource = new Dictionary<string, string>
+            {
+                { "ApiKey", "xov5j8a09uea5dvug9q0jw" }
+            };
+            var bodyContent = @"{
+                ""contract"": ""ABCTEST"",
+                ""token"": ""1ae3ebc1-41ab4a4e-9ef2-0a34ec05a039"",
+                ""tran_id"": ""depositId"",
+                ""pg_tran_id"": ""1"",
+                ""status"": ""8"",
+                ""status_message"": ""NO_ERROR"",
+                ""tran_status"": ""2"",
+                ""tran_message"": ""Processing"",
+                ""decline_reason"": ""reached max login trials"",
+                ""remark"": ""nn"",
+                ""amount"": ""1000"",
+                ""total_fees"": ""23"",
+                ""currency"": ""INR"",
+                ""depositer"": ""Jon Doe"",
+                ""from_bank_code"": ""KOTAK"",
+                ""from_bank_account"": ""112233445566"",
+                ""bank_reference"": ""bank transaction success reference number"",
+                ""signature"": ""0c612678f967c0f130090312e96c63be32990cfea830f19ae9351667a35ea6aa"",
+                ""created_at"": ""9/14/2022 3:59:41 PM"",
+                ""updated_at"": ""9/14/2022 3:59:41 PM"",
+                ""reference"": ""1321""
+            }";
+            var actual = _target.CallBackDebit(formData,bodyContent,headers,payResource);
+
+            var expected = new NotifyDepositResult
+            {
+                ThirdId = "depositId",
+                DepositId = "depositId",
+                Comment = "8",
+                TransStatus = TransStatus.Success,
+                ActualAmount = 1000M,
+                Response = Definition.CallbackResponse
+            };
+
+            actual.Should().BeEquivalentTo(expected);
         }
 
         private static DepositResponse GivenDepositResponse(string status, string statusMessage)
@@ -147,7 +194,7 @@ namespace PaymentService.IntegrationTest
             _actualAuth.Should().Be(expectedAuth);
         }
 
-        private void AssertDebitShouldReturn(Dictionary<string,string> inputs, DepositResult expected)
+        private void AssertDebitShouldReturn(Dictionary<string, string> inputs, DepositResult expected)
         {
             var actual = _target.Debit(inputs);
             actual.Should().BeEquivalentTo(expected);

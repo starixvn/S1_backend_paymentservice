@@ -3,6 +3,7 @@
     public class Definition
     {
         public const string SuccessCode = "0";
+        public const string CallbackResponse = "OK";
     }
 
     internal class Path
