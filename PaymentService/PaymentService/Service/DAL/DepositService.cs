@@ -106,7 +106,7 @@ namespace PaymentService.Service.DAL
                                 $"transId:{input.TransId} Execute _withdrawalLimitService.SetWithdrawalLimit after result:{result} Step3-2";
                         }
 
-                        if (is1stDepoist == 1 && result > 0)
+                        if (is1stDepoist && result > 0)
                         {
                             logMsg += Environment.NewLine +
                                 $"transId:{input.TransId} Execute SetDepositInfoFirstDeposit parameter depositId:{depositId}, siteId:{input.SiteId} Step4-1";
