@@ -28,6 +28,7 @@ public class DepositV2Controller : ControllerBase
     private readonly Common _common;
     private readonly ICacheHelper _redisHelper;
     private readonly string _callBackUrl;
+    private readonly CRMBLL _cRMBLL;
 
     private readonly IDictionary<DepositType, Func<DepositInfoModel, Customer, (IPayInfo, Dictionary<string, string>)>>
         _getDepositInputMapper;
@@ -43,6 +44,8 @@ public class DepositV2Controller : ControllerBase
         _common = provider.GetRequiredService<Common>();
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
         _callBackUrl = configBll.GetConfigValue("CallBack");
+        _cRMBLL = provider.GetRequiredService<CRMBLL>();
+
         #region ActionMapper
 
         _getDepositInputMapper = new Dictionary<DepositType, Func<DepositInfoModel, Customer, (IPayInfo, Dictionary<string, string>)>>
@@ -377,6 +380,24 @@ public class DepositV2Controller : ControllerBase
             {
                 case TransStatus.Success when depositRequest.Amount > 0:
                     _paymentBll.DepositSuccess(depositRequest, result);
+                    var refreshDepositInfoData = _paymentBll.GetDepositRequest(transId);
+                    #region 埋點
+                    if (depositRequest.SiteId is 1 or 2 or 3 && refreshDepositInfoData.Status == DepositStatus.Approved)
+                    {
+
+                        _ = Task.Run(() =>
+                        {
+                            var para = new CRMRequest() { 
+                                Event = (int)CRMEvent.Deposit_successful,
+                                CustId = depositRequest.CustId,
+                                SiteId = depositRequest.SiteId,
+                                OrderAmount = depositRequest.Amount,
+                                CurrencyId = depositRequest.CurrencyId
+                            };
+                            _ = _cRMBLL.Send(para);
+                        });
+                    }
+                    #endregion
                     break;
 
                 case TransStatus.Fail:
