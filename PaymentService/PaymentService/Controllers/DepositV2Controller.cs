@@ -405,7 +405,8 @@ public class DepositV2Controller : ControllerBase
                                 Event = (int)CRMEvent.Deposit_successful,
                                 CustId = depositRequest.CustId,
                                 SiteId = depositRequest.SiteId,
-                                OrderAmount = depositRequest.Amount
+                                OrderAmount = depositRequest.Amount,
+                                CurrencyId = depositRequest.CurrencyId
                             };
                             _ = _cRMBLL.Send(para);
                         });
