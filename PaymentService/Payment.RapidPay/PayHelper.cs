@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
+using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -27,9 +27,14 @@ namespace Payment.RapidPay
             var apiHost = inputs["host"];
             var payCurrency = inputs["PayCurrencyId"];
             var (payCode, method) = GetMethod(inputs["PayCode"]);
+            var depositInfo = inputs["DepositInfo"];
             
             try
             {
+                // 檢查 DepositInfo
+                if (depositInfo == null)
+                    throw new CustomException("DepositInfo is empty.");
+                
                 var frag = string.IsNullOrEmpty(payCode) ? $"d{payCurrency}" : payCode;
                 var username = inputs[$"{frag}User"];
                 var req = new Dictionary<string, string>
@@ -73,11 +78,14 @@ namespace Payment.RapidPay
                 if (!resp.Status)
                     throw new CustomException("Generate orders failed, msg=" + resp.Message);
 
+                depositInfo = depositInfo.AddOrSetJProperty("KeyFrag", frag);
+                
                 return new DepositResult
                 {
                     Success = true,
                     ErrorCode = "0",
-                    Url = resp.Url
+                    Url = resp.Url,
+                    DepositInfo = depositInfo
                 };
             }
             catch (CustomException ex)
@@ -94,7 +102,11 @@ namespace Payment.RapidPay
             var transId = data.TransId;
             try
             {
-                var secretKeyName = GetDebitCallBackSecretKey(data.Currency, data.PaymentType);
+                var secretKeyName = DebitCallBackSecretKey(payResource);
+                
+                if (string.IsNullOrEmpty(secretKeyName))
+                    secretKeyName = GetDebitCallBackSecretKey(data.Currency, data.PaymentType);
+                
                 var str = secretKeyName + data.TransId;
                 var sign = ToMD5(str).ToLower();
 
@@ -278,6 +290,16 @@ namespace Payment.RapidPay
             var sPayCode = payCode.Split("_");
 
             return (sPayCode[0], sPayCode.Length > 1 ? sPayCode[1] : string.Empty);
+        }
+
+        private static string DebitCallBackSecretKey(IDictionary<string, string> inputs)
+        {
+            var depositInfo = inputs["DepositInfo"];
+            var jObj = JObject.Parse(depositInfo);
+
+            return jObj.TryGetValue("KeyFrag", StringComparison.OrdinalIgnoreCase, out var jPayCode)
+                ? jPayCode.ToObject<string>()
+                : string.Empty;
         }
         
         private static string GetDebitCallBackSecretKey(string currency, string paymentType)
