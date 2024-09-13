@@ -298,7 +298,7 @@ namespace Payment.RapidPay
             var jObj = JObject.Parse(depositInfo);
 
             return jObj.TryGetValue("KeyFrag", StringComparison.OrdinalIgnoreCase, out var jPayCode)
-                ? jPayCode.ToObject<string>()
+                ? $"{jPayCode.ToObject<string>()}Secret"
                 : string.Empty;
         }
         
