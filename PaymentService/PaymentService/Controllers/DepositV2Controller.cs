@@ -151,6 +151,22 @@ public class DepositV2Controller : ControllerBase
                     _paymentBll.UpdateDepositInfo(req.TransId, result.DepositInfo);
                 }
 
+                #region 埋點
+                _ = Task.Run(() =>
+                {
+                    var para = new CRMRequest()
+                    {
+                        Event = (int)CRMEvent.deposit_initiated,
+                        CustId = depositInfo.CustId,
+                        SiteId = depositInfo.SiteId,
+                        OrderAmount = depositInfo.Amount,
+                        CurrencyId = depositInfo.CurrencyId,
+                        Environment = _common.GetEnv()
+                    };
+                    _ = _cRMBLL.Send(para);
+                });
+                #endregion
+
                 return new ApiResult<PayResult>(payResult);
             }
 
@@ -402,11 +418,12 @@ public class DepositV2Controller : ControllerBase
                         _ = Task.Run(() =>
                         {
                             var para = new CRMRequest() { 
-                                Event = (int)CRMEvent.Deposit_successful,
+                                Event = (int)CRMEvent.deposit_successful,
                                 CustId = depositRequest.CustId,
                                 SiteId = depositRequest.SiteId,
                                 OrderAmount = depositRequest.Amount,
-                                CurrencyId = depositRequest.CurrencyId
+                                CurrencyId = depositRequest.CurrencyId,
+                                Environment = _common.GetEnv()
                             };
                             _ = _cRMBLL.Send(para);
                         });
