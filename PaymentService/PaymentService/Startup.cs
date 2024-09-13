@@ -56,6 +56,7 @@ namespace PaymentService
             services.AddSingleton<PaymentBLL>();
             services.AddSingleton<WhitelistBLL>();
             services.AddSingleton<FaceBookPixelBLL>();
+            services.AddSingleton<CRMBLL>();
 
 
             /*SiteConfig*/
