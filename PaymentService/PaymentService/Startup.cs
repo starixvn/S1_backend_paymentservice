@@ -48,6 +48,7 @@ namespace PaymentService
             services.AddSingleton<WalletService>();
             services.AddSingleton<WithdrawalService>();
             services.AddSingleton<ConfigService>();
+            services.AddSingleton<TaskSettingService>();
 
 
             /*BLL*/
@@ -56,6 +57,7 @@ namespace PaymentService
             services.AddSingleton<PaymentBLL>();
             services.AddSingleton<WhitelistBLL>();
             services.AddSingleton<FaceBookPixelBLL>();
+            services.AddSingleton<TaskSettingBLL>();
             services.AddSingleton<CRMBLL>();
 
 

@@ -381,13 +381,6 @@ public class WithdrawalV2Controller : ControllerBase
                     {
                         _ = Task.Run(() =>
                         {
-                            var pixelEvent = new List<FaceBookPixel> { FaceBookPixel.withdraw };
-                            var pixelRequest = _faceBookPixelBll.CreatePixelRequest(withdrawalInfo.SiteId, withdrawalInfo.CustId, withdrawalInfo.CurrencyId, withdrawalInfo.Amount, pixelEvent);
-                            _ = _faceBookPixelBll.Send(pixelRequest);
-                        });
-
-                        _ = Task.Run(() =>
-                        {
                             var para = new CRMRequest()
                             {
                                 Event = (int)CRMEvent.withdrawal_sucessful,
