@@ -144,11 +144,75 @@ namespace PaymentService.IntegrationTest
         {
             var transId = "WD138065";
             var inputs = GenerateWithdrawalInputs(transId);
-            // GenerateWithdrawalResponse();
-            // GivenHttpHelperPostJsonReturnsSuccessWithdrawalResponse();
-            //
-            // AssertCreditSuccessShouldReturn();
-            // AssertHttpHelperPostJsonShouldReceive();
+            var withdrawalResponse = GenerateWithdrawalResponse("0", "NO_ERROR", "WD138065");
+            GivenHttpHelperPostJsonReturnsSuccessWithdrawalResponse(withdrawalResponse);
+
+            var expected = new WithdrawResult
+            {
+                Success = true,
+                Message = "NO_ERROR"
+            };
+            AssertCreditSuccessShouldReturn(inputs, expected);
+
+            var expectedData = new WithdrawalPost
+            {
+                HttpPostUrl = $"http://www.callbackurl.com/Payment/WithdrawalCallBack/{transId}",
+                Amount = "1000.00",
+                ToBankCode = "AXIS",
+                ToBankAccount = "58585858",
+                ToAccountName = "Jatinder Mesi",
+                IfscCode = "ABCDE012345",
+                TranId = transId,
+                Remark = "payout"
+            };
+            AssertHttpHelperPostJsonShouldReceive(
+                JsonConvert.SerializeObject(expectedData),
+                "http://localhost:59159/RarepidPay/Api/Withdraw",
+                "Contract ApiKey");
+        }
+
+        private void AssertHttpHelperPostJsonShouldReceive(string expectedData, string expectedUrl, string expectedAuth)
+        {
+            _actualData.Should().Be(expectedData);
+            _actualUrl.Should().Be(expectedUrl);
+            _actualAuth.Should().Be(expectedAuth);
+        }
+
+        private void AssertCreditSuccessShouldReturn(Dictionary<string, string> inputs, WithdrawResult expected)
+        {
+            var actual = _target.Credit(inputs);
+            actual.Should().BeEquivalentTo(expected);
+        }
+
+        private void GivenHttpHelperPostJsonReturnsSuccessWithdrawalResponse(WithdrawalResponse withdrawalResponse)
+        {
+            _flurlHttpHelper
+                .WithHeader("Authorization", Arg.Do<string>(actualAuth => _actualAuth = actualAuth))
+                .WithHeader("accept", "application/json")
+                .PostJson<string, WithdrawalResponse>(
+                    Arg.Do<string>(actualUrl => _actualUrl = actualUrl),
+                    Arg.Do<string>(actualData => _actualData = actualData))
+                .Returns((withdrawalResponse, HttpStatusCode.OK));
+        }
+
+        private WithdrawalResponse GenerateWithdrawalResponse(string status, string statusMessage, string transId)
+        {
+            return new WithdrawalResponse
+            {
+                Status = status,
+                StatusMessage =  statusMessage,
+                TranId = transId,
+                PayoutTranId =  "C00000000013422",
+                Token =  "f0375599-077-47aa-b39a-6267a8bca571",
+                Remark =  "payout for player PokerGod666",
+                Amount =  "1000",
+                TotalFees =  "1.15",
+                Currency = "INR",
+                ToBankCode =  "KOTAK",
+                ToBankAccount =  "123455778980",
+                IfscCode =  "123455778980",
+                PhoneNumber = "123455778980"
+            };
         }
 
         private Dictionary<string, string> GenerateWithdrawalInputs(string transId)
@@ -170,7 +234,7 @@ namespace PaymentService.IntegrationTest
                 { "TransID", transId },
                 { "ClientIP", "1.0.0.1" },
                 { "OutgoingIp", "1.0.0.1" }, 
-                { "CallBackUrl", "$\"http://www.callbackurl.com/Payment/WithdrawalCallBack/{transId}"},
+                { "CallBackUrl", $"http://www.callbackurl.com/Payment/WithdrawalCallBack/{transId}"},
                 { "IsTest", "false" }
             };
         }
@@ -180,7 +244,7 @@ namespace PaymentService.IntegrationTest
             var pay = new Pay
             {
                 Setting =
-                    "{\"Host\": \"http://localhost:59159/RarepidPay\", \"ApiKey\": \"xov5j8a09uea5dvug9q0jw\", \"PayName\": \"RarepidPay\", \"Contract\": \"PACSEA128TEST\"}"
+                    "{\"Host\": \"http://localhost:59159/RarepidPay\", \"ApiKey\": \"ApiKey\", \"PayName\": \"RarepidPay\", \"Contract\": \"Contract\"}"
             };
 
             return JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
@@ -311,7 +375,7 @@ namespace PaymentService.IntegrationTest
 
         private void AssertCreateOrderDataShouldReceive(Dictionary<string, string> inputs)
         {
-            var expectedData = JsonConvert.SerializeObject(new Payment.RarepidPay.DepositRequest
+            var expectedData = JsonConvert.SerializeObject(new DepositPost
             {
                 HttpPostUrl = inputs["CallBackUrl"],
                 ReturnUrl = inputs["ReturnUrl"],

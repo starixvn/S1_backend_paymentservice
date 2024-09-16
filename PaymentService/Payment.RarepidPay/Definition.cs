@@ -9,6 +9,7 @@
     internal class Path
     {
         public const string CreateDeposit = "/Api/QRDeposit";
+        public static string CreateWithdrawal = "/Api/Withdraw";
     }
 
     internal class MediaType

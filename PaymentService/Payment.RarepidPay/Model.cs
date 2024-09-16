@@ -2,6 +2,75 @@
 
 namespace Payment.RarepidPay
 {
+    public class WithdrawalResponse
+    {
+        [JsonProperty("amount")]
+        public string Amount { get; set; }
+
+        [JsonProperty("currency")]
+        public string Currency { get; set; }
+
+        [JsonProperty("ifsc_code")]
+        public string IfscCode { get; set; }
+
+        [JsonProperty("payout_tran_id")]
+        public string PayoutTranId { get; set; }
+
+        [JsonProperty("phone_number")]
+        public string PhoneNumber { get; set; }
+
+        [JsonProperty("remark")]
+        public string Remark { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("status_message")]
+        public string StatusMessage { get; set; }
+
+        [JsonProperty("to_bank_account")]
+        public string ToBankAccount { get; set; }
+
+        [JsonProperty("to_bank_code")]
+        public string ToBankCode { get; set; }
+
+        [JsonProperty("token")]
+        public string Token { get; set; }
+
+        [JsonProperty("total_fees")]
+        public string TotalFees { get; set; }
+
+        [JsonProperty("tran_id")]
+        public string TranId { get; set; }
+    }
+
+    public class WithdrawalPost
+    {
+        [JsonProperty("amount")]
+        public string Amount { get; set; }
+
+        [JsonProperty("http_post_url")]
+        public string HttpPostUrl { get; set; }
+
+        [JsonProperty("ifsc_code")]
+        public string IfscCode { get; set; }
+
+        [JsonProperty("remark")]
+        public string Remark { get; set; }
+
+        [JsonProperty("to_account_name")]
+        public string ToAccountName { get; set; }
+
+        [JsonProperty("to_bank_account")]
+        public string ToBankAccount { get; set; }
+
+        [JsonProperty("to_bank_code")]
+        public string ToBankCode { get; set; }
+
+        [JsonProperty("tran_id")]
+        public string TranId { get; set; }
+    }
+
     public class DepositCallBackRequest
     {
         [JsonProperty("contract")]
@@ -98,7 +167,7 @@ namespace Payment.RarepidPay
         public string RedirectTo { get; set; }
     }
 
-    public class DepositRequest
+    public class DepositPost
     {
         [JsonProperty("http_post_url")]
         public string HttpPostUrl { get; set; }

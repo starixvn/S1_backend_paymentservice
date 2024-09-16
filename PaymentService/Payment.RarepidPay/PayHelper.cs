@@ -25,7 +25,7 @@ namespace Payment.RarepidPay
 
             try
             {
-                var depositRequest = new DepositRequest
+                var depositRequest = new DepositPost
                 {
                     HttpPostUrl = inputs["CallBackUrl"],
                     ReturnUrl = inputs["ReturnUrl"],
@@ -84,7 +84,45 @@ namespace Payment.RarepidPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var url = GetUrl(inputs["Host"], Path.CreateWithdrawal);
+            var authorization = GetAuthorization(inputs["Contract"], inputs["ApiKey"]);
+
+            var withdrawalRequest = new WithdrawalPost
+            {
+                HttpPostUrl = inputs["CallBackUrl"],
+                Amount = int.Parse(inputs["Amount"]).ToString("F2"),
+                ToBankCode = inputs["BankCode"],
+                ToBankAccount = inputs["AccountNo"],
+                ToAccountName = inputs["AccountName"],
+                IfscCode = inputs["IFSCCode"],
+                TranId = inputs["TransID"],
+                Remark = "payout"
+            };
+
+            var withdrawalResponse = CreatePayout(url, authorization, ToJson(withdrawalRequest));
+            var result = new WithdrawResult
+            {
+                Success = true,
+                Message = withdrawalResponse.StatusMessage
+            };
+
+            return result;
+        }
+
+        private WithdrawalResponse CreatePayout(string url, string authorization, string data)
+        {
+            var (response, statusCode) = _httpHelper
+                .WithHeader("Authorization", authorization)
+                .WithHeader("accept", MediaType.Json)
+                .PostJson<string, WithdrawalResponse>(url, data);
+
+            if (response.Status != Definition.SuccessCode)
+            {
+                throw new CustomException(
+                    $"RarepidPay create payout failed: Status={response.Status}, StatusMessage={response.StatusMessage}");
+            }
+
+            return response;
         }
 
         public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
