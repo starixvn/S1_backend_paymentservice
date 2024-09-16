@@ -136,6 +136,17 @@ namespace PaymentService.IntegrationTest
             actual.Should().BeEquivalentTo(expected);
         }
 
+        [Test]
+        public void C01_Credit_success()
+        {
+            // GenerateWithdrawalInputs();
+            // GenerateWithdrawalResponse();
+            // GivenHttpHelperPostJsonReturnsSuccessWithdrawalResponse();
+            //
+            // AssertCreditSuccessShouldReturn();
+            // AssertHttpHelperPostJsonShouldReceive();
+        }
+
         private static DepositResponse GivenDepositResponse(string status, string statusMessage)
         {
             return new DepositResponse
