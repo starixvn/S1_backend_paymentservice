@@ -7,8 +7,11 @@ using NSubstitute;
 using NUnit.Framework;
 using Payment.RarepidPay;
 using PaymentCore;
+using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
+using PaymentService.Service.Model;
 
 namespace PaymentService.IntegrationTest
 {
@@ -121,7 +124,7 @@ namespace PaymentService.IntegrationTest
                 ""updated_at"": ""9/14/2022 3:59:41 PM"",
                 ""reference"": ""1321""
             }";
-            var actual = _target.CallBackDebit(formData,bodyContent,headers,payResource);
+            var actual = _target.CallBackDebit(formData, bodyContent, headers, payResource);
 
             var expected = new NotifyDepositResult
             {
@@ -139,7 +142,8 @@ namespace PaymentService.IntegrationTest
         [Test]
         public void C01_Credit_success()
         {
-            var inputs = GenerateWithdrawalInputs();
+            var transId = "WD138065";
+            var inputs = GenerateWithdrawalInputs(transId);
             // GenerateWithdrawalResponse();
             // GivenHttpHelperPostJsonReturnsSuccessWithdrawalResponse();
             //
@@ -147,13 +151,131 @@ namespace PaymentService.IntegrationTest
             // AssertHttpHelperPostJsonShouldReceive();
         }
 
-        private Dictionary<string, string> GenerateWithdrawalInputs()
+        private Dictionary<string, string> GenerateWithdrawalInputs(string transId)
         {
-            // GenerateInputsFromCustInfo();
-            // GenerateInputsFromWithdrawalInfo();
-            // GenerateInputsFromPayInfo();
-            // GenerateInputsFromWithdrawalTypeOnlineBanking();
-            // GenerateInputsFromPaySetting();
+            var inputs = new Dictionary<string, string>();
+            inputs.AddRange(GenerateInputsFromCustInfo());
+            inputs.AddRange(GenerateInputsFromWithdrawalInfo());
+            inputs.AddRange(GenerateInputsFromPayInfo());
+            inputs.AddRange(GenerateInputsFromWithdrawalTypeOnlineBanking());
+            inputs.AddRange(GenerateInputsFromPaySetting());
+            inputs.AddRange(GenerateInputsFromOriginalRequest(transId));
+            return inputs;
+        }
+
+        private Dictionary<string, string> GenerateInputsFromOriginalRequest(string transId)
+        {
+            return new Dictionary<string, string>
+            {
+                { "TransID", transId },
+                { "ClientIP", "1.0.0.1" },
+                { "OutgoingIp", "1.0.0.1" }, 
+                { "CallBackUrl", "$\"http://www.callbackurl.com/Payment/WithdrawalCallBack/{transId}"},
+                { "IsTest", "false" }
+            };
+        }
+
+        private Dictionary<string, string> GenerateInputsFromPaySetting()
+        {
+            var pay = new Pay
+            {
+                Setting =
+                    "{\"Host\": \"http://localhost:59159/RarepidPay\", \"ApiKey\": \"xov5j8a09uea5dvug9q0jw\", \"PayName\": \"RarepidPay\", \"Contract\": \"PACSEA128TEST\"}"
+            };
+
+            return JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
+        }
+
+        private Dictionary<string, string> GenerateInputsFromWithdrawalTypeOnlineBanking()
+        {
+            var withdrawalInfo = new WithdrawalRequest
+            {
+                WithdrawalInfo =
+                    "{\"PayId\": 92, \"SysId\": 244, \"IFSCCode\": \"ABCDE012345\", \"AccountNo\": \"9416030505\", \"ChannelId\": 773, \"AccountName\": \"Jatinder Mesi\"}"
+            };
+
+            var withdrawalInfoDictionary =
+                JsonConvert.DeserializeObject<Dictionary<string, string>>(withdrawalInfo.WithdrawalInfo);
+            var payInfo = GeneratePayInfo();
+
+            return new Dictionary<string, string>
+            {
+                { "BankName", payInfo.BankName },
+                { "BankCode", payInfo.BankCode },
+                { "IFSCCode", withdrawalInfoDictionary["IFSCCode"] }
+            };
+        }
+
+        private Dictionary<string, string> GenerateInputsFromPayInfo()
+        {
+            var payInfo = GeneratePayInfo();
+
+            return new Dictionary<string, string>
+            {
+                { "PayCurrencyId", payInfo.PayCurrencyId },
+                { "PayCode", payInfo.PayCode }
+            };
+        }
+
+        private static BankInfoPay GeneratePayInfo()
+        {
+            var payInfo = new BankInfoPay
+            {
+                PayId = 92,
+                PayCurrencyId = "INR",
+                BankCode = "AXIS",
+                BankName = "Axis Bank",
+                SysId = 244,
+                PayCode = string.Empty
+            };
+            return payInfo;
+        }
+
+        private Dictionary<string, string> GenerateInputsFromWithdrawalInfo()
+        {
+            var withdrawalInfo = new WithdrawalRequest
+            {
+                CurrencyId = 61,
+                Amount = 1000,
+                AccountNo = "58585858",
+                WithdrawalInfo =
+                    "{\"PayId\": 92, \"SysId\": 244, \"IFSCCode\": \"ABCDE012345\", \"AccountNo\": \"9416030505\", \"ChannelId\": 773, \"AccountName\": \"Jatinder Mesi\"}",
+                WithdrawalType = WithdrawalType.OnlineBanking
+            };
+
+            return new Dictionary<string, string>
+            {
+                { "CurrencyId", withdrawalInfo.CurrencyId.ToString() },
+                { "Amount", withdrawalInfo.Amount.ToString("G29") },
+                { "AccountNo", withdrawalInfo.AccountNo },
+                { "WithdrawalInfo", withdrawalInfo.WithdrawalInfo },
+                { "WithdrawalType", ((int)withdrawalInfo.WithdrawalType).ToString() }
+            };
+        }
+
+        private Dictionary<string, string> GenerateInputsFromCustInfo()
+        {
+            var customer = new Customer
+            {
+                CustId = 651403,
+                UserName = "debbieinr001",
+                AccountName = "Jatinder Mesi",
+                UserLang = "en",
+                PhoneNo = "966521475",
+                PhoneVerified = true,
+                AreaCode = "+66",
+            };
+
+            return new Dictionary<string, string>
+            {
+                { "CustId", customer.CustId.ToString() },
+                { "UserName", customer.UserName },
+                { "AccountName", customer.AccountName },
+                { "Lang", customer.UserLang },
+                { "PhoneNo", customer.PhoneNo },
+                { "PhoneVerified", customer.PhoneVerified.ToString() },
+                { "AreaCode", customer.AreaCode }
+            };
         }
 
         private static DepositResponse GivenDepositResponse(string status, string statusMessage)
@@ -189,7 +311,7 @@ namespace PaymentService.IntegrationTest
 
         private void AssertCreateOrderDataShouldReceive(Dictionary<string, string> inputs)
         {
-            var expectedData = JsonConvert.SerializeObject(new DepositRequest
+            var expectedData = JsonConvert.SerializeObject(new Payment.RarepidPay.DepositRequest
             {
                 HttpPostUrl = inputs["CallBackUrl"],
                 ReturnUrl = inputs["ReturnUrl"],
