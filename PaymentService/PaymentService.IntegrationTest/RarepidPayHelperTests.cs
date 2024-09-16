@@ -139,12 +139,21 @@ namespace PaymentService.IntegrationTest
         [Test]
         public void C01_Credit_success()
         {
-            // GenerateWithdrawalInputs();
+            var inputs = GenerateWithdrawalInputs();
             // GenerateWithdrawalResponse();
             // GivenHttpHelperPostJsonReturnsSuccessWithdrawalResponse();
             //
             // AssertCreditSuccessShouldReturn();
             // AssertHttpHelperPostJsonShouldReceive();
+        }
+
+        private Dictionary<string, string> GenerateWithdrawalInputs()
+        {
+            // GenerateInputsFromCustInfo();
+            // GenerateInputsFromWithdrawalInfo();
+            // GenerateInputsFromPayInfo();
+            // GenerateInputsFromWithdrawalTypeOnlineBanking();
+            // GenerateInputsFromPaySetting();
         }
 
         private static DepositResponse GivenDepositResponse(string status, string statusMessage)
