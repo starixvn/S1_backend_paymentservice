@@ -32,6 +32,7 @@ public class WithdrawalV2Controller : ControllerBase
     private readonly ICacheHelper _redisHelper;
     private readonly string _callBackUrl;
     private readonly FaceBookPixelBLL _faceBookPixelBll;
+    private readonly CRMBLL _cRMBLL;
 
     private readonly IDictionary<WithdrawalType, Func<WithdrawalRequest, Customer, (IPayInfo, Dictionary<string, string>)>>
         _getWithdrawalInputMapper;
@@ -49,6 +50,7 @@ public class WithdrawalV2Controller : ControllerBase
         _whitelistBll = provider.GetRequiredService<WhitelistBLL>();
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
         _faceBookPixelBll = provider.GetRequiredService<FaceBookPixelBLL>();
+        _cRMBLL = provider.GetRequiredService<CRMBLL>();
 
         #region ActionMapper
 
@@ -121,6 +123,23 @@ public class WithdrawalV2Controller : ControllerBase
             if (!string.IsNullOrEmpty(result.WithdrawalInfo))
             {
                 _paymentBll.UpdateWithdrawalInfo(req.TransId, result.WithdrawalInfo);
+            }
+
+            if (result.Success)
+            {
+                _ = Task.Run(() =>
+                {
+                    var para = new CRMRequest()
+                    {
+                        Event = (int)CRMEvent.withdrawal_initiated,
+                        CustId = custInfo.CustId,
+                        SiteId = custInfo.SiteId,
+                        OrderAmount = withdrawalInfo.Amount,
+                        CurrencyId = custInfo.CurrencyId,
+                        Environment = _common.GetEnv()
+                    };
+                    _ = _cRMBLL.Send(para);
+                });
             }
 
             return new ApiResult(result.Success
@@ -357,6 +376,24 @@ public class WithdrawalV2Controller : ControllerBase
             {
                 case TransStatus.Success when withdrawalInfo.Amount > 0:
                     _paymentBll.WithdrawalSuccess(withdrawalInfo, result);
+                    #region 埋點
+                    if (withdrawalInfo.SiteId is 1 or 2 or 3)
+                    {
+                        _ = Task.Run(() =>
+                        {
+                            var para = new CRMRequest()
+                            {
+                                Event = (int)CRMEvent.withdrawal_sucessful,
+                                CustId = withdrawalInfo.CustId,
+                                SiteId = withdrawalInfo.SiteId,
+                                OrderAmount = withdrawalInfo.Amount,
+                                CurrencyId = withdrawalInfo.CurrencyId,
+                                Environment = _common.GetEnv()
+                            };
+                            _ = _cRMBLL.Send(para);
+                        });
+                    }
+                    #endregion
                     break;
 
                 case TransStatus.Fail:
