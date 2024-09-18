@@ -203,6 +203,95 @@ namespace PaymentService.IntegrationTest
                 "Contract ApiKey");
         }
 
+        [Test]
+        public void D01_CallBackCredit_SignSuccess()
+        {
+            var transId = "WD138065";
+            var (formData, bodyContent, headers, payResource) =
+                GenerateParameters(transId, WithdrawalType.OnlineBanking, CurrencyEnum.INR);
+
+            var expectedNotifyWithdrawResult = new NotifyWithdrawResult
+            {
+                WithdrawId = transId,
+                ThirdId = "1",
+                TransStatus = TransStatus.Success,
+                Response = "OK",
+                Message = "NO_ERROR"
+            };
+            AssertCallBankCreditShouldReturn(formData, bodyContent, headers, payResource, expectedNotifyWithdrawResult);
+        }
+
+        private void AssertCallBankCreditShouldReturn(
+            Dictionary<string, string> formData,
+            string bodyContent,
+            Dictionary<string, string> headers,
+            Dictionary<string, string> payResource,
+            NotifyWithdrawResult expectedNotifyWithdrawResult)
+        {
+            var actual = _target.CallBackCredit(formData, bodyContent, headers, payResource);
+            actual.Should().BeEquivalentTo(expectedNotifyWithdrawResult);
+        }
+
+        private (Dictionary<string, string>, string, Dictionary<string, string>, Dictionary<string, string>) GenerateParameters(
+            string transId,
+            WithdrawalType withdrawalType,
+            CurrencyEnum currency)
+        {
+            var formData = GenerateFormData();
+            var bodyContent = GenerateRarepidPayBodyContent();
+            var headers = GenerateHeaders();
+            var payResource = GeneratePayResource(transId, withdrawalType, currency);
+
+            return (formData, bodyContent, headers, payResource);
+        }
+
+        private Dictionary<string, string> GeneratePayResource(string transId, WithdrawalType withdrawalType, CurrencyEnum currency)
+        {
+            var payResource = GenerateInputsFromPaySetting();
+            payResource.Add("TransId", transId);
+            payResource.Add("WithdrawalType", ((int)withdrawalType).ToString());
+            payResource.Add("CurrencyId", ((int)currency).ToString());
+
+            return payResource;
+        }
+
+        private Dictionary<string, string> GenerateHeaders()
+        {
+            return new Dictionary<string, string>();
+        }
+
+        private string GenerateRarepidPayBodyContent()
+        {
+            return @"{
+                ""contract"": ""PACSEA128TEST"",
+                ""token"": ""1ae3ebc1-41ab4a4e-9ef2-0a34ec05a039"",
+                ""tran_id"": ""depositId"",
+                ""payout_tran_id"": ""1"",
+                ""status"": ""0"",
+                ""status_message"": ""NO_ERROR"",
+                ""payout_status"": ""2"",
+                ""payout_message"": ""Processing"",
+                ""decline_reason"": ""reached max login trials"",
+                ""remark"": ""nn"",
+                ""amount"": ""1000"",
+                ""total_fees"": ""23"",
+                ""currency"": ""INR"",
+                ""to_bank_code"": ""KOTAK"",
+                ""to_bank_account"": ""112233445566"",
+                ""to_account_name"": ""112233445566"",
+                ""ifsc_code"": ""ICICI12345678"",
+                ""phone_number"": ""112233445566"",
+                ""signature"": ""26bd1272d38a3a3d34871874d8b9a1d162990ce0f2af505b77db9d90fd61d10d"",
+                ""created_at"": ""2017-01-01 16:41:21"",
+                ""payment_date"": ""2017-01-01 16:41:21""
+            }";
+        }
+
+        private Dictionary<string, string> GenerateFormData()
+        {
+            return new Dictionary<string, string>();
+        }
+
         private void AssertHttpHelperPostJsonShouldReceive(string expectedData, string expectedUrl, string expectedAuth)
         {
             _actualData.Should().Be(expectedData);
