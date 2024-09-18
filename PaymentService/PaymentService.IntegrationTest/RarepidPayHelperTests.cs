@@ -22,7 +22,8 @@ namespace PaymentService.IntegrationTest
         private IFlurlHttpHelper _flurlHttpHelper;
         private string _actualAuth;
         private string _actualUrl;
-        private string _actualData;
+        private DepositPost _actualData;
+        private WithdrawalPost _actualWData;
 
         [SetUp]
         public void Setup()
@@ -45,9 +46,9 @@ namespace PaymentService.IntegrationTest
             _flurlHttpHelper
                 .WithHeader("Authorization", Arg.Do<string>(actualAuth => _actualAuth = actualAuth))
                 .WithHeader("accept", "application/json")
-                .PostJson<string, DepositResponse>(
+                .PostJson<DepositPost, DepositResponse>(
                     Arg.Do<string>(actualUrl => _actualUrl = actualUrl),
-                    Arg.Do<string>(actualData => _actualData = actualData))
+                    Arg.Do<DepositPost>(actualData => _actualData = actualData))
                 .Returns((depositResponse, HttpStatusCode.OK));
 
             var expected = new DepositResult
@@ -62,7 +63,17 @@ namespace PaymentService.IntegrationTest
 
             AssertCreateOrderUrlShouldReceive();
             AssertCreateOrderAuthorizationShouldReceive();
-            AssertCreateOrderDataShouldReceive(inputs);
+            var expectedData = new DepositPost
+            {
+                HttpPostUrl = inputs["CallBackUrl"],
+                ReturnUrl = inputs["ReturnUrl"],
+                FailedReturnUrl = inputs["ReturnUrl"],
+                Depositer = inputs["CustId"],
+                Amount = int.Parse(inputs["Amount"]),
+                TranId = inputs["TransID"],
+                Remark = "service"
+            };
+            AssertCreateOrderDataShouldReceive(expectedData);
         }
 
         [Test]
@@ -74,9 +85,9 @@ namespace PaymentService.IntegrationTest
             _flurlHttpHelper
                 .WithHeader("Authorization", Arg.Do<string>(actualAuth => _actualAuth = actualAuth))
                 .WithHeader("accept", "application/json")
-                .PostJson<string, DepositResponse>(
+                .PostJson<DepositPost, DepositResponse>(
                     Arg.Do<string>(actualUrl => _actualUrl = actualUrl),
-                    Arg.Do<string>(actualData => _actualData = actualData))
+                    Arg.Do<DepositPost>(actualData => _actualData = actualData))
                 .Returns((depositResponse, HttpStatusCode.OK));
 
             var expected = new DepositResult
@@ -89,7 +100,17 @@ namespace PaymentService.IntegrationTest
 
             AssertCreateOrderUrlShouldReceive();
             AssertCreateOrderAuthorizationShouldReceive();
-            AssertCreateOrderDataShouldReceive(inputs);
+            var expectedData = new DepositPost
+            {
+                HttpPostUrl = inputs["CallBackUrl"],
+                ReturnUrl = inputs["ReturnUrl"],
+                FailedReturnUrl = inputs["ReturnUrl"],
+                Depositer = inputs["CustId"],
+                Amount = int.Parse(inputs["Amount"]),
+                TranId = inputs["TransID"],
+                Remark = "service"
+            };
+            AssertCreateOrderDataShouldReceive(expectedData);
         }
 
         [Test]
@@ -166,7 +187,7 @@ namespace PaymentService.IntegrationTest
                 Remark = "payout"
             };
             AssertHttpHelperPostJsonShouldReceive(
-                JsonConvert.SerializeObject(expectedData),
+                expectedData,
                 "http://localhost:59159/RarepidPay/Api/Withdraw",
                 "Contract ApiKey");
         }
@@ -198,7 +219,7 @@ namespace PaymentService.IntegrationTest
                 Remark = "payout"
             };
             AssertHttpHelperPostJsonShouldReceive(
-                JsonConvert.SerializeObject(expectedData),
+                expectedData,
                 "http://localhost:59159/RarepidPay/Api/Withdraw",
                 "Contract ApiKey");
         }
@@ -292,9 +313,9 @@ namespace PaymentService.IntegrationTest
             return new Dictionary<string, string>();
         }
 
-        private void AssertHttpHelperPostJsonShouldReceive(string expectedData, string expectedUrl, string expectedAuth)
+        private void AssertHttpHelperPostJsonShouldReceive(WithdrawalPost expectedData, string expectedUrl, string expectedAuth)
         {
-            _actualData.Should().Be(expectedData);
+            _actualWData.Should().BeEquivalentTo(expectedData);
             _actualUrl.Should().Be(expectedUrl);
             _actualAuth.Should().Be(expectedAuth);
         }
@@ -310,9 +331,9 @@ namespace PaymentService.IntegrationTest
             _flurlHttpHelper
                 .WithHeader("Authorization", Arg.Do<string>(actualAuth => _actualAuth = actualAuth))
                 .WithHeader("accept", "application/json")
-                .PostJson<string, WithdrawalResponse>(
+                .PostJson<WithdrawalPost, WithdrawalResponse>(
                     Arg.Do<string>(actualUrl => _actualUrl = actualUrl),
-                    Arg.Do<string>(actualData => _actualData = actualData))
+                    Arg.Do<WithdrawalPost>(actualData => _actualWData = actualData))
                 .Returns((withdrawalResponse, HttpStatusCode.OK));
         }
 
@@ -494,19 +515,9 @@ namespace PaymentService.IntegrationTest
             };
         }
 
-        private void AssertCreateOrderDataShouldReceive(Dictionary<string, string> inputs)
+        private void AssertCreateOrderDataShouldReceive(DepositPost expectedData)
         {
-            var expectedData = JsonConvert.SerializeObject(new DepositPost
-            {
-                HttpPostUrl = inputs["CallBackUrl"],
-                ReturnUrl = inputs["ReturnUrl"],
-                FailedReturnUrl = inputs["ReturnUrl"],
-                Depositer = inputs["CustId"],
-                Amount = int.Parse(inputs["Amount"]),
-                TranId = inputs["TransID"],
-                Remark = "service"
-            });
-            _actualData.Should().Be(expectedData);
+            _actualData.Should().BeEquivalentTo(expectedData);
         }
 
         private void AssertCreateOrderUrlShouldReceive()

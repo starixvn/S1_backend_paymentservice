@@ -36,7 +36,7 @@ namespace Payment.RarepidPay
                     Remark = "service"
                 };
 
-                var orderResponse = CreateOrder(url, authorization, ToJson(depositRequest));
+                var orderResponse = CreateOrder(url, authorization, depositRequest);
                 var result = new DepositResult
                 {
                     Success = true,
@@ -56,12 +56,12 @@ namespace Payment.RarepidPay
             }
         }
 
-        private DepositResponse CreateOrder(string url, string authorization, string data)
+        private DepositResponse CreateOrder(string url, string authorization, DepositPost data)
         {
             var (response, statusCode) = _httpHelper
                 .WithHeader("Authorization", authorization)
                 .WithHeader("accept", MediaType.Json)
-                .PostJson<string, DepositResponse>(url, data);
+                .PostJson<DepositPost, DepositResponse>(url, data);
 
             if (response.Status != Definition.SuccessCode)
             {
@@ -101,7 +101,7 @@ namespace Payment.RarepidPay
                     Remark = "payout"
                 };
 
-                var withdrawalResponse = CreatePayout(url, authorization, ToJson(withdrawalRequest));
+                var withdrawalResponse = CreatePayout(url, authorization, withdrawalRequest);
                 var result = new WithdrawResult
                 {
                     Success = true,
@@ -118,12 +118,12 @@ namespace Payment.RarepidPay
             }
         }
 
-        private WithdrawalResponse CreatePayout(string url, string authorization, string data)
+        private WithdrawalResponse CreatePayout(string url, string authorization, WithdrawalPost data)
         {
             var (response, statusCode) = _httpHelper
                 .WithHeader("Authorization", authorization)
                 .WithHeader("accept", MediaType.Json)
-                .PostJson<string, WithdrawalResponse>(url, data);
+                .PostJson<WithdrawalPost, WithdrawalResponse>(url, data);
 
             if (response.Status != Definition.SuccessCode)
             {
