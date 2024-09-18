@@ -37,7 +37,7 @@ public class PayHelper : PayHelperBase
             };
             
             req.Add("hash_value", GetSign(req, input["Key"]));
-            req.Add("payment_action", "qrText");
+            req.Add("payment_action", "embed");
             req.Add("return_waiting_url", input["ReturnUrl"]);
             req.Add("callback_url", input["CallBackUrl"]);
         
@@ -54,7 +54,7 @@ public class PayHelper : PayHelperBase
             {
                 Success = true,
                 ErrorCode = "0",
-                Url = result.Data.QrText,
+                Url = result.Data.Url,
                 ThirdId = result.Data.ThirdId
             };
         }
