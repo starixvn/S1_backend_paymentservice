@@ -107,7 +107,7 @@ namespace Payment.RapidPay
                 if (string.IsNullOrEmpty(secretKeyName))
                     secretKeyName = GetDebitCallBackSecretKey(data.Currency, data.PaymentType);
                 
-                var str = secretKeyName + data.TransId;
+                var str = payResource[secretKeyName] + data.TransId;
                 var sign = ToMD5(str).ToLower();
 
                 if (!data.Token.Equals(sign))
