@@ -87,26 +87,35 @@ namespace Payment.RarepidPay
             var url = GetUrl(inputs["Host"], Path.CreateWithdrawal);
             var authorization = GetAuthorization(inputs["Contract"], inputs["ApiKey"]);
 
-            var withdrawalRequest = new WithdrawalPost
+            try
             {
-                HttpPostUrl = inputs["CallBackUrl"],
-                Amount = int.Parse(inputs["Amount"]).ToString("F2"),
-                ToBankCode = inputs["BankCode"],
-                ToBankAccount = inputs["AccountNo"],
-                ToAccountName = inputs["AccountName"],
-                IfscCode = inputs["IFSCCode"],
-                TranId = inputs["TransID"],
-                Remark = "payout"
-            };
+                var withdrawalRequest = new WithdrawalPost
+                {
+                    HttpPostUrl = inputs["CallBackUrl"],
+                    Amount = int.Parse(inputs["Amount"]).ToString("F2"),
+                    ToBankCode = inputs["BankCode"],
+                    ToBankAccount = inputs["AccountNo"],
+                    ToAccountName = inputs["AccountName"],
+                    IfscCode = inputs["IFSCCode"],
+                    TranId = inputs["TransID"],
+                    Remark = "payout"
+                };
 
-            var withdrawalResponse = CreatePayout(url, authorization, ToJson(withdrawalRequest));
-            var result = new WithdrawResult
+                var withdrawalResponse = CreatePayout(url, authorization, ToJson(withdrawalRequest));
+                var result = new WithdrawResult
+                {
+                    Success = true,
+                    Message = withdrawalResponse.StatusMessage
+                };
+
+                return result;
+            }
+            catch (CustomException exception)
             {
-                Success = true,
-                Message = withdrawalResponse.StatusMessage
-            };
+                _logger.LogInformation(exception.Message);
 
-            return result;
+                return new WithdrawResult(exception.Message);
+            }
         }
 
         private WithdrawalResponse CreatePayout(string url, string authorization, string data)

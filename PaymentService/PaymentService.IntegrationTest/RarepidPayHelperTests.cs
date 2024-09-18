@@ -145,12 +145,44 @@ namespace PaymentService.IntegrationTest
             var transId = "WD138065";
             var inputs = GenerateWithdrawalInputs(transId);
             var withdrawalResponse = GenerateWithdrawalResponse("0", "NO_ERROR", "WD138065");
-            GivenHttpHelperPostJsonReturnsSuccessWithdrawalResponse(withdrawalResponse);
+            GivenHttpHelperPostJsonReturnsWithdrawalResponse(withdrawalResponse);
 
             var expected = new WithdrawResult
             {
                 Success = true,
                 Message = "NO_ERROR"
+            };
+            AssertCreditSuccessShouldReturn(inputs, expected);
+
+            var expectedData = new WithdrawalPost
+            {
+                HttpPostUrl = $"http://www.callbackurl.com/Payment/WithdrawalCallBack/{transId}",
+                Amount = "1000.00",
+                ToBankCode = "AXIS",
+                ToBankAccount = "58585858",
+                ToAccountName = "Jatinder Mesi",
+                IfscCode = "ABCDE012345",
+                TranId = transId,
+                Remark = "payout"
+            };
+            AssertHttpHelperPostJsonShouldReceive(
+                JsonConvert.SerializeObject(expectedData),
+                "http://localhost:59159/RarepidPay/Api/Withdraw",
+                "Contract ApiKey");
+        }
+
+        [Test]
+        public void C02_Credit_fail()
+        {
+            var transId = "WD138065";
+            var inputs = GenerateWithdrawalInputs(transId);
+            var withdrawalResponse = GenerateWithdrawalResponse("306", "ERR_DUPLICATE_ID", "WD138065");
+            GivenHttpHelperPostJsonReturnsWithdrawalResponse(withdrawalResponse);
+
+            var expected = new WithdrawResult
+            {
+                Success = false,
+                Message = "RarepidPay create payout failed: Status=306, StatusMessage=ERR_DUPLICATE_ID"
             };
             AssertCreditSuccessShouldReturn(inputs, expected);
 
@@ -184,7 +216,7 @@ namespace PaymentService.IntegrationTest
             actual.Should().BeEquivalentTo(expected);
         }
 
-        private void GivenHttpHelperPostJsonReturnsSuccessWithdrawalResponse(WithdrawalResponse withdrawalResponse)
+        private void GivenHttpHelperPostJsonReturnsWithdrawalResponse(WithdrawalResponse withdrawalResponse)
         {
             _flurlHttpHelper
                 .WithHeader("Authorization", Arg.Do<string>(actualAuth => _actualAuth = actualAuth))
