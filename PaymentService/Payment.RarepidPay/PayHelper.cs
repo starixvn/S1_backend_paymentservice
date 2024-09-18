@@ -183,10 +183,37 @@ namespace Payment.RarepidPay
             return sourceSignature.Equals(resultSignature, StringComparison.OrdinalIgnoreCase);
         }
 
-        public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
+        public override NotifyWithdrawResult CallBackCredit(
+            Dictionary<string, string> formData,
+            string bodyContent,
+            Dictionary<string, string> headers,
             Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            var transId = payResource["TransId"];
+            var req = FromJson<WithdrawalCallBackRequest>(bodyContent);
+            var signConcatSourceString = $"{req.TranId}{req.Amount}{req.Currency}{req.PayoutStatus}{req.CreatedAt}";
+
+            if (!VerifySign(req.Signature, signConcatSourceString, payResource["ApiKey"]))
+            {
+                return new NotifyWithdrawResult
+                {
+                    WithdrawId = transId,
+                    TransStatus = TransStatus.Pending,
+                    Response = "Signature verification failed."
+                };
+            }
+
+            var transStatus = Definition.GetTransStatus(req.PayoutStatus);
+            var result = new NotifyWithdrawResult
+            {
+                WithdrawId = transId,
+                ThirdId = req.PayoutTranId,
+                TransStatus = transStatus,
+                Response = Definition.CallbackResponse,
+                Message = req.StatusMessage
+            };
+
+            return result;
         }
     }
 }

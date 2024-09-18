@@ -213,7 +213,7 @@ namespace PaymentService.IntegrationTest
             var expectedNotifyWithdrawResult = new NotifyWithdrawResult
             {
                 WithdrawId = transId,
-                ThirdId = "1",
+                ThirdId = "5438543",
                 TransStatus = TransStatus.Success,
                 Response = "OK",
                 Message = "NO_ERROR"
@@ -265,12 +265,12 @@ namespace PaymentService.IntegrationTest
             return @"{
                 ""contract"": ""PACSEA128TEST"",
                 ""token"": ""1ae3ebc1-41ab4a4e-9ef2-0a34ec05a039"",
-                ""tran_id"": ""depositId"",
-                ""payout_tran_id"": ""1"",
-                ""status"": ""0"",
+                ""tran_id"": ""withdrawalId"",
+                ""payout_tran_id"": ""5438543"",
+                ""status"": ""8"",
                 ""status_message"": ""NO_ERROR"",
-                ""payout_status"": ""2"",
-                ""payout_message"": ""Processing"",
+                ""payout_status"": ""8"",
+                ""payout_message"": ""Complete"",
                 ""decline_reason"": ""reached max login trials"",
                 ""remark"": ""nn"",
                 ""amount"": ""1000"",
@@ -281,7 +281,7 @@ namespace PaymentService.IntegrationTest
                 ""to_account_name"": ""112233445566"",
                 ""ifsc_code"": ""ICICI12345678"",
                 ""phone_number"": ""112233445566"",
-                ""signature"": ""26bd1272d38a3a3d34871874d8b9a1d162990ce0f2af505b77db9d90fd61d10d"",
+                ""signature"": ""2bf83fa629ff419407032c36b2d89828add84aa3ee3b598b703849a792d58bb4"",
                 ""created_at"": ""2017-01-01 16:41:21"",
                 ""payment_date"": ""2017-01-01 16:41:21""
             }";
