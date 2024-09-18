@@ -31,8 +31,8 @@ internal class DepositData
     [JsonProperty("transactionId")]
     public string ThirdId { get; set; }
     
-    [JsonProperty("qrText")]
-    public string QrText { get; set; }
+    [JsonProperty("url")]
+    public string Url { get; set; }
 }
 
 internal class PayoutCallbackReq
