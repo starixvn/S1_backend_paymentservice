@@ -45,7 +45,6 @@ namespace PaymentService.IntegrationTest
 
             _flurlHttpHelper
                 .WithHeader("Authorization", Arg.Do<string>(actualAuth => _actualAuth = actualAuth))
-                .WithHeader("accept", "application/json")
                 .PostJson<DepositPost, DepositResponse>(
                     Arg.Do<string>(actualUrl => _actualUrl = actualUrl),
                     Arg.Do<DepositPost>(actualData => _actualData = actualData))
@@ -84,7 +83,6 @@ namespace PaymentService.IntegrationTest
 
             _flurlHttpHelper
                 .WithHeader("Authorization", Arg.Do<string>(actualAuth => _actualAuth = actualAuth))
-                .WithHeader("accept", "application/json")
                 .PostJson<DepositPost, DepositResponse>(
                     Arg.Do<string>(actualUrl => _actualUrl = actualUrl),
                     Arg.Do<DepositPost>(actualData => _actualData = actualData))
@@ -330,7 +328,6 @@ namespace PaymentService.IntegrationTest
         {
             _flurlHttpHelper
                 .WithHeader("Authorization", Arg.Do<string>(actualAuth => _actualAuth = actualAuth))
-                .WithHeader("accept", "application/json")
                 .PostJson<WithdrawalPost, WithdrawalResponse>(
                     Arg.Do<string>(actualUrl => _actualUrl = actualUrl),
                     Arg.Do<WithdrawalPost>(actualData => _actualWData = actualData))

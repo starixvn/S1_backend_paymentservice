@@ -25,9 +25,4 @@ namespace Payment.RarepidPay
         public const string CreateDeposit = "/Api/QRDeposit";
         public static string CreateWithdrawal = "/Api/Withdraw";
     }
-
-    internal class MediaType
-    {
-        public const string Json = "application/json";
-    }
 }

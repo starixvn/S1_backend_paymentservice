@@ -60,7 +60,6 @@ namespace Payment.RarepidPay
         {
             var (response, statusCode) = _httpHelper
                 .WithHeader("Authorization", authorization)
-                .WithHeader("accept", MediaType.Json)
                 .PostJson<DepositPost, DepositResponse>(url, data);
 
             if (response.Status != Definition.SuccessCode)
@@ -122,7 +121,6 @@ namespace Payment.RarepidPay
         {
             var (response, statusCode) = _httpHelper
                 .WithHeader("Authorization", authorization)
-                .WithHeader("accept", MediaType.Json)
                 .PostJson<WithdrawalPost, WithdrawalResponse>(url, data);
 
             if (response.Status != Definition.SuccessCode)
