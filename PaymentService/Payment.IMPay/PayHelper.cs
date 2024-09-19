@@ -41,7 +41,7 @@ public class PayHelper : PayHelperBase
             req.Add("return_waiting_url", input["ReturnUrl"]);
             req.Add("callback_url", input["CallBackUrl"]);
         
-            var (result, statusCode) = _httpHelper
+            /*var (result, statusCode) = _httpHelper
                 .PostJson<Dictionary<string, string>, PayResp<DepositData>>(input["Host"] + Path.CreateDeposit, req);
 
             if (!statusCode.IsSuccessStatus())
@@ -56,6 +56,14 @@ public class PayHelper : PayHelperBase
                 ErrorCode = "0",
                 Url = result.Data.Url,
                 ThirdId = result.Data.ThirdId
+            };*/
+            
+            return new DepositResult
+            {
+                Success = true,
+                ErrorCode = "0",
+                FormData = req,
+                Url = input["Host"] + Path.CreateDeposit
             };
         }
         catch (CustomException ex)
