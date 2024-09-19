@@ -44,9 +44,6 @@ public class PayHelper : PayHelperBase
             var (result, statusCode) = _httpHelper
                 .PostJson<Dictionary<string, string>, PayResp<DepositData>>(input["Host"] + Path.CreateDeposit, req);
 
-            if (!statusCode.IsSuccessStatus())
-                throw new CustomException($"HttpStatus: {(int)statusCode} {statusCode}");
-
             if (!result.Status)
                 throw new CustomException(result.Message);
 
@@ -100,9 +97,6 @@ public class PayHelper : PayHelperBase
             
             var (result, statusCode) = _httpHelper
                 .PostJson<Dictionary<string, string>, PayResp<object>>(input["Host"] + Path.CreatePayout, req);
-
-            if (!statusCode.IsSuccessStatus())
-                throw new CustomException($"HttpStatus: {(int)statusCode} {statusCode}");
 
             if (!result.Status)
                 throw new CustomException(result.Message);
