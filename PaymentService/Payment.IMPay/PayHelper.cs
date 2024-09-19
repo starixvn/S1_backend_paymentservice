@@ -37,7 +37,7 @@ public class PayHelper : PayHelperBase
             };
             
             req.Add("hash_value", GetSign(req, input["Key"]));
-            req.Add("payment_action", "embed");
+            req.Add("payment_action", "redirect");
             req.Add("return_waiting_url", input["ReturnUrl"]);
             req.Add("callback_url", input["CallBackUrl"]);
         
