@@ -45,7 +45,7 @@ public class PayHelper : PayHelperBase
                 .PostJson<Dictionary<string, string>, PayResp<DepositData>>(input["Host"] + Path.CreateDeposit, req);
 
             if (!statusCode.IsSuccessStatus())
-                throw new CustomException($"HttpStatus: {(int)statusCode} {statusCode}");
+                throw new CustomException($"({result.Response.StatusCode}){result.Response.Message}");
 
             if (!result.Status)
                 throw new CustomException(result.Message);
@@ -102,7 +102,7 @@ public class PayHelper : PayHelperBase
                 .PostJson<Dictionary<string, string>, PayResp<object>>(input["Host"] + Path.CreatePayout, req);
 
             if (!statusCode.IsSuccessStatus())
-                throw new CustomException($"HttpStatus: {(int)statusCode} {statusCode}");
+                throw new CustomException($"({result.Response.StatusCode}){result.Response.Message}");
 
             if (!result.Status)
                 throw new CustomException(result.Message);

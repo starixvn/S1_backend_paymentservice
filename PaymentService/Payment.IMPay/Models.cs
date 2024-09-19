@@ -12,6 +12,18 @@ internal class PayResp<T>
     
     [JsonProperty("data")]
     public T Data { get; set; }
+    
+    [JsonProperty("response")]
+    public ErrorResp Response { get; set; }
+}
+
+internal class ErrorResp
+{
+    [JsonProperty("statusCode")]
+    public string StatusCode { get; set; }
+    
+    [JsonProperty("message")]
+    public string Message { get; set; }
 }
 
 internal class DepositCallbackReq
