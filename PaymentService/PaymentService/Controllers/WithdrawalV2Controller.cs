@@ -378,7 +378,6 @@ public class WithdrawalV2Controller : ControllerBase
                     #region 埋點
                     if (withdrawalInfo.SiteId is 1 or 2 or 3)
                     {
-
                         _ = Task.Run(() =>
                         {
                             var para = new CRMRequest()
