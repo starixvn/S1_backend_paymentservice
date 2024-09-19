@@ -147,7 +147,11 @@ namespace Payment.RarepidPay
             throw new NotImplementedException();
         }
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
+        public override NotifyDepositResult CallBackDebit(
+            Dictionary<string, string> formData,
+            string bodyContent,
+            Dictionary<string, string> headers,
+            Dictionary<string, string> payResource)
         {
             var req = FromJson<DepositCallBackRequest>(bodyContent);
             var signConcatSourceString = $"{req.Token}{req.TranId}{req.FromBankCode}{req.Amount}";
@@ -164,7 +168,7 @@ namespace Payment.RarepidPay
 
             var result = new NotifyDepositResult
             {
-                ThirdId = req.TranId,
+                ThirdId = req.PgTranId,
                 DepositId = req.TranId,
                 Comment = req.Status,
                 TransStatus = req.Status.Equals("8") ? TransStatus.Success : TransStatus.Pending,

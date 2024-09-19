@@ -147,7 +147,7 @@ namespace PaymentService.IntegrationTest
 
             var expected = new NotifyDepositResult
             {
-                ThirdId = "depositId",
+                ThirdId = "1",
                 DepositId = "depositId",
                 Comment = "8",
                 TransStatus = TransStatus.Success,
