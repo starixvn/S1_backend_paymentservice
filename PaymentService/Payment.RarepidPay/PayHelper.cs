@@ -31,7 +31,7 @@ namespace Payment.RarepidPay
                     ReturnUrl = inputs["ReturnUrl"],
                     FailedReturnUrl = inputs["ReturnUrl"],
                     Depositer = inputs["CustId"],
-                    Amount = int.Parse(inputs["Amount"]),
+                    Amount = int.Parse(inputs["Amount"]).ToString("F0"),
                     TranId = inputs["TransID"],
                     Remark = "service"
                 };
@@ -40,7 +40,7 @@ namespace Payment.RarepidPay
                 var result = new DepositResult
                 {
                     Success = true,
-                    ErrorCode = orderResponse.Status,
+                    ErrorCode = "0",
                     ThirdId = orderResponse.PgTranId,
                     Message = orderResponse.StatusMessage,
                     Url = orderResponse.RedirectTo
@@ -58,7 +58,7 @@ namespace Payment.RarepidPay
 
         private DepositResponse CreateOrder(string url, string authorization, DepositPost data)
         {
-            var (response, statusCode) = _httpHelper
+            var (response, _) = _httpHelper
                 .WithHeader("Authorization", authorization)
                 .PostJson<DepositPost, DepositResponse>(url, data);
 
@@ -119,7 +119,7 @@ namespace Payment.RarepidPay
 
         private WithdrawalResponse CreatePayout(string url, string authorization, WithdrawalPost data)
         {
-            var (response, statusCode) = _httpHelper
+            var (response, _) = _httpHelper
                 .WithHeader("Authorization", authorization)
                 .PostJson<WithdrawalPost, WithdrawalResponse>(url, data);
 
@@ -191,7 +191,6 @@ namespace Payment.RarepidPay
             Dictionary<string, string> headers,
             Dictionary<string, string> payResource)
         {
-            var transId = payResource["TransId"];
             var req = FromJson<WithdrawalCallBackRequest>(bodyContent);
             var signConcatSourceString = $"{req.TranId}{req.Amount}{req.Currency}{req.PayoutStatus}{req.CreatedAt}";
 
@@ -199,7 +198,7 @@ namespace Payment.RarepidPay
             {
                 return new NotifyWithdrawResult
                 {
-                    WithdrawId = transId,
+                    WithdrawId = req.TranId,
                     TransStatus = TransStatus.Pending,
                     Response = "Signature verification failed."
                 };
@@ -208,7 +207,7 @@ namespace Payment.RarepidPay
             var transStatus = Definition.GetTransStatus(req.PayoutStatus);
             var result = new NotifyWithdrawResult
             {
-                WithdrawId = transId,
+                WithdrawId = req.TranId,
                 ThirdId = req.PayoutTranId,
                 TransStatus = transStatus,
                 Response = Definition.CallbackResponse,

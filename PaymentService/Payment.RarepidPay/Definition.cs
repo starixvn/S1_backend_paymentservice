@@ -14,9 +14,7 @@ namespace Payment.RarepidPay
             new()
             {
                 { "8", TransStatus.Success },
-                { "-1", TransStatus.Fail },
-                { "-2", TransStatus.Fail },
-                { "-9", TransStatus.Fail }
+                { "-1", TransStatus.Fail }
             };
     }
 

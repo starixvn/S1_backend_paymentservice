@@ -68,7 +68,7 @@ namespace PaymentService.IntegrationTest
                 ReturnUrl = inputs["ReturnUrl"],
                 FailedReturnUrl = inputs["ReturnUrl"],
                 Depositer = inputs["CustId"],
-                Amount = int.Parse(inputs["Amount"]),
+                Amount = int.Parse(inputs["Amount"]).ToString("F0"),
                 TranId = inputs["TransID"],
                 Remark = "service"
             };
@@ -104,7 +104,7 @@ namespace PaymentService.IntegrationTest
                 ReturnUrl = inputs["ReturnUrl"],
                 FailedReturnUrl = inputs["ReturnUrl"],
                 Depositer = inputs["CustId"],
-                Amount = int.Parse(inputs["Amount"]),
+                Amount = int.Parse(inputs["Amount"]).ToString("F0"),
                 TranId = inputs["TransID"],
                 Remark = "service"
             };
@@ -163,7 +163,7 @@ namespace PaymentService.IntegrationTest
         {
             var transId = "WD138065";
             var inputs = GenerateWithdrawalInputs(transId);
-            var withdrawalResponse = GenerateWithdrawalResponse("0", "NO_ERROR", "WD138065");
+            var withdrawalResponse = GenerateWithdrawalResponse("0", "NO_ERROR");
             GivenHttpHelperPostJsonReturnsWithdrawalResponse(withdrawalResponse);
 
             var expected = new WithdrawResult
@@ -195,7 +195,7 @@ namespace PaymentService.IntegrationTest
         {
             var transId = "WD138065";
             var inputs = GenerateWithdrawalInputs(transId);
-            var withdrawalResponse = GenerateWithdrawalResponse("306", "ERR_DUPLICATE_ID", "WD138065");
+            var withdrawalResponse = GenerateWithdrawalResponse("306", "ERR_DUPLICATE_ID");
             GivenHttpHelperPostJsonReturnsWithdrawalResponse(withdrawalResponse);
 
             var expected = new WithdrawResult
@@ -334,23 +334,12 @@ namespace PaymentService.IntegrationTest
                 .Returns((withdrawalResponse, HttpStatusCode.OK));
         }
 
-        private WithdrawalResponse GenerateWithdrawalResponse(string status, string statusMessage, string transId)
+        private WithdrawalResponse GenerateWithdrawalResponse(string status, string statusMessage)
         {
             return new WithdrawalResponse
             {
                 Status = status,
-                StatusMessage =  statusMessage,
-                TranId = transId,
-                PayoutTranId =  "C00000000013422",
-                Token =  "f0375599-077-47aa-b39a-6267a8bca571",
-                Remark =  "payout for player PokerGod666",
-                Amount =  "1000",
-                TotalFees =  "1.15",
-                Currency = "INR",
-                ToBankCode =  "KOTAK",
-                ToBankAccount =  "123455778980",
-                IfscCode =  "123455778980",
-                PhoneNumber = "123455778980"
+                StatusMessage =  statusMessage
             };
         }
 
@@ -487,12 +476,7 @@ namespace PaymentService.IntegrationTest
             {
                 Status = status,
                 StatusMessage = statusMessage,
-                TranId = "TransID",
                 PgTranId = "D0000000001",
-                Token = "1ae3ebc1-41ab-4a4e-9ef2-0a34ec05a039",
-                Amount = "1000",
-                TotalFees = "1.15",
-                Currency = "INR",
                 RedirectTo = "https://api.{domain}.com/Api/StartWidget/1ae3ebc1-41ab-4a4e-9ef2-0a34ec05a039"
             };
         }

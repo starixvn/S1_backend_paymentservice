@@ -5,7 +5,7 @@ namespace PaymentService.Controllers
     public class TestController : Controller
     {
         [Route("RarepidPay/Api/QRDeposit")]
-        public JsonResult Index()
+        public JsonResult RarepidPayDepositResponse()
         {
             var depositResponse = new
             {
