@@ -1,0 +1,7 @@
+include:
+  - project: "sre/gitlab-ci-configs"
+    ref: "main"
+    file: "/paymentservice/.gitlab-ci.yaml"
+  - project: "sre/gitlab-ci-configs"
+    ref: "main"
+    file: "/paymentworker/.gitlab-ci.yaml"
