@@ -14,16 +14,13 @@ internal class PayResp<T>
     public T Data { get; set; }
     
     [JsonProperty("response")]
-    public ErrorResp Response { get; set; }
+    public ErrorResp ErrorResp { get; set; }
 }
 
 internal class ErrorResp
 {
-    [JsonProperty("statusCode")]
-    public string StatusCode { get; set; }
-    
-    [JsonProperty("message")]
-    public string Message { get; set; }
+    [JsonProperty("data")]
+    public object Data { get; set; }
 }
 
 internal class DepositCallbackReq
