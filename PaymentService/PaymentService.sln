@@ -153,6 +153,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.IMPay", "Payment.IM
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.EasyPay3", "Payment.EasyPay3\Payment.EasyPay3.csproj", "{AF7C2921-2279-4E2E-985C-7062DEF6BF89}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.RarepidPay", "Payment.RarepidPay\Payment.RarepidPay.csproj", "{0C7BACF8-CAC5-42D7-ADF7-1E0CBE5D3DE0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -455,6 +457,10 @@ Global
 		{AF7C2921-2279-4E2E-985C-7062DEF6BF89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF7C2921-2279-4E2E-985C-7062DEF6BF89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF7C2921-2279-4E2E-985C-7062DEF6BF89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C7BACF8-CAC5-42D7-ADF7-1E0CBE5D3DE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C7BACF8-CAC5-42D7-ADF7-1E0CBE5D3DE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C7BACF8-CAC5-42D7-ADF7-1E0CBE5D3DE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C7BACF8-CAC5-42D7-ADF7-1E0CBE5D3DE0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -531,6 +537,7 @@ Global
 		{F99E30B3-8012-405D-83E4-1A9322894617} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{98B3218D-E3DB-4811-A459-A9DD58672FF6} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{AF7C2921-2279-4E2E-985C-7062DEF6BF89} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{0C7BACF8-CAC5-42D7-ADF7-1E0CBE5D3DE0} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
