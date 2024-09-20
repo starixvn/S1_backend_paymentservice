@@ -42,6 +42,12 @@ internal class DepositData
     
     [JsonProperty("url")]
     public string Url { get; set; }
+    
+    [JsonProperty("qrType")]
+    public string QrType { get; set; }
+    
+    [JsonProperty("qrText")]
+    public string QrText { get; set; }
 }
 
 internal class PayoutCallbackReq
