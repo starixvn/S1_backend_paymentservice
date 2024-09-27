@@ -134,8 +134,7 @@ namespace Payment.EBPay
                     {"userName", input["CustId"]},
                     {"orderType", input["PayCode"]},
                     {"payAmount", reqAmount.ToString("F2")},
-                    {"bankNum", input["AccountNo"]},
-                    {"timestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString()}
+                    {"bankNum", input["AccountNo"]}
                 };
 
                 req.Add("sign", GetSign(req, input["Key"]));
