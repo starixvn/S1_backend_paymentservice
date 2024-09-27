@@ -51,7 +51,7 @@ namespace Payment.EBPay
                 {
                     {"merchantNo", input["MerchantNo"]},
                     {"merchantOrderId", input["TransID"]},
-                    {"userName", input["CustID"]},
+                    {"userName", input["CustId"]},
                     {"deviceType", input["DeviceType"].Equals("1") ? "1" : "9"} // 1: PC, 9: 未知（他有分作業系統問群說H5傳這個）
                 };
 
@@ -130,7 +130,7 @@ namespace Payment.EBPay
                 {
                     {"merchantNo", input["MerchantNo"]},
                     {"merchantOrderId", input["TransID"]},
-                    {"userName", input["CustID"]},
+                    {"userName", input["CustId"]},
                     {"orderType", input["PayCode"]},
                     {"payAmount", reqAmount.ToString("F2")},
                     {"bankNum", input["AccountNo"]},
