@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 using Payment.EBPay;
 using PaymentCore.Interface;
@@ -13,16 +13,15 @@ public class EBPayHelperTests
     [SetUp]
     public void Setup()
     {     
-        var serviceProvider =  new Mock<IServiceProvider>();
+        var serviceProvider = Substitute.For<IServiceProvider>();
         
-        serviceProvider
-            .Setup(x => x.GetService(typeof(ILogger<PayHelper>)))
-            .Returns(new Mock<ILogger<PayHelper>>().Object);
+        serviceProvider.GetService(typeof(ILogger<PayHelper>))
+            .Returns(Substitute.For<ILogger<PayHelper>>());
         
-        serviceProvider.Setup(x => x.GetService(typeof(IFlurlHttpHelper)))
-            .Returns(new Mock<IFlurlHttpHelper>().Object);
+        serviceProvider.GetService(typeof(IFlurlHttpHelper))
+            .Returns(Substitute.For<IFlurlHttpHelper>());
 
-        _payHelper = new PayHelper(serviceProvider.Object);
+        _payHelper = new PayHelper(serviceProvider);
     }
 
     [Test]
