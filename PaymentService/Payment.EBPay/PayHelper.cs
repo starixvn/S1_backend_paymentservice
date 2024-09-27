@@ -61,6 +61,7 @@ namespace Payment.EBPay
                 req.Add("payAmount", reqAmount.ToString("F2"));
                 req.Add("depositName", input["AccountName"]);
                 req.Add("payTypeId", input["PayCode"]);
+                req.Add("virtualProtocol", "0");
 
                 var res = CreateOrder(apiUrl, req);
 
@@ -144,6 +145,7 @@ namespace Payment.EBPay
                 req.Add("bankCode", input["BankCode"]);
                 req.Add("bankOwner", input["AccountName"]);
                 req.Add("bankAddress", "bankAddress");
+                req.Add("virtualProtocol", "0");
 
                 var res = Payout(apiUrl, req);
                 
