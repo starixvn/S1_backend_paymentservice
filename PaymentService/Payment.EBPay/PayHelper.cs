@@ -13,7 +13,6 @@ namespace Payment.EBPay
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
         private readonly List<string> _callbackSignKeys;
-        private readonly List<string> _payoutCallbackSignKeys;
 
         public PayHelper(IServiceProvider provider)
         {
@@ -34,8 +33,6 @@ namespace Payment.EBPay
             };
 
             #endregion
-            
-            
         }
 
 
