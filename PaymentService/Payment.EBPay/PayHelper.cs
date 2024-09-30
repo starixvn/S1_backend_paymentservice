@@ -3,11 +3,12 @@ using Microsoft.Extensions.Logging;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.EBPay
 {
-    public class PayHelper : PayHelperBase
+    public class PayHelper : PayHelperBase, IVerifyTransaction
     {
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
@@ -199,6 +200,26 @@ namespace Payment.EBPay
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+
+        public (string TransId, IDictionary<string, string> Data) FetchTransIdAndDataBeforeVerify(IDictionary<string, string> formData, string bodyContent,
+            Dictionary<string, string> headers)
+        {
+            return (formData["merchantOrderId"], formData);
+        }
+
+        public VerifyTransactionResult VerifyTransaction(IDictionary<string, string> data, IDictionary<string, string> input)
+        {
+            var transExists = bool.Parse(input["TransIdExists"]);
+            var resp = transExists
+                ? new CallbackResponse(200, "success")
+                : new CallbackResponse(400, "Transaction not exists.");
+            
+            return new VerifyTransactionResult
+            {
+                ContentType = ContentType.Json,
+                Response = ToJson(resp)
+            };
         }
 
         #endregion
