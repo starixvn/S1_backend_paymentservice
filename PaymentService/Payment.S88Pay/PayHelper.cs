@@ -119,7 +119,7 @@ public class PayHelper: PayHelperBase
                 { "bank_account_number", input["AccountNo"] },
                 { "bank_code", input["BankCode"] },
                 { "bank_name", input["BankName"] },
-                { "account_name", input["AccountName"] },
+                { "account_name", input["AccountName"].NormalizeString() },
                 { "callback_url", input["CallBackUrl"] }
             };
     

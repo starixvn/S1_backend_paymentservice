@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Globalization;
+using System.Text;
+using Newtonsoft.Json.Linq;
 using PaymentCore.Models;
 
 namespace PaymentCore.Extensions
@@ -57,5 +59,16 @@ namespace PaymentCore.Extensions
         public static bool IsNotOnlinePayment(this DepositType type)
             => type is (DepositType.LocalBank
                 or DepositType.CryptoWallet);
+
+        public static string NormalizeString(this string str)
+        {
+            var normalizedString = str.Normalize(NormalizationForm.FormD);
+
+            var stringWithoutDiacritics = new string(normalizedString
+                .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                .ToArray());
+
+            return stringWithoutDiacritics.Normalize(NormalizationForm.FormC);
+        }
     }
 }
