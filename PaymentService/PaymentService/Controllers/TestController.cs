@@ -45,5 +45,18 @@ namespace PaymentService.Controllers
 
             return new JsonResult(withdrawalResponse);
         }
+
+        [Route("CommsPay/{success}/api/v1/payout/{merchantCode}")]
+        public JsonResult CommsPayWithdrawalResponse(string success, string merchantCode)
+        {
+            var result = success.Equals("success", StringComparison.OrdinalIgnoreCase);
+            var response = new
+            {
+                success = result,
+                message = "test message"
+            };
+
+            return new JsonResult(response);
+        }
     }
 }
