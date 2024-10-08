@@ -58,5 +58,41 @@ namespace PaymentService.Controllers
 
             return new JsonResult(response);
         }
+
+        [Route("CashRuPay/web/createOnlineOrder")]
+        public JsonResult CashRuPayDepositResponse()
+        {
+            var response = new
+            {
+                Code = "0",
+                Msg = "success",
+                Data = new
+                {
+                    OrderNo = "1324232451232",
+                    Id = "2023101211343626342",
+                    PayAmount = "400",
+                    Url = "https://www.cashrupay.com/index/index?orderId=dd18382993263421"
+                }
+            };
+
+            return new JsonResult(response);
+        }
+
+        [Route("CashRuPay/web/createOnlineOutOrder")]
+        public JsonResult CashRuPayWithdrawalResponse()
+        {
+            var response = new
+            {
+                Code = "0",
+                Msg = "success",
+                Data = new
+                {
+                    OrderNo = "1324232451232",
+                    Id = "2023101211343626342"
+                }
+            };
+
+            return new JsonResult(response);
+        }
     }
 }
