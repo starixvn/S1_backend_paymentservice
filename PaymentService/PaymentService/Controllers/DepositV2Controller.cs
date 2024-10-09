@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
-using PaymentCore.Model;
 using PaymentCore.Models;
 using PaymentService.Exceptions;
 using PaymentService.Extensions;

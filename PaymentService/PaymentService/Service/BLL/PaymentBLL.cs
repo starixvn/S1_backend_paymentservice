@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using PaymentCore.Interface;
-using PaymentCore.Model;
 using PaymentService.Exceptions;
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;

@@ -1,7 +1,8 @@
-﻿using PaymentCore.Models;
+﻿
+using PaymentCore.Models;
 using PaymentService.Service.Model.enums;
 
-namespace PaymentCore.Model
+namespace PaymentService.Service.Model
 {
     public class DepositRequest
     {

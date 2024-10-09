@@ -1,7 +1,6 @@
 ﻿using System.Data;
 using Dapper;
 using Newtonsoft.Json;
-using PaymentCore.Model;
 using PaymentService.Model;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
