@@ -28,9 +28,11 @@
     <ProjectReference Include="..\Payment.AOPay\Payment.AOPay.csproj" />
     <ProjectReference Include="..\Payment.BetcatPay\Payment.BetcatPay.csproj" />
     <ProjectReference Include="..\Payment.BigPayz\Payment.BigPayz.csproj" />
+    <ProjectReference Include="..\Payment.CashRuPay\Payment.CashRuPay.csproj" />
     <ProjectReference Include="..\Payment.ChangChenPay\Payment.ChangChenPay.csproj" />
     <ProjectReference Include="..\Payment.CindaPay\Payment.CindaPay.csproj" />
     <ProjectReference Include="..\Payment.ComitPay\Payment.ComitPay.csproj" />
+    <ProjectReference Include="..\Payment.CommsPay\Payment.CommsPay.csproj" />
     <ProjectReference Include="..\Payment.CoPay\Payment.CoPay.csproj" />
     <ProjectReference Include="..\Payment.Coin2Pay\Payment.Coin2Pay.csproj" />
     <ProjectReference Include="..\Payment.DirePay\Payment.DirePay.csproj" />
