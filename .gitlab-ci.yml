@@ -2,3 +2,5 @@ include:
     - project: ci/core-cicd
       ref: main
       file: nexcel.gitlab-ci.yml
+variables:
+    SOLUTION_NAME: PaymentService
