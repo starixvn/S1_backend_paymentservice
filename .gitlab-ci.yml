@@ -3,4 +3,4 @@ include:
       ref: main
       file: nexcel.gitlab-ci.yml
 variables:
-    SOLUTION_NAME: PaymentService
+    SOLUTION_NAME: "PaymentService"
