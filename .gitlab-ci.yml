@@ -4,3 +4,6 @@ include:
       file: nexcel.gitlab-ci.yml
 variables:
     SOLUTION_NAME: "PaymentService"
+sonar_dotnet:
+    variables:
+        SOLUTION_NAME: "PaymentService"
