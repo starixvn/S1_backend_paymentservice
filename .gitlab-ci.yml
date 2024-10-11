@@ -2,14 +2,3 @@ include:
     - project: ci/core-cicd
       ref: main
       file: nexcel.gitlab-ci.yml
-
-sonar_dotnet:
-    script:
-        - ls
-        - dotnet sonarscanner begin /k:$PROJECT_NAME /n:"$SONAR_PROJECT_NAME" /v:"${CI_COMMIT_REF_NAME}
-          ($CI_COMMIT_SHORT_SHA) [${CI_JOB_ID}]" /d:sonar.token=$SONAR_TOKEN /d:sonar.host.url=$SONAR_HOST_URL
-          /d:sonar.qualitygate.wait=true /d:sonar.cs.opencover.reportsPaths=**/*.coverage.opencover.xml
-          /d:sonar.cs.vstest.reportsPaths=**/*.trx
-        - echo "PaymentService"
-        - dotnet build PaymentService
-        - dotnet sonarscanner end /d:sonar.token=$SONAR_TOKEN
