@@ -30,7 +30,7 @@ namespace PaymentService.Service.DAL
 
         public DepositRequest GetDepositRequest(int depositId)
         {
-            return _mainDbClient.QueryFirst<DepositRequest>("DepositCallBack_Get_V2", new { DepositId = depositId });
+            return _mainDbClient.QueryFirst<DepositRequest>("DepositCallBack_Get_V3", new { DepositId = depositId });
         }
 
         public DepositInfoModel GetDepositInfo(int depositId)
@@ -58,40 +58,37 @@ namespace PaymentService.Service.DAL
 
                 var p = new DynamicParameters(new
                 {
-                    DepositId = depositId,
-                    input.SiteId,
-                    input.ActualDeposit,
-                    input.Comment,
-                    ForStatus = JsonConvert.SerializeObject(input.ForStatus),
-                    Status = (int)input.Status,
-                    RefThirdId = input.ThirdId, // 看起來原本RefThirdId根本沒用
-                    input.ThirdId,
-                    input.Operator
+                    _DepositId = depositId,
+                    _SiteId = input.SiteId,
+                    _ActualDeposit = input.ActualDeposit,
+                    _ForStatus = JsonConvert.SerializeObject(input.ForStatus),
+                    _Status = (int)input.Status,
+                    _RefId = input.ThirdId,
+                    _ThirdId = input.ThirdId,
+                    _Operator = input.Operator
                 });
 
-                p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                p.Add("UserName", dbType: DbType.String, direction: ParameterDirection.Output);
+                p.Add("_CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                p.Add("_UserName", dbType: DbType.String, direction: ParameterDirection.Output);
 
-                var result = _mainDbClient.Execute("Service_DepositInfo_Set_V3", p, trans);
+                var result = _mainDbClient.Execute("Service_DepositInfo_Set_V4", p, trans);
                 logMsg += $"transId:{input.TransId} Execute Service_DepositInfo_Set_V3 after result:{result} Step1";
 
                 if (result >= 0)
                 {
-                    SetDepositLog(depositId, input.SiteId, input.Comment, (int)input.Status, input.ActualDeposit, input.Operator);
+                    _ = SetDepositLog(depositId, input.SiteId, input.Comment, (int)input.Status, input.ActualDeposit, input.Operator);
 
                     if (input.Status == DepositStatus.Approved)
                     {
-                        decimal afterAmount = 0;
-
-                        custId = p.Get<int?>("CustId") ?? 0;
-                        var userName = p.Get<string>("UserName");
+                        custId = p.Get<int?>("_CustId") ?? 0;
+                        var userName = p.Get<string>("_UserName");
 
                         logMsg += Environment.NewLine +
                             $"transId:{input.TransId} _walletService.SetBalance parameter custId:{custId}, siteId:{input.SiteId}, userName:{userName}, " +
-                            $"actualDeposit:{input.ActualDeposit}, type:{type} Step2-1";
+                            $"actualDeposit:{input.ActualDeposit} Step2-1";
 
                         result = _walletService.SetBalance(custId, input.SiteId, userName, input.ActualDeposit, type,
-                            $"Deposit Approved: {input.ActualDeposit}", input.TransId, out afterAmount, out var is1stDepoist, trans);
+                            $"Deposit Approved: {input.ActualDeposit}", input.TransId, out var afterAmount, out var is1stDepoist, trans);
 
                         logMsg += Environment.NewLine +
                             $"transId:{input.TransId} Execute _walletService.SetBalance after result:{result}, afterAmount:{afterAmount} Step2-2";
@@ -109,7 +106,7 @@ namespace PaymentService.Service.DAL
                                 $"transId:{input.TransId} Execute _withdrawalLimitService.SetWithdrawalLimit after result:{result} Step3-2";
                         }
 
-                        if (is1stDepoist == 1 && result > 0)
+                        if (is1stDepoist && result > 0)
                         {
                             logMsg += Environment.NewLine +
                                 $"transId:{input.TransId} Execute SetDepositInfoFirstDeposit parameter depositId:{depositId}, siteId:{input.SiteId} Step4-1";
@@ -169,7 +166,7 @@ namespace PaymentService.Service.DAL
             }
             catch (Exception ex)
             {
-                SetDepositLog(depositId, input.SiteId, ex.Message, (int)DepositStatus.Error, input.ActualDeposit, "Payment Service");
+                _ = SetDepositLog(depositId, input.SiteId, ex.Message, (int)DepositStatus.Error, input.ActualDeposit, "Payment Service");
                 _logger.LogError(ex, $"exception: {ex.Message}, logMsg: {logMsg}");
 
                 return false;
