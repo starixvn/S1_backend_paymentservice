@@ -51,7 +51,7 @@ namespace Payment.EasyPay3
                 req.Add("callback", notifyUrl);
 
                 if (payCode == "bank")
-                    req.Add("subType", bankCode);
+                    req.Add("subType", "");
 
                 var res = CreateOrder(apiUrl, req);
 
