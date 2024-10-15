@@ -1,6 +1,6 @@
 using PaymentCore;
 
-namespace Payment.ZuiPay;
+namespace Payment.ZiuPay;
 
 internal class Definition
 {

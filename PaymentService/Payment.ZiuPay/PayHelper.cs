@@ -7,7 +7,7 @@ using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
-namespace Payment.ZuiPay
+namespace Payment.ZiuPay
 {
     class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
@@ -44,7 +44,7 @@ namespace Payment.ZuiPay
                 
 
                 var (response, statusCode) = _httpHelper
-                    .PostJson<Dictionary<string, string>, ZuiPayResp<DepositRespData>>($"{apiHost}{Path.Deposit}", req);
+                    .PostJson<Dictionary<string, string>, ZiuPayResp<DepositRespData>>($"{apiHost}{Path.Deposit}", req);
 
                 if (!statusCode.IsSuccessStatus())
                     throw new CustomException($"HttpStatus: {statusCode}", ((int)statusCode).ToString());
@@ -119,7 +119,7 @@ namespace Payment.ZuiPay
                 };
 
                 var (response, statusCode) = _httpHelper
-                    .PostJson<Dictionary<string, string>, ZuiPayResp<object>>($"{apiHost}{Path.Withdrawal}", req);
+                    .PostJson<Dictionary<string, string>, ZiuPayResp<object>>($"{apiHost}{Path.Withdrawal}", req);
 
                 if (!statusCode.IsSuccessStatus())
                     throw new CustomException($"HttpStatus: {statusCode}", ((int)statusCode).ToString());
