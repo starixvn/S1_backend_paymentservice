@@ -73,6 +73,7 @@ public class ConfigBLL
 
     public T GetConfigValueFromDbByEnvironment<T>(string configKey, int siteId = 0, string configType = "")
     {
+
         var json = GetConfigValueFromDb($"{configKey}.{_env}.json", siteId, configType);
 
         return JsonConvert.DeserializeObject<T>(json);
