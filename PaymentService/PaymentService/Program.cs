@@ -3,7 +3,7 @@ using PaymentService.Extensions;
 using PaymentService.Service.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddHealthChecks();
 var remoteUrls = GetRemoteUrls();
 remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
@@ -11,6 +11,7 @@ builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
 var excludesResponseEmptyMessage = builder.Configuration.GetValue<string>("ExcludesResponseEmptyMessage");
 var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
+
 
 
 var startup = new Startup(builder.Configuration);
@@ -31,7 +32,8 @@ startup.Configure(app, builder.Environment);
 const int minWorkers = 16;
 const int minIOCPs = 4;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
-
+app.MapHealthChecks("/healthz");
+app.MapHealthChecks("/");
 app.Run();
 return;
 
