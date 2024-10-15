@@ -90,12 +90,7 @@ namespace PaymentService
                 app.UseSwagger();
                 app.UseSwaggerUI(c => {
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Payment Service v1");
-                });
-                app.UseReDoc(c =>
-                {
-                    c.DocumentTitle = "PaymentService REDOC API Documentation";
-                    c.SpecUrl = "/swagger/v1/swagger.json";
-                });  
+                }); 
             }
             app.UseRouting();
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
