@@ -8,12 +8,6 @@ var remoteUrls = GetRemoteUrls();
 remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
-var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
-var excludesResponseEmptyMessage = builder.Configuration.GetValue<string>("ExcludesResponseEmptyMessage");
-var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
-
-
-
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
 
