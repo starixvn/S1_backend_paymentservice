@@ -59,7 +59,8 @@ public class DepositV2Controller : ControllerBase
             {DepositType.CryptoPayment, GetGenericDepositInput},
             {DepositType.LoadCardPayment, GetLoadCardDepositInput},
             {DepositType.QrPayPayment, GetGenericDepositInput},
-            {DepositType.ChatTransfer,  GetGenericDepositInput}
+            {DepositType.ChatTransfer,  GetGenericDepositInput},
+            {DepositType.DigitalWallet,  GetGenericDepositInput}
         };
 
         #endregion
