@@ -1,8 +1,8 @@
 using Newtonsoft.Json;
 
-namespace Payment.ZuiPay;
+namespace Payment.ZiuPay;
 
-internal class ZuiPayResp<T>
+internal class ZiuPayResp<T>
 {
     [JsonProperty("code")]
     public int Code { get; set; }
