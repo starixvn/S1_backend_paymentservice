@@ -31,7 +31,8 @@ internal class CallbackReq
     [JsonProperty("status")]
     public string Status { get; set; }
     
-    [JsonProperty("actualAmount")]
+    // 用戶存入金額一定要和申請金額相符才會回調成功，他們的actualAmount是扣掉商戶手續費的金額因此不能用它上分
+    [JsonProperty("requestAmount")]
     public decimal ActualAmount { get; set; }
 }
 
