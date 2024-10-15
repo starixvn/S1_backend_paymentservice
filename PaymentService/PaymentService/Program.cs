@@ -10,7 +10,7 @@ if (!string.IsNullOrEmpty(environmentName))
 {
     builder.Environment.EnvironmentName = environmentName;
 }
-
+builder.WebHost.UseSentry();
 builder.Services.AddHealthChecks();
 var remoteUrls = GetRemoteUrls();
 remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
