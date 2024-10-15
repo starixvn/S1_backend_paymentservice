@@ -14,6 +14,7 @@ public class ConfigBLL
     private readonly ILogger<ConfigBLL> _logger;
     private readonly string _env;
 
+
     public ConfigBLL(IServiceProvider provider)
     {
         var environment = provider.GetRequiredService<IWebHostEnvironment>();
@@ -21,7 +22,8 @@ public class ConfigBLL
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
         _siteConfigs = provider.GetServices<SiteConfig>();
         _logger = provider.GetRequiredService<ILogger<ConfigBLL>>();
-        _env = environment.EnvironmentName;
+        _env = "Local";
+        Console.WriteLine(environment.EnvironmentName);
     }
 
     public string GetConfigValue(string configKey, int siteId = 0)

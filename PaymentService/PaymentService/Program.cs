@@ -3,6 +3,14 @@ using PaymentService.Extensions;
 using PaymentService.Service.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// update environmentName ?
+var environmentName = builder.Configuration.GetValue<string>("EnvironmentName");
+if (!string.IsNullOrEmpty(environmentName))
+{
+    builder.Environment.EnvironmentName = environmentName;
+}
+
 builder.Services.AddHealthChecks();
 var remoteUrls = GetRemoteUrls();
 remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
