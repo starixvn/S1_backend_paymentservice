@@ -98,7 +98,7 @@
     <ProjectReference Include="..\Payment.JYMPay\Payment.JYMPay.csproj" />
     <ProjectReference Include="..\Payment.DaYangPay\Payment.DaYangPay.csproj" />
     <ProjectReference Include="..\Payment.PayPro\Payment.PayPro.csproj" />
-    <ProjectReference Include="..\Payment.ZuiPay\Payment.ZuiPay.csproj" />
+    <ProjectReference Include="..\Payment.ZiuPay\Payment.ZiuPay.csproj" />
     <ProjectReference Include="..\PaymentCore\PaymentCore.csproj" />
     
   </ItemGroup>

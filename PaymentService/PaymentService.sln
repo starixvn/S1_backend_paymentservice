@@ -161,7 +161,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.CommsPay", "Payment
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.CashRuPay", "Payment.CashRuPay\Payment.CashRuPay.csproj", "{0D341D9C-4AF5-4C48-A68E-4E3DC5753EA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.ZuiPay", "Payment.ZuiPay\Payment.ZuiPay.csproj", "{1A665ABA-2FBD-4B16-A016-ACA203931890}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.ZiuPay", "Payment.ZiuPay\Payment.ZiuPay.csproj", "{1A665ABA-2FBD-4B16-A016-ACA203931890}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
