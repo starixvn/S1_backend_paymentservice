@@ -43,7 +43,6 @@ string[] GetRemoteUrls()
 {
     // 如果有 Runtime Environment Variable 優先使用
     // 沒有則使用預設 AppSetting
-    return Environment.GetEnvironmentVariable("ConfigServiceUrl") is null
-        ? builder.Configuration.GetSection("ConfigService").Get<string[]>()
-        : new List<string>() { Environment.GetEnvironmentVariable("ConfigServiceUrl") }.ToArray();
+    return builder.Configuration.GetSection("ConfigService").Get<string[]>();
+        
 }
