@@ -35,7 +35,8 @@ namespace Payment.Bajicash
             var amount = decimal.Parse(inputs["Amount"]);
             var apiKey = inputs["ApiKey"];
             var secretKey = inputs["SecretKey"];
-            var depositInfo = inputs["DepositInfo"];
+            var apiUrl = $"{inputs["ApiUrl"]}/{merchantCode}/{Definition.Path.Deposit}";
+            var header = Crypto(Definition.CryptoMethod.Encrypt, transId, apiKey, secretKey);
 
             try
             {
@@ -48,10 +49,7 @@ namespace Payment.Bajicash
                     CallbackUrl = inputs["CallBackUrl"],
                     ReturnUrl = inputs["ReturnUrl"],
                     IPAddress = inputs["ClientIP"],
-                };
-
-                var header = encrypt_decrypt(Definition.CryptoMethod.Encrypt, transId, apiKey, secretKey);
-                var apiUrl = $"{inputs["ApiUrl"]}/{merchantCode}/{Definition.Path.Deposit}";
+                };         
 
                 var (result, statusCode) = _httpHelper
                     .WithHeader("X-Encrypted-Transaction", header)
@@ -88,7 +86,8 @@ namespace Payment.Bajicash
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var req = FromJson<CallbackRequest>(bodyContent);
-            var reqInfo = encrypt_decrypt(Definition.CryptoMethod.Decrypt, req.Key,payResource["ApiKey"], payResource["SecretKey"]);
+            var reqInfo = Crypto(Definition.CryptoMethod.Decrypt, req.Key,payResource["ApiKey"], payResource["SecretKey"]);
+            //解完後資料會用&分割，轉換成字典
             var dictReq = reqInfo.Split('&')
                 .Select(param => param.Split('='))
                 .ToDictionary(keyValue => keyValue[0], keyValue => keyValue[1]);
@@ -134,8 +133,9 @@ namespace Payment.Bajicash
                 callback_url = inputs["CallBackUrl"]
             };
 
+            //參數加密後送出
             var reqStr = ToJson(p);
-            var key = encrypt_decrypt(Definition.CryptoMethod.Encrypt, reqStr, apiKey, secretKey);
+            var key = Crypto(Definition.CryptoMethod.Encrypt, reqStr, apiKey, secretKey);
             var req = new PayoutRequest
             {
                 Key = key,
@@ -164,8 +164,8 @@ namespace Payment.Bajicash
             Dictionary<string, string> payResource)
         {
             var req = FromJson<CallbackRequest>(bodyContent);
-            var reqInfo = encrypt_decrypt(Definition.CryptoMethod.Decrypt, req.Key, payResource["ApiKey"], payResource["SecretKey"]);
-
+            var reqInfo = Crypto(Definition.CryptoMethod.Decrypt, req.Key, payResource["ApiKey"], payResource["SecretKey"]);
+            //解完資料是Json，轉字典
             var dictReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(reqInfo);
             var status = dictReq["transaction_status"];
             var transStatus = Definition.GetTransStatus(status);
@@ -197,7 +197,7 @@ namespace Payment.Bajicash
 
 
         #region private
-        private static string encrypt_decrypt(string action, string payload, string apikey, string secretkey)
+        private static string Crypto(string action, string payload, string apikey, string secretkey)
         {
             string secret_iv = secretkey;
 
