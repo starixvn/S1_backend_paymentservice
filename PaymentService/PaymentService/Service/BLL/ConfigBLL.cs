@@ -22,8 +22,7 @@ public class ConfigBLL
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
         _siteConfigs = provider.GetServices<SiteConfig>();
         _logger = provider.GetRequiredService<ILogger<ConfigBLL>>();
-        _env = "Local";
-        Console.WriteLine(environment.EnvironmentName);
+        _env = environment.EnvironmentName;
     }
 
     public string GetConfigValue(string configKey, int siteId = 0)
