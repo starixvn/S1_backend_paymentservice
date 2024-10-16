@@ -43,7 +43,7 @@ namespace Payment.Bajicash
                 {
                     TransactionAmount = amount,
                     PaymentCode = inputs["PaymentCode"],
-                    UserId = inputs["AccountName"],
+                    UserId = inputs["UserName"],
                     CurrencyCode = inputs["PayCurrencyId"],
                     CallbackUrl = inputs["CallBackUrl"],
                     ReturnUrl = inputs["ReturnUrl"],
@@ -112,12 +112,71 @@ namespace Payment.Bajicash
         #region credit
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var apiKey = inputs["ApiKey"];
+            var secretKey = inputs["SecretKey"];
+            var merchantCode = inputs["MerchantCode"];
+            var apiUrl = $"{inputs["ApiUrl"]}/{Definition.Path.Payout}/{merchantCode}";
+
+            var p = new 
+            {
+                merchant_code = inputs["MerchantCode"],
+                transaction_code = inputs["TransID"],
+                transaction_timestamp = DateTimeOffset.Now.ToUnixTimeSeconds().ToString(),
+                payout_code = inputs["PayoutCode"],
+                transaction_amount = inputs["Amount"],
+                user_id = inputs["UserName"],
+                currency_code = inputs["PayCurrencyId"],
+                bank_account_number = inputs["AccountNo"],
+                ifsc_code = inputs["IFSCCode"],
+                bank_code = inputs["BankCode"],
+                bank_name = inputs["BankName"],
+                account_name = inputs["AccountName"],
+                callback_url = inputs["CallBackUrl"]
+            };
+
+            var reqStr = ToJson(p);
+            var key = encrypt_decrypt(Definition.CryptoMethod.Encrypt, reqStr, apiKey, secretKey);
+            var req = new PayoutRequest
+            {
+                Key = key,
+            };
+
+            var (result, statusCode) = _httpHelper
+                .PostJson<PayoutRequest, PayoutResponse>(apiUrl, req);
+
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException($"Bajicash withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
+            }
+
+            if (result != null && !result.Success)
+            {
+                throw new CustomException(result.Message);
+            }
+
+            return new WithdrawResult
+            {
+                Success = true,
+                RawContent = JsonConvert.SerializeObject(result)
+            };
         }
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
             Dictionary<string, string> payResource)
         {
-            throw new NotImplementedException();
+            var req = FromJson<CallbackRequest>(bodyContent);
+            var reqInfo = encrypt_decrypt(Definition.CryptoMethod.Decrypt, req.Key, payResource["ApiKey"], payResource["SecretKey"]);
+
+            var dictReq = JsonConvert.DeserializeObject<Dictionary<string, string>>(reqInfo);
+            var status = dictReq["transaction_status"];
+            var transStatus = Definition.GetTransStatus(status);
+
+            return new NotifyWithdrawResult
+            {
+                ThirdId = "",
+                TransStatus = transStatus,
+                Response = "SUCCESS",
+                WithdrawId = req.TransactionCode
+            };
         }
         #endregion
 

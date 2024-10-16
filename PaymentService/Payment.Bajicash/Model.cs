@@ -41,6 +41,12 @@ namespace Payment.Bajicash
         public string Note { get; set; }
     }
 
+    public class PayoutRequest
+    {
+        [JsonProperty("key")]
+        public string Key {  get; set; }
+    }
+
     public class PaymentResponse
     {
         [JsonProperty("code")]
@@ -67,5 +73,13 @@ namespace Payment.Bajicash
     {
         [JsonProperty("additional_data")]
         public object AdditionalData { get; set; } 
+    }
+
+    public class PayoutResponse
+    {
+        [JsonProperty("success")]
+        public bool Success { get; set; }
+        [JsonProperty("message")]
+        public string Message { get; set; }
     }
 }

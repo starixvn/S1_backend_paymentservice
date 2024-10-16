@@ -15,6 +15,10 @@ namespace Payment.Bajicash
             /// 創建代收
             /// </summary>
             public const string Deposit = "v4/generateDeposit";
+            /// <summary>
+            /// 創建代付
+            /// </summary>
+            public const string Payout = "api/v1/payout";
         }
 
         internal class CryptoMethod
