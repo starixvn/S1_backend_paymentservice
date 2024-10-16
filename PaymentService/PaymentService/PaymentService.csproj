@@ -26,6 +26,7 @@
     <ProjectReference Include="..\Payment.AeePay\Payment.AeePay.csproj" />
     <ProjectReference Include="..\Payment.AsetPay\Payment.AsetPay.csproj" />
     <ProjectReference Include="..\Payment.AOPay\Payment.AOPay.csproj" />
+    <ProjectReference Include="..\Payment.Bajicash\Payment.Bajicash.csproj" />
     <ProjectReference Include="..\Payment.BetcatPay\Payment.BetcatPay.csproj" />
     <ProjectReference Include="..\Payment.BigPayz\Payment.BigPayz.csproj" />
     <ProjectReference Include="..\Payment.CashRuPay\Payment.CashRuPay.csproj" />
