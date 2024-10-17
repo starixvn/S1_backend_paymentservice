@@ -155,6 +155,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.EBPay", "Payment.EB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.ZiuPay", "Payment.ZiuPay\Payment.ZiuPay.csproj", "{1A665ABA-2FBD-4B16-A016-ACA203931890}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.Bajicash", "Payment.Bajicash\Payment.Bajicash.csproj", "{845EB76D-CC02-4C37-844E-BF9168EF32EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -461,6 +463,10 @@ Global
 		{1A665ABA-2FBD-4B16-A016-ACA203931890}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A665ABA-2FBD-4B16-A016-ACA203931890}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A665ABA-2FBD-4B16-A016-ACA203931890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{845EB76D-CC02-4C37-844E-BF9168EF32EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{845EB76D-CC02-4C37-844E-BF9168EF32EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{845EB76D-CC02-4C37-844E-BF9168EF32EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{845EB76D-CC02-4C37-844E-BF9168EF32EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -538,6 +544,7 @@ Global
 		{AF7C2921-2279-4E2E-985C-7062DEF6BF89} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{C11DA541-CCBA-47F7-9BC2-70DC83C5F426} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{1A665ABA-2FBD-4B16-A016-ACA203931890} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{845EB76D-CC02-4C37-844E-BF9168EF32EC} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
