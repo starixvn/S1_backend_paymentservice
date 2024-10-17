@@ -177,7 +177,7 @@ namespace PaymentService.Service.DAL
         
         private int SetDepositInfoFirstDeposit(int depositId, IDbTransaction trans)
         {
-            return _mainDbClient.Execute("Service_DepositInfo1stDeposit_Set", new { DepositId = depositId }, trans);
+            return _mainDbClient.Execute("Service_DepositInfo1stDeposit_Set", new { _DepositId = depositId }, trans);
         }
 
         public int SetDepositLog(int depositId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
