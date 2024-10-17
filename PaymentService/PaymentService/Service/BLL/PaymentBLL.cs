@@ -330,7 +330,7 @@ namespace PaymentService.Service.BLL
 
             if (di.FirstDeposit)
             {
-                var res = _taskSettingService.Set(di.CustId, TaskSetting.FirstDepositTime, di.FlowEndTime);
+                var res = _taskSettingService.Set(di.CustId, TaskSetting.FirstDepositTime, di.FlowEndTime, di.TransId);
                 
                 if (res < 1)
                     _logger.LogInformation($"{transId} Set FirstDeposit CustTuskTime Failed.");
