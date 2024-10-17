@@ -48,7 +48,6 @@ namespace PaymentService
             services.AddSingleton<WalletService>();
             services.AddSingleton<WithdrawalService>();
             services.AddSingleton<ConfigService>();
-            services.AddSingleton<TaskSettingService>();
 
 
             /*BLL*/
