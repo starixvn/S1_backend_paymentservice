@@ -50,6 +50,7 @@ namespace PaymentCore.Models
         BankAutoChannel = 7,
         CryptoWallet = 8,
         QuickTransfer = 9,
-        ChatTransfer = 10
+        ChatTransfer = 10,
+        DigitalWallet = 11
     }
 }
