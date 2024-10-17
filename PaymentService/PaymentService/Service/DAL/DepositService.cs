@@ -111,7 +111,7 @@ namespace PaymentService.Service.DAL
                             logMsg += Environment.NewLine +
                                 $"transId:{input.TransId} Execute SetDepositInfoFirstDeposit parameter depositId:{depositId}, siteId:{input.SiteId} Step4-1";
 
-                            result = SetDepositInfoFirstDeposit(depositId, input.SiteId, trans);
+                            result = SetDepositInfoFirstDeposit(depositId, trans);
 
                             logMsg += Environment.NewLine +
                                 $"transId:{input.TransId} Execute SetDepositInfoFirstDeposit after result:{result} Step4-2";
@@ -175,9 +175,9 @@ namespace PaymentService.Service.DAL
             return true;
         }
         
-        private int SetDepositInfoFirstDeposit(int depositId, int siteId, IDbTransaction trans)
+        private int SetDepositInfoFirstDeposit(int depositId, IDbTransaction trans)
         {
-            return _mainDbClient.Execute("DepositInfoFirstDeposit_Set", new { DepositId = depositId, SiteId = siteId }, trans);
+            return _mainDbClient.Execute("Service_DepositInfo1stDeposit_Set", new { DepositId = depositId }, trans);
         }
 
         public int SetDepositLog(int depositId, int siteId, string comment, int status, decimal actualDeposit, string @operator)
