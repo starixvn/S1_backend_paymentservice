@@ -23,14 +23,15 @@ namespace Payment.FPay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var apiHost = inputs["Host"];
-            var payCurrency = inputs["PayCurrencyId"];
+            var payCurrency = GetPayCurrency(inputs["PayCurrencyId"]);
+            var settingKey = GetSettingKey(inputs["PayCurrencyId"]);
             
             try
             {
                 var req = new Dictionary<string, string>
                 {
-                    {"username", inputs[$"{payCurrency}DepositUsername"]},
-                    {"api_key", inputs[$"{payCurrency}DepositApiKey"]}
+                    {"username", inputs[$"{settingKey}DepositUsername"]},
+                    {"api_key", inputs[$"{settingKey}DepositApiKey"]}
                 };
                 
                 var authResp = GetAuth(apiHost, req);
@@ -111,14 +112,15 @@ namespace Payment.FPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var apiHost = inputs["Host"];
-            var payCurrency = inputs["PayCurrencyId"];
+            var payCurrency = GetPayCurrency(inputs["PayCurrencyId"]);
+            var settingKey = GetSettingKey(inputs["PayCurrencyId"]);
             
             try
             {
                 var req = new Dictionary<string, string>
                 {
-                    {"username", inputs[$"{payCurrency}PayoutUsername"]},
-                    {"api_key", inputs[$"{payCurrency}PayoutApiKey"]}
+                    {"username", inputs[$"{settingKey}PayoutUsername"]},
+                    {"api_key", inputs[$"{settingKey}PayoutApiKey"]}
                 };
                 
                 var authResp = GetAuth(apiHost, req);
@@ -234,5 +236,11 @@ namespace Payment.FPay
 
             return result;
         }
+
+        private static string GetSettingKey(string payCurrency)
+            => payCurrency.Replace("_", "");
+        
+        private static string GetPayCurrency(string payCurrency)
+            => payCurrency.Split("_")[0];
     }
 }
