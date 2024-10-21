@@ -10,6 +10,13 @@ if (!string.IsNullOrEmpty(environmentName))
 {
     builder.Environment.EnvironmentName = environmentName;
 }
+
+builder.Services.AddLogging(loggingBuilder =>
+{
+    loggingBuilder.AddConsole();
+    loggingBuilder.AddDebug();
+});
+
 builder.WebHost.UseSentry();
 builder.Services.AddHealthChecks();
 var remoteUrls = GetRemoteUrls();
