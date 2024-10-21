@@ -4,6 +4,7 @@ using PaymentService.Extensions;
 using PaymentService.Service.Workers;
 using System.Net.Mime;
 using Microsoft.AspNetCore.HttpLogging;
+using System.Net;
 var builder = WebApplication.CreateBuilder(args);
 
 // update environmentName ?
@@ -54,7 +55,7 @@ ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/");
 
-app.UseHttpLogging();
+app.UseWhen(context => !(context.Request.Path.StartsWithSegments("/health") && context.Response.StatusCode == ((int)HttpStatusCode.OK)), app => app.UseHttpLogging());
 app.Use(async (context, next) =>
 {
     await next();

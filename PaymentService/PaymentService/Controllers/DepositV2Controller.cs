@@ -124,6 +124,8 @@ public class DepositV2Controller : ControllerBase
             input.AddRange(setting);
             
             _logger.LogInformation("INPUT=" + JsonConvert.SerializeObject(input));
+            SentrySdk.CaptureMessage($"INPUT = " + JsonConvert.SerializeObject(input), SentryLevel.Info);
+            Console.WriteLine("INPUT=" + JsonConvert.SerializeObject(input));
 
             var result = payHelper.Debit(input);
 
@@ -201,6 +203,9 @@ public class DepositV2Controller : ControllerBase
 
             _logger.LogInformation(
                 $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
+
+            SentrySdk.CaptureMessage($"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}", SentryLevel.Info);
+        Console.WriteLine($"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
 
             var depositId = _common.GetId(transId);
             var tmpTransId = $"D{_common.GetEnv()}{depositId}";
