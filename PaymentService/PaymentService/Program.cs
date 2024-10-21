@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.HttpLogging;
 using PaymentService;
 using PaymentService.Extensions;
 using PaymentService.Service.Workers;
-
+using System.Net.Mime;
+using Microsoft.AspNetCore.HttpLogging;
 var builder = WebApplication.CreateBuilder(args);
 
 // update environmentName ?
@@ -16,6 +18,14 @@ builder.Services.AddLogging(loggingBuilder =>
     loggingBuilder.AddConsole();
     loggingBuilder.AddDebug();
 });
+builder.Services
+ .AddHttpLogging(logging =>
+ {
+     logging.LoggingFields = HttpLoggingFields.All;
+     logging.MediaTypeOptions.AddText(MediaTypeNames.Application.Json);
+     logging.MediaTypeOptions.AddText(MediaTypeNames.Text.Html);
+ })
+  .AddHealthChecks();
 
 builder.WebHost.UseSentry();
 builder.Services.AddHealthChecks();
@@ -43,6 +53,23 @@ const int minIOCPs = 4;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/");
+
+app.UseHttpLogging();
+app.Use(async (context, next) =>
+{
+    await next();
+
+    var logger = context.RequestServices.GetService<ILoggerFactory>()
+        ?.CreateLogger("Microsoft.AspNetCore.HttpLogging.HttpLoggingMiddleware");
+
+    if (logger?.IsEnabled(LogLevel.Information) == true)
+    {
+        using var stream = new StreamReader(context.Request.Body);
+
+        _ = await stream.ReadToEndAsync().ConfigureAwait(false);
+    }
+});
+
 app.Run();
 return;
 
