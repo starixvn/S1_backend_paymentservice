@@ -70,7 +70,7 @@ app.Use(async (context, next) =>
         _ = await stream.ReadToEndAsync().ConfigureAwait(false);
     }
 });
-
+Console.WriteLine("Payment start!");
 app.Run();
 return;
 
