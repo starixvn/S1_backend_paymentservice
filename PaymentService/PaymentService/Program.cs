@@ -3,10 +3,12 @@ using PaymentService;
 using PaymentService.Extensions;
 using PaymentService.Service.Workers;
 using System.Net.Mime;
-using Microsoft.AspNetCore.HttpLogging;
-using System.Net;
-var builder = WebApplication.CreateBuilder(args);
 
+using System.Net;
+using System.Diagnostics;
+var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseSentry();
+builder.Services.AddHealthChecks();
 // update environmentName ?
 var environmentName = builder.Configuration.GetValue<string>("EnvironmentName");
 if (!string.IsNullOrEmpty(environmentName))
@@ -14,22 +16,21 @@ if (!string.IsNullOrEmpty(environmentName))
     builder.Environment.EnvironmentName = environmentName;
 }
 
-builder.Services.AddLogging(loggingBuilder =>
-{
-    loggingBuilder.AddConsole();
-    loggingBuilder.AddDebug();
-});
-builder.Services
- .AddHttpLogging(logging =>
- {
-     logging.LoggingFields = HttpLoggingFields.All;
-     logging.MediaTypeOptions.AddText(MediaTypeNames.Application.Json);
-     logging.MediaTypeOptions.AddText(MediaTypeNames.Text.Html);
- })
-  .AddHealthChecks();
+//builder.Services.AddLogging(loggingBuilder =>
+//{
+//    loggingBuilder.AddConsole();
+//    loggingBuilder.AddDebug();
+//    loggingBuilder.add
+//});
+//builder.Services
+// .AddHttpLogging(logging =>
+// {
+//     logging.LoggingFields = HttpLoggingFields.All;
+//     logging.MediaTypeOptions.AddText(MediaTypeNames.Application.Json);
+//     logging.MediaTypeOptions.AddText(MediaTypeNames.Text.Html);
+// });
 
-builder.WebHost.UseSentry();
-builder.Services.AddHealthChecks();
+
 var remoteUrls = GetRemoteUrls();
 remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
@@ -55,29 +56,14 @@ ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/");
 
-app.UseWhen(context => !(context.Request.Path.StartsWithSegments("/health") && context.Response.StatusCode == ((int)HttpStatusCode.OK)), app => app.UseHttpLogging());
-app.Use(async (context, next) =>
-{
-    await next();
 
-    var logger = context.RequestServices.GetService<ILoggerFactory>()
-        ?.CreateLogger("Microsoft.AspNetCore.HttpLogging.HttpLoggingMiddleware");
-
-    if (logger?.IsEnabled(LogLevel.Information) == true)
-    {
-        using var stream = new StreamReader(context.Request.Body);
-
-        _ = await stream.ReadToEndAsync().ConfigureAwait(false);
-    }
-});
-Console.WriteLine("Payment start!");
+Debug.WriteLine("Payment start!");
 app.Run();
 return;
 
 string[] GetRemoteUrls()
 {
-    // 如果有 Runtime Environment Variable 優先使用
-    // 沒有則使用預設 AppSetting
+
     return builder.Configuration.GetSection("ConfigService").Get<string[]>();
         
 }
