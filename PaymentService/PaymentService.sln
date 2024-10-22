@@ -163,7 +163,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.CashRuPay", "Paymen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.ZiuPay", "Payment.ZiuPay\Payment.ZiuPay.csproj", "{1A665ABA-2FBD-4B16-A016-ACA203931890}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.Bajicash", "Payment.Bajicash\Payment.Bajicash.csproj", "{845EB76D-CC02-4C37-844E-BF9168EF32EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.Bajicash", "Payment.Bajicash\Payment.Bajicash.csproj", "{845EB76D-CC02-4C37-844E-BF9168EF32EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.XcPay", "Payment.XcPay\Payment.XcPay.csproj", "{3C144CB1-673C-40AC-850C-F5402D240984}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -491,6 +493,10 @@ Global
 		{845EB76D-CC02-4C37-844E-BF9168EF32EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{845EB76D-CC02-4C37-844E-BF9168EF32EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{845EB76D-CC02-4C37-844E-BF9168EF32EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C144CB1-673C-40AC-850C-F5402D240984}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C144CB1-673C-40AC-850C-F5402D240984}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C144CB1-673C-40AC-850C-F5402D240984}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C144CB1-673C-40AC-850C-F5402D240984}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -573,6 +579,7 @@ Global
 		{0D341D9C-4AF5-4C48-A68E-4E3DC5753EA6} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{1A665ABA-2FBD-4B16-A016-ACA203931890} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{845EB76D-CC02-4C37-844E-BF9168EF32EC} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{3C144CB1-673C-40AC-850C-F5402D240984} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
