@@ -202,16 +202,19 @@ public class DepositV2Controller : ControllerBase
             var (headers, bodyContent, dicParams) = await HttpExtension.GetCallbackInfo(Request);
 
             _logger.LogInformation(
-                $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
+                $"CallBack Info: Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
 
             SentrySdk.CaptureMessage($"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}", SentryLevel.Info);
        //     Console.WriteLine($"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
 
             var depositId = _common.GetId(transId);
             var tmpTransId = $"D{_common.GetEnv()}{depositId}";
-            
+            _logger.LogInformation("here is log tmpTransId: {TmpTransId} and transId: {TransId}", tmpTransId, transId);
+
+
             if (tmpTransId != transId)
             {
+                
                 var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)_payBll.GetPayHelper(transId);
                 var payResource = new Dictionary<string, string>
                 {
