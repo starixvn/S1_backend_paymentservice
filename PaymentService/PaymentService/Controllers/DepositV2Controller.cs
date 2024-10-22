@@ -123,8 +123,8 @@ public class DepositV2Controller : ControllerBase
             var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
             input.AddRange(setting);
             
-            _logger.LogInformation("INPUT=" + JsonConvert.SerializeObject(input));
-            SentrySdk.CaptureMessage($"INPUT = " + JsonConvert.SerializeObject(input), SentryLevel.Info);
+            _logger.LogInformation("Deposit Create=" + JsonConvert.SerializeObject(input));
+            SentrySdk.CaptureMessage($"Deposit Create = " + JsonConvert.SerializeObject(input), SentryLevel.Info);
             
 
             var result = payHelper.Debit(input);
@@ -202,14 +202,13 @@ public class DepositV2Controller : ControllerBase
             var (headers, bodyContent, dicParams) = await HttpExtension.GetCallbackInfo(Request);
 
             _logger.LogInformation(
-                $"CallBack Info: Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
+                $"Deposite CallBack Info: Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
 
             SentrySdk.CaptureMessage($"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}", SentryLevel.Info);
-       //     Console.WriteLine($"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
-
+  
             var depositId = _common.GetId(transId);
             var tmpTransId = $"D{_common.GetEnv()}{depositId}";
-            _logger.LogInformation("here is log tmpTransId: {TmpTransId} and transId: {TransId}", tmpTransId, transId);
+            _logger.LogInformation("here is log tmpTransId for Deposit: {TmpTransId} and transId: {TransId}", tmpTransId, transId);
 
 
             if (tmpTransId != transId)
