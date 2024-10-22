@@ -95,8 +95,8 @@ namespace PaymentService
             app.UseRouting();
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            app.UseRequestLogMiddleware();
-            app.UseResponseLogMiddleware();
+            //app.UseRequestLogMiddleware();
+            //app.UseResponseLogMiddleware();
             //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
