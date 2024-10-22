@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace PaymentService.Controllers
 {
@@ -122,6 +124,78 @@ namespace PaymentService.Controllers
             };
 
             return new JsonResult(response);
+        }
+
+        [Route("SpeedPay/{success}/{method}")]
+        public JsonResult SpeedPayResponse(string success, string method)
+        {
+            var methodMapper = new Dictionary<string, string>
+            {
+                { "qrh5", "deposit" },
+                { "payout", "withdrawal" }
+            };
+
+            var resCode = success.Equals("success", StringComparison.OrdinalIgnoreCase) ? "000" : "999";
+
+            if (methodMapper[method].Equals("deposit", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = new
+                {
+                    amount = "200",
+                    orderNo = "POSTMAN_20211001140546",
+                    gbpOrderNo = "QRHA20211001060547000200868977",
+                    createTime = "20211001060546",
+                    resultUrl = "http://www.google.com",
+                    code = "0000",
+                    msg = "Success"
+                };
+
+                return new JsonResult(
+                    new
+                    {
+                        version = "1.0",
+                        merchantNo = "GBP111222",
+                        resCode,
+                        resMsg = "test msg",
+                        response = ToBase64Encode(ToJson(response))
+                    });
+            }
+            else
+            {
+                var response = new
+                {
+                    code = "0000",
+                    msg = "订单建立成功",
+                    amount = "100.00",
+                    fee = "2.00",
+                    orderNo = "Order12345789",
+                    gbpOrderNo = "190101185511101",
+                    createTime = "20101231032055"
+                };
+
+                return new JsonResult(
+                    new
+                    {
+                        merchantNo = "GBP111222",
+                        resCode,
+                        resMsg = "test msg",
+                        response = ToBase64Encode(ToJson(response))
+                    });
+            }
+        }
+
+        private string ToJson(object t)
+        {
+            return JsonConvert.SerializeObject(t, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
+        }
+
+        private string ToBase64Encode(string str)
+        {
+            var plainTextBytes = Encoding.UTF8.GetBytes(str);
+            return Convert.ToBase64String(plainTextBytes);
         }
     }
 }
