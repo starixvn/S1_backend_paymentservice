@@ -94,5 +94,34 @@ namespace PaymentService.Controllers
 
             return new JsonResult(response);
         }
+
+        [Route("DirePay/{status}/api/callBack")]
+        public IActionResult DirePayResponse(string status)
+        {
+            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = new
+                {
+                    message = "test",
+                    txid = "abc1234",
+                    pay_url = "https://www.google.com/"
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { error = "Test Bad Response" });
+        }
+
+        [Route("DirePay/{status}/api/login")]
+        public IActionResult DirePayLoginResponse(string status)
+        {
+            var response = new
+            {
+                access_token = "123456"
+            };
+
+            return new JsonResult(response);
+        }
     }
 }
