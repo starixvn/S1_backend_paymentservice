@@ -202,6 +202,61 @@ namespace PaymentService.Controllers
             return Content(responseXml, "text/xml");
         }
 
+
+        [Route("BigPayz/{status}/payin/depositv2")]
+        public IActionResult BigPayzDepositResponse(string status)
+        {
+            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = new
+                {
+                    transaction = "009-212-20-750",
+                    redirect_to = "https://www.google.com",
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { error = "Bad Response" });
+        }
+
+        [Route("BigPayz/{status}/DuitNow/Deposit")]
+        public IActionResult BigPayzDepositQrCodeResponse(string status)
+        {
+            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = new
+                {
+                    invoice_number = "009-212-20-750",
+                    redirect_to = "https://www.google.com",
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { error = "Bad Response" });
+        }
+
+        [Route("BigPayz/{status}/payout/withdrawal")]
+        public IActionResult BigPayzWithdrawalResponse(string status)
+        {
+            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = new
+                {
+                    error_code = "0",
+                    error_message = "Operation success",
+                    invoice_number = "000-MY01-126-20-140",
+                    currency_code = "MYR",
+                    merchant_balance = "9620.0"
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { error = "Bad Response" });
+        }
+
         private string ToJson(object t)
         {
             return JsonConvert.SerializeObject(t, new JsonSerializerSettings
