@@ -184,6 +184,24 @@ namespace PaymentService.Controllers
             }
         }
 
+        [Route("Help2Pay/{success}")]
+        public IActionResult Help2PayWithdrawalResponse(string success)
+        {
+            var isSuccess = success.Equals("success", StringComparison.OrdinalIgnoreCase);
+            var statusCode = isSuccess ? "000" : "001";
+            var msg = isSuccess ? "Success" : "Invalid Merchant";
+            var responseXml = $"<Payout><statusCode>{statusCode}</statusCode><message>{msg}</message></Payout>";
+
+            // Clear existing response headers if necessary
+            Response.Clear();
+
+            // Add the content type header for XML
+            Response.Headers["Content-Type"] = "text/xml";
+
+            // Return the XML response
+            return Content(responseXml, "text/xml");
+        }
+
         private string ToJson(object t)
         {
             return JsonConvert.SerializeObject(t, new JsonSerializerSettings
