@@ -23,7 +23,7 @@ namespace PaymentService.Service.Library
             {
                 case "Development":
                 case "Local":
-                    return "P";
+                    return "D";
 
                 case "Staging":
                     return "S";
