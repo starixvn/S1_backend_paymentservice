@@ -5,13 +5,25 @@ namespace Payment.XcPay
     internal class Definition
     {
         public const string QR = "IndiaQR";
-        public const string RequestId = "03b30f8f-8f80-11ef-868a-35ccf23fad77";
+        public const string Pauout = "IndiaPayout";
         internal class CryptoMethod
         {
             /// <summary>
             /// MD5
             /// </summary>
             public const string MD5 = "MD5";
+        }
+
+        internal class Path
+        {
+            /// <summary>
+            /// 存款
+            /// </summary>
+            public const string deposit = "/api/gateway/pay";
+            /// <summary>
+            /// 提款
+            /// </summary>
+            public const string Withdrawal = "/api/gateway/withdraw";
         }
 
         private static Dictionary<string, TransStatus> StatusMap =>
