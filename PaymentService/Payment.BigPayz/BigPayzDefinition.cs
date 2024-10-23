@@ -11,6 +11,8 @@ internal class BigPayzDefinition
         public const string QRDeposit = "/QRScanDeposit";
 
         public const string Withdrawal = "/payout/withdrawal";
+
+        public const string DuitNow = "/DuitNow/Deposit";
     }
 
     internal class ErrorCode
