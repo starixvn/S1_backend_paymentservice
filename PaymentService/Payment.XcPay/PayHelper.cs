@@ -175,13 +175,11 @@ namespace Payment.XcPay
 
                 var (result, statusCode) = _httpHelper
                     .PostFormData<string, PaymentResponse>(url, sParam);
-                var deserializeParams = JsonConvert.DeserializeObject<PaymentParams>(result.Params);
 
                 if (!statusCode.IsSuccessStatus())
                 {
-                    throw new CustomException($"XcPay deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
+                    throw new CustomException($"XcPay Withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
                 }
-
 
                 if (result != null && result.Code != 200)
                 {
@@ -196,7 +194,7 @@ namespace Payment.XcPay
             }
             catch (CustomException ex)
             {
-                _logger.LogError($"XcPay deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+                _logger.LogError($"XcPay Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
 
                 return new WithdrawResult(ex.Message);
             }
