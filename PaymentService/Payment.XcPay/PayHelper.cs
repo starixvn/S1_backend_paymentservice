@@ -60,7 +60,7 @@ namespace Payment.XcPay
 
                 if (!statusCode.IsSuccessStatus())
                 {
-                    throw new CustomException($"XcPay deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
+                    throw new CustomException($"XcPay deposit failed, HttpStatus: {(int)statusCode} {result.Message}");
                 }
 
 
@@ -179,7 +179,7 @@ namespace Payment.XcPay
 
                 if (!statusCode.IsSuccessStatus())
                 {
-                    throw new CustomException($"XcPay Withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
+                    throw new CustomException($"XcPay Withdrawal failed, HttpStatus: {(int)statusCode} {result.Message}");
                 }
 
                 if (result != null && result.Code != 200)
