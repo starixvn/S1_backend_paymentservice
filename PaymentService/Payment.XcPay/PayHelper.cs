@@ -57,7 +57,6 @@ namespace Payment.XcPay
 
                 var (result, statusCode) = _httpHelper
                     .PostFormData<string, PaymentResponse>(url, sParam);
-                var deserializeParams = JsonConvert.DeserializeObject<PaymentParams>(result.Params);
 
                 if (!statusCode.IsSuccessStatus())
                 {
@@ -69,6 +68,8 @@ namespace Payment.XcPay
                 {
                     throw new CustomException(result.Message);
                 }
+
+                var deserializeParams = JsonConvert.DeserializeObject<PaymentParams>(result.Params);
 
                 return new DepositResult
                 {
