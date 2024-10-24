@@ -124,7 +124,7 @@ namespace Payment.XcPay
                 ActualAmount = decimal.Parse(deserializeParams.Amount),
                 DepositId = transId,
                 ThirdId = deserializeParams.SystemRef,
-                TransStatus = Definition.GetTransStatus(deserializeParams.Status.ToString()),
+                TransStatus = Definition.GetTransStatus(deserializeParams.Status.ToString(),Definition.QR),
                 Response = "success"
             };
 
@@ -147,7 +147,7 @@ namespace Payment.XcPay
                 var p = new
                 {
                     merchant_ref = inputs["TransID"],
-                    product = Definition.Pauout,
+                    product = Definition.Payout,
                     amount = inputs["Amount"],
                     extra = new
                     {
@@ -233,7 +233,7 @@ namespace Payment.XcPay
             var result = new NotifyWithdrawResult
             {
                 ThirdId = deserializeParams.SystemRef,
-                TransStatus = Definition.GetTransStatus(deserializeParams.Status.ToString()),
+                TransStatus = Definition.GetTransStatus(deserializeParams.Status.ToString(), Definition.Payout),
                 Response = "success",
                 WithdrawId = transId,
                 Message = deserializeParams.Status.ToString()
