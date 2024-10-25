@@ -62,8 +62,11 @@ namespace Payment.BigPayz
                     req.Add("hash", GetSign(req, key));
                     req.Add("lang", input["Lang"]);
 
+                    var url = input["PayCurrencyId"] == "THB"
+                        ? $"{qrBaseApiUrl}{BigPayzDefinition.Path.QRDeposit}"
+                        : $"{baseApiUrl}{BigPayzDefinition.Path.DuitNow}";
                     (response, statusCode) = _httpHelper
-                            .PostJson<Dictionary<string, string>, DepositResponse>($"{qrBaseApiUrl}{BigPayzDefinition.Path.QRDeposit}", req);
+                            .PostJson<Dictionary<string, string>, DepositResponse>(url, req);
 
                     transaction = response.InvoiceNumber;
                     redirectURL = response.RedirectTo;
