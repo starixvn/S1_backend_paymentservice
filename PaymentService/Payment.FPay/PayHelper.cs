@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -25,9 +26,14 @@ namespace Payment.FPay
             var apiHost = inputs["Host"];
             var payCurrency = GetPayCurrency(inputs["PayCurrencyId"]);
             var settingKey = GetSettingKey(inputs["PayCurrencyId"]);
+            var depositInfo = inputs["DepositInfo"];
             
             try
             {
+                // 檢查 DepositInfo
+                if (depositInfo == null)
+                    throw new CustomException("DepositInfo is empty.");
+                
                 var req = new Dictionary<string, string>
                 {
                     {"username", inputs[$"{settingKey}DepositUsername"]},
@@ -57,11 +63,14 @@ namespace Payment.FPay
                 if (!resp.Status)
                     throw new CustomException("Generate orders failed, msg=" + resp.Message);
 
+                depositInfo = depositInfo.AddOrSetJProperty("SettingKey", settingKey);
+
                 return new DepositResult
                 {
                     Success = true,
                     ErrorCode = "0",
-                    Url = resp.Url
+                    Url = resp.Url,
+                    DepositInfo = depositInfo
                 };
             }
             catch (CustomException ex)
@@ -81,11 +90,14 @@ namespace Payment.FPay
         {
             var data = FromJson<CallBackDebitReq>(bodyContent);
             var transId = data.TransId;
-            var str = payResource[$"{data.Currency}DepositSecretKey"] + data.TransId;
+            
+            var settingKey = GetDepositCallBackSettingKey(payResource);
+            var str = payResource[$"{settingKey}DepositSecretKey"] + data.TransId;
             var sign = ToMD5(str).ToLower();
 
             if (!data.Token.Equals(sign))
             {
+
                 _logger.LogInformation($"{transId}, signature verification failed.");
 
                 return new NotifyDepositResult
@@ -129,7 +141,7 @@ namespace Payment.FPay
                 {
                     { "auth", authResp.Auth },
                     { "amount", amount.ToString("G29") },
-                    { "currency", inputs["PayCurrencyId"] },
+                    { "currency", payCurrency },
                     { "orderid", inputs["TransID"] },
                     { "bank_id", inputs["BankCode"] },
                     { "bank_branch", "" },
@@ -242,5 +254,15 @@ namespace Payment.FPay
         
         private static string GetPayCurrency(string payCurrency)
             => payCurrency.Split("_")[0];
+        
+        private static string GetDepositCallBackSettingKey(IDictionary<string, string> inputs)
+        {
+            var depositInfo = inputs["DepositInfo"];
+            var jObj = JObject.Parse(depositInfo);
+
+            return jObj.TryGetValue("SettingKey", StringComparison.OrdinalIgnoreCase, out var jPayCode)
+                ? jPayCode.ToObject<string>()
+                : string.Empty;
+        }
     }
 }
