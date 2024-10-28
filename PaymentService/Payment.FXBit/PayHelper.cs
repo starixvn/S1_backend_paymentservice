@@ -525,10 +525,10 @@ namespace Payment.FXBit
 
         private static string GetExchangeAmountString(string reqAmount, string rate, string toCurrency)
         {
-            // 小數位數 ETH BTC 8 位，其餘 2 位
+            // 小數位數 ETH BTC 6 位，其餘 2 位
             var unit = toCurrency.Equals("ETH", StringComparison.OrdinalIgnoreCase)
                        || toCurrency.Equals("BTC", StringComparison.OrdinalIgnoreCase)
-                ? 8 : 2;
+                ? 6 : 2;
 
             var amount = decimal.Parse(reqAmount) / decimal.Parse(rate);
 
