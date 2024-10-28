@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -296,6 +297,35 @@ namespace PaymentService.Controllers
             }
 
             return BadRequest(new { error = "Bad Response" });
+        }
+
+        [Route("GameWallet/{status}")]
+        public JsonResult GameWalletWithdrawalResponse(string status)
+        {
+            var isSuccess = status.Equals("success", StringComparison.OrdinalIgnoreCase);
+            var statusCode = isSuccess ? "002" : "001";
+            var statusMessage = isSuccess ? "SUCCESS" : "test msg";
+            var dateNow = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+            var response = new
+            {
+                actualAmount = "100",
+                amount = "100",
+                bank = "xxx",
+                currency = "THB",
+                customer = "customer",
+                datetime = dateNow,
+                key = "xxx",
+                merchant = "xxx",
+                reference = "wid",
+                refId = dateNow,
+                statementDate = dateNow,
+                statusCode,
+                statusMessage,
+                transactionId = dateNow
+            };
+
+            return new JsonResult(response);
         }
 
         private string ToJson(object t)
