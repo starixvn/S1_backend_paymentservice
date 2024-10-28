@@ -240,8 +240,10 @@ namespace Payment.OOPay
         {
             var sortedParameters = param.OrderBy(p => p.Key, StringComparer.Ordinal);
             SignConcatSourceString = string.Join("&", sortedParameters.Select(x => $"{x.Key}={x.Value}").ToArray());
+            var encodeStr = $"{SignConcatSourceString}{secretKey}";
+            _logger.LogInformation(encodeStr);
 
-            var signSha256 = ToHMACSHA256($"{SignConcatSourceString}{secretKey}");
+            var signSha256 = ToHMACSHA256(encodeStr);
             _logger.LogInformation(signSha256);
 
             var sign = ToMD5(signSha256).ToUpper();
