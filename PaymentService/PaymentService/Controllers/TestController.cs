@@ -257,6 +257,47 @@ namespace PaymentService.Controllers
             return BadRequest(new { error = "Bad Response" });
         }
 
+        [Route("OOPay/{status}/shou/new")]
+        public IActionResult OOPayDepositResponse(string status)
+        {
+            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = new
+                {
+                    code = "0",
+                    text = "success",
+                    amount = "1000",
+                    channelNo = "2",
+                    tradeNo = "123456",
+                    targetUrl = "https://www.google.com/"
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { error = "Bad Response" });
+        }
+
+        [Route("OOPay/{status}/fu/new")]
+        public IActionResult OOPayWithdrawalResponse(string status)
+        {
+            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = new
+                {
+                    code = "0",
+                    text = "success",
+                    amount = "1000",
+                    channelNo = "2",
+                    tradeNo = "123456",
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { error = "Bad Response" });
+        }
+
         private string ToJson(object t)
         {
             return JsonConvert.SerializeObject(t, new JsonSerializerSettings

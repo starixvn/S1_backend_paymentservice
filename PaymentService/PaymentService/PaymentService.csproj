@@ -63,6 +63,7 @@
     <ProjectReference Include="..\Payment.OFAPay\Payment.OFAPay.csproj" />
     <ProjectReference Include="..\Payment.OneDayPay\Payment.OneDayPay.csproj" />
     <ProjectReference Include="..\Payment.OnePay\Payment.OnePay.csproj" />
+    <ProjectReference Include="..\Payment.OOPay\Payment.OOPay.csproj" />
     <ProjectReference Include="..\Payment.PAPay\Payment.PAPay.csproj" />
     <ProjectReference Include="..\Payment.PapayaPay\Payment.PapayaPay.csproj" />
     <ProjectReference Include="..\Payment.PattayaPay\Payment.PattayaPay.csproj" />
