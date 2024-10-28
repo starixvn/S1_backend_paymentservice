@@ -367,6 +367,50 @@ namespace PaymentService.Controllers
             }
         }
 
+        [Route("988Pay/{status}/placeOrder")]
+        public IActionResult _988PayDepositResponse(string status)
+        {
+            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = new
+                {
+                    code = "0",
+                    msg = "操作成功",
+                    data = new
+                    {
+                        orderNo = "PO1716992597174341632",
+                        payUrl = "https://www.google.com/"
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { error = "Bad Response" });
+        }
+
+        [Route("988Pay/{status}/withdrawOrder")]
+        public IActionResult _988PayWithdrawalResponse(string status)
+        {
+            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = new
+                {
+                    code = "0",
+                    msg = "操作成功",
+                    data = new
+                    {
+                        orderNo = "TO1716990940768194560",
+                        Status = "1"
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { error = "Bad Response" });
+        }
+
         private string ToJson(object t)
         {
             return JsonConvert.SerializeObject(t, new JsonSerializerSettings
