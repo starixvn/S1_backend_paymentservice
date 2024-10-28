@@ -165,9 +165,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.ZiuPay", "Payment.Z
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.Bajicash", "Payment.Bajicash\Payment.Bajicash.csproj", "{845EB76D-CC02-4C37-844E-BF9168EF32EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.XcPay", "Payment.XcPay\Payment.XcPay.csproj", "{3C144CB1-673C-40AC-850C-F5402D240984}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.XcPay", "Payment.XcPay\Payment.XcPay.csproj", "{3C144CB1-673C-40AC-850C-F5402D240984}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.OOPay", "Payment.OOPay\Payment.OOPay.csproj", "{817975F5-0E90-42DB-B7E7-4D67585EF0F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.GameWallet", "Payment.GameWallet\Payment.GameWallet.csproj", "{3531B756-DEBE-4016-A186-DB87E1A5028D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -503,6 +505,10 @@ Global
 		{817975F5-0E90-42DB-B7E7-4D67585EF0F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{817975F5-0E90-42DB-B7E7-4D67585EF0F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{817975F5-0E90-42DB-B7E7-4D67585EF0F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3531B756-DEBE-4016-A186-DB87E1A5028D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3531B756-DEBE-4016-A186-DB87E1A5028D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3531B756-DEBE-4016-A186-DB87E1A5028D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3531B756-DEBE-4016-A186-DB87E1A5028D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -587,6 +593,7 @@ Global
 		{845EB76D-CC02-4C37-844E-BF9168EF32EC} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{3C144CB1-673C-40AC-850C-F5402D240984} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{817975F5-0E90-42DB-B7E7-4D67585EF0F5} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{3531B756-DEBE-4016-A186-DB87E1A5028D} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
