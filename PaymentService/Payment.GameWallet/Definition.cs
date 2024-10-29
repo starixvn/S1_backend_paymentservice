@@ -24,7 +24,8 @@ namespace Payment.GameWallet
         private static Dictionary<string, string> CurrencyMap =>
             new()
             {
-                { "4", "THB" }
+                { "4", "THB" },
+                { "51", "VND" }
             };
 
         internal static TransStatus GetCreditTransStatus(string status)

@@ -15,6 +15,7 @@ namespace Payment.GameWallet
     {
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
+        private readonly string[] _specificBankValuesForAmountFormat = { "MOMO", "ZALOPAY", "VTTMO" };
         private DateTimeOffset? _currentTimeStamp;
 
         public PayHelper(IServiceProvider provider)
@@ -107,10 +108,9 @@ namespace Payment.GameWallet
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var setting = GetSetting(inputs);
-
             try
             {
+                var setting = GetSetting(inputs);
                 var post = new WithdrawalPost
                 {
                     accountName = inputs["AccountName"],
@@ -147,39 +147,52 @@ namespace Payment.GameWallet
 
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            var setting = GetSetting(inputs);
-            var (method, bank) = GetMethodBankCode(inputs);
-            var post = new DepositPost
+            try
             {
-                Merchant = setting.MerchantCode,
-                Currency = inputs["PayCurrencyId"],
-                Method = method,
-                Bank = bank,
-                Customer = inputs["CustId"],
-                Reference = inputs["TransID"],
-                Amount = decimal.Parse(inputs["Amount"]).ToString("F2"),
-                Note = string.Empty,
-                SuccessUrl = inputs["ReturnUrl"],
-                FailUrl = inputs["ReturnUrl"],
-                Datetime = CurrentTimeStamp.ToString("yyyyMMddHHmmss"),
-                CallbackUri = inputs["CallBackUrl"],
-                Language = inputs["PayLangId"],
-                ClientIP = inputs["ClientIP"]
-            };
-            post.Key = GetPostSign(post, setting.Key);
-            post.Datetime = CurrentTimeStamp.ToString("yyyy-MM-dd HH:mm:sstt", new CultureInfo("en-us"));
+                var setting = GetSetting(inputs);
+                var (method, bank) = GetMethodBankCode(inputs);
+                var post = new DepositPost
+                {
+                    Merchant = setting.MerchantCode,
+                    Currency = inputs["PayCurrencyId"],
+                    Method = method,
+                    Bank = bank,
+                    Customer = inputs["CustId"],
+                    Reference = inputs["TransID"],
+                    Amount = decimal.Parse(inputs["Amount"]).ToString("F2"),
+                    Note = string.Empty,
+                    SuccessUrl = inputs["ReturnUrl"],
+                    FailUrl = inputs["ReturnUrl"],
+                    Datetime = CurrentTimeStamp.ToString("yyyyMMddHHmmss"),
+                    CallbackUri = inputs["CallBackUrl"],
+                    Language = inputs["PayLangId"],
+                    ClientIP = inputs["ClientIP"]
+                };
+                post.Key = GetPostSign(post, setting.Key);
+                post.Datetime = CurrentTimeStamp.ToString("yyyy-MM-dd HH:mm:sstt", new CultureInfo("en-us"));
+                if (_specificBankValuesForAmountFormat.Contains(bank))
+                {
+                    post.Amount = decimal.Parse(inputs["Amount"]).ToString("F0");
+                }
 
-            var postData = ToJson(post);
-            var parameter = HttpUtility.UrlEncode(Convert.ToBase64String(Encoding.UTF8.GetBytes(postData)));
-            var url = $"{setting.Host.TrimEnd('/')}?parameter={parameter}";
-            _logger.LogInformation($"Origin PostData: {postData}, Url: {url}");
+                var postData = ToJson(post);
+                var parameter = HttpUtility.UrlEncode(Convert.ToBase64String(Encoding.UTF8.GetBytes(postData)));
+                var url = $"{setting.Host.TrimEnd('/')}?parameter={parameter}";
+                _logger.LogInformation($"Origin PostData: {postData}, Url: {url}");
 
-            return new DepositResult
+                return new DepositResult
+                {
+                    Success = true,
+                    ErrorCode = "0",
+                    Url = url
+                };
+            }
+            catch (CustomException exception)
             {
-                Success = true,
-                ErrorCode = "0",
-                Url = url
-            };
+                _logger.LogInformation($"GameWallet deposit failed, Code:{exception.Code}, Message:{exception.Message}");
+
+                return new DepositResult(false, exception.Code, exception.Message);
+            }
         }
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
