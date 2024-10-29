@@ -26,28 +26,31 @@ namespace Payment.OOPay
 
         public override DepositResult Debit(Dictionary<string, string> input)
         {
-            var apiHost = input["Host"];
+            var payCurrencyId = input["PayCurrencyId"];
+            var apiHost = input[$"{payCurrencyId}Host"];
             var transId = input["TransID"];
+            var payCode = input["PayCode"];
+            var (method, code) = GetMethod(payCode);
 
             try
             {
                 var req = new Dictionary<string, string>
                 {
-                    { "merchantNo", input["MerchantNo"] },
+                    { "merchantNo", input[$"{payCurrencyId}MerchantNo"] },
                     { "orderNo", transId },
                     { "userNo", "" },
                     { "userName", "" },
-                    { "channelNo", input["PayCode"] },
+                    { "channelNo", method },
                     { "amount", input["Amount"] },
                     { "realName", "" },
-                    { "bankCode", input["BankCode"] },
-                    { "extra", "" },
+                    { "bankCode", string.IsNullOrEmpty(code) ? input["BankCode"] : code },
+                    { "extra", payCurrencyId },
                     { "notifyUrl", input["CallBackUrl"] },
                     { "time", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString() },
-                    { "appSecret", input["AppSecret"] }
+                    { "appSecret", input[$"{payCurrencyId}AppSecret"] }
                 };
 
-                var sign = GetPostSign(req, input["SecretKey"]);
+                var sign = GetPostSign(req, input[$"{payCurrencyId}SecretKey"]);
                 req.Add("sign", sign);
 
                 var (response, statusCode) = _httpHelper
@@ -55,7 +58,6 @@ namespace Payment.OOPay
 
                 if (!statusCode.IsSuccessStatus())
                     throw new CustomException($"HttpStatus: {statusCode}", ((int)statusCode).ToString());
-
 
                 if (!Definition.SuccessCode.Equals(response.Code))
                     throw new CustomException(response.Text, response.Code);
@@ -83,6 +85,7 @@ namespace Payment.OOPay
             var status = formData["status"];
             var transId = formData["orderNo"];
             var amount = formData["amount"];
+            var payCurrencyId = formData["extra"];
             var receiveModel = new Dictionary<string, string>
             {
                 { "status", status },
@@ -94,11 +97,11 @@ namespace Payment.OOPay
                 { "amount", amount },
                 { "lucky", formData["lucky"] },
                 { "paid", formData["paid"] },
-                { "extra", formData["extra"] }
+                { "extra", payCurrencyId }
             };
 
             var sign = formData["sign"];
-            if (!VerifySign(sign, receiveModel, input["SecretKey"]))
+            if (!VerifySign(sign, receiveModel, input[$"{payCurrencyId}SecretKey"]))
             {
                 return new NotifyDepositResult
                 {
@@ -135,26 +138,27 @@ namespace Payment.OOPay
 
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var apiHost = inputs["Host"];
+            var payCurrencyId = inputs["PayCurrencyId"];
+            var apiHost = inputs[$"{payCurrencyId}Host"];
             var transId = inputs["TransID"];
 
             try
             {
                 var req = new Dictionary<string, string>
                 {
-                    { "merchantNo", inputs["MerchantNo"] },
+                    { "merchantNo", inputs[$"{payCurrencyId}MerchantNo"] },
                     { "orderNo", transId },
                     { "amount", inputs["Amount"] },
                     { "name", inputs["AccountName"] },
                     { "bankName", inputs["BankCode"] },
                     { "bankAccount", inputs["AccountNo"] },
                     { "notifyUrl", inputs["CallBackUrl"] },
-                    { "extra", "" },
+                    { "extra", payCurrencyId },
                     { "time", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString() },
-                    { "appSecret", inputs["AppSecret"] }
+                    { "appSecret", inputs[$"{payCurrencyId}AppSecret"] }
                 };
 
-                var sign = GetPostSign(req, inputs["SecretKey"]);
+                var sign = GetPostSign(req, inputs[$"{payCurrencyId}SecretKey"]);
                 req.Add("reverseUrl", inputs["CallBackUrl"]);
                 req.Add("sign", sign);
 
@@ -195,6 +199,7 @@ namespace Payment.OOPay
             var status = formData["status"];
             var transId = formData["orderNo"];
             var amount = formData["amount"];
+            var payCurrencyId = formData["extra"];
 
             var receiveModel = new Dictionary<string, string>
             {
@@ -206,11 +211,11 @@ namespace Payment.OOPay
                 { "bankName", formData["bankName"] },
                 { "bankAccount", formData["bankAccount"] },
                 { "fee", formData["fee"] },
-                { "extra", formData["extra"] }
+                { "extra", payCurrencyId }
             };
 
             var sign = formData["sign"];
-            if (!VerifySign(sign, receiveModel, payResource["SecretKey"]))
+            if (!VerifySign(sign, receiveModel, payResource[$"{payCurrencyId}SecretKey"]))
             {
                 return new NotifyWithdrawResult
                 {
@@ -235,6 +240,12 @@ namespace Payment.OOPay
         }
 
         #endregion
+        private static (string method, string code) GetMethod(string payCode)
+        {
+            var result = payCode.Split('-');
+
+            return (result[0], result.Length > 1 ? result[1] : string.Empty);
+        }
 
         internal string GetPostSign(Dictionary<string, string> param, string secretKey)
         {
