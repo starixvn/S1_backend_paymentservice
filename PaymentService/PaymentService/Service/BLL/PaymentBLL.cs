@@ -18,13 +18,11 @@ namespace PaymentService.Service.BLL
         private readonly ILogger<PaymentBLL> _logger;
         private readonly ConfigBLL _configBll;
         private readonly FaceBookPixelBLL _pixelBll;
-        private readonly TaskSettingService _taskSettingService;
 
         public PaymentBLL(IServiceProvider provider)
         {
             _depositService = provider.GetRequiredService<DepositService>();
             _withdrawalService = provider.GetRequiredService<WithdrawalService>();
-            _taskSettingService = provider.GetRequiredService<TaskSettingService>();
             _common = provider.GetRequiredService<Common>();
             _logger = provider.GetRequiredService<ILogger<PaymentBLL>>();
             _configBll = provider.GetRequiredService<ConfigBLL>();
@@ -327,14 +325,6 @@ namespace PaymentService.Service.BLL
             var di = GetDepositInfo(transId);
             
             _pixelBll.Send2PixelDepositSuccess(di.SiteId, di.CustId, di.CurrencyId, di.ActualDeposit, di.FirstDeposit);
-
-            if (di.FirstDeposit)
-            {
-                var res = _taskSettingService.Set(di.CustId, TaskSetting.FirstDepositTime, di.FlowEndTime);
-                
-                if (res < 1)
-                    _logger.LogInformation($"{transId} Set FirstDeposit CustTuskTime Failed.");
-            }
         }
         
         private bool CanRewardPoint(int siteId, int currencyId)
