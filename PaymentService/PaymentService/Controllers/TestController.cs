@@ -328,6 +328,45 @@ namespace PaymentService.Controllers
             return new JsonResult(response);
         }
 
+        [Route("EBPay/{status}/api/merchant/{method}/v2")]
+        [Route("EBPay/{status}/api/merchant/{method}/create/v2")]
+        public JsonResult EBPayResponse(string status, string method)
+        {
+            var isSuccess = status.Equals("success", StringComparison.OrdinalIgnoreCase);
+            var isDeposit = method.Equals("deposit", StringComparison.OrdinalIgnoreCase);
+            var code = isSuccess ? "200" : "400";
+            var msg = isSuccess ? "success": "fail msg";
+
+            if (isDeposit)
+            {
+                var response = new
+                {
+                    code,
+                    msg,
+                    data = new
+                    {
+                        url = "http://www.google.com"
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+            else
+            {
+                var response = new
+                {
+                    code,
+                    msg,
+                    data = new
+                    {
+                        orderId = DateTime.Now.ToString("yyyyMMddHHmmss")
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+        }
+
         private string ToJson(object t)
         {
             return JsonConvert.SerializeObject(t, new JsonSerializerSettings
