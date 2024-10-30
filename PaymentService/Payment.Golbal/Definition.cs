@@ -10,6 +10,13 @@ namespace Payment.Golbal
     internal class Definition
     {
         public const string Deposit = "/gateway/v1/order";
+        public const string Withdrawal = "/gateway/v1/payfor";
+
+        public class Currency
+        {
+            public const string INR = "INR";
+            public const string BRL = "BRL";
+        }
 
         private class GolbalDepositStatus
         {

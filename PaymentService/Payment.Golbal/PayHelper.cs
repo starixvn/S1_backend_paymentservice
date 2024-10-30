@@ -22,20 +22,36 @@ namespace Payment.Golbal
         #region debit
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            var apiKey = inputs["APIKey"];
+            var currency = inputs["PayCurrencyId"];
+            var merchantNo = inputs[$"{currency}_MerchantNo"];
+            var apiKey = inputs[$"{currency}_APIKey"];
             var apiUrl = $"{inputs["APIUrl"]}{Definition.Deposit}";
+            var extra = "";
 
             try
             {
+                if (currency == Definition.Currency.INR)
+                {
+                    var extrapara = new
+                    {
+                        returnUrl = inputs["ReturnUrl"],
+                        clientIp = inputs["ClientIP"],
+                        payerName = inputs["AccountName"],
+                        payerPhone = inputs["PhoneNo"],
+                    };
+                    extra = JsonConvert.SerializeObject(extrapara);
+                }
+
                 var p = new Dictionary<string, string>();
 
-                p.Add("merchantUid", inputs["MerchantNo"]);
+                p.Add("merchantUid", merchantNo);
                 p.Add("amount", inputs["Amount"]);
                 p.Add("orderNo", inputs["TransID"]);
                 p.Add("currency", inputs["PayCurrencyId"]);
                 p.Add("channelId", inputs["PayCode"]);
                 p.Add("notifyUrl", inputs["CallBackUrl"]);
                 p.Add("time", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
+                p.Add("extra", extra);
                 p.Add("sign", GetSign(p, apiKey));
 
                 var (result, statusCode) = _httpHelper
@@ -47,7 +63,7 @@ namespace Payment.Golbal
                     throw new CustomException($"Golbal deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
                 }
 
-
+                
                 if (result != null && result.Code != "200")
                 {
                     throw new CustomException(result.Msg);
@@ -56,7 +72,7 @@ namespace Payment.Golbal
                 return new DepositResult
                 {
                     Success = true,
-                    ErrorCode = result.Code,
+                    ErrorCode = result?.Code,
                     Url = result.Data.PayUrl,
                     Message = result.Msg,
                     ThirdId = result.Data.SysOrderNo,
@@ -73,7 +89,7 @@ namespace Payment.Golbal
 
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var transId = payResource["TransId"];
+            var transId = payResource["TransID"];
             var req = FromJson<DepositCallBackRequest>(bodyContent);
 
             var sign = new Dictionary<string, string>();
@@ -112,26 +128,45 @@ namespace Payment.Golbal
         #region credit
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var apiKey = inputs["APIKey"];
-            var apiUrl = $"{inputs["APIUrl"]}{Definition.Deposit}";
+            var currency = inputs["PayCurrencyId"];
+            var merchantNo = inputs[$"{currency}_MerchantNo"];
+            var apiKey = inputs[$"{currency}_APIKey"];
+            var apiUrl = $"{inputs["APIUrl"]}{Definition.Withdrawal}";
+            var extra = "";
 
             try
             {
-                var extra = new
+                if (currency == Definition.Currency.BRL)
                 {
-                    bank_code = inputs["bankcode"],
-                    document = inputs["123"]
-                };
+                    var extrapara = new
+                    {
+                        bank_code = inputs["BankCode"],
+                        document = inputs["AccountNo"]
+                    };
+                    extra = JsonConvert.SerializeObject(extrapara);
+                }
+                else if(currency == Definition.Currency.INR) 
+                {
+                    var extrapara = new
+                    {
+                        bank_code = inputs["BankCode"],
+                        ifsc = inputs["IFSCCode"],
+                        mobile = inputs["PhoneNo"],
+                    };
+                    extra = JsonConvert.SerializeObject(extrapara);
+                }
+
+
                 var p = new Dictionary<string, string>();
 
-                p.Add("merchantUid", inputs["MerchantNo"]);
+                p.Add("merchantUid", merchantNo);
                 p.Add("amount", inputs["Amount"]);
                 p.Add("orderNo", inputs["TransID"]);
                 p.Add("currency", inputs["PayCurrencyId"]);
                 p.Add("channelId", inputs["PayCode"]);
                 p.Add("accountName", inputs["AccountName"]);
                 p.Add("accountNo", inputs["AccountNo"]);
-                p.Add("extra", JsonConvert.SerializeObject(extra));
+                p.Add("extra", extra);
                 p.Add("notifyUrl", inputs["CallBackUrl"]);
                 p.Add("time", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
                 p.Add("sign", GetSign(p, apiKey));
@@ -204,6 +239,7 @@ namespace Payment.Golbal
         private string GetSign(Dictionary<string, string> dic, string apikey)
         {
             var queryString = string.Join("&", dic
+                .Where(x => !string.IsNullOrEmpty(x.Value)) // 過濾掉 null 或空字串的項目
                 .OrderBy(x => x.Key, StringComparer.Ordinal) // 使用 ASCII 排序
                 .Select(x => $"{x.Key}={x.Value}").ToArray());
 
