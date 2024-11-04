@@ -67,7 +67,6 @@ namespace Payment.FXBit
         {
             var baseApiUrl = input["host"];
             var apiKey = input["key"];
-            //var apiUrl = baseApiUrl + Path.H5;
             var fromCurrency = input["PayCurrencyId"];
             var toCurrency = input["PayCode"];
             var reqAmount = input["Amount"];
@@ -515,7 +514,7 @@ namespace Payment.FXBit
                 return requestAmount;
 
             // 使用匯率回推平台金額，保留小數 2 位
-            var actualAmount = decimal.Round(receivedCryptoAmount * exchangeRate, 2);
+            var actualAmount = decimal.Round(receivedCryptoAmount / exchangeRate, 2);
             return actualAmount;
         }
 

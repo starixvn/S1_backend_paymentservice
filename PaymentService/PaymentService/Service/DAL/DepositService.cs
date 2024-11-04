@@ -72,7 +72,7 @@ namespace PaymentService.Service.DAL
                 p.Add("_UserName", dbType: DbType.String, direction: ParameterDirection.Output);
 
                 var result = _mainDbClient.Execute("Service_DepositInfo_Set_V4", p, trans);
-                logMsg += $"transId:{input.TransId} Execute Service_DepositInfo_Set_V3 after result:{result} Step1";
+                logMsg += $"transId:{input.TransId} Execute Service_DepositInfo_Set_V4 after result:{result} Step1";
 
                 if (result >= 0)
                 {
