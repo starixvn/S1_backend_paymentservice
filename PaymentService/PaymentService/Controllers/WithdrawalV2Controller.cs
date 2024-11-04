@@ -378,7 +378,7 @@ public class WithdrawalV2Controller : ControllerBase
                 case TransStatus.Success when withdrawalInfo.Amount > 0:
                     _paymentBll.WithdrawalSuccess(withdrawalInfo, result);
                     #region 埋點
-                    if (withdrawalInfo.SiteId is 1 or 2 or 3)
+                    if (withdrawalInfo.SiteId > 0 )
                     {
                         _ = Task.Run(() =>
                         {
