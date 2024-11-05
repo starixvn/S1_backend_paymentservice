@@ -67,7 +67,6 @@ namespace Payment.FXBit
         {
             var baseApiUrl = input["host"];
             var apiKey = input["key"];
-            //var apiUrl = baseApiUrl + Path.H5;
             var fromCurrency = input["PayCurrencyId"];
             var toCurrency = input["PayCode"];
             var reqAmount = input["Amount"];
@@ -101,13 +100,13 @@ namespace Payment.FXBit
                     ReceiptToken = getTokenResp.ReceiptToken
                 };
                 var getWalletResp = GetWalletAddress(baseApiUrl, apiKey, getWalletReq);
-
+                var rate = GetExchangeRateString(rateInfo.SellRate);
+                
                 // 將匯率與回傳支付金額加入 DepositInfo
                 depositInfo = depositInfo
-                    .AddOrSetExchangeInfo(rateInfo.SellRate, getWalletResp.BilledPrice.ToString());
+                    .AddOrSetExchangeInfo(rate, exchangeAmount);
 
                 // 因為 H5 網頁預設為中文，改為使用 url 以 QRCode 呈現
-                var rate = GetExchangeRateString(rateInfo.SellRate);
                 var formData = new Dictionary<string, string>
                 {
                     { "DepositAmount", reqAmount },
@@ -515,7 +514,7 @@ namespace Payment.FXBit
                 return requestAmount;
 
             // 使用匯率回推平台金額，保留小數 2 位
-            var actualAmount = decimal.Round(receivedCryptoAmount * exchangeRate, 2);
+            var actualAmount = decimal.Round(receivedCryptoAmount / exchangeRate, 2);
             return actualAmount;
         }
 
