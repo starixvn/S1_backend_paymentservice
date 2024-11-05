@@ -28,6 +28,7 @@ namespace PaymentService.IntegrationTest
 
             _signKey = "key";
         }
+
         [Test]
         public void A01_GetPostSign_Debit()
         {

@@ -184,7 +184,7 @@ namespace Payment._988Pay
                 sortedParameters
                     .Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) 
                                 && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase))
-                    .Select(x => $"{x.Key}={x.Value}").ToArray());
+                    .Select(x => $"{x.Key}={x.Value}"));
             SignConcatSourceString = $"{signSourceParams}&key={key}";
             _logger.LogInformation(SignConcatSourceString);
 
