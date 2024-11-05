@@ -6,7 +6,7 @@ using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
-using System.Net.NetworkInformation;
+
 
 namespace Payment.Golbal
 {
@@ -22,8 +22,10 @@ namespace Payment.Golbal
         #region debit
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            var currency = inputs["PayCurrencyId"];
+            var currency = inputs["CurrencyId"];
             var merchantNo = inputs[$"{currency}_MerchantNo"];
+            var bankCode = inputs["BankCode"];
+            var payCode = inputs["PayCode"];
             var apiKey = inputs[$"{currency}_APIKey"];
             var apiUrl = $"{inputs["APIUrl"]}{Definition.Deposit}";
             var extra = "";
@@ -41,6 +43,31 @@ namespace Payment.Golbal
                     };
                     extra = JsonConvert.SerializeObject(extrapara);
                 }
+                else if (currency == Definition.Currency.VND)
+                {
+                    //VND掃碼需拆分payCode拿參數
+                    var bankName = "";
+                    if (payCode.Contains('-'))
+                    {
+                        var s = payCode.Split('-');
+                        payCode = s[0];
+                        //代收掃碼由三方選擇，bankcode跟bankname用不到
+                        bankCode = s[1];
+                        bankName = s[2];
+                    }
+                    //onlinebanking
+                    if (payCode == "1001")
+                    {
+                        bankName = inputs["BankName"];
+                        var extrapara = new
+                        {
+                            bank_code = bankCode,
+                            bank_name = bankName,
+                        };
+                        extra = JsonConvert.SerializeObject(extrapara);
+                    }
+                    
+                }
 
                 var p = new Dictionary<string, string>();
 
@@ -48,7 +75,7 @@ namespace Payment.Golbal
                 p.Add("amount", inputs["Amount"]);
                 p.Add("orderNo", inputs["TransID"]);
                 p.Add("currency", inputs["PayCurrencyId"]);
-                p.Add("channelId", inputs["PayCode"]);
+                p.Add("channelId", payCode);
                 p.Add("notifyUrl", inputs["CallBackUrl"]);
                 p.Add("time", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
                 p.Add("extra", extra);
@@ -62,7 +89,6 @@ namespace Payment.Golbal
                 {
                     throw new CustomException($"Golbal deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
                 }
-
                 
                 if (result != null && result.Code != "200")
                 {
@@ -90,6 +116,7 @@ namespace Payment.Golbal
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var transId = payResource["TransID"];
+            var currency = payResource["CurrencyId"];
             var req = FromJson<DepositCallBackRequest>(bodyContent);
 
             var sign = new Dictionary<string, string>();
@@ -104,7 +131,7 @@ namespace Payment.Golbal
             sign.Add("remark", req.Remark);
             sign.Add("extra", req.Extra);
 
-            if (req.Sign != GetSign(sign, payResource["APIKey"]))
+            if (req.Sign != GetSign(sign, payResource[$"{currency}_APIKey"]))
             {
                 return new NotifyDepositResult
                 {
@@ -128,7 +155,8 @@ namespace Payment.Golbal
         #region credit
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var currency = inputs["PayCurrencyId"];
+            var currency = inputs["CurrencyId"];
+            var paycode = inputs["PayCode"];
             var merchantNo = inputs[$"{currency}_MerchantNo"];
             var apiKey = inputs[$"{currency}_APIKey"];
             var apiUrl = $"{inputs["APIUrl"]}{Definition.Withdrawal}";
@@ -155,7 +183,20 @@ namespace Payment.Golbal
                     };
                     extra = JsonConvert.SerializeObject(extrapara);
                 }
-
+                else if (currency == Definition.Currency.VND)
+                {
+                    //銀行
+                    if (paycode == "5001")
+                    {
+                        var extrapara = new
+                        {
+                            bank_code = inputs["BankCode"],
+                            bank_name = inputs["BankName"]
+                        };
+                        extra = JsonConvert.SerializeObject(extrapara);
+                    }
+                    
+                }
 
                 var p = new Dictionary<string, string>();
 
@@ -177,7 +218,7 @@ namespace Payment.Golbal
 
                 if (!statusCode.IsSuccessStatus())
                 {
-                    throw new CustomException($"Golbal deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
+                    throw new CustomException($"Golbal Withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
                 }
 
 
@@ -194,7 +235,7 @@ namespace Payment.Golbal
             }
             catch (CustomException ex)
             {
-                _logger.LogError($"Golbal deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+                _logger.LogError($"Golbal Withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
 
                 return new WithdrawResult(ex.Message);
             }
@@ -203,6 +244,7 @@ namespace Payment.Golbal
             Dictionary<string, string> payResource)
         {
             var transId = payResource["TransId"];
+            var currency = payResource["CurrencyId"];
             var req = FromJson<DepositCallBackRequest>(bodyContent);
 
             var sign = new Dictionary<string, string>();
@@ -215,7 +257,7 @@ namespace Payment.Golbal
             sign.Add("remark", req.Remark);
             sign.Add("status", req.Status.ToString());
 
-            if (req.Sign != GetSign(sign, payResource["APIKey"]))
+            if (req.Sign != GetSign(sign, payResource[$"{currency}_APIKey"]))
             {
                 return new NotifyWithdrawResult
                 {

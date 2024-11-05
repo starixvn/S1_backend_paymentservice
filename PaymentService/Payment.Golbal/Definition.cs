@@ -14,8 +14,9 @@ namespace Payment.Golbal
 
         public class Currency
         {
-            public const string INR = "INR";
-            public const string BRL = "BRL";
+            public const string INR = "61";
+            public const string BRL = "82";
+            public const string VND = "51";
         }
 
         private class GolbalDepositStatus
@@ -42,9 +43,9 @@ namespace Payment.Golbal
         private static Dictionary<int, TransStatus> GolbalWithdrawalStatusMap =>
             new()
             {
-                { GolbalDepositStatus.Unpaid, TransStatus.Pending },
-                { GolbalDepositStatus.Paid, TransStatus.Success },
-                { GolbalDepositStatus.Closed, TransStatus.Fail }
+                { GolbalWithdrawalStatus.Success, TransStatus.Success },
+                { GolbalWithdrawalStatus.Fail, TransStatus.Fail }
+                
             };
 
         public static TransStatus GetDepositTransStatus(int status) =>
