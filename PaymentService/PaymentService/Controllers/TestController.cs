@@ -411,6 +411,24 @@ namespace PaymentService.Controllers
             return BadRequest(new { error = "Bad Response" });
         }
 
+        [Route("PowerBank/{status}/SetDepositV3")]
+        [Route("PowerBank/{status}/SetWithdrawal")]
+        public JsonResult PowerBankResponse(string status)
+        {
+            var isSuccess = status.Equals("success", StringComparison.OrdinalIgnoreCase);
+            var result = isSuccess ? 10 : 99;
+            var msg = isSuccess ? "success" : "fail";
+
+            var response = new
+            {
+                result,
+                msg,
+                url = "http://www.google.com"
+            };
+
+            return new JsonResult(response);
+        }
+
         private string ToJson(object t)
         {
             return JsonConvert.SerializeObject(t, new JsonSerializerSettings
