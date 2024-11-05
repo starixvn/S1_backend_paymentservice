@@ -100,13 +100,13 @@ namespace Payment.FXBit
                     ReceiptToken = getTokenResp.ReceiptToken
                 };
                 var getWalletResp = GetWalletAddress(baseApiUrl, apiKey, getWalletReq);
-
+                var rate = GetExchangeRateString(rateInfo.SellRate);
+                
                 // 將匯率與回傳支付金額加入 DepositInfo
                 depositInfo = depositInfo
-                    .AddOrSetExchangeInfo(rateInfo.SellRate, getWalletResp.BilledPrice.ToString());
+                    .AddOrSetExchangeInfo(rate, exchangeAmount);
 
                 // 因為 H5 網頁預設為中文，改為使用 url 以 QRCode 呈現
-                var rate = GetExchangeRateString(rateInfo.SellRate);
                 var formData = new Dictionary<string, string>
                 {
                     { "DepositAmount", reqAmount },
