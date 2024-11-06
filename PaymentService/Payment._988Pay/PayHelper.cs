@@ -6,6 +6,7 @@ using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
+// 988Pay and 808Pay document is same
 namespace Payment._988Pay
 {
     public class PayHelper : PayHelperBase
@@ -31,7 +32,7 @@ namespace Payment._988Pay
             {
                 var req = new Dictionary<string, string>
                 {
-                    {"appId", input["appId"]},
+                    {"appId", input["AppId"]},
                     {"mchOrderNo", input["TransID"]},
                     {"amount",reqAmount.ToString("F2")},
                     {"member", input["CustId"]},
@@ -55,7 +56,7 @@ namespace Payment._988Pay
             }
             catch (CustomException ex)
             {
-                _logger.LogInformation("EBPay create order failed: " + ex.Message);
+                _logger.LogInformation("988Pay create order failed: " + ex.Message);
 
                 return new DepositResult(false, ex.Code, ex.Message);
             }
@@ -106,7 +107,7 @@ namespace Payment._988Pay
             {
                 var req = new Dictionary<string, string>
                 {
-                    {"appId", input["appId"]},
+                    {"appId", input["AppId"]},
                     {"member", input["CustId"]},
                     {"mchOrderNo", input["TransID"]},
                     {"amount",reqAmount.ToString("F2")},
@@ -205,7 +206,7 @@ namespace Payment._988Pay
             var apiUrl = baseApiUrl + Path.Deposit;
 
             var (result, statusCode) = _httpHelper
-                .PostUrlEncoded<Dictionary<string, string>, Response<CreateOrderData>>(apiUrl, req);
+                .PostJson<Dictionary<string, string>, Response<CreateOrderData>>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
                 throw new CustomException($"HttpStatus: {statusCode}", ((int)statusCode).ToString());
@@ -220,7 +221,7 @@ namespace Payment._988Pay
         {
             var apiUrl = baseApiUrl + Path.Withdrawal;
             var (result, statusCode) = _httpHelper
-                .PostUrlEncoded<Dictionary<string, string>, Response<CreatePayoutData>>(apiUrl, req);
+                .PostJson<Dictionary<string, string>, Response<CreatePayoutData>>(apiUrl, req);
 
             if (!statusCode.IsSuccessStatus())
                 throw new CustomException($"HttpStatus: {statusCode}", ((int)statusCode).ToString());
