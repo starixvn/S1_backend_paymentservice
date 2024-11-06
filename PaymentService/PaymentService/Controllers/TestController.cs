@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -368,6 +367,7 @@ namespace PaymentService.Controllers
         }
 
         [Route("988Pay/{status}/placeOrder")]
+        [Route("808Pay/{status}/placeOrder")]
         public IActionResult _988PayDepositResponse(string status)
         {
             if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
@@ -390,6 +390,7 @@ namespace PaymentService.Controllers
         }
 
         [Route("988Pay/{status}/withdrawOrder")]
+        [Route("808Pay/{status}/withdrawOrder")]
         public IActionResult _988PayWithdrawalResponse(string status)
         {
             if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
