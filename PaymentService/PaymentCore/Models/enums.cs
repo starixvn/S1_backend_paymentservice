@@ -17,7 +17,8 @@ namespace PaymentCore.Models
         VND = 51,
         INR = 61,
         BDT = 74,
-        USDT = 96
+        USDT = 96,
+        BRL = 82
     }
     
     public enum DeviceTypeEnum

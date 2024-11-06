@@ -12,13 +12,6 @@ namespace Payment.Golbal
         public const string Deposit = "/gateway/v1/order";
         public const string Withdrawal = "/gateway/v1/payfor";
 
-        public class Currency
-        {
-            public const string INR = "61";
-            public const string BRL = "82";
-            public const string VND = "51";
-        }
-
         private class GolbalDepositStatus
         {
             public const int Unpaid = 0;
