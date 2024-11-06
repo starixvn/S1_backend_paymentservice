@@ -67,7 +67,7 @@ namespace Payment.QuickPay
                     req.Add("bankName", input["BankName"]);
                 }
 
-                if (payCode.Equals("2"))
+                if (channelNo.Equals("2"))
                 {
                     req.Add("bankName",bankCode);
                     req.Add("userName", input["AccountName"]);
