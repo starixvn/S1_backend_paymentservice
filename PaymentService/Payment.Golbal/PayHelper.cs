@@ -5,7 +5,9 @@ using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
+
 
 
 namespace Payment.Golbal
@@ -32,7 +34,7 @@ namespace Payment.Golbal
 
             try
             {
-                if (currency == Definition.Currency.INR)
+                if (currency == CurrencyEnum.INR.ToString())
                 {
                     var extrapara = new
                     {
@@ -43,7 +45,7 @@ namespace Payment.Golbal
                     };
                     extra = JsonConvert.SerializeObject(extrapara);
                 }
-                else if (currency == Definition.Currency.VND)
+                else if (currency == CurrencyEnum.VND.ToString())
                 {
                     //VND掃碼需拆分payCode拿參數
                     var bankName = "";
@@ -164,7 +166,7 @@ namespace Payment.Golbal
 
             try
             {
-                if (currency == Definition.Currency.BRL)
+                if (currency == CurrencyEnum.BRL.ToString())
                 {
                     var extrapara = new
                     {
@@ -173,7 +175,7 @@ namespace Payment.Golbal
                     };
                     extra = JsonConvert.SerializeObject(extrapara);
                 }
-                else if(currency == Definition.Currency.INR) 
+                else if(currency == CurrencyEnum.INR.ToString()) 
                 {
                     var extrapara = new
                     {
@@ -183,7 +185,7 @@ namespace Payment.Golbal
                     };
                     extra = JsonConvert.SerializeObject(extrapara);
                 }
-                else if (currency == Definition.Currency.VND)
+                else if (currency == CurrencyEnum.VND.ToString())
                 {
                     //銀行
                     if (paycode == "5001")
