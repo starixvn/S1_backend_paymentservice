@@ -6,7 +6,7 @@ using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
-// 808Pay and 808Pay document is same
+// 808Pay and 988Pay document is same
 namespace Payment._808Pay
 {
     public class PayHelper : PayHelperBase
