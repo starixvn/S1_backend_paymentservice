@@ -24,7 +24,7 @@ namespace Payment.Golbal
         #region debit
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
-            var currency = inputs["CurrencyId"];
+            var currency = int.Parse(inputs["CurrencyId"]);
             var merchantNo = inputs[$"{currency}_MerchantNo"];
             var bankCode = inputs["BankCode"];
             var payCode = inputs["PayCode"];
@@ -34,7 +34,7 @@ namespace Payment.Golbal
 
             try
             {
-                if (currency == CurrencyEnum.INR.ToString())
+                if (currency == (int)CurrencyEnum.INR)
                 {
                     var extrapara = new
                     {
@@ -45,7 +45,7 @@ namespace Payment.Golbal
                     };
                     extra = JsonConvert.SerializeObject(extrapara);
                 }
-                else if (currency == CurrencyEnum.VND.ToString())
+                else if (currency == (int)CurrencyEnum.VND)
                 {
                     //VND掃碼需拆分payCode拿參數
                     var bankName = "";
@@ -157,7 +157,7 @@ namespace Payment.Golbal
         #region credit
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
-            var currency = inputs["CurrencyId"];
+            var currency = int.Parse(inputs["CurrencyId"]);
             var paycode = inputs["PayCode"];
             var merchantNo = inputs[$"{currency}_MerchantNo"];
             var apiKey = inputs[$"{currency}_APIKey"];
@@ -166,7 +166,7 @@ namespace Payment.Golbal
 
             try
             {
-                if (currency == CurrencyEnum.BRL.ToString())
+                if (currency == (int)CurrencyEnum.BRL)
                 {
                     var extrapara = new
                     {
@@ -175,7 +175,7 @@ namespace Payment.Golbal
                     };
                     extra = JsonConvert.SerializeObject(extrapara);
                 }
-                else if(currency == CurrencyEnum.INR.ToString()) 
+                else if(currency == (int)CurrencyEnum.INR) 
                 {
                     var extrapara = new
                     {
@@ -185,7 +185,7 @@ namespace Payment.Golbal
                     };
                     extra = JsonConvert.SerializeObject(extrapara);
                 }
-                else if (currency == CurrencyEnum.VND.ToString())
+                else if (currency == (int)CurrencyEnum.VND)
                 {
                     //銀行
                     if (paycode == "5001")
