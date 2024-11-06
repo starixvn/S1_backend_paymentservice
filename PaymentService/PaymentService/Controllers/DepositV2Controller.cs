@@ -116,6 +116,7 @@ public class DepositV2Controller : ControllerBase
             input.Add("Birth_d", custInfo.Birth_d);
             input.Add("Birth_m", custInfo.Birth_m);
             input.Add("Birth_y", custInfo.Birth_y);
+            input.Add("DepositType", ((int)depositInfo.DepositType).ToString());
 
             if (!input.ContainsKey("BankCode"))
             {

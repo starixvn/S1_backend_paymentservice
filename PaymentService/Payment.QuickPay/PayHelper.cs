@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.QuickPay
@@ -37,6 +37,8 @@ namespace Payment.QuickPay
             var transId = input["TransID"];
             var notifyUrl = input["CallBackUrl"];
             var depositInfo = input["DepositInfo"];
+            var (channelNo, bankCode) = SplitPayCode(payCode);
+            var depositType = input["DepositType"];
 
             try
             {
@@ -54,20 +56,20 @@ namespace Payment.QuickPay
                 };
                 
                 req.Add("sign", GetSign(req, apiKey));
-                req.Add("appSecret",appSecret);
-                req.Add("payeeName",accountName);
-                req.Add("channelNo",ConvertChannel(payCode));
+                req.Add("appSecret", appSecret);
+                req.Add("payeeName", accountName);
+                req.Add("channelNo", channelNo);
                 
                 
 
-                if (payCode.Equals("OnlineBanking"))
+                if (depositType.Equals(((int)DepositType.OnlineBanking).ToString()))
                 {
                     req.Add("bankName", input["BankName"]);
                 }
 
-                if (payCode.Equals("QRIS"))
+                if (payCode.Equals("2"))
                 {
-                    req.Add("bankName", "");
+                    req.Add("bankName",bankCode);
                     req.Add("userName", input["AccountName"]);
                 }
 
@@ -75,11 +77,10 @@ namespace Payment.QuickPay
 
                 depositInfo = depositInfo.AddOrSetJProperty("PayCode", payCode);
 
-                var response = new DepositResult();
 
                 if (res.Code == 0)
                 {
-                    response = new DepositResult
+                    return new DepositResult
                     {
                         Success = true,
                         ErrorCode = "0",
@@ -87,17 +88,13 @@ namespace Payment.QuickPay
                         DepositInfo = depositInfo
                     };
                 }
-                else
-                {
-                    response = new DepositResult
-                    {
-                        Success = false,
-                        ErrorCode = "1",
-                        Message = res.Text
-                    };
-                }
                 
-                return response;
+                return new DepositResult
+                {
+                    Success = false,
+                    ErrorCode = "1",
+                    Message = res.Text
+                };
             }
             catch (CustomException ex)
             {
@@ -115,12 +112,12 @@ namespace Payment.QuickPay
             var req = FromJson<DepositCallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
             {
-                {"amount",req.Amount.ToString()},
-                {"discount",req.Discount.ToString()},
+                {"amount",req.Amount.ToString("G29")},
+                {"discount",req.Discount.ToString("G29")},
                 {"extra",req.Extra},
-                {"lucky",req.Lucky.ToString()},
+                {"lucky",req.Lucky.ToString("G29")},
                 {"orderNo",req.OrderNo},
-                {"paid",req.Paid.ToString()},
+                {"paid",req.Paid.ToString("G29")},
                 {"status",req.Status},
                 {"tradeNo",req.TradeNo},
                 {"userNo",req.UserNo.ToString()}
@@ -224,11 +221,11 @@ namespace Payment.QuickPay
             var req = FromJson<WithdrawalCallBackRequest>(bodyContent);
             var dic = new Dictionary<string, string>
             {
-                {"amount",req.Amount.ToString()},
+                {"amount",req.Amount.ToString("G29")},
                 {"bankAccount",req.BankAccount},
                 {"bankName",req.BankName},
                 {"extra",req.Extra},
-                {"fee",req.Fee.ToString()},
+                {"fee",req.Fee.ToString("G29")},
                 {"mobile",req.Mobile},
                 {"name",req.Name},
                 {"orderNo",req.OrderNo},
@@ -332,18 +329,12 @@ namespace Payment.QuickPay
 
             return target.Equals(sign, StringComparison.OrdinalIgnoreCase);
         }
-
-        private string ConvertChannel(string payCode)
+        
+        private static (string channelNo, string bankCode) SplitPayCode(string payCode)
         {
-            return payCode switch
-            {
-                "OnlineBanking" => "4",
-                "QRIS" => "2",
-                "OVO" => "0",
-                "DANA" => "1",
-                "Withdrawal" => "6",
-                _ => ""
-            };
+            var result = payCode.Split('_');
+
+            return (result[0], result.Length > 1 ? result[1] : string.Empty);
         }
 
         #endregion
