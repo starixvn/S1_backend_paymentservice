@@ -16,8 +16,8 @@ public class Response<T>
 
 public class CreateOrderData
 {
-    [JsonProperty("url")]
-    public string Url { get; set; }
+    [JsonProperty("payUrl")]
+    public string PayUrl { get; set; }
 
     [JsonProperty("orderNo")]
     public string OrderNo { get; set; }
