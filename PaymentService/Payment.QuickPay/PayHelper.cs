@@ -315,7 +315,7 @@ namespace Payment.QuickPay
         {
             var str = string.Join("&", param
                 .Where(x => !exceptKeys.Contains(x.Key))
-                .OrderBy(kp => kp.Key)
+                .OrderBy(kp => kp.Key, StringComparer.Ordinal)
                 .Select(kp => $"{kp.Key}={kp.Value}")) + apiKey;
 
             _logger.LogInformation(str);
