@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
+// ReSharper disable InconsistentNaming
 namespace PaymentService.Controllers
 {
     public class TestController : Controller
@@ -100,7 +101,7 @@ namespace PaymentService.Controllers
         [Route("DirePay/{status}/api/callBack")]
         public IActionResult DirePayResponse(string status)
         {
-            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            if (CheckIsSuccess(status))
             {
                 var response = new
                 {
@@ -206,7 +207,7 @@ namespace PaymentService.Controllers
         [Route("BigPayz/{status}/payin/depositv2")]
         public IActionResult BigPayzDepositResponse(string status)
         {
-            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            if (CheckIsSuccess(status))
             {
                 var response = new
                 {
@@ -223,7 +224,7 @@ namespace PaymentService.Controllers
         [Route("BigPayz/{status}/DuitNow/Deposit")]
         public IActionResult BigPayzDepositQrCodeResponse(string status)
         {
-            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            if (CheckIsSuccess(status))
             {
                 var response = new
                 {
@@ -240,7 +241,7 @@ namespace PaymentService.Controllers
         [Route("BigPayz/{status}/payout/withdrawal")]
         public IActionResult BigPayzWithdrawalResponse(string status)
         {
-            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            if (CheckIsSuccess(status))
             {
                 var response = new
                 {
@@ -260,7 +261,7 @@ namespace PaymentService.Controllers
         [Route("OOPay/{status}/shou/new")]
         public IActionResult OOPayDepositResponse(string status)
         {
-            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            if (CheckIsSuccess(status))
             {
                 var response = new
                 {
@@ -281,7 +282,7 @@ namespace PaymentService.Controllers
         [Route("OOPay/{status}/fu/new")]
         public IActionResult OOPayWithdrawalResponse(string status)
         {
-            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            if (CheckIsSuccess(status))
             {
                 var response = new
                 {
@@ -301,7 +302,7 @@ namespace PaymentService.Controllers
         [Route("GameWallet/{status}")]
         public JsonResult GameWalletWithdrawalResponse(string status)
         {
-            var isSuccess = status.Equals("success", StringComparison.OrdinalIgnoreCase);
+            var isSuccess = CheckIsSuccess(status);
             var statusCode = isSuccess ? "002" : "001";
             var statusMessage = isSuccess ? "SUCCESS" : "test msg";
             var dateNow = DateTime.Now.ToString("yyyyMMddHHmmss");
@@ -331,7 +332,7 @@ namespace PaymentService.Controllers
         [Route("EBPay/{status}/api/merchant/{method}/create/v2")]
         public JsonResult EBPayResponse(string status, string method)
         {
-            var isSuccess = status.Equals("success", StringComparison.OrdinalIgnoreCase);
+            var isSuccess = CheckIsSuccess(status);
             var isDeposit = method.Equals("deposit", StringComparison.OrdinalIgnoreCase);
             var code = isSuccess ? "200" : "400";
             var msg = isSuccess ? "success": "fail msg";
@@ -370,7 +371,7 @@ namespace PaymentService.Controllers
         [Route("808Pay/{status}/placeOrder")]
         public IActionResult _988PayDepositResponse(string status)
         {
-            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            if (CheckIsSuccess(status))
             {
                 var response = new
                 {
@@ -393,7 +394,7 @@ namespace PaymentService.Controllers
         [Route("808Pay/{status}/withdrawOrder")]
         public IActionResult _988PayWithdrawalResponse(string status)
         {
-            if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
+            if (CheckIsSuccess(status))
             {
                 var response = new
                 {
@@ -416,7 +417,7 @@ namespace PaymentService.Controllers
         [Route("PowerBank/{status}/SetWithdrawal")]
         public JsonResult PowerBankResponse(string status)
         {
-            var isSuccess = status.Equals("success", StringComparison.OrdinalIgnoreCase);
+            var isSuccess = CheckIsSuccess(status);
             var result = isSuccess ? 10 : 99;
             var msg = isSuccess ? "success" : "fail";
 
@@ -428,6 +429,65 @@ namespace PaymentService.Controllers
             };
 
             return new JsonResult(response);
+        }
+
+        [Route("PapayaPay/{status}/api/v2/create-qr-payment")]
+        public IActionResult PapayaPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            var statusCode = isSuccess ? 200 : 999;
+            var message = isSuccess ? "success" : "fail";
+
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    statusCode,
+                    message,
+                    payurl = "http://www.google.com"
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { statusCode, message });
+        }
+
+        [Route("PapayaPay/{status}/api/v2/create-fundout")]
+        public IActionResult PapayaPayCreditResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            var statusCode = isSuccess ? 200 : 999;
+            var message = isSuccess ? "success" : "fail";
+
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    message,
+                    fundOutStatus = "fundOutStatus",
+                    data = new
+                    {
+                        accountNumber = "123",
+                        amount = 999m,
+                        bankCode = "abc",
+                        createdDate = DateTime.Now,
+                        currencyCode = "THB",
+                        fundOutCallbackStatus = "status",
+                        fundOutDescription = "description",
+                        fundOutPaymentReference = "ref"
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { statusCode, message });
+        }
+
+        private static bool CheckIsSuccess(string status)
+        {
+            return status.Equals("success", StringComparison.OrdinalIgnoreCase);
         }
 
         private string ToJson(object t)
