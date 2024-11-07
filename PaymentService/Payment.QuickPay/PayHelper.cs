@@ -14,11 +14,38 @@ namespace Payment.QuickPay
     {
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
+        private readonly IEnumerable<string> _depositSignExceptKeys;
+        private readonly IEnumerable<string> _payoutSignExceptKeys;
 
         public PayHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
             _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
+
+            #region sign except keys
+
+            _depositSignExceptKeys = new[]
+            {
+                
+                "userName",
+                "amountBeforeFixed",
+                "payeeName",
+                "appSecret",
+                "bankName",
+                "channelNo",
+                "sign"
+            };
+            _payoutSignExceptKeys = new[]
+            {
+                
+                "bankBranch",
+                "memo",
+                "VerifyChannelNo",
+                "appSecret",
+                "sign"
+            };
+
+            #endregion
         }
 
         #region Debit
@@ -53,15 +80,11 @@ namespace Payment.QuickPay
                     {"datetime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")},
                     {"notifyUrl",notifyUrl},
                     {"time", ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds().ToString()},
+                    {"appSecret", appSecret},
+                    {"payeeName", accountName},
+                    {"channelNo", channelNo}
                 };
                 
-                req.Add("sign", GetSign(req, apiKey));
-                req.Add("appSecret", appSecret);
-                req.Add("payeeName", accountName);
-                req.Add("channelNo", channelNo);
-                
-                
-
                 if (depositType.Equals(((int)DepositType.OnlineBanking).ToString()))
                 {
                     req.Add("bankName", input["BankName"]);
@@ -72,6 +95,8 @@ namespace Payment.QuickPay
                     req.Add("bankName",bankCode);
                     req.Add("userName", input["AccountName"]);
                 }
+                
+                req.Add("sign", GetSign(req, apiKey, _depositSignExceptKeys));
 
                 var res = CreateOrder(apiUrl, req);
 
@@ -110,20 +135,9 @@ namespace Payment.QuickPay
             var apiKey = input["apiKey"];
             
             var req = FromJson<DepositCallBackRequest>(bodyContent);
-            var dic = new Dictionary<string, string>
-            {
-                {"amount",req.Amount.ToString("G29")},
-                {"discount",req.Discount.ToString("G29")},
-                {"extra",req.Extra},
-                {"lucky",req.Lucky.ToString("G29")},
-                {"orderNo",req.OrderNo},
-                {"paid",req.Paid.ToString("G29")},
-                {"status",req.Status},
-                {"tradeNo",req.TradeNo},
-                {"userNo",req.UserNo.ToString()}
-            };
+            var dic = FromJson<Dictionary<string, string>>(bodyContent);
 
-            if (!VerifySign(req.Sign, dic, apiKey))
+            if (!VerifySign(req.Sign, dic, apiKey, _depositSignExceptKeys))
             {
                 return new NotifyDepositResult
                 {
@@ -187,10 +201,10 @@ namespace Payment.QuickPay
                     {"reverseUrl",string.Empty},
                     {"extra",string.Empty},
                     {"time", ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds().ToString()},
+                    {"appSecret",appSecret}
                 };
 
-                req.Add("sign", GetSign(req, apiKey));
-                req.Add("appSecret",appSecret);
+                req.Add("sign", GetSign(req, apiKey, _payoutSignExceptKeys));
 
                 var res = Payout(apiUrl, req);
                 var response = new WithdrawResult
@@ -219,22 +233,9 @@ namespace Payment.QuickPay
             var apiKey = payResource["apiKey"];
             
             var req = FromJson<WithdrawalCallBackRequest>(bodyContent);
-            var dic = new Dictionary<string, string>
-            {
-                {"amount",req.Amount.ToString("G29")},
-                {"bankAccount",req.BankAccount},
-                {"bankName",req.BankName},
-                {"extra",req.Extra},
-                {"fee",req.Fee.ToString("G29")},
-                {"mobile",req.Mobile},
-                {"name",req.Name},
-                {"orderNo",req.OrderNo},
-                {"payAccount",req.PayAccount},
-                {"status",req.Status},
-                {"tradeNo",req.TradeNo}
-            };
-
-            if (!VerifySign(req.Sign, dic, apiKey))
+            var dic = FromJson<Dictionary<string, string>>(bodyContent);
+            
+            if (!VerifySign(req.Sign, dic, apiKey, _payoutSignExceptKeys))
             {
                 return new NotifyWithdrawResult
                 {
@@ -310,10 +311,12 @@ namespace Payment.QuickPay
             return result;
         }
 
-        private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiKey)
+        private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, IEnumerable<string> exceptKeys)
         {
-            var str = string.Join("&", param.OrderBy(kp => kp.Key).
-                Select(kp => $"{kp.Key}={kp.Value}")) + apiKey;
+            var str = string.Join("&", param
+                .Where(x => !exceptKeys.Contains(x.Key))
+                .OrderBy(kp => kp.Key, StringComparer.Ordinal)
+                .Select(kp => $"{kp.Key}={kp.Value}")) + apiKey;
 
             _logger.LogInformation(str);
             var sha256 = ToSHA256(str).ToLower();
@@ -323,9 +326,9 @@ namespace Payment.QuickPay
             return sign;
         }
 
-        private bool VerifySign(string target, IEnumerable<KeyValuePair<string, string>> param, string apiKey)
+        private bool VerifySign(string target, IEnumerable<KeyValuePair<string, string>> param, string apiKey, IEnumerable<string> exceptKeys)
         {
-            var sign = GetSign(param, apiKey);
+            var sign = GetSign(param, apiKey, exceptKeys);
 
             return target.Equals(sign, StringComparison.OrdinalIgnoreCase);
         }
