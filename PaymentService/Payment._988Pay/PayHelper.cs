@@ -49,7 +49,7 @@ namespace Payment._988Pay
                 {
                     Success = true,
                     ErrorCode = "0",
-                    Url = res.Url
+                    Url = res.PayUrl
                 };
 
                 return response;
