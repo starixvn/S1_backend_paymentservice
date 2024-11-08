@@ -261,7 +261,7 @@ namespace Payment.VaderPay
                 Success = true,
                 ErrorCode = "0",
                 ThirdId = resp.Result.ThirdId,
-                Url = resp.Result.RedirectTo
+                Url = resp.Result.RedirectTo.Replace("redirectlink=", "")
             };
         }
         
@@ -280,7 +280,7 @@ namespace Payment.VaderPay
                 { "client_url", inputs["ReturnUrl"] }
             };
             var str = $"{req["merchant_code"]}{req["ref_id"]}{req["player_username"]}{req["player_ip"]}{req["currency_code"]}{req["amount"]}{req["client_url"]}";
-            req.Add("Hash", GetSign(str, key));
+            req.Add("hash", GetSign(str, key));
             
             var resp = _httpHelper
                 .WithOAuthBearerToken(key)
