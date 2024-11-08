@@ -23,10 +23,10 @@ namespace Payment.VaderPay
         public override DepositResult Debit(Dictionary<string, string> inputs)
         {
             var payCurrency = inputs["PayCurrencyId"];
-            var key = $"{payCurrency}_key";
+            var key = inputs[$"{payCurrency}_key"];
             var type = GetPayType(inputs["PayCode"]);
-            var apiHost = $"{type}_host";
-            var merchantId = $"{payCurrency}_merchantId";
+            var apiHost = inputs[$"{type}_host"];
+            var merchantId = inputs[$"{payCurrency}_merchantId"];
             
             try
             {
@@ -104,9 +104,9 @@ namespace Payment.VaderPay
         public override WithdrawResult Credit(Dictionary<string, string> inputs)
         {
             var payCurrency = inputs["PayCurrencyId"];
-            var key = $"{payCurrency}_key";
+            var key = inputs[$"{payCurrency}_key"];
             var apiHost =  inputs["payout_host"];
-            var merchantId = $"{payCurrency}_merchantId";
+            var merchantId = inputs[$"{payCurrency}_merchantId"];
             var transId = inputs["TransID"];
             
             try
