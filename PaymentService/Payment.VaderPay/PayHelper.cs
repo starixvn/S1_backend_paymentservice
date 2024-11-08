@@ -108,97 +108,87 @@ namespace Payment.VaderPay
             var key = $"{payCurrency}_key";
             var apiHost =  inputs["payout_host"];
             var merchantId = $"{payCurrency}_merchantId";
+            var transId = inputs["TransID"];
             
-            var req = new Dictionary<string, string>
+            try
             {
-                { "merchant_code", merchantId },
-                { "ref_id", inputs["TransID"] },
-                { "player_username", inputs["CustId"] },
-                { "player_ip", inputs["ClientIP"] },
-                { "currency_code", inputs["PayCurrencyId"] },
-                { "amount", inputs["Amount"] },
-                { "bank_code", inputs["BankCode"] },
-                { "beneficiary_account", inputs["AccountNo"] },
-                { "beneficiary_name", inputs["AccountName"] }
-            };
+                var req = new Dictionary<string, string>
+                {
+                    { "merchant_code", merchantId },
+                    { "ref_id", transId },
+                    { "player_username", inputs["CustId"] },
+                    { "player_ip", inputs["ClientIP"] },
+                    { "currency_code", inputs["PayCurrencyId"] },
+                    { "amount", inputs["Amount"] },
+                    { "bank_code", inputs["BankCode"] },
+                    { "beneficiary_account", inputs["AccountNo"] },
+                    { "beneficiary_name", inputs["AccountName"] }
+                };
             
-            if (payCurrency == "INR")
-                req.Add("ifsc", inputs["IFSCCode"]);
+                if (payCurrency == "INR")
+                    req.Add("ifsc", inputs["IFSCCode"]);
             
-            var str = $"{inputs["merchant_code"]}{inputs["ref_id"]}{inputs["player_username"]}{inputs["player_ip"]}" +
-                      $"{inputs["currency_code"]}{inputs["amount"]}{inputs["bank_code"]}{inputs["beneficiary_account"]}" +
-                      $"{inputs["beneficiary_name"]}";
+                var str = $"{inputs["merchant_code"]}{inputs["ref_id"]}{inputs["player_username"]}{inputs["player_ip"]}" +
+                          $"{inputs["currency_code"]}{inputs["amount"]}{inputs["bank_code"]}{inputs["beneficiary_account"]}" +
+                          $"{inputs["beneficiary_name"]}";
 
-            req.Add("hash", GetSign(str, key));
+                req.Add("hash", GetSign(str, key));
 
-            var sUrl = inputs["withdrawHost"];
-            var sResponse = HttpPost(sUrl, ToJson(req), "application/json", req.ref_id, false);
-
-            var withdrawResult = new WithdrawResult();
-            var withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
-            if (withdrawalRes.error_code == WithdrawalStatus.Success)
-            {
-                withdrawResult.Success = true;
-                withdrawResult.Message = withdrawalRes.error_message;
-                withdrawResult.RawContent = withdrawalRes.error_message;
+                var resp = _httpHelper
+                    .PostJson<Dictionary<string, string>, PayoutResp>($"{apiHost}{Definition.Path["payout"]}", req);
+                
+                if (!resp.StatusCode.IsSuccessStatus())
+                    throw new CustomException($"Code={resp.StatusCode}");
+            
+                if (!Definition.SuccessCode.Equals(resp.Result.ErrorCode))
+                    throw new CustomException($"Code={resp.Result.ErrorCode}, Msg={resp.Result.ErrorMessage}");
+                
+                return new WithdrawResult
+                {
+                    Success = true,
+                    WithdrawId = transId,
+                    Message = resp.Result.ThirdId
+                };
             }
-            else
+            catch (CustomException ex)
             {
-                withdrawResult.Success = false;
-                withdrawResult.Message = withdrawalRes.message;
-                withdrawResult.RawContent = withdrawalRes.message;
+                _logger.LogInformation("VaderPay creat payout failed: " + ex.Message);
+                
+                return new WithdrawResult
+                {
+                    Success = false,
+                    WithdrawId = transId,
+                    Message = ex.Message
+                };
             }
-
-            return withdrawResult;
         }
         
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var data = FromJson<CallBackCreditReq>(ToJson(formData));
-            var parameter = $"{data.InvoiceNo}{(int)data.Status}{data.Currency}{data.Amount}{data.PaymentDate}";
-            var sign = ToHMACSHA256(parameter, payResource["key"]);
+            var depositInfo = FromJson<DepositInfo>(payResource["DepositInfo"]);
+            var key = payResource[$"{depositInfo.PayCurrencyId}_key"];
+            var transId = payResource["TransId"];
+            
+            var str = $"{formData["InvoiceNo"]}{formData["Status"]}{formData["Currency"]}{formData["Amount"]}{formData["PaymentDate"]}";
 
-            var oNotify = new NotifyWithdrawResult
+            if (!VerifySign(str, key, formData["Signature"]))
             {
-                WithdrawId = data.RefId,
-                Message = data.StatusMessage,
-                Response = ToJson(new CallBackCreditRes
+                return new NotifyWithdrawResult
                 {
-                    error_code = (int)WithdrawalResponseStatus.OperationSuccess,
-                    message = WithdrawalResponseStatus.OperationSuccess.ToString()
-                })
+                    WithdrawId = transId,
+                    TransStatus = TransStatus.Pending,
+                    Response = ToJson(new CallbackResp(-1, $"{payResource["TransID"]}, signature verification failed."))
+                };
+            }
+            
+            return new NotifyWithdrawResult
+            {
+                ThirdId = formData["InvoiceNo"],
+                TransStatus = Definition.GetTransStatus(formData["Status"]),
+                Response = ToJson(new CallbackResp(0, "success")),
+                WithdrawId = transId,
+                Message = $"Status={formData["Status"]}, PaymentDate={formData["PaymentDate"]}"
             };
-
-            if (sign == data.Signature)
-            {
-                switch (data.Status)
-                {
-                    case WithdrawalCallbackStatus.Success:
-                    case WithdrawalCallbackStatus.ManualApprove:
-                        oNotify.TransStatus = TransStatus.Success;
-                        oNotify.RequestAmount = data.Amount;
-                        break;
-                    case WithdrawalCallbackStatus.Reject:
-                        oNotify.TransStatus = TransStatus.Fail;
-                        break;
-                    case WithdrawalCallbackStatus.Pending:
-                    default:
-                        oNotify.TransStatus = TransStatus.Pending;
-                        break;
-                }
-            }
-            else
-            {
-                oNotify.TransStatus = TransStatus.Pending;
-                oNotify.Message = "Signature error";
-                oNotify.Response = ToJson(new CallBackCreditRes
-                {
-                    error_code = (int)WithdrawalResponseStatus.InvalidParameter,
-                    message = "Signature error"
-                });
-            }
-
-            return oNotify;
         }
         
         #endregion

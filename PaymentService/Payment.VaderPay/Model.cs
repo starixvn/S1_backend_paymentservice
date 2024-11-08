@@ -57,3 +57,21 @@ internal class CallbackResp
     [JsonProperty("message")]
     public string Message { get; set; }
 }
+
+internal class PayoutResp
+{
+    [JsonProperty("invoice_number")]
+    public string ThirdId { get; set; }
+    
+    [JsonProperty("error_code")]
+    public int ErrorCode { get; set; }
+
+    [JsonProperty("error_message")]
+    private string ErrorMessage1 { get; set; }
+    
+    [JsonProperty("message")]
+    private string ErrorMessage2 { get; set; }
+
+    public string ErrorMessage => string.IsNullOrEmpty(ErrorMessage1)
+        ? ErrorMessage2 : ErrorMessage1;
+}
