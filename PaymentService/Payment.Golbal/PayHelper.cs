@@ -177,13 +177,18 @@ namespace Payment.Golbal
                 }
                 else if(currency == (int)CurrencyEnum.INR) 
                 {
-                    var extrapara = new
+                    //UPI
+                    if (paycode == "5000")
                     {
-                        bank_code = inputs["BankCode"],
-                        ifsc = inputs["IFSCCode"],
-                        mobile = inputs["PhoneNo"],
-                    };
-                    extra = JsonConvert.SerializeObject(extrapara);
+                        var extrapara = new
+                        {
+                            bank_code = inputs["BankName"],
+                            ifsc = inputs["IFSCCode"],
+                            mobile = inputs["PhoneNo"],
+                        };
+                        extra = JsonConvert.SerializeObject(extrapara);
+                    }
+                    
                 }
                 else if (currency == (int)CurrencyEnum.VND)
                 {
