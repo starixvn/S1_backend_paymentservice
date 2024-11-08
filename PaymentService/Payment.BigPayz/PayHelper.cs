@@ -7,11 +7,6 @@ using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 using static Payment.BigPayz.BigPayzModel;
 using static Payment.BigPayz.BigPayzDefinition;
-using Flurl.Util;
-using System.Security.Cryptography;
-using System.Text;
-using System.Web;
-using Org.BouncyCastle.Ocsp;
 using Newtonsoft.Json;
 using System.Net;
 

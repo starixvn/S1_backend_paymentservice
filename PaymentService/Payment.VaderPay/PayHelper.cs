@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -251,6 +250,7 @@ namespace Payment.VaderPay
             req.Add("Hash", GetSign(str, key));
             
             var resp = _httpHelper
+                .WithOAuthBearerToken(key)
                 .PostJson<Dictionary<string, string>, DepositBankResp>(apiHost + Definition.Path[payCode], req);
             
             if (!resp.StatusCode.IsSuccessStatus())
@@ -283,6 +283,7 @@ namespace Payment.VaderPay
             req.Add("Hash", GetSign(str, key));
             
             var resp = _httpHelper
+                .WithOAuthBearerToken(key)
                 .PostJson<Dictionary<string, string>, DepositQrResp>(apiHost + Definition.Path[payCode], req);
             
             if (!resp.StatusCode.IsSuccessStatus())
