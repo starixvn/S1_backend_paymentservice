@@ -182,7 +182,7 @@ namespace Payment.Golbal
                     {
                         var extrapara = new
                         {
-                            bank_code = inputs["BankCode"],
+                            bank_code = inputs["BankName"],
                             ifsc = inputs["IFSCCode"],
                             mobile = inputs["PhoneNo"],
                         };
