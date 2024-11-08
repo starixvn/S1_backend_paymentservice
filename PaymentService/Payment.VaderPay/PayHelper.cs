@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
-
 using PaymentCore;
+using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
@@ -12,11 +12,146 @@ namespace Payment.VaderPay
     class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
         private readonly ILogger<PayHelper> _logger;
+        private readonly IFlurlHttpHelper _httpHelper;
         public PayHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+            _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
         }
 
+        #region Deposit
+
+        public override DepositResult Debit(Dictionary<string, string> inputs)
+        {
+            var payCurrency = inputs["PayCurrencyId"];
+            var key = $"{payCurrency}_key";
+            var type = GetPayType(inputs["PayCode"]);
+            var apiHost = $"{type}_host";
+            var merchantId = $"{payCurrency}_merchantId";
+            
+            try
+            {
+                return type switch
+                {
+                    "bank" => DepositBank(inputs, key, apiHost, merchantId),
+                    "qr" => DepositQr(inputs, key, apiHost, merchantId),
+                    _ => new DepositResult(false, "-1", "VaderPay service not support type=" + type)
+                };
+            }
+            catch (CustomException ex)
+            {
+                _logger.LogInformation("VaderPay creat order failed: " + ex.Message);
+
+                return new DepositResult(false, ex.Code, ex.Message);
+            }
+        }
+
+        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
+        {
+            var depositInfo = FromJson<DepositInfo>(payResource["DepositInfo"]);
+            var key = payResource[$"{depositInfo.PayCurrencyId}_key"];
+            var type = GetPayType(depositInfo.PayCode);
+
+            try
+            {
+                var info = type switch
+                {
+                    "bank" => new DepositCallbackInfo
+                    {
+                        VerifyStr = $"{formData["transaction_id"]}{formData["status"]}{formData["Currency"]}{formData["created_at"]}",
+                        VerifyTarget = formData["signature2"],
+                        Status = formData["status"],
+                        ActualAmount = formData["Amount"]
+                    },
+                        
+                    "qr" => new DepositCallbackInfo
+                    {
+                        VerifyStr = $"{formData["InvoiceNo"]}{formData["ReceiverBank"]}{formData["ReceiverAccount"]}" +
+                                    $"{formData["Currency"]}{formData["Amount"]}{formData["PaymentDate"]}",
+                        VerifyTarget = formData["Signature"],
+                        Status = formData["status"],
+                        ActualAmount = formData["Amount"]
+                    },
+                    _ => throw new CustomException("not support type=" + type)
+                };
+
+                if (!VerifySign(info.VerifyStr, key, info.VerifyTarget))
+                    throw new CustomException($"{payResource["TransID"]}, signature verification failed.");
+                
+                return new NotifyDepositResult
+                {
+                    DepositId = payResource["TransID"],
+                    Comment = $"orderStatus={info.Status}",
+                    TransStatus = Definition.GetTransStatus(info.Status),
+                    ActualAmount = decimal.Parse(info.ActualAmount),
+                    Response = ToJson(new CallbackResp(0, "success"))
+                };
+            }
+            catch (CustomException ex)
+            {
+                return new NotifyDepositResult
+                {
+                    DepositId = payResource["TransID"],
+                    TransStatus = TransStatus.Pending,
+                    Response = ToJson(new CallbackResp(-1, ex.Message))
+                };
+            }
+        }
+
+        #endregion
+
+        #region Withdrawal
+
+        public override WithdrawResult Credit(Dictionary<string, string> inputs)
+        {
+            var payCurrency = inputs["PayCurrencyId"];
+            var key = $"{payCurrency}_key";
+            var apiHost =  inputs["payout_host"];
+            var merchantId = $"{payCurrency}_merchantId";
+            
+            var req = new Dictionary<string, string>
+            {
+                { "merchant_code", merchantId },
+                { "ref_id", inputs["TransID"] },
+                { "player_username", inputs["CustId"] },
+                { "player_ip", inputs["ClientIP"] },
+                { "currency_code", inputs["PayCurrencyId"] },
+                { "amount", inputs["Amount"] },
+                { "bank_code", inputs["BankCode"] },
+                { "beneficiary_account", inputs["AccountNo"] },
+                { "beneficiary_name", inputs["AccountName"] }
+            };
+            
+            if (payCurrency == "INR")
+                req.Add("ifsc", inputs["IFSCCode"]);
+            
+            var str = $"{inputs["merchant_code"]}{inputs["ref_id"]}{inputs["player_username"]}{inputs["player_ip"]}" +
+                      $"{inputs["currency_code"]}{inputs["amount"]}{inputs["bank_code"]}{inputs["beneficiary_account"]}" +
+                      $"{inputs["beneficiary_name"]}";
+
+            req.Add("hash", GetSign(str, key));
+
+            var sUrl = inputs["withdrawHost"];
+            var sResponse = HttpPost(sUrl, ToJson(req), "application/json", req.ref_id, false);
+
+            var withdrawResult = new WithdrawResult();
+            var withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
+            if (withdrawalRes.error_code == WithdrawalStatus.Success)
+            {
+                withdrawResult.Success = true;
+                withdrawResult.Message = withdrawalRes.error_message;
+                withdrawResult.RawContent = withdrawalRes.error_message;
+            }
+            else
+            {
+                withdrawResult.Success = false;
+                withdrawResult.Message = withdrawalRes.message;
+                withdrawResult.RawContent = withdrawalRes.message;
+            }
+
+            return withdrawResult;
+        }
+        
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
             var data = FromJson<CallBackCreditReq>(ToJson(formData));
@@ -65,224 +200,14 @@ namespace Payment.VaderPay
 
             return oNotify;
         }
+        
+        #endregion
 
-        public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
-        {
-            var onlineBank = (formData != null && formData.Count > 0);
-            var oNotify = new NotifyDepositResult();
-
-            if (onlineBank)
-            {
-                var data = FromJson<CallBackDebitReq>(ToJson(formData));
-                var parameter = $"{data.transaction}{(int)data.status}{data.Currency}{data.Amount}{data.created_at}";
-                var sign = ToHMACSHA256(parameter, payResource["key"]);
-                oNotify.DepositId = data.ItemID;
-                oNotify.ThirdId = data.transaction;
-                oNotify.Message = data.status_message;
-                oNotify.Comment = data.status_message;
-                oNotify.Response = ToJson(new CallBackCreditRes
-                {
-                    error_code = (int)DepositResponseStatus.OperationSuccess,
-                    message = DepositResponseStatus.OperationSuccess.ToString()
-                });
-
-                if (sign == data.signature2)
-                {
-                    switch (data.status)
-                    {
-                        case DepositCallbackStatus.Success:
-                        case DepositCallbackStatus.Approved:
-                            oNotify.TransStatus = TransStatus.Success;
-                            oNotify.RequestAmount = data.Amount;
-                            oNotify.ActualAmount = data.Amount;
-                            break;
-                        case DepositCallbackStatus.Rejected:
-                            oNotify.TransStatus = TransStatus.Fail;
-                            oNotify.Comment = data.decline_reason;
-                            break;
-                        case DepositCallbackStatus.Pending:
-                            oNotify.TransStatus = TransStatus.Pending;
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                }
-                else
-                {
-                    oNotify.TransStatus = TransStatus.Pending;
-                    oNotify.Comment = "Signature error";
-                    oNotify.Message = "Signature error";
-                    oNotify.Response = ToJson(new CallBackCreditRes
-                    {
-                        error_code = (int)DepositResponseStatus.InvalidParameter,
-                        message = "Signature error"
-                    });
-                }
-            }
-            else
-            {
-                var data = FromJson<CallBackDebitMobileReq>(bodyContent);
-                var parameter = $"{data.InvoiceNo}{data.ReceiverBank}{data.ReceiverAccount}{data.Currency}{data.Amount}{data.PaymentDate}";
-                var sign = ToHMACSHA256(parameter, payResource["key"]);
-                oNotify.DepositId = data.RefId;
-                oNotify.ThirdId = data.InvoiceNo;
-                oNotify.Comment = $"ReceiverBank:{data.ReceiverBank}, ReceiverAccount:{data.ReceiverAccount}";
-                oNotify.Response = ToJson(new CallBackCreditRes
-                {
-                    error_code = (int)DepositResponseStatus.OperationSuccess,
-                    message = DepositResponseStatus.OperationSuccess.ToString()
-                });
-
-                if (sign == data.Signature)
-                {
-                    switch (data.Status)
-                    {
-                        case DepositCallbackStatus.Success:
-                        case DepositCallbackStatus.Approved:
-                            oNotify.TransStatus = TransStatus.Success;
-                            oNotify.RequestAmount = data.Amount;
-                            oNotify.ActualAmount = data.Amount;
-                            break;
-                        case DepositCallbackStatus.Rejected:
-                            oNotify.TransStatus = TransStatus.Fail;
-                            break;
-                        case DepositCallbackStatus.Pending:
-                            oNotify.TransStatus = TransStatus.Pending;
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                }
-                else
-                {
-                    oNotify.TransStatus = TransStatus.Pending;
-                    oNotify.Comment = "Signature error";
-                    oNotify.Message = "Signature error";
-                    oNotify.Response = ToJson(new CallBackCreditRes
-                    {
-                        error_code = (int)DepositResponseStatus.InvalidParameter,
-                        message = "Signature error"
-                    });
-                }
-            }
-
-            return oNotify;
-        }
+        #region NotImplemented
 
         public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
-        }
-
-        public override WithdrawResult Credit(Dictionary<string, string> inputs)
-        {
-            var request = new WithdrawalReq
-            {
-                merchant_code = inputs["merchant"],
-                ref_id = inputs["TransID"],
-                player_username = inputs["CustId"],
-                player_ip = inputs["ClientIP"],
-                currency_code = inputs["PayCurrencyId"],
-                amount = Convert.ToDecimal(inputs["Amount"]).ToString(),
-                bank_code = inputs["BankCode"],
-                beneficiary_account = inputs["AccountNo"],
-                beneficiary_name = inputs["AccountName"]
-            };
-            if (request.currency_code == "INR")
-            {
-                request.ifsc = inputs["IFSCCode"];
-            }
-
-            var parameter = $"{request.merchant_code}{request.ref_id}{request.player_username}{request.player_ip}{request.currency_code}{request.amount}{request.bank_code}{request.beneficiary_account}{request.beneficiary_name}";
-            request.hash = ToHMACSHA256(parameter, inputs["key"]);
-
-            var sUrl = inputs["withdrawHost"];
-            var sResponse = HttpPost(sUrl, ToJson(request), "application/json", request.ref_id, false);
-
-            var withdrawResult = new WithdrawResult();
-            var withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
-            if (withdrawalRes.error_code == WithdrawalStatus.Success)
-            {
-                withdrawResult.Success = true;
-                withdrawResult.Message = withdrawalRes.error_message;
-                withdrawResult.RawContent = withdrawalRes.error_message;
-            }
-            else
-            {
-                withdrawResult.Success = false;
-                withdrawResult.Message = withdrawalRes.message;
-                withdrawResult.RawContent = withdrawalRes.message;
-            }
-
-            return withdrawResult;
-        }
-
-        public override DepositResult Debit(Dictionary<string, string> inputs)
-        {
-            var sUrl = inputs["depositHost"];
-            var sResponse = string.Empty;
-            var onlineBank = string.IsNullOrEmpty(inputs["PayCode"]);
-            if (onlineBank)
-            {
-                var depositReq = new DepositReq
-                {
-                    MerchantCode = inputs["merchant"],
-                    ItemID = inputs["TransID"],
-                    ItemDescription = inputs["TransID"],
-                    Amount = inputs["Amount"],
-                    Currency = inputs["PayCurrencyId"],
-                    HTTPPostURL = inputs["CallBackUrl"],
-                    PlayerId = inputs["CustId"],
-                    ReturnURL = inputs["ReturnUrl"],
-                    FailedReturnURL = inputs["ReturnUrl"]
-                };
-                var parameter = $"{depositReq.MerchantCode}{depositReq.ItemID}{depositReq.Currency}{depositReq.Amount}";
-                depositReq.Hash = ToHMACSHA256(parameter, inputs["key"]);
-                sResponse = HttpPost(sUrl, ToJson(depositReq), "application/json", depositReq.ItemID, false);
-            }
-            else
-            {
-                sUrl = inputs["qrHost"];
-                var mobileDepositReq = new MobileDepositReq
-                {
-                    merchant_code = inputs["merchant"],
-                    ref_id = inputs["TransID"],
-                    player_username = inputs["CustId"],
-                    player_ip = inputs["ClientIP"],
-                    currency_code = inputs["PayCurrencyId"],
-                    amount = Convert.ToDecimal(inputs["Amount"]).ToString(),
-                    client_url = inputs["ReturnUrl"]
-                };
-                var parameter = $"{mobileDepositReq.merchant_code}{mobileDepositReq.ref_id}{mobileDepositReq.player_username}{mobileDepositReq.player_ip}{mobileDepositReq.currency_code}{mobileDepositReq.amount}{mobileDepositReq.client_url}";
-                mobileDepositReq.hash = ToHMACSHA256(parameter, inputs["key"]);
-
-                _logger.LogInformation($"TransId={mobileDepositReq.ref_id}, parameter={parameter}, key={inputs["key"]}, hash={mobileDepositReq.hash}");
-                sResponse = HttpPost(sUrl, ToJson(mobileDepositReq), "application/json", mobileDepositReq.ref_id, false);
-            }
-
-            var depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
-            var depositResult = new DepositResult();
-            if ((onlineBank && (depositRes.status == (int)DepositStatus.Initiated || depositRes.status == (int)DepositStatus.Accepted)) ||
-                (!onlineBank && depositRes.error_code == (int)MobileDepositStatus.OperationSuccess))
-            {
-                depositResult.ThirdId = onlineBank ? depositRes.transaction : depositRes.invoice_number;
-                var responseData = new Dictionary<string, string>
-                {
-                    { "DepositAmount", onlineBank ? depositRes.Amount.ToString() : depositRes.amount.ToString() }
-                };
-                depositResult.Url = depositRes.redirect_to.Replace("redirectlink=", "");
-                depositResult.FormData = responseData;
-                depositResult.Success = true;
-            }
-            else
-            {
-                depositResult.Success = false;
-                depositResult.Message = string.IsNullOrEmpty(depositRes.error_message)
-                    ? depositRes.message
-                    : depositRes.error_message;
-            }
-
-            return depositResult;
         }
 
         public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
@@ -295,20 +220,114 @@ namespace Payment.VaderPay
             throw new NotImplementedException();
         }
 
+        #endregion
+
         public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
             string refId;
-            if (formData != null && formData.Count > 0)
+            
+            if (formData is { Count: > 0 })
             {
                 formData.TryGetValue("RefId", out refId);
             }
             else
             {
-                var data = FromJson<CallBackCreditReq>(bodyContent);
-                refId = data.RefId;
+                var data = FromJson<Dictionary<string, string>>(bodyContent);
+                data.TryGetValue("RefId", out refId);
             }
 
             return refId;
         }
+        
+        #region Private
+
+        private DepositResult DepositBank(IDictionary<string, string> inputs,
+            string key, string apiHost, string merchantId)
+        {
+            var payCode = inputs["PayCode"];
+            var req = new Dictionary<string, string>
+            {
+                { "MerchantCode", merchantId },
+                { "ReturnURL", inputs["ReturnUrl"] },
+                { "FailedReturnURL", inputs["ReturnUrl"] },
+                { "HTTPPostURL", inputs["CallBackUrl"] },
+                { "Amount", inputs["Amount"] },
+                { "Currency", inputs["PayCurrencyId"] },
+                { "ItemID", inputs["TransID"] },
+                { "ItemDescription", inputs["TransID"] },
+                { "PlayerId", inputs["CustId"] }
+            };
+            var str = $"{req["MerchantCode"]}{req["ItemID"]}{req["Currency"]}{req["Amount"]}";
+            req.Add("Hash", GetSign(str, key));
+            
+            var resp = _httpHelper
+                .PostJson<Dictionary<string, string>, DepositBankResp>(apiHost + Definition.Path[payCode], req);
+            
+            if (!resp.StatusCode.IsSuccessStatus())
+                throw new CustomException($"Code={resp.StatusCode}, Msg={resp.Result.Message}");
+
+            return new DepositResult
+            {
+                Success = true,
+                ErrorCode = "0",
+                ThirdId = resp.Result.ThirdId,
+                Url = resp.Result.RedirectTo
+            };
+        }
+        
+        private DepositResult DepositQr(IDictionary<string, string> inputs,
+            string key, string apiHost, string merchantId)
+        {
+            var payCode = inputs["PayCode"];
+            var req = new Dictionary<string, string>
+            {
+                { "merchant_code", merchantId },
+                { "ref_id", inputs["TransID"] },
+                { "player_username", inputs["CustId"] },
+                { "player_ip", inputs["ClientIP"] },
+                { "currency_code", inputs["PayCurrencyId"] },
+                { "amount", inputs["Amount"] },
+                { "client_url", inputs["ReturnUrl"] }
+            };
+            var str = $"{req["merchant_code"]}{req["ref_id"]}{req["player_username"]}{req["player_ip"]}{req["currency_code"]}{req["amount"]}{req["client_url"]}";
+            req.Add("Hash", GetSign(str, key));
+            
+            var resp = _httpHelper
+                .PostJson<Dictionary<string, string>, DepositQrResp>(apiHost + Definition.Path[payCode], req);
+            
+            if (!resp.StatusCode.IsSuccessStatus())
+                throw new CustomException($"Code={resp.StatusCode}");
+            
+            if (!Definition.SuccessCode.Equals(resp.Result.ErrorCode))
+                throw new CustomException($"Code={resp.Result.ErrorCode}, Msg={resp.Result.Message}");
+
+            return new DepositResult
+            {
+                Success = true,
+                ErrorCode = "0",
+                ThirdId = resp.Result.ThirdId,
+                Url = resp.Result.RedirectTo
+            };
+        }
+        
+        private string GetSign(string str, string secretKey)
+        {
+            _logger.LogInformation("str: " + str);
+            var sign = ToHMACSHA256(str, secretKey);
+
+            return sign;
+        }
+
+        private bool VerifySign(string str, string secretKey, string target)
+            => target.Equals(GetSign(str, secretKey), StringComparison.OrdinalIgnoreCase);
+        
+        private static string GetPayType(string payCode)
+        {
+            var result = payCode.Split('-');
+
+            return result[0];
+        }
+
+        #endregion
     }
 }

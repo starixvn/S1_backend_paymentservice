@@ -34,6 +34,7 @@ namespace PaymentCore
         public abstract NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource);
         public abstract NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource);
 
+        [Obsolete("請用FlurlHttp")]
         protected string HttpGet(string url, string parameters, string transId, bool ignoreCertificate = false)
         {
             try
@@ -56,6 +57,7 @@ namespace PaymentCore
             }
         }
 
+        [Obsolete("請用FlurlHttp")]
         protected string HttpPost(string url, string parameters, string contentType, string transId, bool ignoreCertificate = false)
         {
             try
@@ -75,98 +77,6 @@ namespace PaymentCore
                 LogInformationProxy(url, parameters, ex.Message, transId);
                 throw;
             }
-        }
-
-        protected string HttpPost(string url, string parameters, string contentType, string accessToken, string transId, bool ignoreCertificate)
-        {
-            try
-            {
-                var httpHeaders = new Dictionary<string, string>
-                {
-                    { "Authorization", "Bearer " + accessToken },
-                    { "accept", contentType },
-                    { "x-api-key", accessToken }
-                };
-
-                LogInformationProxy(url, $"request: {parameters}, " +
-                                $"Headers: {ToJson(httpHeaders)}", string.Empty, transId);
-
-                var response = HttpClientSend(httpMethod: HttpMethod.Post,
-                    content: parameters,
-                    requestUri: url,
-                    contentType: contentType,
-                    ignoreCertificate: ignoreCertificate,
-                    httpHeaders: httpHeaders);
-
-                LogInformationProxy(url, parameters, response, transId);
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                LogInformationProxy(url, parameters, ex.Message, transId);
-                throw;
-            }
-        }
-
-        protected string HttpPost(string url, string parameters, string contentType, string username, string password, string transId)
-        {
-            try
-            {
-                var svcCredentials = username;
-                if (!string.IsNullOrEmpty(password))
-                {
-                    svcCredentials = Convert.ToBase64String(ASCIIEncoding.ASCII.GetBytes(username + ":" + password));
-                }
-
-                var httpHeaders = new Dictionary<string, string>
-                {
-                    { "Authorization", "Basic " + svcCredentials }
-                };
-
-                LogInformationProxy(url, $"request: {parameters}, " +
-                                $"Headers: {ToJson(httpHeaders)}", string.Empty, transId);
-
-                var response = HttpClientSend(httpMethod: HttpMethod.Post,
-                    content: parameters,
-                    requestUri: url,
-                    contentType: contentType,
-                    ignoreCertificate: false,
-                    httpHeaders: httpHeaders);
-
-                LogInformationProxy(url, parameters, response, transId);
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                LogInformationProxy(url, parameters, ex.Message, transId);
-                throw;
-            }
-        }
-
-        protected string HttpPostGBK(string url, string parameters, string contentType, string transId)
-        {
-            try
-            {
-                var gBkEncoding = Encoding.GetEncoding("GB2312"); // GBK 编码
-                var response = HttpClientSend(httpMethod: HttpMethod.Post,
-                    content: UTF8StrToGBKStr(parameters),
-                    requestUri: url,
-                    contentType: contentType,
-                    ignoreCertificate: false,
-                    encoding: gBkEncoding);
-
-                LogInformationProxy(url, parameters, response, transId);
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                LogInformationProxy(url, parameters, ex.Message, transId);
-                throw;
-            }
-
         }
 
         protected string ToMD5(string encodeStr)
