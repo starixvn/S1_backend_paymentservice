@@ -329,18 +329,19 @@ namespace Payment.BigPayz
 
         public string FetchTransId(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> payResource)
         {
-            string result = "";
-            //QR callback
-            if (formData.Count == 0)
-            {
-                var data = FromJson<DepositCallbackRequest>(bodyContent);
-                result = data.RefId;
-            }else//bank transfer callback
-            {
-                result = formData["RefId"];
-            }
+            string refId;
             
-            return result;
+            if (formData is { Count: > 0 })
+            {
+                formData.TryGetValue("RefId", out refId);
+            }
+            else
+            {
+                var data = FromJson<Dictionary<string, string>>(bodyContent);
+                data.TryGetValue("RefId", out refId);
+            }
+
+            return refId;
         }
 
         #endregion
