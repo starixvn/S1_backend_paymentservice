@@ -485,6 +485,53 @@ namespace PaymentService.Controllers
             return BadRequest(new { statusCode, message });
         }
 
+        [Route("YFBPay/{status}/order/create")]
+        public IActionResult YFBPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            var statusCode = isSuccess ? 200 : 999;
+            var code = isSuccess ? "0" : "-1";
+            var text = isSuccess ? "OK" : "NOT OK";
+
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    code,
+                    text,
+                    tradeNo = DateTime.Now.ToString("yyyyMMddHHmmss"),
+                    targetUrl = "http://www.google.com"
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { code, text });
+        }
+
+        [Route("YFBPay/{status}/payout/create")]
+        public IActionResult YFBPayCreditResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            var statusCode = isSuccess ? 200 : 999;
+            var code = isSuccess ? "0" : "-1";
+            var text = isSuccess ? "OK" : "NOT OK";
+
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    code,
+                    text,
+                    tradeNo = DateTime.Now.ToString("yyyyMMddHHmmss")
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { code, text });
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
