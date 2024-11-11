@@ -21,16 +21,6 @@ namespace Payment.YFBPay
                 { "CANCELLED", TransStatus.Fail }
             };
 
-        private static Dictionary<string, string> CurrencyMap =>
-            new()
-            {
-                { "4", "THB" },
-                { "51", "VND" }
-            };
-
-        public static string GetPayCurrency(string currencyId)
-            => CurrencyMap.GetValueOrDefault(currencyId, string.Empty);
-
         public static TransStatus GetDepositTransStatus(string status)
             => DepositStatusMap.GetValueOrDefault(status.ToUpper(), TransStatus.Pending);
 

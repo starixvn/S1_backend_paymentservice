@@ -16,12 +16,4 @@ namespace Payment.YFBPay
         [JsonProperty("targetUrl")] public string TargetUrl { get; set; }
         [JsonProperty("tradeNo")] public string TradeNo { get; set; }
     }
-
-    internal class Setting
-    {
-        public string Key { get; set; }
-        public string AppSecret { get; set; }
-        public string MerchantNo { get; set; }
-        public string Host { get; set; }
-    }
 }

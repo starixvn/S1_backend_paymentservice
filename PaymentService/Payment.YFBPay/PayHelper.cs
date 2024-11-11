@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -27,12 +26,16 @@ namespace Payment.YFBPay
         {
             try
             {
-                var setting = GetSetting(inputs);
+                var currency = int.Parse(inputs["CurrencyId"]);
+                var merchantNo = inputs[$"{currency}_MerchantNo"];
+                var key = inputs[$"{currency}_Key"];
+                var host = inputs[$"{currency}_Host"];
+                var appSecret = inputs[$"{currency}_AppSecret"];
                 var time = new DateTimeOffset(DateTime.Now);
                 
                 var req = new Dictionary<string, string>
                 {
-                    { "merchantNo", setting.MerchantNo },
+                    { "merchantNo", merchantNo },
                     { "orderNo", inputs["TransID"] },
                     { "userNo", inputs["CustId"] },
                     { "amount", decimal.Parse(inputs["Amount"]).ToString("F2") },
@@ -43,12 +46,12 @@ namespace Payment.YFBPay
                     { "time", time.ToUnixTimeSeconds().ToString() }
                 };
                 // above properties are specific for sign use
-                req.Add("sign", GetSign(req, setting.Key));
+                req.Add("sign", GetSign(req, key));
                 req.Add("channelNo", inputs["PayCode"]);
                 req.Add("payeeName", inputs["CustId"]);
-                req.Add("appSecret", setting.AppSecret);
+                req.Add("appSecret", appSecret);
 
-                var apiUrl = $"{setting.Host.TrimEnd('/')}{Path.Deposit}";
+                var apiUrl = $"{host.TrimEnd('/')}{Path.Deposit}";
                 var res = CreateOrder(apiUrl, req);
                 var result = new DepositResult
                 {
@@ -75,9 +78,8 @@ namespace Payment.YFBPay
             Dictionary<string, string> headers,
             Dictionary<string, string> payResource)
         {
-            var payCurrency = Definition.GetPayCurrency(payResource["CurrencyId"]);
-            payResource.Add("PayCurrencyId", payCurrency);
-            var setting = GetSetting(payResource);
+            var currency = payResource["CurrencyId"];
+            var key = payResource[$"{currency}_Key"];
 
             var checkSignData = new Dictionary<string, string>
             {
@@ -92,7 +94,7 @@ namespace Payment.YFBPay
                 { "userNo", formData["userNo"] }
             };
 
-            if (!ValidateSign(checkSignData, formData["sign"], setting.Key))
+            if (!ValidateSign(checkSignData, formData["sign"], key))
             {
                 return new NotifyDepositResult
                 {
@@ -122,13 +124,18 @@ namespace Payment.YFBPay
         {
             try
             {
-                var setting = GetSetting(inputs);
+                var currency = int.Parse(inputs["CurrencyId"]);
+                var merchantNo = inputs[$"{currency}_MerchantNo"];
+                var key = inputs[$"{currency}_Key"];
+                var host = inputs[$"{currency}_Host"];
+                var appSecret = inputs[$"{currency}_AppSecret"];
+
                 var time = new DateTimeOffset(DateTime.Now);
                 var isInr = inputs["PayCurrencyId"].Equals("inr", StringComparison.OrdinalIgnoreCase);
 
                 var req = new Dictionary<string, string>
                 {
-                    { "merchantNo", setting.MerchantNo },
+                    { "merchantNo", merchantNo },
                     { "orderNo", inputs["TransID"] },
                     { "amount", double.Parse(inputs["Amount"]).ToString("F0") },
                     { "name", inputs["AccountName"] },
@@ -142,12 +149,12 @@ namespace Payment.YFBPay
                     { "time", time.ToUnixTimeSeconds().ToString() }
                 };
                 // above properties are specific for sign use
-                req.Add("sign", GetSign(req, setting.Key));
+                req.Add("sign", GetSign(req, key));
                 req.Add("bankBranch", isInr ? inputs["IFSCCode"] : "N/A");
                 req.Add("memo", string.Empty);
-                req.Add("appSecret", setting.AppSecret);
+                req.Add("appSecret", appSecret);
 
-                var apiUrl = $"{setting.Host.TrimEnd('/')}{Path.Withdrawal}";
+                var apiUrl = $"{host.TrimEnd('/')}{Path.Withdrawal}";
                 var res = CreatePayout(apiUrl, req);
 
                 var result = new WithdrawResult
@@ -169,9 +176,8 @@ namespace Payment.YFBPay
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
             Dictionary<string, string> payResource)
         {
-            var payCurrency = Definition.GetPayCurrency(payResource["CurrencyId"]);
-            payResource.Add("PayCurrencyId", payCurrency);
-            var setting = GetSetting(payResource);
+            var currency = payResource["CurrencyId"];
+            var key = payResource[$"{currency}_Key"];
 
             var checkSignData = new Dictionary<string, string>
             {
@@ -187,7 +193,7 @@ namespace Payment.YFBPay
                 { "tradeNo", formData["tradeNo"] }
             };
 
-            if (!ValidateSign(checkSignData, formData["sign"], setting.Key))
+            if (!ValidateSign(checkSignData, formData["sign"], key))
             {
                 return new NotifyWithdrawResult
                 {
@@ -286,25 +292,6 @@ namespace Payment.YFBPay
             }
 
             return response;
-        }
-
-        private Setting GetSetting(Dictionary<string, string> inputs)
-        {
-            var payCurrency = inputs["PayCurrencyId"];
-
-            if (!inputs.ContainsKey(payCurrency))
-            {
-                throw new CustomException($"YFBPay missing {payCurrency} setting.");
-            }
-
-            var setting = JsonConvert.DeserializeObject<Setting>(inputs[payCurrency]);
-
-            if (setting == null)
-            {
-                throw new CustomException($"YFBPay {payCurrency} setting is null.");
-            }
-
-            return setting;
         }
     }
 }
