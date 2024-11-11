@@ -56,10 +56,13 @@ namespace PaymentService.Service.Library
         /// </summary>
         public string GetClientIP(HttpContext httpContext)
         {
-            var headerNames = new[] { "X-Forwarded-For", "HTTP_X_FORWARDED_FOR", "HTTP_INCAP_CLIENT_IP", "HTTP_TRUE_CLIENT_IP", "HTTP_X_REAL_IP", "REMOTE_ADDR" };
+            var headerNames = new[] { "X-Forwarded-For",
+                "HTTP_X_FORWARDED_FOR", "HTTP_INCAP_CLIENT_IP",
+                "HTTP_TRUE_CLIENT_IP", "HTTP_X_REAL_IP", "REMOTE_ADDR" };
 
             foreach (var header in headerNames)
             {
+                _logger.LogInformation($"header={header}, {httpContext.Request.Headers.ContainsKey(header)}");
                 if (httpContext.Request.Headers.ContainsKey(header))
                 {
                     string sServerVariables = httpContext.Request.Headers[header];
