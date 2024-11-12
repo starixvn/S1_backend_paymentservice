@@ -62,7 +62,20 @@ namespace PaymentService.Service.Library
 
             foreach (var header in headerNames)
             {
-                _logger.LogInformation($"header={header}, {httpContext.Request.Headers.ContainsKey(header)}");
+                _logger.LogInformation($"Liam Test1 header={header}, {httpContext.Request.Headers.ContainsKey(header)}");
+                _logger.LogInformation($"Liam Test2 header={header}, {httpContext.Request.Headers[header]}");
+                if (httpContext.Request.Headers.ContainsKey(header))
+                {
+                    string sServerVariables = httpContext.Request.Headers[header];
+                    var ip = GetIPAddress(sServerVariables.Split(','));
+
+                    _logger.LogInformation($"Liam Test3 header={header}, ip={ip}");
+                }
+            }
+
+            foreach (var header in headerNames)
+            {
+              //  _logger.LogInformation($"header={header}, {httpContext.Request.Headers.ContainsKey(header)}");
                 if (httpContext.Request.Headers.ContainsKey(header))
                 {
                     string sServerVariables = httpContext.Request.Headers[header];
