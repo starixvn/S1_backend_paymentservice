@@ -8,7 +8,7 @@ using PaymentCore.Models.Result;
 
 namespace Payment.VaderPay
 {
-    class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
+    public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     {
         private readonly ILogger<PayHelper> _logger;
         private readonly IFlurlHttpHelper _httpHelper;
@@ -53,11 +53,14 @@ namespace Payment.VaderPay
 
             try
             {
+                if (formData == null || formData.Count == 0)
+                    formData = FromJson<Dictionary<string, string>>(bodyContent);
+                
                 var info = type switch
                 {
                     "bank" => new DepositCallbackInfo
                     {
-                        VerifyStr = $"{formData["transaction_id"]}{formData["status"]}{formData["Currency"]}{formData["created_at"]}",
+                        VerifyStr = $"{formData["transaction"]}{formData["status"]}{formData["Currency"]}{formData["Amount"]}{formData["created_at"]}",
                         VerifyTarget = formData["signature2"],
                         Status = formData["status"],
                         ActualAmount = formData["Amount"]
@@ -68,7 +71,7 @@ namespace Payment.VaderPay
                         VerifyStr = $"{formData["InvoiceNo"]}{formData["ReceiverBank"]}{formData["ReceiverAccount"]}" +
                                     $"{formData["Currency"]}{formData["Amount"]}{formData["PaymentDate"]}",
                         VerifyTarget = formData["Signature"],
-                        Status = formData["status"],
+                        Status = formData["Status"],
                         ActualAmount = formData["Amount"]
                     },
                     _ => throw new CustomException("not support type=" + type)
