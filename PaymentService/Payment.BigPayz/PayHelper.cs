@@ -33,12 +33,12 @@ namespace Payment.BigPayz
                 {
                     "bank" => DepositBank(inputs, key, merchantId),
                     "qr" => DepositQr(inputs, key, merchantId),
-                    _ => new DepositResult(false, "-1", "VaderPay service not support type=" + type)
+                    _ => new DepositResult(false, "-1", "BigPayz service not support type=" + type)
                 };
             }
             catch (CustomException ex)
             {
-                _logger.LogInformation("VaderPay creat order failed: " + ex.Message);
+                _logger.LogInformation("BigPayz creat order failed: " + ex.Message);
 
                 return new DepositResult(false, ex.Code, ex.Message);
             }
@@ -161,7 +161,7 @@ namespace Payment.BigPayz
             }
             catch (CustomException ex)
             {
-                _logger.LogInformation("VaderPay creat payout failed: " + ex.Message);
+                _logger.LogInformation("BigPayz creat payout failed: " + ex.Message);
                 
                 return new WithdrawResult
                 {
