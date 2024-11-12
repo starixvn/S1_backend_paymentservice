@@ -130,9 +130,9 @@ namespace Payment.VaderPay
                 if (payCurrency == "INR")
                     req.Add("ifsc", inputs["IFSCCode"]);
             
-                var str = $"{inputs["merchant_code"]}{inputs["ref_id"]}{inputs["player_username"]}{inputs["player_ip"]}" +
-                          $"{inputs["currency_code"]}{inputs["amount"]}{inputs["bank_code"]}{inputs["beneficiary_account"]}" +
-                          $"{inputs["beneficiary_name"]}";
+                var str = $"{req["merchant_code"]}{req["ref_id"]}{req["player_username"]}{req["player_ip"]}" +
+                          $"{req["currency_code"]}{req["amount"]}{req["bank_code"]}{req["beneficiary_account"]}" +
+                          $"{req["beneficiary_name"]}";
 
                 req.Add("hash", GetSign(str, key));
 
