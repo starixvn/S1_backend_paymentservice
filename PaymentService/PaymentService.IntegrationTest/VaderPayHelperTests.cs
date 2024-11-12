@@ -88,34 +88,41 @@ public class VaderPayHelperTests
 
         Assert.AreEqual(expected, actual);
     }
-    /*
+    
     [Test]
     public void PayoutCallbackSignTest()
     {
         var testFormData = new Dictionary<string, string>
         {
-            { "orderNo", "ICBC2220516124055745b46700" },
-            { "merchantOrderId", "819273559624282180" },
-            { "merchantNo", "666666" },
-            { "orderStatus", "1" },
-            { "payTypeId", "912" },
-            { "orderAmount", "288.12" },
-            { "paidAmount", "1.2" },
-            { "completeTime", "yyyy-MM-dd HH:mm:ss" },
-            { "sign", "e9e19805e7c462d93859f1ad59492e1d" }
+            { "InvoiceNo", "079-MY01-317-24-304" },
+            { "BeneficiaryAccount", "5566556622334455" },
+            { "BeneficiaryBankCode", "AMBB" },
+            { "BeneficiaryName", "stoneYan" },
+            { "ActualBeneficiaryName", "" },
+            { "SubmissionDate", "11/12/2024 3:41:24 PM" },
+            { "Status", "3" },
+            { "StatusMessage", "Approved" },
+            { "Reference", "-" },
+            { "MerchantCode", "vdptestnova88my" },
+            { "RefId", "WD138294" },
+            { "Currency", "MYR" },
+            { "Amount", "50.0" },
+            { "PaymentDate", "11/12/2024 3:42:28 PM" },
+            { "Signature", "fd467e1624ba6cf40adc9acec0de71c50676e62448f14ed81599106bafa2b254" }
         };
         
         var testInputData = new Dictionary<string, string>
         {
-            { "Key", "2rk9b1trxwfzohku" }
+            { "TransId", "WD138294" },
+            { "MYR_key", "0By11KhPMwbXVJPOvZ5nNz2MVviXa1wiGI/HwUWhr2k=" },
         };
 
-        var expected = $"orderStatus={testFormData["orderStatus"]}, completeTime={testFormData["completeTime"]}";
+        var expected = $"Status={testFormData["Status"]}, PaymentDate={testFormData["PaymentDate"]}";
         
         var actual = _payHelper
             .CallBackCredit(testFormData, string.Empty, null!, testInputData)
             .Message;
 
         Assert.AreEqual(expected, actual);
-    }*/
+    }
 }

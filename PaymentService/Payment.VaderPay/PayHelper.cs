@@ -167,8 +167,8 @@ namespace Payment.VaderPay
         
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var depositInfo = FromJson<DepositInfo>(payResource["DepositInfo"]);
-            var key = payResource[$"{depositInfo.PayCurrencyId}_key"];
+            var currency = formData["Currency"];
+            var key = payResource[$"{currency}_key"];
             var transId = payResource["TransId"];
             
             var str = $"{formData["InvoiceNo"]}{formData["Status"]}{formData["Currency"]}{formData["Amount"]}{formData["PaymentDate"]}";
