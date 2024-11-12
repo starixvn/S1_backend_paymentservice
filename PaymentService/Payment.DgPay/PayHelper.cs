@@ -37,7 +37,7 @@ namespace Payment.DgPay
                     {"orderId", inputs["TransID"]},
                     {"providerId", providerId},
                     {"providerType", providerType},
-                    {"currency", inputs["payCurrencyId"] },
+                    {"currency", inputs["PayCurrencyId"] },
                     {"amount ", inputs["Amount"]},
                     {"reqDateTime", DateTimeOffset.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")},
                     {"opCode", inputs["MerchantCode"]}
@@ -140,7 +140,7 @@ namespace Payment.DgPay
                     {"orderId", inputs["TransID"]},
                     {"providerId", providerId},
                     {"providerType", providerType},
-                    {"currency", inputs["payCurrencyId"] },
+                    {"currency", inputs["PayCurrencyId"] },
                     {"amount ", inputs["Amount"]},
                     {"reqDateTime", DateTimeOffset.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")},
                     {"opCode", inputs["MerchantCode"]}
