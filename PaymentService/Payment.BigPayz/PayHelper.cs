@@ -228,7 +228,6 @@ namespace Payment.BigPayz
         
         private DepositResult DepositBank(IDictionary<string, string> inputs, string key, string merchantId)
         {
-            var method = GetPayMethod(inputs["PayCode"]);
             var req = new Dictionary<string, string>
             {
                 { "MerchantCode", merchantId },
@@ -246,7 +245,7 @@ namespace Payment.BigPayz
             
             var resp = _httpHelper
                 .WithOAuthBearerToken(key)
-                .PostJson<Dictionary<string, string>, DepositBankResp>(inputs[$"{method}_url"], req);
+                .PostJson<Dictionary<string, string>, DepositBankResp>(inputs["bank_url"], req);
             
             if (!resp.StatusCode.IsSuccessStatus())
                 throw new CustomException($"Code={resp.StatusCode}, Msg={resp.Result.Message}");
