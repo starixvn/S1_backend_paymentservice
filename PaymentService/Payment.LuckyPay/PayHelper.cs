@@ -32,7 +32,7 @@ namespace Payment.LuckyPay
                 {
                     { "clientCode", input[$"{payCurrency}merchantNo"] },
                     { "chainName", "BANK" },
-                    { "coinUnit", input[payCurrency] },
+                    { "coinUnit", payCurrency },
                     { "clientNo", input["TransID"] },
                     { "requestTimestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
                 };
