@@ -406,7 +406,7 @@ public class DepositV2Controller : ControllerBase
                     _paymentBll.DepositSuccess(depositRequest, result);
                     var refreshDepositInfoData = _paymentBll.GetDepositRequest(transId);
                     #region 埋點
-                    if (depositRequest.SiteId is 1 or 2 or 3 && refreshDepositInfoData.Status == DepositStatus.Approved)
+                    if (depositRequest.SiteId > 0 && refreshDepositInfoData.Status == DepositStatus.Approved)
                     {
                         _ = Task.Run(() =>
                         {
