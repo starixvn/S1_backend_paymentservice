@@ -143,25 +143,25 @@ namespace Payment.BigPayz
 
                 req.Add("hash", GetSign(str, key));
 
-                var resp = _httpHelper
+                var (result, statusCode) = _httpHelper
                     .PostJson<Dictionary<string, string>, PayoutResp>(inputs["payout_url"], req);
                 
-                if (!resp.StatusCode.IsSuccessStatus())
-                    throw new CustomException($"Code={resp.StatusCode}");
+                if (!statusCode.IsSuccessStatus())
+                    throw new CustomException($"Code={statusCode}");
             
-                if (!Definition.SuccessCode.Equals(resp.Result.ErrorCode))
-                    throw new CustomException($"Code={resp.Result.ErrorCode}, Msg={resp.Result.ErrorMessage}");
+                if (!Definition.SuccessCode.Equals(result.ErrorCode))
+                    throw new CustomException($"Code={result.ErrorCode}, Msg={result.ErrorMessage}");
                 
                 return new WithdrawResult
                 {
                     Success = true,
                     WithdrawId = transId,
-                    Message = resp.Result.ThirdId
+                    Message = result.ThirdId
                 };
             }
             catch (CustomException ex)
             {
-                _logger.LogInformation("BigPayz creat payout failed: " + ex.Message);
+                _logger.LogInformation("BigPayz create payout failed: " + ex.Message);
                 
                 return new WithdrawResult
                 {
@@ -243,19 +243,19 @@ namespace Payment.BigPayz
             var str = $"{req["MerchantCode"]}{req["ItemID"]}{req["Currency"]}{req["Amount"]}";
             req.Add("Hash", GetSign(str, key));
             
-            var resp = _httpHelper
+            var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(key)
                 .PostJson<Dictionary<string, string>, DepositBankResp>(inputs["bank_url"], req);
             
-            if (!resp.StatusCode.IsSuccessStatus())
-                throw new CustomException($"Code={resp.StatusCode}, Msg={resp.Result.Message}");
+            if (!statusCode.IsSuccessStatus())
+                throw new CustomException($"Code={statusCode}, Msg={result.Message}");
 
             return new DepositResult
             {
                 Success = true,
                 ErrorCode = "0",
-                ThirdId = resp.Result.ThirdId,
-                Url = resp.Result.RedirectTo.Replace("redirectlink=", "")
+                ThirdId = result.ThirdId,
+                Url = result.RedirectTo.Replace("redirectlink=", "")
             };
         }
         
@@ -275,22 +275,22 @@ namespace Payment.BigPayz
             var str = $"{req["merchant_code"]}{req["ref_id"]}{req["player_username"]}{req["player_ip"]}{req["currency_code"]}{req["amount"]}{req["client_url"]}";
             req.Add("hash", GetSign(str, key));
             
-            var resp = _httpHelper
+            var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(key)
                 .PostJson<Dictionary<string, string>, DepositQrResp>(inputs[$"{method}_url"], req);
             
-            if (!resp.StatusCode.IsSuccessStatus())
-                throw new CustomException($"Code={resp.StatusCode}");
+            if (!statusCode.IsSuccessStatus())
+                throw new CustomException($"Code={statusCode}");
             
-            if (!Definition.SuccessCode.Equals(resp.Result.ErrorCode))
-                throw new CustomException($"Code={resp.Result.ErrorCode}, Msg={resp.Result.Message}");
+            if (!Definition.SuccessCode.Equals(result.ErrorCode))
+                throw new CustomException($"Code={result.ErrorCode}, Msg={result.Message}");
 
             return new DepositResult
             {
                 Success = true,
                 ErrorCode = "0",
-                ThirdId = resp.Result.ThirdId,
-                Url = resp.Result.RedirectTo
+                ThirdId = result.ThirdId,
+                Url = result.RedirectTo
             };
         }
         
