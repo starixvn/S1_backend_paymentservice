@@ -98,7 +98,6 @@ namespace Payment.DgPay
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var depositId = formData["orderId"];
             var amount = decimal.Parse(formData["amount"]);
             var status = formData["status"];
 
@@ -112,9 +111,9 @@ namespace Payment.DgPay
 
             return new NotifyDepositResult
             {
-                DepositId = depositId,
+                DepositId = payResource["TransID"],
                 ActualAmount = amount,
-                ThirdId = depositId,
+                ThirdId = formData["orderId"],
                 Comment = status,
                 TransStatus = transStatus,
                 Response = ToJson(responseData)
@@ -202,7 +201,6 @@ namespace Payment.DgPay
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var withdrawalId = formData["orderId"];
             var status = formData["status"];
 
             var responseData = new
@@ -213,8 +211,8 @@ namespace Payment.DgPay
 
             return new NotifyWithdrawResult
             {
-                WithdrawId = withdrawalId,
-                ThirdId = withdrawalId,
+                WithdrawId = payResource["TransId"],
+                ThirdId = formData["orderId"],
                 TransStatus = Definition.GetTransStatus(status),
                 Response = ToJson(responseData)
             };
