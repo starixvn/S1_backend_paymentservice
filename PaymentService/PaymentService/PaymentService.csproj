@@ -34,6 +34,7 @@
     <ProjectReference Include="..\Payment.ComitPay\Payment.ComitPay.csproj" />
     <ProjectReference Include="..\Payment.CoPay\Payment.CoPay.csproj" />
     <ProjectReference Include="..\Payment.Coin2Pay\Payment.Coin2Pay.csproj" />
+    <ProjectReference Include="..\Payment.DgPay\Payment.DgPay.csproj" />
     <ProjectReference Include="..\Payment.DirePay\Payment.DirePay.csproj" />
     <ProjectReference Include="..\Payment.DoitnowPay\Payment.DoitnowPay.csproj" />
     <ProjectReference Include="..\Payment.DouDouPay\Payment.DouDouPay.csproj" />
@@ -45,6 +46,7 @@
     <ProjectReference Include="..\Payment.FPay\Payment.FPay.csproj" />
     <ProjectReference Include="..\Payment.FXBit\Payment.FXBit.csproj" />
     <ProjectReference Include="..\Payment.GlobalPay\Payment.GlobalPay.csproj" />
+    <ProjectReference Include="..\Payment.Golbal\Payment.Golbal.csproj" />
     <ProjectReference Include="..\Payment.GoPay\Payment.GoPay.csproj" />
     <ProjectReference Include="..\Payment.Help2Pay\Payment.Help2Pay.csproj" />
     <ProjectReference Include="..\Payment.HeroPay\Payment.HeroPay.csproj" />
