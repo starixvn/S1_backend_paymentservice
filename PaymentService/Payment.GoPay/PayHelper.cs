@@ -1,10 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using PaymentCore;
 using PaymentCore.Exceptions;
-using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 

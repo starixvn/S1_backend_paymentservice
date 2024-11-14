@@ -29,6 +29,8 @@
     <ProjectReference Include="..\Payment.NAP3SPay\Payment.NAP3SPay.csproj" />
     <ProjectReference Include="..\Payment.RapidPay\Payment.RapidPay.csproj" />
     <ProjectReference Include="..\Payment.QuickPay\Payment.QuickPay.csproj" />
+    <ProjectReference Include="..\Payment.VaderPay\Payment.VaderPay.csproj" />
+
   </ItemGroup>
 
 </Project>
