@@ -44,12 +44,12 @@ namespace Payment.LuckyPay
                 req.Add("hrefbackurl", input["ReturnUrl"]);
                 req.Add("toPayQr", "0");
                 
-                var res = CreateOrder(host, req);
-
                 if (payCurrency.Equals("MYR"))
                 {
                     req.Add("channel", input["PayCode"]);
                 }
+                
+                var res = CreateOrder(host, req);
 
                 var response = new DepositResult
                 {
