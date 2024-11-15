@@ -46,6 +46,11 @@ namespace Payment.LuckyPay
                 
                 var res = CreateOrder(host, req);
 
+                if (payCurrency.Equals("MYR"))
+                {
+                    req.Add("channel", input["PayCode"]);
+                }
+
                 var response = new DepositResult
                 {
                     Success = true,
