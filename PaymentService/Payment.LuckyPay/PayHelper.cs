@@ -249,7 +249,7 @@ namespace Payment.LuckyPay
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
         {
             var str = string.Join("&", param
-                    .Select(x => $"{x.Value}")) + $"&{key}";
+                    .Select(x => $"{x.Value}")) + key;
 
             _logger.LogInformation("str: " + str);
             var sign = ToMD5(str).ToLower();
