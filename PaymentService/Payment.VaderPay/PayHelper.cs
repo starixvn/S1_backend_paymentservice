@@ -72,7 +72,7 @@ namespace Payment.VaderPay
                                     $"{formData["Currency"]}{formData["Amount"]}{formData["PaymentDate"]}",
                         VerifyTarget = formData["Signature"],
                         Status = formData["Status"],
-                        ActualAmount = formData["Amount"]
+                        ActualAmount = formData["OriginalAmount"]
                     },
                     _ => throw new CustomException("not support type=" + type)
                 };
