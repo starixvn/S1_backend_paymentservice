@@ -34,7 +34,7 @@ namespace Payment.LuckyPay
                     { "chainName", "BANK" },
                     { "coinUnit", payCurrency },
                     { "clientNo", input["TransID"] },
-                    { "requestTimestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
+                    { "requestTimestamp", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString() }
                 };
 
                 req.Add("sign", GetSign(req, input[$"{payCurrency}key"]));
@@ -123,7 +123,7 @@ namespace Payment.LuckyPay
                     { "chainName", "BANK" },
                     { "coinUnit", payCurrency },
                     { "clientNo", transId },
-                    { "requestTimestamp", DateTimeOffset.Now.ToUnixTimeSeconds().ToString() }
+                    { "requestTimestamp", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString() }
                 };
 
                 req.Add("sign", GetSign(req, inputs[$"{payCurrency}key"]));
