@@ -258,6 +258,7 @@ namespace PaymentService.Controllers
         }
 
         [Route("OOPay/{status}/shou/new")]
+        [Route("OOPay/{status}/order/create")]
         public IActionResult OOPayDepositResponse(string status)
         {
             if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
@@ -279,6 +280,7 @@ namespace PaymentService.Controllers
         }
 
         [Route("OOPay/{status}/fu/new")]
+        [Route("OOPay/{status}/payout/create")]
         public IActionResult OOPayWithdrawalResponse(string status)
         {
             if (status.Equals("success", StringComparison.OrdinalIgnoreCase))
