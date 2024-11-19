@@ -29,7 +29,9 @@ namespace Payment.OOPay
             var payCurrencyId = input["PayCurrencyId"];
             var apiHost = input[$"{payCurrencyId}Host"];
             var transId = input["TransID"];
-            var payCode = input["PayCode"];
+            var payCode = input["PayCode"]; 
+            var requestAmount = decimal.Parse(input["Amount"]).ToString("F2");
+
             var (method, code) = GetMethod(payCode);
 
             try
@@ -38,23 +40,41 @@ namespace Payment.OOPay
                 {
                     { "merchantNo", input[$"{payCurrencyId}MerchantNo"] },
                     { "orderNo", transId },
-                    { "userNo", "" },
-                    { "userName", "" },
-                    { "channelNo", method },
-                    { "amount", input["Amount"] },
-                    { "realName", "" },
-                    { "bankCode", string.IsNullOrEmpty(code) ? input["BankCode"] : code },
-                    { "extra", payCurrencyId },
-                    { "notifyUrl", input["CallBackUrl"] },
+                    { "userNo", input["CustId"] },
+                    { "amount", requestAmount },
                     { "time", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString() },
-                    { "appSecret", input[$"{payCurrencyId}AppSecret"] }
+                    { "extra", payCurrencyId },
+                    { "notifyUrl", input["CallBackUrl"] }
                 };
 
-                var sign = GetPostSign(req, input[$"{payCurrencyId}SecretKey"]);
-                req.Add("sign", sign);
+                if (payCurrencyId.Equals("INR", StringComparison.OrdinalIgnoreCase))
+                {
+                    req.Add("discount", "");
+                    req.Add("datetime", DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    req.Add("userName", input["CustId"]);
+                    req.Add("channelNo", method);
+                    req.Add("payeeName", input["CustId"]);
+                    req.Add("returnUrl", input["ReturnUrl"]);
+                    req.Add("appSecret", input[$"{payCurrencyId}AppSecret"]);
 
+                    var sign = GetInrDepositPostSign(req, input[$"{payCurrencyId}SecretKey"]);
+                    req.Add("sign", sign);
+                }
+                else
+                {
+                    req.Add("userName", "");
+                    req.Add("channelNo", method);
+                    req.Add("realName", "");
+                    req.Add("bankCode", string.IsNullOrEmpty(code) ? input["BankCode"] : code);
+                    req.Add("appSecret", input[$"{payCurrencyId}AppSecret"]);
+
+                    var sign = GetPostSign(req, input[$"{payCurrencyId}SecretKey"]);
+                    req.Add("sign", sign);
+                }
+
+                var url = $"{apiHost}{Definition.GetDepositPath(payCurrencyId)}";
                 var (response, statusCode) = _httpHelper
-                    .PostJson<Dictionary<string, string>, DepositResponse>($"{apiHost}{Path.Deposit}", req);
+                    .PostJson<Dictionary<string, string>, DepositResponse>(url, req);
 
                 if (!statusCode.IsSuccessStatus())
                     throw new CustomException($"HttpStatus: {statusCode}", ((int)statusCode).ToString());
@@ -100,6 +120,11 @@ namespace Payment.OOPay
                 { "extra", payCurrencyId }
             };
 
+            if (payCurrencyId.Equals("INR", StringComparison.OrdinalIgnoreCase))
+            {
+                receiveModel.Add("discount", formData["discount"]);
+            }
+
             var sign = formData["sign"];
             if (!VerifySign(sign, receiveModel, input[$"{payCurrencyId}SecretKey"]))
             {
@@ -144,26 +169,44 @@ namespace Payment.OOPay
 
             try
             {
+                var requestAmount = decimal.Parse(inputs["Amount"]).ToString("F0");
                 var req = new Dictionary<string, string>
                 {
                     { "merchantNo", inputs[$"{payCurrencyId}MerchantNo"] },
                     { "orderNo", transId },
-                    { "amount", inputs["Amount"] },
+                    { "amount", requestAmount },
                     { "name", inputs["AccountName"] },
-                    { "bankName", inputs["BankCode"] },
                     { "bankAccount", inputs["AccountNo"] },
                     { "notifyUrl", inputs["CallBackUrl"] },
                     { "extra", payCurrencyId },
                     { "time", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString() },
-                    { "appSecret", inputs[$"{payCurrencyId}AppSecret"] }
                 };
 
-                var sign = GetPostSign(req, inputs[$"{payCurrencyId}SecretKey"]);
-                req.Add("reverseUrl", inputs["CallBackUrl"]);
-                req.Add("sign", sign);
+                if (payCurrencyId.Equals("INR",StringComparison.OrdinalIgnoreCase))
+                {
+                    req.Add("bankName", inputs["BankName"]);
+                    req.Add("mobile", "");
+                    req.Add("datetime", DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    req.Add("reverseUrl", inputs["CallBackUrl"]);
+                    req.Add("bankBranch", inputs["IFSCCode"]);
+                    req.Add("appSecret", inputs[$"{payCurrencyId}AppSecret"]);
 
+                    var sign = GetInrWithdrawalPostSign(req, inputs[$"{payCurrencyId}SecretKey"]);
+                    req.Add("sign", sign);
+                }
+                else
+                {
+                    req.Add("bankName", inputs["BankCode"]);
+                    req.Add("appSecret", inputs[$"{payCurrencyId}AppSecret"]);
+                    req.Add("reverseUrl", inputs["CallBackUrl"]);
+
+                    var sign = GetPostSign(req, inputs[$"{payCurrencyId}SecretKey"]);
+                    req.Add("sign", sign);
+                }
+
+                var url = $"{apiHost}{Definition.GetWithdrawalPath(payCurrencyId)}";
                 var (response, statusCode) = _httpHelper
-                    .PostJson<Dictionary<string, string>, WithdrawalResponse>($"{apiHost}{Path.Withdrawal}", req);
+                    .PostJson<Dictionary<string, string>, WithdrawalResponse>(url, req);
 
                 if (!statusCode.IsSuccessStatus())
                     throw new CustomException($"HttpStatus: {statusCode}", ((int)statusCode).ToString());
@@ -214,6 +257,11 @@ namespace Payment.OOPay
                 { "extra", payCurrencyId }
             };
 
+            if (payCurrencyId.Equals("INR",StringComparison.OrdinalIgnoreCase))
+            {
+                receiveModel.Add("mobile", formData["mobile"]);
+            }
+
             var sign = formData["sign"];
             if (!VerifySign(sign, receiveModel, payResource[$"{payCurrencyId}SecretKey"]))
             {
@@ -247,19 +295,60 @@ namespace Payment.OOPay
             return (result[0], result.Length > 1 ? result[1] : string.Empty);
         }
 
-        internal string GetPostSign(Dictionary<string, string> param, string secretKey)
+        internal string GetInrDepositPostSign(Dictionary<string, string> param, string secretKey)
         {
-            var sortedParameters = param.OrderBy(p => p.Key, StringComparer.Ordinal);
+            var sortedParameters = param
+                .Where(x => !x.Key.Equals("userName", StringComparison.OrdinalIgnoreCase))
+                .Where(x => !x.Key.Equals("channelNo", StringComparison.OrdinalIgnoreCase))
+                .Where(x => !x.Key.Equals("payeeName", StringComparison.OrdinalIgnoreCase))
+                .Where(x => !x.Key.Equals("amountBeforeFixed", StringComparison.OrdinalIgnoreCase))
+                .Where(x => !x.Key.Equals("returnUrl", StringComparison.OrdinalIgnoreCase))
+                .Where(x => !x.Key.Equals("appSecret", StringComparison.OrdinalIgnoreCase))
+                .Where(x => !x.Key.Equals("bankName", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(p => p.Key, StringComparer.Ordinal);
             SignConcatSourceString = string.Join("&", sortedParameters.Select(x => $"{x.Key}={x.Value}").ToArray());
             var encodeStr = $"{SignConcatSourceString}{secretKey}";
             _logger.LogInformation(encodeStr);
 
+            var sign = Encrypt(encodeStr);
+            return sign;
+        }
+
+        internal string GetInrWithdrawalPostSign(Dictionary<string, string> param, string secretKey)
+        {
+            var sortedParameters = param
+                .Where(x => !x.Key.Equals("bankBranch", StringComparison.OrdinalIgnoreCase))
+                .Where(x => !x.Key.Equals("memo", StringComparison.OrdinalIgnoreCase))
+                .Where(x => !x.Key.Equals("appSecret", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(p => p.Key, StringComparer.Ordinal);
+            SignConcatSourceString = string.Join("&", sortedParameters.Select(x => $"{x.Key}={x.Value}").ToArray());
+            var encodeStr = $"{SignConcatSourceString}{secretKey}";
+            _logger.LogInformation(encodeStr);
+
+            var sign = Encrypt(encodeStr);
+            return sign;
+        }
+
+        internal string GetPostSign(Dictionary<string, string> param, string secretKey)
+        {
+            var sortedParameters = param
+                .Where(x => !x.Key.Equals("reverseUrl", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(p => p.Key, StringComparer.Ordinal);
+            SignConcatSourceString = string.Join("&", sortedParameters.Select(x => $"{x.Key}={x.Value}").ToArray());
+            var encodeStr = $"{SignConcatSourceString}{secretKey}";
+            _logger.LogInformation(encodeStr);
+
+            var sign = Encrypt(encodeStr);
+            return sign;
+        }
+
+        private string Encrypt(string encodeStr)
+        {
             var signSha256 = ToHMACSHA256(encodeStr);
             _logger.LogInformation(signSha256);
 
             var sign = ToMD5(signSha256).ToUpper();
             _logger.LogInformation(sign);
-
             return sign;
         }
 
