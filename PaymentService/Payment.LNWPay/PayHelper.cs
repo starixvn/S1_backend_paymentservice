@@ -5,6 +5,7 @@ using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.LNWPay;
@@ -178,10 +179,12 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     
     private IDepositData CreateDepositAuto(IDictionary<string, string> input)
     {
-        var extra = new Dictionary<string, string>
+        var extra = new Dictionary<string, string>();
+        
+        if (input["PayCurrencyId"].Equals(CurrencyEnum.THB.ToString()))
         {
-            { "clientAccount", input["PayAccount"] }
-        };
+            extra.Add("clientAccount", input["PayAccount"]);
+        }
         
         return CreateDeposit<DepositDataAuto>(input, Path.CreateDepositAuto, extra);
     }
