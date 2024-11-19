@@ -23,20 +23,21 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         {
             {"Auto", CreateDepositAuto},
             {"QR", CreateDepositQr},
-            {"True", CreateDepositTrue}
+            {"True", CreateDepositTrue},
+            {"PAYWAY", CreateDepositPayway}
         };
     }
     
     public override DepositResult Debit(Dictionary<string, string> inputs)
     {
-        var payCode = inputs["PayCode"];
+        var (method, _) = SplitPayCode(inputs["PayCode"]);
         
         try
         {
-            if (!_depositMapper.ContainsKey(payCode))
-                throw new CustomException($"Not support deposit type. PayCode={payCode}");
+            if (!_depositMapper.ContainsKey(method))
+                throw new CustomException($"Not support deposit type. Method={method}");
 
-            var resp = _depositMapper[payCode].Invoke(inputs);
+            var resp = _depositMapper[method].Invoke(inputs);
 
             return new DepositResult
             {
@@ -48,7 +49,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         }
         catch (CustomException ex)
         {
-            _logger.LogInformation($"Deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+            _logger.LogInformation($"LNWPay create deposit failed, Code:{ex.Code}, Message:{ex.Message}");
 
             return new DepositResult(false, ex.Code, ex.Message);
         }
@@ -69,8 +70,9 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     
     public override WithdrawResult Credit(Dictionary<string, string> input)
     {
-        var payCode = input["PayCode"];
-        var apiUrl = input[$"{payCode}ApiUrl"];
+        var (method, type) = SplitPayCode(input["PayCode"]);
+        var currencyId = input["CurrencyId"];
+        var apiHost = input[$"{currencyId}_{method}ApiHost"];
         
         try
         {
@@ -87,7 +89,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         
             var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(authToken)
-                .PostJson<PayoutReq, PayResp<PayoutData>>(apiUrl + Path.CreatePayout, req);
+                .PostJson<PayoutReq, PayResp<PayoutData>>(apiHost + Path.CreatePayout, req);
 
             if (!statusCode.IsSuccessStatus())
                 throw new CustomException(
@@ -150,17 +152,18 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
 
     private string GetAuthToken(IDictionary<string, string> input)
     {
-        var payCode = input["PayCode"];
-        var apiUrl = input[$"{payCode}ApiUrl"];
-        var apiToken = input[$"{payCode}Token"];
+        var (method, type) = SplitPayCode(input["PayCode"]);
+        var currencyId = input["CurrencyId"];
+        var apiHost = input[$"{currencyId}_{method}ApiHost"];
+        var apiToken = input[$"{currencyId}_{method}Token"];
 
-        var str = $"{input["Prefix"]}:{apiToken}:{DateTimeOffset.Now:yyyyMMddHHmmss}";
+        var str = $"{input[$"{currencyId}_Prefix"]}:{apiToken}:{DateTimeOffset.Now:yyyyMMddHHmmss}";
         var token = ToBase64Encode(str);
         _logger.LogInformation("token orig str: " + str);
         
         var (result, statusCode) = _httpHelper
             .WithHeader("Authorization", "Basic " + token)
-            .PostJson<string, PayResp<AuthData>>(apiUrl + Path.Auth, string.Empty);
+            .PostJson<string, PayResp<AuthData>>(apiHost + Path.Auth, string.Empty);
 
         if (!statusCode.IsSuccessStatus())
             throw new CustomException(
@@ -181,34 +184,58 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     
     private IDepositData CreateDepositTrue(IDictionary<string, string> input)
         => CreateDeposit<DepositDataTrue>(input, Path.CreateDepositTrue);
+
+    private IDepositData CreateDepositPayway(IDictionary<string, string> input)
+    {
+        var (_, type) = SplitPayCode(input["PayCode"]);
+        var extra = new Dictionary<string, string>
+        {
+            { "paymentType", type }
+        };
+        
+        return CreateDeposit<DepositDataPayway>(input, Path.CreateDepositPayway, extra);
+    }
     
-    private IDepositData CreateDeposit<TResult>(IDictionary<string, string> input, string path)
+    private IDepositData CreateDeposit<TResult>(IDictionary<string, string> input, string path, IDictionary<string, string>? extra = null)
         where TResult: IDepositData
     {
-        var payCode = input["PayCode"];
-        var apiUrl = input[$"{payCode}ApiUrl"];
+        var (method, _) = SplitPayCode(input["PayCode"]);
+        var currencyId = input["CurrencyId"];
+        var apiHost = input[$"{currencyId}_{method}ApiHost"];
         
-        var req = new DepositReq
+        var req = new Dictionary<string, string>
         {
-            Amount = decimal.Parse(input["Amount"]),
-            ClientAccount = input["PayAccount"],
-            ClientAccountName = input["AccountName"],
-            TransId = input["TransID"]
+            { "requestTime", DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss") },
+            { "amount", input["Amount"] },
+            { "clientAccount", input["PayAccount"] },
+            { "clientAccountName", input["AccountName"] },
+            { "reference1", input["TransID"] }
         };
+
+        if (extra != null)
+        {
+            req.AddRange(extra);
+        }
         
         var authToken = GetAuthToken(input);
         
         var (result, statusCode) = _httpHelper
             .WithOAuthBearerToken(authToken)
-            .PostJson<DepositReq, PayResp<TResult>>(apiUrl + path, req);
+            .PostJson<Dictionary<string, string>, PayResp<TResult>>(apiHost + path, req);
 
         if (!statusCode.IsSuccessStatus())
-            throw new CustomException(
-                $"Create deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
+            throw new CustomException($"HttpStatus: {(int)statusCode} {statusCode}");
 
         if (!result.Status.Equals(Definition.SuccessStatus))
-            throw new CustomException("Create deposit failed, msg=" + result.Message);
+            throw new CustomException(result.Message);
 
         return result.Data;
+    }
+    
+    private static (string method, string type) SplitPayCode(string payCode)
+    {
+        var result = payCode.Split('_');
+        
+        return (result[0], result.Length > 1 ? result[1] : string.Empty);
     }
 }

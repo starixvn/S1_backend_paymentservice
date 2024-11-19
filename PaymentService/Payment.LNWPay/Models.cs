@@ -32,25 +32,6 @@ internal interface IDepositData
     public string ThirdId { get; set; }
 }
 
-internal class DepositReq
-{
-    [JsonProperty("requestTime")]
-    public string RequestTime
-        => DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss");
-    
-    [JsonProperty("amount")]
-    public decimal Amount { get; set; }
-    
-    [JsonProperty("clientAccount")]
-    public string ClientAccount { get; set; }
-    
-    [JsonProperty("clientAccountName")]
-    public string ClientAccountName { get; set; }
-    
-    [JsonProperty("reference1")]
-    public string TransId { get; set; }
-}
-
 internal class PayoutReq
 {
     [JsonProperty("requestTime")]
@@ -130,6 +111,18 @@ internal class DepositDataTrue : IDepositData
     public decimal Amount { get; set; }
     
     [JsonProperty("walletURL")]
+    public string Url { get; set; }
+    
+    [JsonProperty("requestId")]
+    public string ThirdId { get; set; }
+}
+
+internal class DepositDataPayway : IDepositData
+{
+    [JsonProperty("amount")]
+    public decimal Amount { get; set; }
+    
+    [JsonProperty("paymentUrl")]
     public string Url { get; set; }
     
     [JsonProperty("requestId")]
