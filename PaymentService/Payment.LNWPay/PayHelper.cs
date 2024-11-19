@@ -179,11 +179,14 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     
     private IDepositData CreateDepositAuto(IDictionary<string, string> input)
     {
-        var extra = new Dictionary<string, string>();
-        
-        if (input["PayCurrencyId"].Equals(CurrencyEnum.THB.ToString()))
+        var extra = new Dictionary<string, string>
         {
-            extra.Add("clientAccount", input["PayAccount"]);
+            { "clientAccount", input["PayAccount"] }
+        };
+        
+        if (int.Parse(input["CurrencyId"]) == (int)CurrencyEnum.KHUSD)
+        {
+            extra.Add("bankCode", input["BankCode"]);
         }
         
         return CreateDeposit<DepositDataAuto>(input, Path.CreateDepositAuto, extra);
