@@ -1,47 +1,42 @@
-﻿using System.Text.RegularExpressions;
-
-using PaymentService.Service.BLL;
-
-namespace PaymentService.Service.Library
+﻿namespace PaymentService.Service.Library
 {
+    using System;
+    using System.Text.RegularExpressions;
+
     public class Common
     {
-        private readonly ConfigBLL _configBll;
-        private readonly IWebHostEnvironment _environment;
-        private readonly ILogger<Common> _logger;
+        private readonly IWebHostEnvironment environment;
 
         public Common(IServiceProvider provider)
         {
-            _configBll = provider.GetRequiredService<ConfigBLL>();
-            _environment = provider.GetRequiredService<IWebHostEnvironment>();
-            _logger = provider.GetRequiredService<ILogger<Common>>();
+            environment = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
         public string GetEnv()
         {
-            switch (_environment.EnvironmentName)
+            switch (environment.EnvironmentName)
             {
                 case "Development":
-                case "Local":
+                case "LOCAL":
                     return "D";
 
-                case "Staging":
+                case "SIT":
                     return "S";
 
-                case "Production":
-                    return "P";
+                case "UAT":
+                    return "U";
 
-                case "QA":
-                    return "Q";
+                case "PROD":
+                    return "P";
 
                 default:
-                    return "P";
+                    return "D";
             }
         }
 
         public string IsTest()
         {
-            return _environment.EnvironmentName == "Production" ? "false" : "true";
+            return environment.EnvironmentName == "PROD" ? "false" : "true";
         }
 
         public decimal Floor(decimal d, int decimals)

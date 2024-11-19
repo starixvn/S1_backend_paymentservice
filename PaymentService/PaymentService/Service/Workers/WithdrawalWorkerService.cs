@@ -129,8 +129,9 @@ namespace PaymentService.Service.Workers
                 var dueTimeSpan = TimeSpan.FromSeconds(30);
 
                 if (_environment.IsDevelopment()
-                    || _environment.IsEnvironment("QA")
-                    || _environment.IsEnvironment("Local"))
+                    || _environment.IsEnvironment("UAT")
+                    || _environment.IsEnvironment("SIT")
+                    || _environment.IsEnvironment("LOCAL"))
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
