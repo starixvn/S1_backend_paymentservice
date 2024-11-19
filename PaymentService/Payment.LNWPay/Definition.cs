@@ -21,8 +21,7 @@ internal class Definition
 
 internal class Path
 {
-    public const string Auth = "/api/v1/service-request";
-    
+    public const string Auth = "/services/api/v1/service-request";
     public const string CreateDepositAuto = "/services/api/v1/account-request";
     public const string CreateDepositQr = "/services/api/v1/qrcode-request";
     public const string CreateDepositTrue = "/services/api/v1/wallet-request";
