@@ -24,6 +24,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
             {"Auto", CreateDepositAuto},
             {"QR", CreateDepositQr},
             {"True", CreateDepositTrue},
+            {"KHQR", CreateDepositKHQr},
             {"PAYWAY", CreateDepositPayway}
         };
     }
@@ -176,14 +177,35 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     }
     
     private IDepositData CreateDepositAuto(IDictionary<string, string> input)
-        => CreateDeposit<DepositDataAuto>(input, Path.CreateDepositAuto);
+    {
+        var extra = new Dictionary<string, string>
+        {
+            { "clientAccount", input["PayAccount"] }
+        };
+        
+        return CreateDeposit<DepositDataAuto>(input, Path.CreateDepositAuto, extra);
+    }
 
     
     private IDepositData CreateDepositQr(IDictionary<string, string> input)
-        => CreateDeposit<DepositDataQr>(input, Path.CreateDepositQr);
+    {
+        var extra = new Dictionary<string, string>
+        {
+            { "clientAccount", input["PayAccount"] }
+        };
+        
+        return CreateDeposit<DepositDataQr>(input, Path.CreateDepositQr, extra);
+    }
     
     private IDepositData CreateDepositTrue(IDictionary<string, string> input)
-        => CreateDeposit<DepositDataTrue>(input, Path.CreateDepositTrue);
+    {
+        var extra = new Dictionary<string, string>
+        {
+            { "clientAccount", input["PayAccount"] }
+        };
+        
+        return CreateDeposit<DepositDataTrue>(input, Path.CreateDepositTrue, extra);
+    }
 
     private IDepositData CreateDepositPayway(IDictionary<string, string> input)
     {
@@ -196,6 +218,9 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         return CreateDeposit<DepositDataPayway>(input, Path.CreateDepositPayway, extra);
     }
     
+    private IDepositData CreateDepositKHQr(IDictionary<string, string> input)
+        => CreateDeposit<DepositDataQr>(input, Path.CreateDepositQr);
+    
     private IDepositData CreateDeposit<TResult>(IDictionary<string, string> input, string path, IDictionary<string, string>? extra = null)
         where TResult: IDepositData
     {
@@ -207,7 +232,6 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         {
             { "requestTime", DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss") },
             { "amount", input["Amount"] },
-            { "clientAccount", input["PayAccount"] },
             { "clientAccountName", input["AccountName"] },
             { "reference1", input["TransID"] }
         };
