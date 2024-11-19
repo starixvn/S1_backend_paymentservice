@@ -164,7 +164,7 @@ namespace Payment.LuckyPay
         
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var currency = formData["Currency"];
+            var currency = formData["coinUnit"];
             var transId = formData["clientNo"];
             
             var dic4Sign = new Dictionary<string, string>
