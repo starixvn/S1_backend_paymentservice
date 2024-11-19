@@ -26,5 +26,5 @@ internal class Path
     public const string CreateDepositQr = "/services/api/v1/qrcode-request";
     public const string CreateDepositTrue = "/services/api/v1/wallet-request";
     public const string CreatePayout = "/services/api/v1/withdraw-request";
-    public const string CreateDepositPayway = "/services/services/api/v2/payment-request";
+    public const string CreateDepositPayway = "/services/api/v2/payment-request";
 }
