@@ -55,7 +55,7 @@ namespace PaymentService.IntegrationTest
         }
 
         [Test]
-        public void A01_GetPostSign_Credit()
+        public void A02_GetPostSign_Credit()
         {
             var parameters = new Dictionary<string, string>
             {
@@ -75,6 +75,60 @@ namespace PaymentService.IntegrationTest
             var expectedSignResult = "2997802432EA8754382E57699FBAF1F6";
 
             AssertGetPostSign(parameters, expectSignConcatSourceString, expectedSignResult);
+        }
+
+        [Test]
+        public void A03_GetInrPostSign_Debit()
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "merchantNo", "123456" },
+                { "orderNo", "123456" },
+                { "userNo", "1001" },
+                { "userName", "1001" },
+                { "channelNo", "4" },
+                { "amount", "1000.00" },
+                { "discount", "0.00" },
+                { "payeeName", "1001" },
+                { "datetime", "2021-10-10 23:59:59" },
+                { "extra", "" },
+                { "notifyUrl", "xxx" },
+                { "returnUrl", "xxx" },
+                { "time","1681681688" },
+                { "appSecret", "appSecret" }
+            };
+
+            var expectSignConcatSourceString = "amount=1000.00&datetime=2021-10-10 23:59:59&discount=0.00&extra=&merchantNo=123456&notifyUrl=xxx&orderNo=123456&time=1681681688&userNo=1001";
+            var expectedSignResult = "2F0EBB8B4DCE7F3E0A3430D3434C9C9A";
+
+            AssertGetInrDepositPostSign(parameters, expectSignConcatSourceString, expectedSignResult);
+        }
+
+        [Test]
+        public void A04_GetInrPostSign_Credit()
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "merchantNo", "123456" },
+                { "orderNo", "20231010123456789012" },
+                { "amount", "1000" },
+                { "name", "123" },
+                { "bankName", "abcde" },
+                { "bankAccount", "123456" },
+                { "bankBranch", "IFSC00000" },
+                { "mobile", "12345" },
+                { "datetime", "2023-01-01 23:59:59" },
+                { "notifyUrl", "" },
+                { "reverseUrl", "" },
+                { "extra", "" },
+                { "time", "1570716647" },
+                { "appSecret", "appSecret" }
+            };
+
+            var expectSignConcatSourceString = "amount=1000&bankAccount=123456&bankName=abcde&datetime=2023-01-01 23:59:59&extra=&merchantNo=123456&mobile=12345&name=123&notifyUrl=&orderNo=20231010123456789012&reverseUrl=&time=1570716647";
+            var expectedSignResult = "A5E447B694FD52838F7DA81299AD3836";
+
+            AssertGetInrWithdrawalPostSign(parameters, expectSignConcatSourceString, expectedSignResult);
         }
 
         [Test]
@@ -124,6 +178,19 @@ namespace PaymentService.IntegrationTest
             var actual = _target.VerifySign(receiveSign, receiveModel, _signKey);
             PayHelper.SignConcatSourceString.Should().Be(expectedSignConcatSourceString);
             actual.Should().BeTrue();
+        }
+
+        private void AssertGetInrDepositPostSign(Dictionary<string, string> testData, string expectSignConcatSourceString, string expectedSignResult)
+        {
+            var actual = _target.GetInrDepositPostSign(testData, _signKey);
+            PayHelper.SignConcatSourceString.Should().Be(expectSignConcatSourceString);
+            actual.Should().Be(expectedSignResult);
+        }
+        private void AssertGetInrWithdrawalPostSign(Dictionary<string, string> testData, string expectSignConcatSourceString, string expectedSignResult)
+        {
+            var actual = _target.GetInrWithdrawalPostSign(testData, _signKey);
+            PayHelper.SignConcatSourceString.Should().Be(expectSignConcatSourceString);
+            actual.Should().Be(expectedSignResult);
         }
 
         private void AssertGetPostSign(Dictionary<string, string> testData, string expectSignConcatSourceString, string expectedSignResult)
