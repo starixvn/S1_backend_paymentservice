@@ -298,7 +298,7 @@ namespace Payment.SpeedPay
             where T : ICreateTransResp
         {
             var (response, statusCode) = _httpHelper
-                .PostUrlEncoded<IDictionary<string, string>, IDictionary<string, string>>(apiUrl, req);
+                .PostUrlEncoded<IDictionary<string, string>, IDictionary<string, string>>(apiUrl, req, true);
 
             if (!statusCode.IsSuccessStatus())
             {

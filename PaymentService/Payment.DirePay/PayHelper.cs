@@ -199,12 +199,12 @@ namespace Payment.DirePay
             };
 
             var (result, statusCode) = _httpHelper
-                .PostUrlEncoded<Dictionary<string, string>, GetAccessTokenResp>(loginUrl, request);
+                .PostUrlEncoded<Dictionary<string, string>, GetAccessTokenResp>(loginUrl, request, true);
 
             if (!statusCode.IsSuccessStatus())
             {
                 throw new CustomException(
-                    $"DirePay login failed, HttpStatus: {(int)statusCode} {statusCode} Message: {result.Message}");
+                    $", HttpStatus: {(int)statusCode} {statusCode} Message: {result.Message}");
             }
 
             if (string.IsNullOrEmpty(result.AccessToken))
@@ -291,7 +291,7 @@ namespace Payment.DirePay
         {
             var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(accessToken)
-                .PostJson<PayinGetWalletReq, CryptoPayinResp>(apiUrl, request);
+                .PostJson<PayinGetWalletReq, CryptoPayinResp>(apiUrl, request, true );
 
             if (!statusCode.IsSuccessStatus())
             {
@@ -337,7 +337,7 @@ namespace Payment.DirePay
 
             var (resp, statusCode) = _httpHelper
                 .WithOAuthBearerToken(accessToken)
-                .PostUrlEncoded<Dictionary<string, string>, FiatPayinResp>(apiUrl, req);
+                .PostUrlEncoded<Dictionary<string, string>, FiatPayinResp>(apiUrl, req, true);
 
             if (!statusCode.IsSuccessStatus())
             {
@@ -371,7 +371,7 @@ namespace Payment.DirePay
 
             var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(accessToken)
-                .PostUrlEncoded<Dictionary<string, string>, ExchangeResp>(getExchangeUrl, request);
+                .PostUrlEncoded<Dictionary<string, string>, ExchangeResp>(getExchangeUrl, request, true);
 
             if (!statusCode.IsSuccessStatus())
             {
@@ -504,7 +504,7 @@ namespace Payment.DirePay
         {
             var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(accessToken)
-                .PostUrlEncoded<Dictionary<string, string>, PayoutGetWalletResp>(apiUrl, request);
+                .PostUrlEncoded<Dictionary<string, string>, PayoutGetWalletResp>(apiUrl, request, true);
 
             if (!statusCode.IsSuccessStatus())
             {
@@ -548,7 +548,7 @@ namespace Payment.DirePay
 
             var (resp, statusCode) = _httpHelper
                 .WithOAuthBearerToken(accessToken)
-                .PostUrlEncoded<Dictionary<string, string>, FiatPayoutResp>(apiUrl, req);
+                .PostUrlEncoded<Dictionary<string, string>, FiatPayoutResp>(apiUrl, req,true);
 
             if (!statusCode.IsSuccessStatus())
             {
