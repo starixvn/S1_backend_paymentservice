@@ -219,7 +219,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
     }
     
     private IDepositData CreateDepositKHQr(IDictionary<string, string> input)
-        => CreateDeposit<DepositDataQr>(input, Path.CreateDepositQr);
+        => CreateDeposit<DepositDataQr>(input, Path.CreateDepositKHQr);
     
     private IDepositData CreateDeposit<TResult>(IDictionary<string, string> input, string path, IDictionary<string, string>? extra = null)
         where TResult: IDepositData
