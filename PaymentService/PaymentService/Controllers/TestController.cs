@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Payment.OneWallet;
 
 // ReSharper disable InconsistentNaming
 namespace PaymentService.Controllers
@@ -532,6 +533,62 @@ namespace PaymentService.Controllers
             }
 
             return BadRequest(new { code, text });
+        }
+
+        [Route("OneWallet/{status}/SH/sendPay")]
+        public IActionResult OneWalletResponse(string status)
+        {
+            switch (status.ToLower())
+            {
+                case "decodefail":
+                    // case 1 Wrong request : json decode failed. For more information please read the documentation
+                    return new ContentResult
+                    {
+                        Content = "eyJlcnJvcl9jb2RlIjo0MDUsImRhdGEiOnsibWVzc2FnZSI6Impzb24gZGVjb2RlIGZhaWxlZC4gRm9yIG1vcmUgaW5mb3JtYXRpb24gcGxlYXNlIHJlYWQgdGhlIGRvY3VtZW50YXRpb24ifX0="
+                    };
+
+                case "codefail":
+                    // case 2 Success request with fail code : The given data was invalid. The notify url not in the whitelist.
+                    return new ContentResult
+                    {
+                        Content = "eyJpdiI6Ino3V2JHcHpBVWV1dVZxQWVmcjRiQnc9PSIsInZhbHVlIjoibnpSUFJRUWRGSUxRZHUzWFFrQmI2NFwvRCtya1oxdCttblVGVllSMEdHaGlmcURBUGhaVDkzcURaK2VpY0tidlRWTFFrYktaR0hXbnp3cVVkQ05JMnpcL0xZZUdvc0QwNFBWNWtUK2ZETzRxTm9NSjRiNVwvcTBRbjZmeXNweWJHOEZlQkc1VmppVkxOaGdBWFBDZUtMeDZRPT0ifQ=="
+                    };
+
+                case "success":
+                default:
+                    return new ContentResult
+                    {
+                        Content = "eyJpdiI6IjJ1MkxkcXgxOVNyZ0FYU1FyMjRMY3c9PSIsInZhbHVlIjoiUEJoZTNLSExkaUNyUHhua0oydUpJZ2RGaU1PZjArbm9Ybm00dWVWbmFSaDd1empsTXJHeGlzUlJITk9KT3Y5NmErdGVWMnZ0S256eFY3bzFZdGxYUlBOd20yMDYvUzJCWnZnbHVVWjlaUjBwRjV6eHQ3M2pyb2s2bUtEY1pmOUJxdWc5dE40cVo0NGlJcmpCSUZBSk9RL3pkSFhvL29tWEJWd2VsMTJ0MEN2bDFSM0x2U1JIWFpqdlkzaGNza01Xc09QRlMxRlJMMEYxT0Y3aEJOUlM2eUNUN3AzMHYxMWlpZENsMnNwb0s5U1RkemwyYWcrbEZGRjhHYzk3dWxGMFkyQWhGejEzeHBDWSt2RElmUEhVanMrVHZGVVA1aEhXclI5Tmkwa0NFUWFmV1ZyRVhGZFJ5WFcvUTBPMmk5cXoifQ=="
+                    };
+            }
+        }
+
+        [Route("OneWallet/{status}/SH/sendWithdraw")]
+        public IActionResult OneWalletCreditResponse(string status)
+        {
+            switch (status.ToLower())
+            {
+                case "decodefail":
+                    // case 1 Wrong request : json decode failed. For more information please read the documentation
+                    return new ContentResult
+                    {
+                        Content = "eyJlcnJvcl9jb2RlIjo0MDUsImRhdGEiOnsibWVzc2FnZSI6Impzb24gZGVjb2RlIGZhaWxlZC4gRm9yIG1vcmUgaW5mb3JtYXRpb24gcGxlYXNlIHJlYWQgdGhlIGRvY3VtZW50YXRpb24ifX0="
+                    };
+
+                case "codefail":
+                    // case 2 Success request with fail code : The given data was invalid. The notify url not in the whitelist.
+                    return new ContentResult
+                    {
+                        Content = "eyJpdiI6Ino3V2JHcHpBVWV1dVZxQWVmcjRiQnc9PSIsInZhbHVlIjoibnpSUFJRUWRGSUxRZHUzWFFrQmI2NFwvRCtya1oxdCttblVGVllSMEdHaGlmcURBUGhaVDkzcURaK2VpY0tidlRWTFFrYktaR0hXbnp3cVVkQ05JMnpcL0xZZUdvc0QwNFBWNWtUK2ZETzRxTm9NSjRiNVwvcTBRbjZmeXNweWJHOEZlQkc1VmppVkxOaGdBWFBDZUtMeDZRPT0ifQ=="
+                    };
+
+                case "success":
+                default:
+                    return new ContentResult
+                    {
+                        Content = "eyJpdiI6Ikh6Sk5nUU9aQlRqalVMbk5PSnE0eGc9PSIsInZhbHVlIjoidE8yVXM0VXFBODhkdlZiZmJncG1LOVRsamRXVG9FNXQzUStzVndSbFYxb2JJYlhVL0ZwalI4dlNZT0pEdkR6Q0NUYU5BRk9JNDE0Z0tKM3ZMcXlqeGZ2V0F6TkJlUWJsNFNEeTF2TTA1KzU2NmNTV3JWZ2ZzWVF4Z3YxZk1PNkYwa0YzSVVVNStlN1FQUm90aTVVM2x3PT0ifQ=="
+                    };
+            }
         }
 
         private static bool CheckIsSuccess(string status)
