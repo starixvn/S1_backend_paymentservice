@@ -177,7 +177,7 @@ namespace Payment.LuckyPay
                 { "txid", formData["txid"] }
             };
             
-            if (!VerifySign(dic4Sign, payResource[$"{currency}_key"], formData["sign"]))
+            if (!VerifySign(dic4Sign, payResource[$"{currency}key"], formData["sign"]))
             {
                 return new NotifyWithdrawResult
                 {
