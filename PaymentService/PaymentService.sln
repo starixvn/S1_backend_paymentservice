@@ -163,6 +163,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.Golbal", "Payment.G
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.DgPay", "Payment.DgPay\Payment.DgPay.csproj", "{33C6C70A-D603-4C2D-8D0D-A41F7AB30656}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.JDPay", "Payment.JDPay\Payment.JDPay.csproj", "{93BE0134-06A6-429C-8B32-BB876BA65D68}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -485,6 +487,10 @@ Global
 		{33C6C70A-D603-4C2D-8D0D-A41F7AB30656}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33C6C70A-D603-4C2D-8D0D-A41F7AB30656}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33C6C70A-D603-4C2D-8D0D-A41F7AB30656}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93BE0134-06A6-429C-8B32-BB876BA65D68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93BE0134-06A6-429C-8B32-BB876BA65D68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93BE0134-06A6-429C-8B32-BB876BA65D68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93BE0134-06A6-429C-8B32-BB876BA65D68}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -566,6 +572,7 @@ Global
 		{3C144CB1-673C-40AC-850C-F5402D240984} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{34BDFB05-6D17-4B54-B71E-6E56EB85E487} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{33C6C70A-D603-4C2D-8D0D-A41F7AB30656} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{93BE0134-06A6-429C-8B32-BB876BA65D68} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
