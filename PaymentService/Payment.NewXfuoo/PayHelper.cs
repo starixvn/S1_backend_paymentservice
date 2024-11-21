@@ -31,7 +31,7 @@ namespace Payment.NewXfuoo
                 var exchangeRateData = GetExchangeRate(inputs);
 
                 var dataRate = decimal.Parse(exchangeRateData.Rate); // 1 USDT = xxx CNY
-                var rate = decimal.Parse((1m / dataRate).ToString("G29")); // 1CNY = 0.xxxx USDT
+                var rate = decimal.Parse((1m / dataRate).ToString("F15")); // 1CNY = 0.xxxx USDT
                 var amount = decimal.Parse(inputs["Amount"]);
                 var toAmount = amount * rate;
 
@@ -99,7 +99,7 @@ namespace Payment.NewXfuoo
 
                 // 將匯率與回傳支付金額加入 DepositInfo
                 depositInfo = depositInfo
-                    .AddOrSetExchangeInfo(rate.ToString("29"), requestAmount);
+                    .AddOrSetExchangeInfo(rate.ToString("F15"), requestAmount);
 
                 return new DepositResult
                 {
