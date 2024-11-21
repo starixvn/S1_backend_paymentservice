@@ -591,6 +591,70 @@ namespace PaymentService.Controllers
             }
         }
 
+        [Route("NewXfuoo/{status}/usdt/rate")]
+        public IActionResult NewXfuooGetExchangeRateResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    status = 0,
+                    data = new
+                    {
+                        fiatCurrency = "cny",
+                        rate = "6.37"
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { status = 1, code = "030102", msg = "Exchange Fail" });
+        }
+
+        [Route("NewXfuoo/{status}/usdt/payin")]
+        public IActionResult NewXfuooDepositResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    status = 0,
+                    data = new
+                    {
+                        payUrl = "https://www.google.com.tw"
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { status = 1, code = "030102", msg = "Fail" });
+        }
+
+        [Route("NewXfuoo/{status}/usdt/payout")]
+        public IActionResult NewXfuooWithdrawalResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    status = 0,
+                    data = new
+                    {
+                        tradeId = "UAP2021082615PA1GNK"
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { status = 1, code = "030102", msg = "Fail" });
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
