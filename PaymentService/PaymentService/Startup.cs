@@ -1,5 +1,7 @@
 ﻿using System.Text;
 using Microsoft.OpenApi.Models;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using PaymentCore.Helpers;
 using PaymentCore.Interface;
 using PaymentService.Exceptions;
@@ -30,6 +32,20 @@ namespace PaymentService
             var redisConnection = ConnectionMultiplexer.Connect(Configuration.GetValue<string>("RedisConnection"));
             services.AddSingleton<IConnectionMultiplexer>(redisConnection);
             services.AddSingleton<ICacheHelper, RedisCacheHelper>();
+
+            services
+               .AddOpenTelemetry()
+               .ConfigureResource(_ => _.AddService(Configuration.GetValue<string>("Otel:ServiceName") ?? ""))
+               .WithTracing(traceProvider => traceProvider
+                   .AddAspNetCoreInstrumentation(options => options.Filter =
+                       httpContext => !httpContext.Request.Path.HasValue
+                           || !httpContext.Request.Path.StartsWithSegments("/swagger")
+                           && !httpContext.Request.Path.StartsWithSegments("/health")
+                           && !httpContext.Request.Path.StartsWithSegments("/healthcheck"))
+                   .AddHttpClientInstrumentation()
+                   .AddConnectorNet()
+                   .AddOtlpExporter(options => options.Endpoint = Configuration.GetValue<Uri>("Otel:Collector") ?? new Uri("")));
+
 
             /*Library*/
             services.AddSingleton<Common>();
@@ -92,6 +108,7 @@ namespace PaymentService
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Payment Service v1");
                 }); 
             }
+
             app.UseRouting();
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
