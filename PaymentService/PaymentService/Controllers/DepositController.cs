@@ -32,6 +32,7 @@ namespace PaymentService.Controllers
         public string GetClientIp()
         {
             var clientIp = _common.GetClientIP(HttpContext);
+            _logger.LogInformation($"Method={GetCurrentMethod()}, ClientIP={clientIp}");
             return clientIp;
         }
 

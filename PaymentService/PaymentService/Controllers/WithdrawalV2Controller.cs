@@ -116,9 +116,7 @@ public class WithdrawalV2Controller : ControllerBase
 
             var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(pay.Setting);
             input.AddRange(setting);
-
             _logger.LogInformation("Input:" + JsonConvert.SerializeObject(input));
-            SentrySdk.CaptureMessage($"Withdraw create = " + JsonConvert.SerializeObject(payInfo), SentryLevel.Info);
             var result = payHelper.Credit(input);
 
             if (!string.IsNullOrEmpty(result.WithdrawalInfo))
@@ -172,10 +170,10 @@ public class WithdrawalV2Controller : ControllerBase
 
             _logger.LogInformation(
                 $"WithDrawal Callback ={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
-            SentrySdk.CaptureMessage($"WithDrawal Callback ={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}", SentryLevel.Info);
+          
             var withdrawalId = _common.GetId(transId);
             var tmpTransId = $"W{_common.GetEnv()}{withdrawalId}";
-            _logger.LogInformation("here is log tmpTransId for withdrawal: {TmpTransId} and transId: {TransId}", tmpTransId, transId);
+            _logger.LogInformation("tmpTransId for withdrawal: {TmpTransId} and transId: {TransId}", tmpTransId, transId);
             if (tmpTransId != transId)
             {
                 var payHelperNoCallBackUrl = (IPayHelperNoCallBackUrl)_payBll.GetPayHelper(transId);
