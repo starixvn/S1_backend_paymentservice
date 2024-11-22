@@ -124,9 +124,7 @@ public class DepositV2Controller : ControllerBase
             input.AddRange(setting);
             
             _logger.LogInformation("Deposit Create=" + JsonConvert.SerializeObject(input));
-            SentrySdk.CaptureMessage($"Deposit Create = " + JsonConvert.SerializeObject(input), SentryLevel.Info);
-            
-
+   
             var result = payHelper.Debit(input);
 
             if (result.Success)
@@ -204,12 +202,9 @@ public class DepositV2Controller : ControllerBase
             _logger.LogInformation(
                 $"Deposite CallBack Info: Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}");
 
-            SentrySdk.CaptureMessage($"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, dicParams={JsonConvert.SerializeObject(dicParams)}, bodyContent={bodyContent}", SentryLevel.Info);
-  
             var depositId = _common.GetId(transId);
             var tmpTransId = $"D{_common.GetEnv()}{depositId}";
-            _logger.LogInformation("here is log tmpTransId for Deposit: {TmpTransId} and transId: {TransId}", tmpTransId, transId);
-
+            _logger.LogInformation("tmpTransId for Deposit: {TmpTransId} and transId: {TransId}", tmpTransId, transId);
 
             if (tmpTransId != transId)
             {
