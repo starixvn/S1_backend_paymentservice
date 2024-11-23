@@ -15,10 +15,10 @@ public class WhitelistBLL
 
     public bool IsWhitelist(string clientIp, string paymentName, string transId, string methodName)
     {
+        _logger.LogInformation($"Method={methodName}, Request: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
+
         if (!_environment.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase))
             return true;
-
-        _logger.LogInformation($"Method={methodName}, Request: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
 
         var officeIps = _configBll.GetConfigValueFromDbByEnvironment<string[]>("OfficeIP", configType: "Whitelist");
         if (officeIps.Any(x => x == clientIp))
