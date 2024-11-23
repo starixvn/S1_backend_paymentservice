@@ -24,6 +24,8 @@ builder.Host.UseSerilog((context, Configuration) =>
 {
     Configuration
         .ReadFrom.Configuration(builder.Configuration)
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+        .MinimumLevel.Information()
         .Enrich.FromLogContext()
         .Filter.ByExcluding(c =>
             c.Properties.Any(p =>
@@ -32,6 +34,7 @@ builder.Host.UseSerilog((context, Configuration) =>
         .Enrich.WithExceptionDetails()
         .Enrich.WithProperty("ApplicationName", builder.Configuration.GetValue<string>("ServiceName"))
         .Enrich.WithProperty("Env", builder.Configuration.GetValue<string>("EnvironmentName"))
+        .WriteTo.Console()
         .WriteTo.UDPSink(
             builder.Configuration.GetValue<string>("OpenSearch:Uri"),
             builder.Configuration.GetValue<int>("OpenSearch:Port"),
