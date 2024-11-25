@@ -692,6 +692,25 @@ namespace PaymentService.Controllers
             return new JsonResult(response);
         }
 
+
+        [Route("DfPay/{status}/app/DFPayFun")]
+        public IActionResult DfPayWithdrawalResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    systate = 0,
+                    msg = "success"
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { systate = 99, msg = "Fail" });
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
