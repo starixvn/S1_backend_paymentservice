@@ -218,8 +218,8 @@ namespace Payment.JDPay
 
         private string GetSign(IDictionary<string, string> param, string apiKey)
         {
-            var str = param
-                .Select(x =>x.Value) + apiKey;
+            var str = string.Join(string.Empty, param
+                .Select(x =>x.Value)) + apiKey;
 
             _logger.LogInformation(str);
             var sign = base.ToMD5(str).ToLower();
