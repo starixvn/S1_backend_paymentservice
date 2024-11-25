@@ -711,6 +711,28 @@ namespace PaymentService.Controllers
             return BadRequest(new { systate = 99, msg = "Fail" });
         }
 
+        [Route("LuckyPay/{status}/api/coin/pay/request")]
+        [Route("LuckyPay/{status}/api/bank/agentPay/request")]
+        public JsonResult LuckyPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            var code = isSuccess ? 200 : 999;
+            var message = isSuccess ? "OK" : "NOT OK";
+
+            var response = new
+            {
+                success = isSuccess,
+                code,
+                message,
+                data = new
+                {
+                    payUrl = "http://www.google.com"
+                }
+            };
+
+            return new JsonResult(response);
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
