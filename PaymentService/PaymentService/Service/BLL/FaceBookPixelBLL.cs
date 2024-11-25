@@ -25,20 +25,8 @@ public class FaceBookPixelBLL
 
         return result;
     }
-
-    public PixelRequest CreatePixelRequest(int siteId, int custId, int currencyId, decimal? value, IEnumerable<FaceBookPixel> pixelEvent)
-    {
-        return new PixelRequest
-        {
-            SiteId = siteId,
-            CustId = custId,
-            CurrencyId = currencyId,
-            Value = value,
-            PixelEvent = pixelEvent
-        };
-    }
     
-    public void Send2PixelDepositSuccess(int siteId, int custId, int currencyId, decimal amount, bool is1stDeposit)
+    public void Send2PixelDepositSuccess(string transId ,int siteId, int custId, decimal amount, bool is1stDeposit)
     {
         if (_siteEnums.All(x => (int)x != siteId))
             return;
@@ -51,15 +39,15 @@ public class FaceBookPixelBLL
 
         _ = Send(new PixelRequest
         {
+            TransId = transId,
             SiteId = siteId,
             CustId = custId,
-            CurrencyId = currencyId,
             Value = amount,
             PixelEvent = pixelEvent
         });
     }
     
-    public void Send2PixelWithdrawalSuccess(int siteId, int custId, int currencyId, decimal amount)
+    public void Send2PixelWithdrawalSuccess(string transId ,int siteId, int custId, decimal amount)
     {
         if (_siteEnums.All(x => (int)x != siteId))
             return;
@@ -71,9 +59,9 @@ public class FaceBookPixelBLL
 
         _ = Send(new PixelRequest
         {
+            TransId = transId,
             SiteId = siteId,
             CustId = custId,
-            CurrencyId = currencyId,
             Value = amount,
             PixelEvent = pixelEvent
         });
