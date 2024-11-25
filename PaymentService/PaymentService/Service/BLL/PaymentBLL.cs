@@ -148,7 +148,7 @@ namespace PaymentService.Service.BLL
             };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
             SetWithdrawalAccountCounter(withdrawalRequest, WithdrawalStatus.Approved);
-            _pixelBll.Send2PixelWithdrawalSuccess(withdrawalRequest.SiteId, withdrawalRequest.CustId, withdrawalRequest.CurrencyId, withdrawalRequest.Amount);
+            _pixelBll.Send2PixelWithdrawalSuccess(withdrawalRequest.TransId ,withdrawalRequest.SiteId, withdrawalRequest.CustId, withdrawalRequest.Amount);
         }
 
         private void SetWithdrawalAccountCounter(WithdrawalRequest withdrawalRequest, WithdrawalStatus changeToStatus)
@@ -195,7 +195,7 @@ namespace PaymentService.Service.BLL
                 @operator,
                 forStatus, WithdrawalStatus.Approved, withdrawalRequest);
             
-            _pixelBll.Send2PixelWithdrawalSuccess(withdrawalRequest.SiteId, withdrawalRequest.CustId, withdrawalRequest.CurrencyId, withdrawalRequest.Amount);
+            _pixelBll.Send2PixelWithdrawalSuccess(withdrawalRequest.TransId, withdrawalRequest.SiteId, withdrawalRequest.CustId, withdrawalRequest.Amount);
         }
 
 
@@ -324,7 +324,7 @@ namespace PaymentService.Service.BLL
         {
             var di = GetDepositInfo(transId);
             
-            _pixelBll.Send2PixelDepositSuccess(di.SiteId, di.CustId, di.CurrencyId, di.ActualDeposit, di.FirstDeposit);
+            _pixelBll.Send2PixelDepositSuccess(transId , di.SiteId, di.CustId, di.ActualDeposit, di.FirstDeposit);
         }
         
         private bool CanRewardPoint(int siteId, int currencyId)

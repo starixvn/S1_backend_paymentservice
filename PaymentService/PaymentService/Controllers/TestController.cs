@@ -655,6 +655,84 @@ namespace PaymentService.Controllers
             return BadRequest(new { status = 1, code = "030102", msg = "Fail" });
         }
 
+        [Route("PomPay/{status}/v2/api/payment")]
+        public JsonResult PomPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            var errorCode = isSuccess ? "" : "E1001";
+            var message = isSuccess ? "" : "Service is temporarily not available";
+
+            var response = new
+            {
+                errorCode,
+                message,
+                qrString = "abcd",
+                referenceId = $"PP{DateTime.Now.ToString("yyyyMMddHHmmss")}"
+            };
+
+            return new JsonResult(response);
+        }
+
+        [Route("PomPay/{status}/v2/payout")]
+        public JsonResult PomPayCreditResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            var statusCode = isSuccess ? "success" : "fail";
+            var errorCode = isSuccess ? "" : "E1001";
+            var message = isSuccess ? "" : "Service is temporarily not available";
+
+            var response = new
+            {
+                status = statusCode,
+                errorCode,
+                message,
+                referenceId = $"PP{DateTime.Now.ToString("yyyyMMddHHmmss")}"
+            };
+
+            return new JsonResult(response);
+        }
+
+
+        [Route("DfPay/{status}/app/DFPayFun")]
+        public IActionResult DfPayWithdrawalResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    systate = 0,
+                    msg = "success"
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { systate = 99, msg = "Fail" });
+        }
+
+        [Route("LuckyPay/{status}/api/coin/pay/request")]
+        [Route("LuckyPay/{status}/api/bank/agentPay/request")]
+        public JsonResult LuckyPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            var code = isSuccess ? 200 : 999;
+            var message = isSuccess ? "OK" : "NOT OK";
+
+            var response = new
+            {
+                success = isSuccess,
+                code,
+                message,
+                data = new
+                {
+                    payUrl = "http://www.google.com"
+                }
+            };
+
+            return new JsonResult(response);
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
