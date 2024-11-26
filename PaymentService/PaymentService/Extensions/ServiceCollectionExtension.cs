@@ -19,20 +19,19 @@ namespace PaymentService.Extensions
             return services;
         }
 
-        public static void AddProxy(this IServiceCollection services)
+        public static void AddProxy(this IServiceCollection services, IConfiguration configuration)
         {
-            var provider = services.BuildServiceProvider();
-            var configBll = provider.GetRequiredService<ConfigBLL>();
-            var config = configBll.GetConfigValueFromDbByEnvironment<ProxySettingConfig>("TokyoProxy");
+            var proxyHost = configuration.GetValue<string>("ProxyHost");
+            var proxyPort = configuration.GetValue<int>("ProxyPort");
 
-            if (!string.IsNullOrEmpty(config.ProxyHost))
+            if (!string.IsNullOrWhiteSpace(proxyHost))
             {
                 services.AddHttpClient("with_proxy")
                     .ConfigurePrimaryHttpMessageHandler(_ =>
                     {
                         var handler = new HttpClientHandler
                         {
-                            Proxy = new WebProxy(config.ProxyHost, config.ProxyPort),
+                            Proxy = new WebProxy(proxyHost, proxyPort),
                             UseProxy = true
                         };
                         
