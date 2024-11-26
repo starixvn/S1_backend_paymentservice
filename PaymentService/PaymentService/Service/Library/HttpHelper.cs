@@ -9,12 +9,12 @@ namespace PaymentService.Service.Library
     {
         private readonly IHttpClientFactory _clientFactory;
         private readonly bool _hasProxySetting;
-        private readonly IConfiguration _configuration;
-        public HttpHelper(IServiceProvider serviceProvider, IConfiguration configuration)
+    
+        public HttpHelper(IServiceProvider serviceProvider)
         {
             _clientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-            _configuration = serviceProvider.GetRequiredService<IConfiguration>();
-            _hasProxySetting = !string.IsNullOrEmpty(_configuration.GetValue<string>("ProxyHost"));
+            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+            _hasProxySetting = !string.IsNullOrEmpty(configuration.GetValue<string>("ProxyHost"));
             Console.WriteLine("hasProxySetting: " + _hasProxySetting);
         }
         public HttpClient GetClient() => _clientFactory.CreateClient();
