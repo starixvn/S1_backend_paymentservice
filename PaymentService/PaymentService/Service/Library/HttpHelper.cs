@@ -15,6 +15,7 @@ namespace PaymentService.Service.Library
             _clientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
             _configuration = serviceProvider.GetRequiredService<IConfiguration>();
             _hasProxySetting = !string.IsNullOrEmpty(_configuration.GetValue<string>("ProxyHost"));
+            Console.WriteLine("hasProxySetting: " + _hasProxySetting);
         }
         public HttpClient GetClient() => _clientFactory.CreateClient();
         

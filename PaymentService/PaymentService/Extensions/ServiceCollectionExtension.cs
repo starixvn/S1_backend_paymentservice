@@ -23,7 +23,7 @@ namespace PaymentService.Extensions
         {
             var proxyHost = configuration.GetValue<string>("ProxyHost");
             var proxyPort = configuration.GetValue<int>("ProxyPort");
-
+            Console.WriteLine($"ProxyHost: {proxyHost}, ProxyPort: {proxyPort}");
             if (!string.IsNullOrWhiteSpace(proxyHost))
             {
                 services.AddHttpClient("with_proxy")
