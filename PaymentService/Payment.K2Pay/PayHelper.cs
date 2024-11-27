@@ -5,6 +5,8 @@ using PaymentCore.Exceptions;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 using Newtonsoft.Json;
+using Flurl;
+using PaymentCore.Extensions;
 
 namespace Payment.K2Pay
 {
@@ -121,21 +123,26 @@ namespace Payment.K2Pay
                 var sUrl = inputs["withdrawalhost"] + inputs["withdraw"];
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(request));
                 var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-                var sResponse = HttpGet(sUrl, sParam, inputs["TransID"], true);
+                var (result, statusCode) = _httpHelper.Get<WithdrawalRes>(sUrl, sParam);
+
+                if (!statusCode.IsSuccessStatus())
+                {
+                    throw new CustomException($"K2Pay create payout failed, HttpStatus: {(int)statusCode} {statusCode}");
+                }
 
                 var withdrawResult = new WithdrawResult();
-                var withdrawalRes = JsonConvert.DeserializeObject<WithdrawalRes>(sResponse);
-                if (withdrawalRes.code == (int)WithdrawalStatus.Success)
+
+                if (result.code == (int)WithdrawalStatus.Success)
                 {
                     withdrawResult.Success = true;
-                    withdrawResult.Message = withdrawalRes.desc;
-                    withdrawResult.RawContent = withdrawalRes.data.ToString();
+                    withdrawResult.Message = result.desc;
+                    withdrawResult.RawContent = result.data.ToString();
                 }
                 else
                 {
                     withdrawResult.Success = false;
-                    withdrawResult.Message = withdrawalRes.desc;
-                    withdrawResult.RawContent = withdrawalRes.data.ToString();
+                    withdrawResult.Message = result.desc;
+                    withdrawResult.RawContent = result.data.ToString();
                 }
 
                 return withdrawResult;
@@ -182,22 +189,25 @@ namespace Payment.K2Pay
                 var sUrl = inputs["host"] + inputs["deposit"];
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(depositReq));
                 var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-                var sResponse = HttpGet(sUrl, sParam, inputs["TransID"], true);
+                var (result, statusCode) = _httpHelper.Get<DepositRes>(sUrl, sParam);
 
-                var depositRes = new DepositRes();
-                depositRes = JsonConvert.DeserializeObject<DepositRes>(sResponse);
+                if (!statusCode.IsSuccessStatus())
+                {
+                    throw new CustomException($"K2Pay creat order failed, HttpStatus: {(int)statusCode} {statusCode}");
+                }
+
                 var depositResult = new DepositResult();
-                if (depositRes.e == (int)DepositStatus.Success)
+                if (result.e == (int)DepositStatus.Success)
                 {
 
                     var responseData = new Dictionary<string, string>
                     {
                         { "DepositAmount", depositReq.price },
-                        { "BankName", depositRes.d.bankType },
-                        { "AccountName", depositRes.d.accountName },
-                        { "AccountNumber", depositRes.d.account }
+                        { "BankName", result.d.bankType },
+                        { "AccountName", result.d.accountName },
+                        { "AccountNumber", result.d.account }
                     };
-                    depositResult.Url = depositRes.d.h5;
+                    depositResult.Url = result.d.h5;
                     depositResult.FormData = responseData;
                     depositResult.Success = true;
                     depositResult.Message = "";
@@ -205,7 +215,7 @@ namespace Payment.K2Pay
                 else
                 {
                     depositResult.Success = false;
-                    depositResult.Message = depositRes.m;
+                    depositResult.Message = result.m;
                 }
 
                 return depositResult;
