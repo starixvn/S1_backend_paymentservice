@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Payment.OneWallet;
 
 // ReSharper disable InconsistentNaming
 namespace PaymentService.Controllers
@@ -492,7 +491,6 @@ namespace PaymentService.Controllers
         public IActionResult YFBPayResponse(string status)
         {
             var isSuccess = CheckIsSuccess(status);
-            var statusCode = isSuccess ? 200 : 999;
             var code = isSuccess ? "0" : "-1";
             var text = isSuccess ? "OK" : "NOT OK";
 
@@ -516,7 +514,6 @@ namespace PaymentService.Controllers
         public IActionResult YFBPayCreditResponse(string status)
         {
             var isSuccess = CheckIsSuccess(status);
-            var statusCode = isSuccess ? 200 : 999;
             var code = isSuccess ? "0" : "-1";
             var text = isSuccess ? "OK" : "NOT OK";
 
@@ -554,7 +551,7 @@ namespace PaymentService.Controllers
                         Content = "eyJpdiI6Ino3V2JHcHpBVWV1dVZxQWVmcjRiQnc9PSIsInZhbHVlIjoibnpSUFJRUWRGSUxRZHUzWFFrQmI2NFwvRCtya1oxdCttblVGVllSMEdHaGlmcURBUGhaVDkzcURaK2VpY0tidlRWTFFrYktaR0hXbnp3cVVkQ05JMnpcL0xZZUdvc0QwNFBWNWtUK2ZETzRxTm9NSjRiNVwvcTBRbjZmeXNweWJHOEZlQkc1VmppVkxOaGdBWFBDZUtMeDZRPT0ifQ=="
                     };
 
-                case "success":
+                // success
                 default:
                     return new ContentResult
                     {
@@ -582,7 +579,7 @@ namespace PaymentService.Controllers
                         Content = "eyJpdiI6Ino3V2JHcHpBVWV1dVZxQWVmcjRiQnc9PSIsInZhbHVlIjoibnpSUFJRUWRGSUxRZHUzWFFrQmI2NFwvRCtya1oxdCttblVGVllSMEdHaGlmcURBUGhaVDkzcURaK2VpY0tidlRWTFFrYktaR0hXbnp3cVVkQ05JMnpcL0xZZUdvc0QwNFBWNWtUK2ZETzRxTm9NSjRiNVwvcTBRbjZmeXNweWJHOEZlQkc1VmppVkxOaGdBWFBDZUtMeDZRPT0ifQ=="
                     };
 
-                case "success":
+                // success
                 default:
                     return new ContentResult
                     {
@@ -731,6 +728,95 @@ namespace PaymentService.Controllers
             };
 
             return new JsonResult(response);
+        }
+
+        [Route("LnwPay/{status}/services/api/v1/{type}-request")]
+        public JsonResult LnwPayResponse(string status, string type)
+        {
+            switch (type.ToLower())
+            {
+                // Auth
+                case "service":
+                    var serviceResponse = new
+                    {
+                        status = "success",
+                        message = "Service is available",
+                        data = new
+                        {
+                            token_type = "Bearer",
+                            access_token = "VzAyOmI2MTU5OWYyYmVhZDQ3ZmVhZjI5NWM4ZGNhNTA3MWM4OmJiZGE5YmZjLTRjMTctNGFhMS05ZTdhLWQ1OWM0NTI0ZGI2ZQ=="
+                        }
+                    };
+                    return new JsonResult(serviceResponse);
+
+                // DepositAuto
+                case "account":
+                    var response = new
+                    {
+                        status,
+                        data = new
+                        {
+                            accountName = "ประพน ชอบเล่น",
+                            accountNo = "0849814507",
+                            accountBank = "BAY",
+                            amount = 780.75m,
+                            accountURL = "https://autopay321.com/public/account?id=0779d0a5-9315-4012-8d68-8c0915d7403d",
+                            requestId = "bbda9bfc-4c17-4aa1-9e7a-d59c4524db6e",
+                        }
+                    };
+                    return new JsonResult(response);
+
+                // DepositQr
+                case "qrcode":
+                    var qrResponse = new
+                    {
+                        status,
+                        data = new
+                        {
+                            promptName = "ประพน ชอบเล่น",
+                            promptNo = "0849814507",
+                            amount = 780.75m,
+                            payload = "00020101021229370016A000000677010111011300668498145075802TH53037645406780.756304DC35",
+                            qrcodeBase64 = "/9j/4AAQS......kZJRgAZ\"",
+                            qrcodeURL = "https://lnwpay123.com/public/Image?id=bbda9bfc-4c17-4aa1-9e7ad59c4524db6e",
+                            requestId = "bbda9bfc-4c17-4aa1-9e7a-d59c4524db6e"
+                        }
+                    };
+                    return new JsonResult(qrResponse);
+
+                // DepositTrue
+                case "wallet":
+                    var trueResponse = new
+                    {
+                        status,
+                        data = new
+                        {
+                            amount = 780.75m,
+                            walletURL = "https://a3.ot-pb-ipsv001.com/twallet/Account?id=153d775f-b54e-4904-b1b8-b4976f9b2697",
+                            requestId = "bbda9bfc-4c17-4aa1-9e7a-d59c4524db6e"
+                        }
+                    };
+                    return new JsonResult(trueResponse);
+
+                // DepositPayway
+                // DepositKHQr
+                // case "payment":
+                default:
+                    var paymentResponse = new
+                    {
+                        status,
+                        data = new
+                        {
+                            amount = 15.00m,
+                            qrcodeURL = "https://khqr01.ot-pb-ipsv001.com/public/image?id=7f92397d-b7b2-4fc8-93cd-705fc3f279d7",
+                            paymentUrl = "https://payway.ot-pb-ipsv001.com/public/image?id=81f73e51-02f8-4189-b111-84dcfe4f8af6",
+                            requestId = "7f92397d-b7b2-4fc8-93cd-705fc3f279d7",
+                            ref1 = "T003"
+                        },
+                        hash = "1df7f3eaf077cf9bd5892599b659225193e3991f695c360f448769c02fb38fc5"
+                    };
+                    return new JsonResult(paymentResponse);
+            }
         }
 
         private static bool CheckIsSuccess(string status)
