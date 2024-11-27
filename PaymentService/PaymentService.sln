@@ -177,15 +177,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.Golbal", "Payment.G
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment._808Pay", "Payment._808Pay\Payment._808Pay.csproj", "{3F8DC10B-80EB-4034-8F87-6A496B6D6069}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.YFBPay", "Payment.YFBPay\Payment.YFBPay.csproj", "{A1238766-89A7-428A-8A56-06AF4B652701}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.YFBPay", "Payment.YFBPay\Payment.YFBPay.csproj", "{A1238766-89A7-428A-8A56-06AF4B652701}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.DgPay", "Payment.DgPay\Payment.DgPay.csproj", "{33C6C70A-D603-4C2D-8D0D-A41F7AB30656}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.DgPay", "Payment.DgPay\Payment.DgPay.csproj", "{33C6C70A-D603-4C2D-8D0D-A41F7AB30656}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.K2Pay", "Payment.K2Pay\Payment.K2Pay.csproj", "{3B3CF566-D611-41B8-9EF1-13CB1A1E37ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.K2Pay", "Payment.K2Pay\Payment.K2Pay.csproj", "{3B3CF566-D611-41B8-9EF1-13CB1A1E37ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.NewXfuoo", "Payment.NewXfuoo\Payment.NewXfuoo.csproj", "{3190EE8C-1FDA-41E4-9972-9DD3730B20F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.NewXfuoo", "Payment.NewXfuoo\Payment.NewXfuoo.csproj", "{3190EE8C-1FDA-41E4-9972-9DD3730B20F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.NewXyPay", "Payment.NewXyPay\Payment.NewXyPay.csproj", "{14764B19-0BBC-4984-8C81-9F8F6500E146}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.NewXyPay", "Payment.NewXyPay\Payment.NewXyPay.csproj", "{14764B19-0BBC-4984-8C81-9F8F6500E146}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.BixinPay", "Payment.BixinPay\Payment.BixinPay.csproj", "{5B7F41FF-97AD-4388-A754-D5E5C6D3D982}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -557,6 +559,10 @@ Global
 		{14764B19-0BBC-4984-8C81-9F8F6500E146}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14764B19-0BBC-4984-8C81-9F8F6500E146}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14764B19-0BBC-4984-8C81-9F8F6500E146}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B7F41FF-97AD-4388-A754-D5E5C6D3D982}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B7F41FF-97AD-4388-A754-D5E5C6D3D982}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B7F41FF-97AD-4388-A754-D5E5C6D3D982}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B7F41FF-97AD-4388-A754-D5E5C6D3D982}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -650,6 +656,7 @@ Global
 		{3B3CF566-D611-41B8-9EF1-13CB1A1E37ED} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{3190EE8C-1FDA-41E4-9972-9DD3730B20F7} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{14764B19-0BBC-4984-8C81-9F8F6500E146} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{5B7F41FF-97AD-4388-A754-D5E5C6D3D982} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}

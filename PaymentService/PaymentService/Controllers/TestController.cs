@@ -613,6 +613,39 @@ namespace PaymentService.Controllers
 
             return BadRequest(new { errorCode = 20001, errorMsg = "上游通道通讯异" });
         }
+
+        [Route("BixinPay/{status}/api/cash/placeCas")]
+        public IActionResult BixinPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    responseContent = new
+                    {
+                        code = "0",
+                        status = "0",
+                        orderId = "123456"
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+
+            var errorMessage = new
+            {
+                responseContent = new
+                {
+                    code = "0",
+                    status = "2",
+                    msg = "fail",
+                    OrderId = "123456"
+                }
+            };
+            return BadRequest(errorMessage);
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
