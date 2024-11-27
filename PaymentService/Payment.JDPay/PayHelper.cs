@@ -145,7 +145,7 @@ namespace Payment.JDPay
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent,
             Dictionary<string, string> headers, Dictionary<string, string> input)
         {
-            var transId = input["TransID"];
+            var transId = input["TransId"];
             var str = formData["merNo"] + formData["ordernum"] + formData["amount"] + input["Key"];
 
 
@@ -165,7 +165,7 @@ namespace Payment.JDPay
                 TransStatus = Definition.GetTransStatus(formData["status"]),
                 Response = Definition.CallbackResponse,
                 WithdrawId = transId,
-                Message = $"status={formData["status"]}, msg={formData["msg"]}"
+                Message = $"status={formData["status"]}"
             };
 
             return result;
