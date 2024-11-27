@@ -731,6 +731,7 @@ namespace PaymentService.Controllers
         }
 
         [Route("LnwPay/{status}/services/api/v1/{type}-request")]
+        [Route("LnwPay/{status}/services/api/v2/{type}-request")]
         public JsonResult LnwPayResponse(string status, string type)
         {
             switch (type.ToLower())
