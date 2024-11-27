@@ -596,6 +596,23 @@ namespace PaymentService.Controllers
             return BadRequest(new { status = 1, code = "030102", msg = "Fail" });
         }
 
+        [Route("NewXyPay/{status}/pay/unifiedorder")]
+        [Route("NewXyPay/{status}/withdraw/unifiedorder")]
+        public IActionResult NewXyPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    payUrl = "http://www.google.com"
+                };
+
+                return new JsonResult(response);
+            }
+
+            return BadRequest(new { errorCode = 20001, errorMsg = "上游通道通讯异" });
+        }
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
