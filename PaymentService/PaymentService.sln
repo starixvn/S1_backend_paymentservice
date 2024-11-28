@@ -195,6 +195,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.DfPay", "Payment.Df
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.NewXyPay", "Payment.NewXyPay\Payment.NewXyPay.csproj", "{14764B19-0BBC-4984-8C81-9F8F6500E146}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payment.BixinPay", "Payment.BixinPay\Payment.BixinPay.csproj", "{5B7F41FF-97AD-4388-A754-D5E5C6D3D982}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -581,6 +583,10 @@ Global
 		{D98FA35E-19EF-40FF-B730-FF77D80A0242}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D98FA35E-19EF-40FF-B730-FF77D80A0242}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D98FA35E-19EF-40FF-B730-FF77D80A0242}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B7F41FF-97AD-4388-A754-D5E5C6D3D982}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B7F41FF-97AD-4388-A754-D5E5C6D3D982}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B7F41FF-97AD-4388-A754-D5E5C6D3D982}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B7F41FF-97AD-4388-A754-D5E5C6D3D982}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -678,6 +684,7 @@ Global
 		{14764B19-0BBC-4984-8C81-9F8F6500E146} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{F9DC9468-2DE4-4764-99D7-13ADFE7A8A4F} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{D98FA35E-19EF-40FF-B730-FF77D80A0242} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{5B7F41FF-97AD-4388-A754-D5E5C6D3D982} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
