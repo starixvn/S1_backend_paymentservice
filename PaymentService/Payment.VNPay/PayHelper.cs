@@ -131,7 +131,7 @@ namespace Payment.VNPay
             creditReq.sign = ToMD5(p).ToLower();
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
-            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.order_no);
 
             var creditResult = new CreditResult();

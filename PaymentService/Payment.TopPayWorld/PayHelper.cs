@@ -219,7 +219,7 @@ namespace Payment.TopPayWorld
         
         private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string rsaKey)
         {
-            var signStr = string.Join("&", param.OrderBy(x => x.Key ,StringComparer.Ordinal).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var signStr = string.Join("&", param.OrderBy(x => x.Key ,StringComparer.Ordinal).Select(kp => $"{kp.Key}={kp.Value}"));
             try
             {
                  //将PKCS8格式的私钥转换为C#中的RSA对象
@@ -247,7 +247,7 @@ namespace Payment.TopPayWorld
         
         private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string apiKey, string target)
         {
-            var signStr = string.Join("&", param.OrderBy(x => x.Key, StringComparer.Ordinal).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var signStr = string.Join("&", param.OrderBy(x => x.Key, StringComparer.Ordinal).Select(kp => $"{kp.Key}={kp.Value}"));
              
             // 待验证签名值base64解码
             var sign = Convert.FromBase64String(target);

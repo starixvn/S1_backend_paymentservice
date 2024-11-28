@@ -113,7 +113,7 @@ namespace Payment.YPay
 
             var sUrl = inputs["withdrawalhost"] + inputs["withdraw"];
             var dicP = FromJson<Dictionary<string, string>>(ToJson(request));
-            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpGet(sUrl, sParam, inputs["TransID"], true);
 
             var withdrawResult = new WithdrawResult();
@@ -163,7 +163,7 @@ namespace Payment.YPay
 
             var sUrl = inputs["host"] + inputs["deposit"];
             var dicP = FromJson<Dictionary<string, string>>(ToJson(depositReq));
-            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpGet(sUrl, sParam, inputs["TransID"], true);
 
             var depositRes = new DepositRes();

@@ -70,7 +70,7 @@ namespace Payment.LuckyPay
             toMD5Data.Add("payAmount", formData["payAmount"]);
             toMD5Data.Add("status", formData["status"]);
             toMD5Data.Add("txid", formData["txid"]);
-            var queryString = string.Join("&", toMD5Data.Select(x => x.Value).ToArray());
+            var queryString = string.Join("&", toMD5Data.Select(x => x.Value));
 
             var currencyData = formData["coinUnit"] switch
             {
@@ -138,7 +138,7 @@ namespace Payment.LuckyPay
             toMD5Data.Add("payAmount", formData["payAmount"]);
             toMD5Data.Add("status", formData["status"]);
             toMD5Data.Add("txid", formData["txid"]);
-            var queryString = string.Join("&", toMD5Data.Select(x => x.Value).ToArray());
+            var queryString = string.Join("&", toMD5Data.Select(x => x.Value));
 
             var currencyData = formData["coinUnit"] switch
             {
@@ -214,7 +214,7 @@ namespace Payment.LuckyPay
             formData.Add("clientNo", inputs["TransID"]);
             formData.Add("currentTime", currentTime);
 
-            var queryString = string.Join("&", formData.Select(x => x.Value).ToArray());
+            var queryString = string.Join("&", formData.Select(x => x.Value));
             var sign = ToMD5($"{queryString}{currencyData["key"]}").ToLower();
 
             var dicP = new Dictionary<string, string>();
@@ -232,7 +232,7 @@ namespace Payment.LuckyPay
             dicP.Add("callbackurl", inputs["CallBackUrl"]);
             dicP.Add("sign", sign);
 
-            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
 
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
 
@@ -275,7 +275,7 @@ namespace Payment.LuckyPay
             formData.Add("clientNo", inputs["TransID"]);
             formData.Add("currentTime", currentTime);
 
-            var queryString = string.Join("&", formData.Select(x => x.Value).ToArray());
+            var queryString = string.Join("&", formData.Select(x => x.Value));
             var sign = ToMD5($"{queryString}{currencyData["key"]}").ToLower();
 
             var dicP = new Dictionary<string, string>();
@@ -290,7 +290,7 @@ namespace Payment.LuckyPay
             dicP.Add("hrefbackurl", inputs["ReturnUrl"]);
             dicP.Add("sign", sign);
             dicP.Add("toPayQr", "0");
-            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
 
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
 

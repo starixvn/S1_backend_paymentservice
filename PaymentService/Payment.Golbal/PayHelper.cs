@@ -290,7 +290,7 @@ namespace Payment.Golbal
             var queryString = string.Join("&", dic
                 .Where(x => !string.IsNullOrEmpty(x.Value)) // 過濾掉 null 或空字串的項目
                 .OrderBy(x => x.Key, StringComparer.Ordinal) // 使用 ASCII 排序
-                .Select(x => $"{x.Key}={x.Value}").ToArray());
+                .Select(x => $"{x.Key}={x.Value}"));
 
             // 在最後加上 "key"
             queryString += $"&key={apikey}";

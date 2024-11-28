@@ -53,7 +53,7 @@ namespace Payment.XcPay
                 formData.Add("sign", GetSign(toMD5Data));
                 formData.Add("params", jparam);
 
-                var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
 
                 var (result, statusCode) = _httpHelper
                     .PostFormData<string, PaymentResponse>(url, sParam);
@@ -103,7 +103,7 @@ namespace Payment.XcPay
             MD5Data.Add("timestamp", formData["timestamp"]);
             MD5Data.Add("Key", apiKey);
 
-            var queryString = string.Join("", MD5Data.Select(x => x.Value).ToArray());
+            var queryString = string.Join("", MD5Data.Select(x => x.Value));
             var sign = ToMD5(queryString);
 
             if (formData["sign"] != sign.ToLower())
@@ -172,7 +172,7 @@ namespace Payment.XcPay
                 formData.Add("sign", GetSign(toMD5Data));
                 formData.Add("params", jparam);
 
-                var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
 
                 var (result, statusCode) = _httpHelper
                     .PostFormData<string, PaymentResponse>(url, sParam);
@@ -215,7 +215,7 @@ namespace Payment.XcPay
             MD5Data.Add("timestamp", formData["timestamp"]);
             MD5Data.Add("Key", apiKey);
 
-            var queryString = string.Join("", MD5Data.Select(x => x.Value).ToArray());
+            var queryString = string.Join("", MD5Data.Select(x => x.Value));
             var sign = ToMD5(queryString);
 
             if (formData["sign"] != sign.ToLower())
@@ -262,7 +262,7 @@ namespace Payment.XcPay
         #region private
         private string GetSign(Dictionary<string, string> dic)
         {
-            var queryString = string.Join("", dic.Select(x => x.Value).ToArray());
+            var queryString = string.Join("", dic.Select(x => x.Value));
             var sign = ToMD5(queryString);
             return sign;
         }

@@ -52,7 +52,7 @@ namespace Payment.PowerBankPay
             var parameter = $"{formData["Merchant"]}{inputs["key"]}{formData["MemberCode"]}{formData["TransactionID"]}{formData["CustomerName"]}{formData["Type"]}{formData["Amount"]}{formData["NotifUrl"]}";
             formData.Add("Signature", ToHMACSHA256(parameter));
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"], true);
 
             var depositRes = JsonConvert.DeserializeObject<DebitResponse>(sResponse);
@@ -168,7 +168,7 @@ namespace Payment.PowerBankPay
 
             formData.Add("Signature", ToHMACSHA256(parameter));
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"], true);
 
             var withdrawalRes = JsonConvert.DeserializeObject<CreditResponse>(sResponse);
