@@ -29,7 +29,7 @@ namespace Payment.BixinPay
             var url = $"{inputs["Host"]}{Definition.Path.Deposit}";
             var amount = decimal.Parse(inputs["Amount"]).ToString("F");
             var dateTimeUtc08 = DateTimeOffset.UtcNow.ToOffset(new TimeSpan(8, 0, 0));
-            var reqDateTime = dateTimeUtc08.ToString("yyyyMMddHHmmss");
+            var requestTime = dateTimeUtc08.ToString("yyyyMMddHHmmss");
             var payType = inputs["PayCode"];
 
             try
@@ -43,7 +43,7 @@ namespace Payment.BixinPay
                     {"requestCurrency", inputs["PayCurrencyId"]},
                     {"asyncUrl", inputs["CallBackUrl"]},
                     {"syncUrl", inputs["ReturnUrl"]},
-                    {"reqDateTime", reqDateTime},
+                    {"requestTime", requestTime},
                     {"apiVersion", "2"},
                     {"attach", payType == "6" ? inputs["AccountName"] : string.Empty}
                 };
@@ -109,7 +109,6 @@ namespace Payment.BixinPay
 
             try
             {
-
                 var req = new Dictionary<string, string>
                 {
                     {"merchno", inputs["MerchantNo"]},
