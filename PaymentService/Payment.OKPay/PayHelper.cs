@@ -121,8 +121,7 @@ namespace Payment.OKPay
                     { "payeeAccount", input["AccountNo"] },
                     { "timestamp", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString() },
                     { "merchantCode", input["MerchantCode"] },
-                    { "callbackAddress", input["CallBackUrl"] },
-                    { "timeout", "" }
+                    { "callbackAddress", input["CallBackUrl"] }
                 };
                     
                 req.Add("sign", GetSign(req, input["Key"]));
@@ -226,9 +225,9 @@ namespace Payment.OKPay
         {
             var str = string.Join('&', param
                 .Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)
-                    && x.Value != string.Empty) // null要參與簽名
+                    && x.Value != string.Empty) // null要參與簽名，例: &remark=null
                 .OrderBy(x => x.Key, StringComparer.Ordinal)
-                .Select(x => $"{x.Key}={x.Value}")) + $"&sKey={apiKey}";
+                .Select(x => $"{x.Key}={x.Value ?? "null"}")) + $"&sKey={apiKey}";
 
             _logger.LogInformation(str);
             var sign = base.ToMD5(str).ToLower();

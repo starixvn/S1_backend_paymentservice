@@ -35,6 +35,7 @@
     <ProjectReference Include="..\Payment.NewXyPay\Payment.NewXyPay.csproj" />
     <ProjectReference Include="..\Payment.OneWallet\Payment.OneWallet.csproj" />
     <ProjectReference Include="..\Payment.PomPay\Payment.PomPay.csproj" />
+    <ProjectReference Include="..\Payment.OKPay\Payment.OKPay.csproj" />
     <ProjectReference Include="..\Payment.RapidPay\Payment.RapidPay.csproj" />
     <ProjectReference Include="..\Payment.QuickPay\Payment.QuickPay.csproj" />
     <ProjectReference Include="..\Payment.SmartPay\Payment.SmartPay.csproj" />
