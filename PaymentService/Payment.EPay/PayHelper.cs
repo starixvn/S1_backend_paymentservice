@@ -137,7 +137,7 @@ namespace Payment.EPay
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(content)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            var p = string.Join("", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}").ToArray()) + key;
+            var p = string.Join("", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase) && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}")) + key;
             content.Sign = ToMD5(p).ToLower();
 
             var req = new RequestBase
@@ -296,7 +296,7 @@ namespace Payment.EPay
             var dicP = FromJson<Dictionary<string, string>>(ToJson(content)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             var p = string.Join("", dicP.Where(x => !x.Value.Equals("", StringComparison.OrdinalIgnoreCase)
                                                     && !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)
-                                                    && !x.Key.Equals("bankName", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}").ToArray()) + key;
+                                                    && !x.Key.Equals("bankName", StringComparison.OrdinalIgnoreCase)).Select(kp => $"{kp.Value}")) + key;
             content.Sign = ToMD5(p).ToLower();
 
             var req = new RequestBase

@@ -80,7 +80,7 @@ namespace Payment.AeePay
             toMD5Data.Add("status", formData["status"]);
             toMD5Data.Add("md5key", payResource["key"]);
 
-            var queryString = string.Join("|", toMD5Data.Select(x => x.Value).ToArray());
+            var queryString = string.Join("|", toMD5Data.Select(x => x.Value));
             var sign = ToMD5(queryString).ToLower();
 
             if (sign == formData["sign"])
@@ -140,7 +140,7 @@ namespace Payment.AeePay
             toMD5Data.Add("status", formData["status"]);
             toMD5Data.Add("md5key", payResource["key"]);
 
-            var queryString = string.Join("|", toMD5Data.Select(x => x.Value).ToArray());
+            var queryString = string.Join("|", toMD5Data.Select(x => x.Value));
             var sign = ToMD5(queryString).ToLower();
 
             if (sign == formData["sign"])
@@ -210,7 +210,7 @@ namespace Payment.AeePay
             toMD5Data.Add("buyerip ", inputs["ClientIP"]);
             toMD5Data.Add("md5key ", inputs["key"]);
 
-            var queryString = string.Join("|", toMD5Data.Select(x => x.Value).ToArray());
+            var queryString = string.Join("|", toMD5Data.Select(x => x.Value));
             var sign = ToMD5(queryString).ToLower();
 
             var formData = new Dictionary<string, string>();
@@ -226,7 +226,7 @@ namespace Payment.AeePay
             formData.Add("buyerip", inputs["ClientIP"]);
             formData.Add("sign", sign);
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"], false);
             var withdrawRes = JsonConvert.DeserializeObject<CreditRes>(sResponse);
 
@@ -261,7 +261,7 @@ namespace Payment.AeePay
             toMD5Data.Add("buyerip", inputs["ClientIP"]);
             toMD5Data.Add("md5key", inputs["key"]);
 
-            var queryString = string.Join("|", toMD5Data.Select(x => x.Value).ToArray());
+            var queryString = string.Join("|", toMD5Data.Select(x => x.Value));
             var sign = ToMD5(queryString).ToLower();
 
             var formData = new Dictionary<string, string>();
@@ -276,7 +276,7 @@ namespace Payment.AeePay
             formData.Add("userinfo", inputs["UserName"]);
             formData.Add("sign", sign);
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
 
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"], false);
             var depositRes = JsonConvert.DeserializeObject<DebitRes>(sResponse);

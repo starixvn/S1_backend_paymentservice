@@ -163,10 +163,10 @@ namespace Payment.GlobalPay
             paraidc.Add("tradeType", payCodes[0]);
             paraidc.Add("attach", newattach);
 
-            var Param = string.Join("&", paraidc.OrderBy(x => x.Key).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var Param = string.Join("&", paraidc.OrderBy(x => x.Key).Select(kp => $"{kp.Key}={kp.Value}"));
             var sign = GetSign(Param, key);
             paraidc.Add("sign", sign);
-            var sParam = string.Join("&", paraidc.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", paraidc.Select(kp => $"{kp.Key}={kp.Value}"));
 
             var sResponse = HttpPost(sUrl + "peerpay/bussiness/order", sParam, "application/x-www-form-urlencoded", "0");
 
@@ -203,11 +203,11 @@ namespace Payment.GlobalPay
             paraidc.Add("totalAmount", inputs["Amount"]);
             paraidc.Add("tradeNo", inputs["TransID"]);
             paraidc.Add("tradeType", payCodes[0]);
-            var Param = string.Join("&", paraidc.OrderBy(x => x.Key).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var Param = string.Join("&", paraidc.OrderBy(x => x.Key).Select(kp => $"{kp.Key}={kp.Value}"));
             var sign = GetSign(Param, key);
             paraidc.Add("sign", sign);
 
-            var sParam = string.Join("&", paraidc.OrderBy(x => x.Key).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", paraidc.OrderBy(x => x.Key).Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl + "alliesPay/bussiness/order", sParam, "application/x-www-form-urlencoded", "0");
 
             var depositResp = new DepositResp();

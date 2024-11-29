@@ -83,7 +83,7 @@ namespace Payment.TenPay
             var data = FromJson<CallBackDebitReq>(bodyContent);
             var dicP = FromJson<Dictionary<string, string>>(ToJson(data)).Where(f => f.Value.Length > 0).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             dicP.Remove("EncryptValue");
-            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={payResource["key"]}";
+            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}")) + $"&hashkey={payResource["key"]}";
             var sign = ToSHA256(p.ToLower()).ToUpper();
 
             var oNotify = new NotifyDepositResult();
@@ -171,11 +171,11 @@ namespace Payment.TenPay
             formData.Add("PayeePhoneNumber", phoneNo);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={inputs["key"]}";
+            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}")) + $"&hashkey={inputs["key"]}";
             formData.Add("EncryptValue", ToSHA256(p.ToLower()).ToUpper());
 
             formData["PayeeBankName"] = UrlEncode(inputs["BankName"]);
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["ShopOrderId"], true);
 
             var withdrawRes = new WithdrawRes();
@@ -236,10 +236,10 @@ namespace Payment.TenPay
             }
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
-            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()) + $"&hashkey={inputs["key"]}";
+            var p = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}")) + $"&hashkey={inputs["key"]}";
             formData.Add("EncryptValue", ToSHA256(p.ToLower()).ToUpper());
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["ShopOrderId"], true);
 
             var depositRes = new DepositRes();
