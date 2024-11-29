@@ -226,7 +226,7 @@ namespace Payment.OKPay
         {
             var str = string.Join('&', param
                 .Where(x => !x.Key.Equals("sign", StringComparison.OrdinalIgnoreCase)
-                    && x.Value == string.Empty) // null要參與簽名
+                    && x.Value != string.Empty) // null要參與簽名
                 .OrderBy(x => x.Key, StringComparer.Ordinal)
                 .Select(x => $"{x.Key}={x.Value}")) + $"&sKey={apiKey}";
 
