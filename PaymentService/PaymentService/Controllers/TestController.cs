@@ -870,6 +870,27 @@ namespace PaymentService.Controllers
             return BadRequest(errorMessage);
         }
 
+        [Route("SmartPay/{status}/api/pay/V2")]
+        [Route("SmartPay/{status}/api/defray/V2")]
+        public JsonResult SmartPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            var code = isSuccess ? "0" : "-1";
+            var msg = isSuccess ? "ok" : "not ok";
+
+            var response = new
+            {
+                code,
+                msg,
+                detail = new
+                {
+                    PayURL = "http://www.google.com"
+                }
+            };
+
+            return new JsonResult(response);
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
