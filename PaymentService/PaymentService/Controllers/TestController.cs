@@ -646,6 +646,57 @@ namespace PaymentService.Controllers
             return BadRequest(errorMessage);
         }
 
+        [Route("BCOTC/{status}/api/v2/merchant-orders")]
+        [Route("BCOTC/{status}/api/v2/merchant-payout-requests")]
+        public IActionResult BCOTCResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    status = "1",
+                    msg = string.Empty,
+                    payment_url = "https://payment_url",
+                    payment_information = new 
+                    {
+                        bank_name = "bankName",
+                        bank_branch = "bankBranch",
+                        account_name = "accountName",
+                        account_number = "111111",
+                        alipay_url = string.Empty,
+                        alipay_account_id = string.Empty,
+                        alipay_user_full_name = string.Empty,
+                        e_cny_wallet_id = string.Empty,
+                        e_cny_user_name = string.Empty,
+                        e_cny_bank_name = string.Empty
+                    },
+                    order_amount = new 
+                    {
+                        crypto_amount = string.Empty,
+                        fiat_amount = "1000"
+                    },
+                    order_id = "BC-OTC123456"
+                };
+
+                return new JsonResult(response);
+            }
+
+            var errorMessage = new
+            {
+                status = "0",
+                // msg = "An error occurred"
+                msg = new
+                {
+                    payer = new []
+                    {
+                        "Payer cannot be longer than 4 characters"
+                    }
+                }
+            };
+            return BadRequest(errorMessage);
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);

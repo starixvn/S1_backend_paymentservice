@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Payment.BCOTC\Payment.BCOTC.csproj" />
     <ProjectReference Include="..\Payment.BixinPay\Payment.BixinPay.csproj" />
     <ProjectReference Include="..\Payment.CoPay\Payment.CoPay.csproj" />
     <ProjectReference Include="..\Payment.DgPay\Payment.DgPay.csproj" />
