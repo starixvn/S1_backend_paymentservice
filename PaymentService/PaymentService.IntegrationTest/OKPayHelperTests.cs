@@ -27,7 +27,7 @@ public class OKPayHelperTests
     [Test]
     public void DepositCallbackSignTest()
     {
-        var testBodyData = "{\"merchantCode\":\"SH262250\",\"orderNo\":\"S2024112910170201356\",\"merchantOrderNo\":\"DD1414752\",\"amount\":\"101000\",\"orderStatus\":\"SUCCESS\",\"payTime\":\"1732874844076\",\"sign\":\"6df1793f9bc8e56b146a7ff413bc74bc\",\"orderType\":\"IN\",\"adjustStatus\":\"SUCCESS\",\"amountActual\":\"101000\",\"remark\":null}";
+        const string testBodyData = "{\"merchantCode\":\"SH262250\",\"orderNo\":\"S2024112910170201356\",\"merchantOrderNo\":\"DD1414752\",\"amount\":\"101000\",\"orderStatus\":\"SUCCESS\",\"payTime\":\"1732874844076\",\"sign\":\"6df1793f9bc8e56b146a7ff413bc74bc\",\"orderType\":\"IN\",\"adjustStatus\":\"SUCCESS\",\"amountActual\":\"101000\",\"remark\":null}";
         
         var testInputData = new Dictionary<string, string>
         {
@@ -49,25 +49,21 @@ public class OKPayHelperTests
     [Test]
     public void PayoutCallbackSignTest()
     {
-        var testFormData = new Dictionary<string, string>
-        {
-            { "merNo", "10214" },
-            { "ordernum", "WD138361" },
-            { "amount", "100.00" },
-            { "status", "1" },
-            { "sign", "23cfe5a434a2ea0c939a0be675e85fd6" }
-        };
+        const string testBodyData = "{\"merchantCode\":\"SH262250\",\"orderNo\":\"C2024112912182641509\",\"merchantOrderNo\":\"WD138366\",\"amount\":\"11000\",\"orderStatus\":\"FAIL\",\"payTime\":\"1732879665751\",\"sign\":\"675cb5b6942227fe8cf7ac7aa1f947d5\",\"orderType\":\"OUT\",\"adjustStatus\":null,\"amountActual\":null,\"remark\":null}";
+                
         
         var testInputData = new Dictionary<string, string>
         {
-            { "TransId", "WD138361" },
-            { "Key", "sIvJwb2YhDnIXeHkc7lYE31j2dfrob0Z" }
+            { "TransId", "WD138366" },
+            { "Key", "5MzERclSd4QM14KzIFBBohzAfkJaUeap" },
+            { "AppId", "7854769432039520" },
+            { "MerchantCode", "SH262250" }
         };
 
-        var expected = $"status={testFormData["status"]}";
+        const string expected = "orderStatus=FAIL";
         
         var actual = _payHelper
-            .CallBackCredit(testFormData, string.Empty, null!, testInputData)
+            .CallBackCredit(null!, testBodyData, null!, testInputData)
             .Message;
 
         Assert.AreEqual(expected, actual);
