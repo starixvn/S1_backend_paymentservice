@@ -960,6 +960,44 @@ namespace PaymentService.Controllers
             return BadRequest(errorMessage);
         }
 
+        [Route("OneDayPay/{status}/api/Deposit/Submit{method}")]
+        [Route("OneDayPay/{status}/api/Withdrawal/Submit{method}")]
+        public JsonResult MbmPayResponse(string status, string method)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            var successCode = isSuccess ? 200 : -1;
+            var errorMessage = isSuccess ? "ok" : "not ok";
+            var transactionId = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+            if (method.Equals("deposit", StringComparison.OrdinalIgnoreCase))
+            {
+                var debitResponse = new
+                {
+                    isSuccess,
+                    successCode,
+                    errorMessage,
+                    data = new
+                    {
+                        transactionId,
+                        url = "http://www.google.com"
+                    }
+                };
+                return new JsonResult(debitResponse);
+            }
+
+            var creditResponse = new
+            {
+                isSuccess,
+                successCode,
+                errorMessage,
+                data = new
+                {
+                    transactionId
+                }
+            };
+            return new JsonResult(creditResponse);
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
