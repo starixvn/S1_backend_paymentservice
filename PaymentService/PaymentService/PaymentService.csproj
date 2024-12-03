@@ -66,6 +66,7 @@
     <ProjectReference Include="..\Payment.LNWPay\Payment.LNWPay.csproj" />
     <ProjectReference Include="..\Payment.LuckyPay\Payment.LuckyPay.csproj" />
     <ProjectReference Include="..\Payment.MangoPay\Payment.MangoPay.csproj" />
+    <ProjectReference Include="..\Payment.MbmPay\Payment.MbmPay.csproj" />
     <ProjectReference Include="..\Payment.MegaPay\Payment.MegaPay.csproj" />
     <ProjectReference Include="..\Payment.NAP3SPay\Payment.NAP3SPay.csproj" />
     <ProjectReference Include="..\Payment.NewXfuoo\Payment.NewXfuoo.csproj" />

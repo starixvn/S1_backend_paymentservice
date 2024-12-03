@@ -890,6 +890,24 @@ namespace PaymentService.Controllers
 
             return new JsonResult(response);
         }
+        
+        [Route("MbmPay/{status}/api/deposit/order")]
+        [Route("MbmPay/{status}/api/payout/order")]
+        public JsonResult MbmPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            var code = isSuccess ? "0" : "-1";
+            var msg = isSuccess ? "ok" : "not ok";
+
+            var response = new
+            {
+                code,
+                msg,
+                data = "http://www.google.com"
+            };
+
+            return new JsonResult(response);
+        }
 
         [Route("BCOTC/{status}/api/v2/merchant-orders")]
         [Route("BCOTC/{status}/api/v2/merchant-payout-requests")]
