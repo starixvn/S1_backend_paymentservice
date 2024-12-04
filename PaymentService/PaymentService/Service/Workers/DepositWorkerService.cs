@@ -1,138 +1,134 @@
 ﻿using System.Text;
-
 using MySql.Data.MySqlClient;
-
 using PaymentCore;
-
 using PaymentService.Service.BLL;
 using Serilog.Context;
 
-namespace PaymentService.Service.Workers
+namespace PaymentService.Service.Workers;
+
+public class DepositWorkerService : BackgroundService
 {
-    public class DepositWorkerService : BackgroundService
+    private readonly string _environmentName;
+    private readonly ILogger<DepositWorkerService> _logger;
+    private readonly PaymentBLL _paymentBll;
+    private readonly PayBLL _payBll;
+    private Timer _timer;
+    private readonly IEnumerable<int> _payIds;
+    public DepositWorkerService(ILogger<DepositWorkerService> logger, IConfiguration configuration, PaymentBLL paymentBll, PayBLL payBll)
     {
-        private readonly IHostEnvironment _environment;
-        private readonly ILogger<DepositWorkerService> _logger;
-        private readonly PaymentBLL _paymentBll;
-        private readonly PayBLL _payBll;
-        private Timer _timer;
-        private readonly IEnumerable<int> _payIds;
-        public DepositWorkerService(ILogger<DepositWorkerService> logger, IHostEnvironment environment, PaymentBLL paymentBll, PayBLL payBll)
-        {
-            _environment = environment;
-            _logger = logger;
-            _paymentBll = paymentBll;
-            _payBll = payBll;
-            _payIds = new List<int> { 3, 32, 74 };
-        }
+        _environmentName = configuration.GetValue<string>("EnvironmentName");
+        _logger = logger;
+        _paymentBll = paymentBll;
+        _payBll = payBll;
+        _payIds = new List<int> { 3, 32, 74 };
+    }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
+        return Task.CompletedTask;
+    }
+    private void DoWork(object state)
+    {
+        LogContext.PushProperty("WorkId", Guid.NewGuid());
+        try
         {
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            return Task.CompletedTask;
-        }
-        private void DoWork(object state)
-        {
-            LogContext.PushProperty("WorkId", Guid.NewGuid());
-            try
+            var depositRequesList = _paymentBll.GetDepositRequesPayEnquiry(_payIds);
+            foreach (var depositRequest in depositRequesList)
             {
-                var depositRequesList = _paymentBll.GetDepositRequesPayEnquiry(_payIds);
-                foreach (var depositRequest in depositRequesList)
+                try
                 {
-                    try
+                    var payHelper = _payBll.GetPayHelper(depositRequest.PayName);
+                    var depReq = depositRequest.ISetting;
+                    if (!depReq.ContainsKey("TransID"))
                     {
-                        var payHelper = _payBll.GetPayHelper(depositRequest.PayName);
-                        var depReq = depositRequest.ISetting;
-                        if (!depReq.ContainsKey("TransID"))
-                        {
-                            depReq.Add("TransID", depositRequest.TransId);
-                        }
+                        depReq.Add("TransID", depositRequest.TransId);
+                    }
 
-                        if (!depReq.ContainsKey("Amount"))
-                        {
-                            depReq.Add("Amount", depositRequest.Amount.ToString());
-                        }
+                    if (!depReq.ContainsKey("Amount"))
+                    {
+                        depReq.Add("Amount", depositRequest.Amount.ToString());
+                    }
 
-                        if (!depReq.ContainsKey("CurrencyId"))
-                        {
-                            depReq.Add("CurrencyId", depositRequest.CurrencyId.ToString());
-                        }
+                    if (!depReq.ContainsKey("CurrencyId"))
+                    {
+                        depReq.Add("CurrencyId", depositRequest.CurrencyId.ToString());
+                    }
 
-                        if (!depReq.ContainsKey("ThirdId"))
-                        {
-                            depReq.Add("ThirdID", depositRequest.ThirdId);
-                        }
+                    if (!depReq.ContainsKey("ThirdId"))
+                    {
+                        depReq.Add("ThirdID", depositRequest.ThirdId);
+                    }
 
-                        var enquiryDepositResult = payHelper.EnquiryForDebit(depReq);
+                    var enquiryDepositResult = payHelper.EnquiryForDebit(depReq);
 
-                        if (enquiryDepositResult.TransStatus == TransStatus.Success)
+                    if (enquiryDepositResult.TransStatus == TransStatus.Success)
+                    {
+                        #region Transaction is Success
+                        try
                         {
-                            #region Transaction is Success
-                            try
-                            {
-                                _paymentBll.DepositSuccess(depositRequest, enquiryDepositResult);
-                            }
-                            catch (MySqlException SqlEx)
-                            {
-                                /*Need Check Transaction Status*/
-                                var errorMessages = new StringBuilder();
-                                //errorMessages.AppendLine(Newtonsoft.Json.JsonConvert.SerializeObject(dataParam));
-                                errorMessages.AppendLine($"PayName: {depositRequest.PayName}");
-                                errorMessages.AppendLine($"Message: {SqlEx.Message}");
-                                errorMessages.AppendLine($"Error Number: {SqlEx.Number}");
-                                errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
-                                errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
-                                errorMessages.AppendLine($"Source: {SqlEx.Source}");
-                                _logger.LogError(SqlEx, errorMessages.ToString());
-                            }
-                            catch (Exception exForEachTransaction)
-                            {
-                                _logger.LogError(exForEachTransaction, $"PayName: {depositRequest.PayName}\r\n{exForEachTransaction.Message}");
-                                continue;
-                            }
-                            #endregion
+                            _paymentBll.DepositSuccess(depositRequest, enquiryDepositResult);
                         }
-                        else if (enquiryDepositResult.TransStatus == TransStatus.Fail)
+                        catch (MySqlException SqlEx)
                         {
-                            try
-                            {
-                                _paymentBll.DepositFail(depositRequest, enquiryDepositResult);
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex, $"PayName: {depositRequest.PayName} {ex.Message}");
-                            }
+                            /*Need Check Transaction Status*/
+                            var errorMessages = new StringBuilder();
+                            //errorMessages.AppendLine(Newtonsoft.Json.JsonConvert.SerializeObject(dataParam));
+                            errorMessages.AppendLine($"PayName: {depositRequest.PayName}");
+                            errorMessages.AppendLine($"Message: {SqlEx.Message}");
+                            errorMessages.AppendLine($"Error Number: {SqlEx.Number}");
+                            errorMessages.AppendLine($"ErrorCode: {SqlEx.ErrorCode}");
+                            errorMessages.AppendLine($"SqlState: {SqlEx.SqlState}");
+                            errorMessages.AppendLine($"Source: {SqlEx.Source}");
+                            _logger.LogError(SqlEx, errorMessages.ToString());
+                        }
+                        catch (Exception exForEachTransaction)
+                        {
+                            _logger.LogError(exForEachTransaction, $"PayName: {depositRequest.PayName}\r\n{exForEachTransaction.Message}");
+                            continue;
+                        }
+                        #endregion
+                    }
+                    else if (enquiryDepositResult.TransStatus == TransStatus.Fail)
+                    {
+                        try
+                        {
+                            _paymentBll.DepositFail(depositRequest, enquiryDepositResult);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"PayName: {depositRequest.PayName} {ex.Message}");
                         }
                     }
-                    catch (Exception ex1)
-                    {
-                        _logger.LogError(ex1, $"PayName: {depositRequest.PayName} {ex1.Message}");
-                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                var dueTimeSpan = TimeSpan.FromSeconds(30);
-                if (_environment.IsDevelopment() || _environment.IsEnvironment("QA"))
+                catch (Exception ex1)
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                    _logger.LogError(ex1, $"PayName: {depositRequest.PayName} {ex1.Message}");
                 }
-                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        ~DepositWorkerService()
+        catch (Exception ex)
         {
-            _timer?.Dispose();
+            _logger.LogError(ex, ex.Message);
         }
-        public override Task StopAsync(CancellationToken cancellationToken)
+        finally
         {
-            _logger.LogInformation("DepositWorkerService: Process Stopped");
-            _timer?.Change(Timeout.Infinite, 0);
-            return Task.CompletedTask;
+            var dueTimeSpan = TimeSpan.FromSeconds(30);
+            if (!_environmentName.Equals("PROD"))
+            {
+                dueTimeSpan = TimeSpan.FromSeconds(5);
+            }
+            _timer.Change(dueTimeSpan, TimeSpan.Zero);
         }
+    }
+    ~DepositWorkerService()
+    {
+        _timer?.Dispose();
+    }
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("DepositWorkerService: Process Stopped");
+        _timer?.Change(Timeout.Infinite, 0);
+        return Task.CompletedTask;
     }
 }

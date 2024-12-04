@@ -3,21 +3,21 @@ namespace PaymentService.Service.BLL;
 public class WhitelistBLL
 {
     private readonly ConfigBLL _configBll;
-    private readonly IWebHostEnvironment _environment;
     private readonly ILogger<WhitelistBLL> _logger;
+    private readonly string _environmentName;
 
-    public WhitelistBLL(IServiceProvider provider)
+    public WhitelistBLL(IServiceProvider provider, IConfiguration configuration)
     {
         _configBll = provider.GetRequiredService<ConfigBLL>();
-        _environment = provider.GetRequiredService<IWebHostEnvironment>();
         _logger = provider.GetRequiredService<ILogger<WhitelistBLL>>();
+        _environmentName = configuration.GetValue<string>("EnvironmentName");
     }
 
     public bool IsWhitelist(string clientIp, string paymentName, string transId, string methodName)
     {
         _logger.LogInformation($"Method={methodName}, Request: PaymentName={paymentName} clientIP={clientIp} transId={transId}");
 
-        if (!_environment.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase))
+        if (!_environmentName.Equals("PROD"))
             return true;
 
         var officeIps = _configBll.GetConfigValueFromDbByEnvironment<string[]>("OfficeIP", configType: "Whitelist");

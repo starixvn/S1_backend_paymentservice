@@ -5,16 +5,16 @@
 
     public class Common
     {
-        private readonly IWebHostEnvironment environment;
+        private readonly string environmentConfig;
 
-        public Common(IServiceProvider provider)
+        public Common(IConfiguration configuration)
         {
-            environment = provider.GetRequiredService<IWebHostEnvironment>();
+            environmentConfig = configuration.GetSection("EnvironmentName").Get<string>();
         }
 
         public string GetEnv()
         {
-            switch (environment.EnvironmentName)
+            switch (environmentConfig)
             {
                 case "Development":
                 case "LOCAL":
@@ -36,7 +36,7 @@
 
         public string IsTest()
         {
-            return environment.EnvironmentName == "PROD" ? "false" : "true";
+            return environmentConfig == "PROD" ? "false" : "true";
         }
 
         public decimal Floor(decimal d, int decimals)

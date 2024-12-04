@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-
 using PaymentService.Service.DAL;
 using PaymentService.Service.Library;
 using PaymentService.Service.Model;
@@ -13,16 +12,17 @@ public class ConfigBLL
     private readonly IEnumerable<SiteConfig> _siteConfigs;
     private readonly ILogger<ConfigBLL> _logger;
     private readonly string _env;
+    private readonly IConfiguration _configuration;
 
 
-    public ConfigBLL(IServiceProvider provider)
+    public ConfigBLL(IServiceProvider provider, IConfiguration configuration)
     {
-        var environment = provider.GetRequiredService<IWebHostEnvironment>();
         _configService = provider.GetRequiredService<ConfigService>();
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
         _siteConfigs = provider.GetServices<SiteConfig>();
         _logger = provider.GetRequiredService<ILogger<ConfigBLL>>();
-        _env = environment.EnvironmentName;
+        _env = configuration.GetValue<string>("EnvironmentName");
+        _configuration = configuration;
     }
 
     public string GetConfigValue(string configKey, int siteId = 0)
@@ -65,11 +65,10 @@ public class ConfigBLL
         return JsonConvert.DeserializeObject<T>(json);
     }
 
-    public T GetConfigValueByEnvironment<T>(string configKey, int siteId = 0)
+    public ServiceHostConfig GetServiceHostConfig()
     {
-        var json = GetConfigValue($"{configKey}.{_env}.json", siteId);
-
-        return JsonConvert.DeserializeObject<T>(json);
+        var serviceHostConfig = _configuration.GetSection("serviceHosts").Get<ServiceHostConfig>();
+        return serviceHostConfig;
     }
 
     public T GetConfigValueFromDbByEnvironment<T>(string configKey, int siteId = 0, string configType = "")

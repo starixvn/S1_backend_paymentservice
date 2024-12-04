@@ -13,7 +13,7 @@ public class FaceBookPixelBLL
     public FaceBookPixelBLL(IServiceProvider provider)
     {
         var configBll = provider.GetRequiredService<ConfigBLL>();
-        _commonServiceUrl = configBll.GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").CommonService;
+        _commonServiceUrl = configBll.GetServiceHostConfig().CommonService;
         _courierAdapter = provider.GetRequiredService<CourierAdapter>();
         _siteEnums = new[] { SiteEnum.Nova88, SiteEnum.Bwing, SiteEnum.Goal123 };
     }
