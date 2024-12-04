@@ -1,6 +1,7 @@
 ﻿using PaymentCore.Interface;
 using PaymentService.Model;
 using PaymentService.Service.BLL;
+using System.Configuration;
 
 namespace PaymentService.Service.Library
 {
@@ -8,12 +9,13 @@ namespace PaymentService.Service.Library
     {
         private readonly IHttpClientFactory _clientFactory;
         private readonly bool _hasProxySetting;
+    
         public HttpHelper(IServiceProvider serviceProvider)
         {
             _clientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-            
-            var configBll = serviceProvider.GetRequiredService<ConfigBLL>();
-            _hasProxySetting = !string.IsNullOrEmpty(configBll.GetConfigValueFromDbByEnvironment<ProxySettingConfig>("TokyoProxy").ProxyHost);
+            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+            _hasProxySetting = !string.IsNullOrEmpty(configuration.GetValue<string>("ProxyHost"));
+            Console.WriteLine("hasProxySetting: " + _hasProxySetting);
         }
         public HttpClient GetClient() => _clientFactory.CreateClient();
         
