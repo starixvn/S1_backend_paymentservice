@@ -62,7 +62,7 @@ namespace Payment.SmartPay
             }
             catch (CustomException exception)
             {
-                _logger.LogInformation($"YFBPay deposit failed, Code:{exception.Code}, Message:{exception.Message}");
+                _logger.LogInformation($"SmartPay deposit failed, Code:{exception.Code}, Message:{exception.Message}");
 
                 return new DepositResult(false, exception.Code, exception.Message);
             }

@@ -31,6 +31,7 @@
     <ProjectReference Include="..\Payment.GameWallet\Payment.GameWallet.csproj" />
     <ProjectReference Include="..\Payment.GlobalPay\Payment.GlobalPay.csproj" />
     <ProjectReference Include="..\Payment.JDPay\Payment.JDPay.csproj" />
+    <ProjectReference Include="..\Payment.JokPay\Payment.JokPay.csproj" />
     <ProjectReference Include="..\Payment.NAP3SPay\Payment.NAP3SPay.csproj" />
     <ProjectReference Include="..\Payment.NewXfuoo\Payment.NewXfuoo.csproj" />
     <ProjectReference Include="..\Payment.NewXyPay\Payment.NewXyPay.csproj" />
