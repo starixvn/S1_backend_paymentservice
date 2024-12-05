@@ -872,6 +872,8 @@ namespace PaymentService.Controllers
 
         [Route("SmartPay/{status}/api/pay/V2")]
         [Route("SmartPay/{status}/api/defray/V2")]
+        [Route("JokPay/{status}/api/pay/V2")]
+        [Route("JokPay/{status}/api/defray/V2")]
         public JsonResult SmartPayResponse(string status)
         {
             var isSuccess = CheckIsSuccess(status);
