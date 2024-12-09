@@ -102,6 +102,7 @@ namespace Payment.AeePay
             var result = new NotifyDepositResult
             {
                 ThirdId = formData["orderno"],
+                ActualAmount = decimal.Parse(formData["tjmoney"]),
                 DepositId = depositId,
                 Comment = $"status={status}", 
                 TransStatus = Definition.GetDepositTransStatus(status),
