@@ -74,7 +74,7 @@ namespace Payment.AeePay
         
         public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
         {
-            var depositId = payResource["TransID"];
+            var depositId = formData["morderno"];
             var currency = payResource["CurrencyId"];
             var status = formData["status"];
 
@@ -166,7 +166,7 @@ namespace Payment.AeePay
         public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
             Dictionary<string, string> payResource)
         {
-            var withdrawalId = payResource["TransID"];
+            var withdrawalId = formData["morderno"];
             var currency = payResource["CurrencyId"];
             var callbackSignKeys= new List<string>
             {
