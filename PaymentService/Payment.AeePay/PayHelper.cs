@@ -195,7 +195,7 @@ namespace Payment.AeePay
             return new NotifyWithdrawResult
             {
                 WithdrawId = withdrawalId,
-                ThirdId = formData["orderNo"],
+                ThirdId = formData["orderno"],
                 TransStatus = Definition.GetWithdrawalTransStatus(status),
                 Response = CallbackResponse.Success
             };
