@@ -130,7 +130,7 @@ namespace Payment.AeePay
                 {
                     { "merchantno", inputs[$"{currency}_MerchantNo"] },
                     { "morderno  ", inputs["TransID"] },
-                    { "bankcode", GetPayOutBankCode(inputs) },
+                    { "bankcode", inputs["BankCode"] },
                     { "type", "0" },
                     { "realname", inputs["AccountName"] },
                     { "cardno", inputs["AccountNo"] },
@@ -227,14 +227,6 @@ namespace Payment.AeePay
             var result = payCode.Split('-');
 
             return result.Length > 1 ? result[1] : string.Empty;
-        }
-        
-        private static string GetPayOutBankCode(Dictionary<string, string> inputs)
-        {
-            // THB use BankCode, BDT use PayCode
-            return int.Parse(inputs["CurrencyId"]) == (int)CurrencyEnum.THB
-                ? inputs["BankCode"]
-                : inputs["PayCode"];
         }
 
         internal string GetPostSign(Dictionary<string, string> dic, string key)
