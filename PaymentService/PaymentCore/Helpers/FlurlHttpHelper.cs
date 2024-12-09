@@ -58,7 +58,6 @@ namespace PaymentCore.Helpers
             {
                 throw new CustomException($"Invalid JSON string={str}, Cannot DeserializeObject.");
             }
-            _logger.LogInformation("Liam Log"+ str);
       
             var result = JsonExtension.DeserializeObject<TResult>(str);
             
