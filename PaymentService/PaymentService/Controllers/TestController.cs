@@ -696,6 +696,37 @@ namespace PaymentService.Controllers
             };
             return BadRequest(errorMessage);
         }
+        
+        [Route("AeePay/{status}/api/payment")]
+        [Route("AeePay/{status}/api/withdraw")]
+        public IActionResult AeePayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    success = true,
+                    resultCode = "10000",
+                    resultMsg = "Success",
+                    data = new
+                    {
+                        payUrl = "https://www.google.com",
+                        orderno = "123456"
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+
+            var errorMessage = new
+            {
+                success = false,
+                resultCode = "18000",
+                resultMsg = "数据签名不通过",
+            };
+            return BadRequest(errorMessage);
+        }
 
         private static bool CheckIsSuccess(string status)
         {
