@@ -83,7 +83,7 @@ namespace Payment.JDPay
                 DepositId = transId,
                 Comment = $"status={formData["status"]}, msg={formData["msg"]}",
                 TransStatus = formData["status"].Equals("1") ? TransStatus.Success : TransStatus.Pending,
-                ActualAmount = decimal.Parse(formData["money"]),
+                ActualAmount = decimal.Parse(formData["amount"]),
                 Response = Definition.CallbackResponse
             };
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
 	  <TargetFramework>net6.0</TargetFramework>
@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Payment.AeePay\Payment.AeePay.csproj" />
     <ProjectReference Include="..\Payment.CoPay\Payment.CoPay.csproj" />
     <ProjectReference Include="..\Payment.DgPay\Payment.DgPay.csproj" />
     <ProjectReference Include="..\Payment.DoitnowPay\Payment.DoitnowPay.csproj" />
