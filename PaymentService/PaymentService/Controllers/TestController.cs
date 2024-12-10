@@ -992,6 +992,35 @@ namespace PaymentService.Controllers
             };
             return BadRequest(errorMessage);
         }
+        
+        [Route("ZiuPay/{status}/transaction/deposit/request")]
+        [Route("ZiuPay/{status}/transaction/withdraw/request")]
+        public IActionResult ZiuPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    code = 0,
+                    msg = "Success",
+                    data = new
+                    {
+                        redirectUrl = "https://www.google.com",
+                        oder_no = "123456"
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+
+            var errorMessage = new
+            {
+                code = 3,
+                msg = "Other errors"
+            };
+            return BadRequest(errorMessage);
+        }
 
         [Route("OneDayPay/{status}/api/Deposit/Submit{method}")]
         [Route("OneDayPay/{status}/api/Withdrawal/Submit{method}")]
