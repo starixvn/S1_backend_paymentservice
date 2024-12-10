@@ -87,7 +87,7 @@ namespace Payment.MegaPay
             toMD5Data.Add("out_trade_no", data.out_trade_no);
             toMD5Data.Add("state", data.state);
             toMD5Data.Add("trade_no", data.trade_no);
-            var queryString = string.Join("&", toMD5Data.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var queryString = string.Join("&", toMD5Data.Select(kp => $"{kp.Key}={kp.Value}"));
             var p = queryString + payResource["apiToken"] + payResource["callBackToken"];
             var sign = ToMD5(p).ToLower();
 
@@ -140,7 +140,7 @@ namespace Payment.MegaPay
             toMD5Data.Add("request_amount", data.request_amount);
             toMD5Data.Add("state", data.state);
             toMD5Data.Add("trade_no", data.trade_no);
-            var queryString = string.Join("&", toMD5Data.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var queryString = string.Join("&", toMD5Data.Select(kp => $"{kp.Key}={kp.Value}"));
             var p = queryString + payResource["apiToken"] + payResource["callBackToken"];
             var sign = ToMD5(p).ToLower();
 
@@ -185,7 +185,7 @@ namespace Payment.MegaPay
             toMD5Data.Add("callback_url", inputs["CallBackUrl"]);
             toMD5Data.Add("out_trade_no", inputs["TransID"]);
             toMD5Data.Add("phone", inputs["PhoneNo"]);
-            var queryString = string.Join("&", toMD5Data.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var queryString = string.Join("&", toMD5Data.Select(kp => $"{kp.Key}={kp.Value}"));
             var p = queryString + inputs["apiToken"] + inputs["callBackToken"];
             var sign = ToMD5(p).ToLower();
 

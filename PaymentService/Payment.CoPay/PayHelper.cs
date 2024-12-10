@@ -38,7 +38,7 @@ namespace Payment.CoPay
             }
             formData.Add("sign", Sign(formData, inputs["key"]));
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
 
             var depositRes = JsonConvert.DeserializeObject<PayResponse>(sResponse);
@@ -84,7 +84,7 @@ namespace Payment.CoPay
             };
             formData.Add("sign", Sign(formData, inputs["key"]));
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"]);
 
             var withdrawResult = new WithdrawResult();

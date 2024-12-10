@@ -54,7 +54,7 @@ namespace Payment.FattyPay
                 formData1.Add("Signature", ToSHA512(p).ToUpper());
 
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(formData1));
-                var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
                 var sResponse = HttpGet(sUrl, sParam, data.MerchantTransactionId, true);
 
                 var callBackDebitReq2 = new CallBackDebitReq2();
@@ -141,7 +141,7 @@ namespace Payment.FattyPay
                 formData1.Add("Signature", ToSHA512(p).ToUpper());
 
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(formData1));
-                var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
                 var sResponse = HttpGet(sUrl, sParam, data.MerchantTransactionId, true);
 
                 var callBackDebitReq2 = new CallBackDebitReq2();
@@ -209,7 +209,7 @@ namespace Payment.FattyPay
             var p = $"{inputs["key"]}&{formData["MerchantTransactionId"]}&{formData["Amount"]}&{formData["CustomerIsoCurrency"]}&{formData["CustomerAccount"]}";
             formData.Add("Signature", ToSHA512(p).ToUpper());
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["MerchantTransactionId"], true);
 
             var withdrawResult = new WithdrawResult();
@@ -288,7 +288,7 @@ namespace Payment.FattyPay
             formData.Add("Signature", sign);
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(formData));
-            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", inputs["TransID"], true);
 
             var oDepositResult = new DepositResult();

@@ -266,7 +266,7 @@ namespace Payment.DoitnowPay
 
         public string Hash(Dictionary<string, string> para, string key)
         {
-            var queryString = string.Join("", para.Select(p => p.Value).ToArray());
+            var queryString = string.Join("", para.Select(p => p.Value));
             _logger.LogInformation(queryString);
             var sign = ToSHA256($"{queryString}{key}").ToLower();
             _logger.LogInformation(sign);

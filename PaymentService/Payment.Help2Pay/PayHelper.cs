@@ -185,7 +185,7 @@ namespace Payment.Help2Pay
             var dicP = FromJson<Dictionary<string, string>>(ToJson(creditReq));
             var P = $"{creditReq.MerchantCode}{creditReq.TransactionID}{creditReq.MemberCode}{creditReq.Amount}{creditReq.CurrencyCode}{time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss")}{creditReq.toBankAccountNumber}{inputs["key"]}";
             dicP.Add("Key", ToMD5(P).ToUpper());
-            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", creditReq.TransactionID);
 
             var withdrawResult = new WithdrawResult();

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
 	  <TargetFramework>net6.0</TargetFramework>
@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Payment.AeePay\Payment.AeePay.csproj" />
     <ProjectReference Include="..\Payment.CoPay\Payment.CoPay.csproj" />
     <ProjectReference Include="..\Payment.DgPay\Payment.DgPay.csproj" />
     <ProjectReference Include="..\Payment.DoitnowPay\Payment.DoitnowPay.csproj" />
@@ -28,6 +29,7 @@
     <ProjectReference Include="..\Payment.GlobalPay\Payment.GlobalPay.csproj" />
     <ProjectReference Include="..\Payment.JDPay\Payment.JDPay.csproj" />
     <ProjectReference Include="..\Payment.NAP3SPay\Payment.NAP3SPay.csproj" />
+    <ProjectReference Include="..\Payment.OKPay\Payment.OKPay.csproj" />
     <ProjectReference Include="..\Payment.RapidPay\Payment.RapidPay.csproj" />
     <ProjectReference Include="..\Payment.QuickPay\Payment.QuickPay.csproj" />
     <ProjectReference Include="..\Payment.VaderPay\Payment.VaderPay.csproj" />

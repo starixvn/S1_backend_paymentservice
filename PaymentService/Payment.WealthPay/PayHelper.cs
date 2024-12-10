@@ -158,7 +158,7 @@ namespace Payment.WealthPay
                     $"{formData["Amount"]}{formData["Note"]}{formData["CallbackURL"]}{formData["ClientIP"]}{formData["TransactionTime"]}{inputs["key"]}";
             formData.Add("Signature", ToSHA256(p).ToUpper());
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["TransactionID"]);
 
             var withdrawResult = new WithdrawResult();
@@ -219,7 +219,7 @@ namespace Payment.WealthPay
                     $"{formData["TransactionTime"]}{inputs["key"]}";
             formData.Add("Signature", ToSHA256(p).ToUpper());
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["TransactionID"]);
 
             var depositRes = new DepositRes();
@@ -278,7 +278,7 @@ namespace Payment.WealthPay
             var p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["type"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
 
             var enquiryWithdrawRes = new EnquiryWithdrawRes();

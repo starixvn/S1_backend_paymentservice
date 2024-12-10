@@ -311,7 +311,7 @@ internal class PayHelper : PayHelperBase
     private string GetSign(IEnumerable<KeyValuePair<string, string>> param, string privateKey)
     {
         param = param.Where(x => !string.IsNullOrWhiteSpace(x.Value)).OrderBy(kp => kp.Key).ToDictionary(x => x.Key, x => x.Value);
-        var plainSign = string.Join("", param.Where(x => !NoSignField.Contains(x.Key)).Select(kp => kp.Value).ToArray());
+        var plainSign = string.Join("", param.Where(x => !NoSignField.Contains(x.Key)).Select(kp => kp.Value));
         _logger.LogInformation($"Sign plaintext={plainSign}.");
 
         var sign = RsaSign(plainSign, privateKey, HashAlgorithmName.SHA1);

@@ -247,7 +247,7 @@ namespace Payment.EasyPay3
         private CreatOrderResponse CreateOrder(string baseApiUrl, Dictionary<string, string> req)
         {
             var apiUrl = baseApiUrl + Definition.Path.CreateOrder;
-            var parameters = string.Join("&", req.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var parameters = string.Join("&", req.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}"));
             var (result, statusCode) = _httpHelper.Get<CreatOrderResponse>(apiUrl, parameters);
 
             if (!statusCode.IsSuccessStatus())
@@ -271,7 +271,7 @@ namespace Payment.EasyPay3
             else
                 apiUrl = baseApiUrl + Definition.Path.CreateEWalletPayout;
 
-            var parameters = string.Join("&", req.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var parameters = string.Join("&", req.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}"));
             var (result, statusCode) = _httpHelper.Get<CreatPayoutResponse>(apiUrl, parameters);
 
             if (!statusCode.IsSuccessStatus())

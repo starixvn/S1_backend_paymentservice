@@ -237,7 +237,7 @@ namespace Payment.DgPay
 
         internal string GetSign(Dictionary<string, string> dic, string secretKey)
         {
-            var queryString = string.Join("", dic.Select(x => x.Value).ToArray());
+            var queryString = string.Join("", dic.Select(x => x.Value));
             SignConcatSourceString = queryString + secretKey;
             _logger.LogInformation($"SignSourceString: {SignConcatSourceString}");
             var sign = ToMD5(SignConcatSourceString).ToLower();

@@ -112,7 +112,7 @@ namespace Payment.MangoPay
             var p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["type"]}{formData["userName"]}{formData["cardNo"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
 
             var withdrawResult = new WithdrawResult();
@@ -179,7 +179,7 @@ namespace Payment.MangoPay
             var p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["notifyUrl"]}{formData["type"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
 
             var depositRes = new DepositRes();
@@ -241,7 +241,7 @@ namespace Payment.MangoPay
             var p = $"{formData["merchantId"]}{formData["orderSn"]}{formData["currency"]}{formData["amount"]}{formData["type"]}{inputs["key"]}";
             formData.Add("sign", ToMD5(p).ToLower());
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["orderSn"]);
 
             var enquiryWithdrawRes = new EnquiryWithdrawRes();

@@ -164,7 +164,7 @@ namespace Payment.ComitPay
                         $"{formData["toBankAccountNumber"]}{inputs["key"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["TransactionID"]);
 
             var withdrawResult = new WithdrawResult();
@@ -210,7 +210,7 @@ namespace Payment.ComitPay
             var p = $"{formData["Merchant"]}{formData["Reference"]}{formData["Customer"]}{formData["Amount"]}{formData["Currency"]}{formData["Datetime"]}{inputs["key"]}{formData["ClientIP"]}";
             formData.Add("Key", ToMD5(p).ToUpper());
 
-            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var sParam = string.Join("&", formData.Select(kp => $"{kp.Key}={kp.Value}"));
             var sResponse = HttpPost(sUrl, sParam, "application/x-www-form-urlencoded", formData["Reference"]);
             var oDepositResult = new DepositResult();
 

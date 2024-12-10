@@ -347,7 +347,7 @@ namespace Payment.DaYangPay
         private string Hash(Dictionary<string, string> param, string key)
         {
             var sortedParameters = param.OrderBy(p => p.Key);
-            var queryString = string.Join("&", sortedParameters.Select(x => $"{x.Key}={x.Value}").ToArray());
+            var queryString = string.Join("&", sortedParameters.Select(x => $"{x.Key}={x.Value}"));
             _logger.LogInformation(queryString);
             var sign = ToHMACSHA256(queryString,key).ToLower();
             _logger.LogInformation(sign);
