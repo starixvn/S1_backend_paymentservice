@@ -727,6 +727,28 @@ namespace PaymentService.Controllers
             };
             return BadRequest(errorMessage);
         }
+        
+        [Route("XPay/{status}/fundtransfer.php")]
+        [Route("XPay/{status}/withdrawal.php")]
+        public IActionResult XPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var responseXml = $"<Payout><status>000</status><billno>XPaybillno</billno><displaypage>http://www.google.com</displaypage></Payout>";
+
+                // Clear existing response headers if necessary
+                Response.Clear();
+
+                // Add the content type header for XML
+                Response.Headers["Content-Type"] = "text/xml";
+
+                // Return the XML response
+                return Content(responseXml, "text/xml");
+            }
+            
+            return BadRequest();
+        }
 
         private static bool CheckIsSuccess(string status)
         {
