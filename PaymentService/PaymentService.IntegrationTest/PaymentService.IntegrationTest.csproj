@@ -45,6 +45,8 @@
     <ProjectReference Include="..\Payment.VaderPay\Payment.VaderPay.csproj" />
 
     <ProjectReference Include="..\Payment.RarepidPay\Payment.RarepidPay.csproj" />
+
+    <ProjectReference Include="..\Payment.XPay\Payment.XPay.csproj" />
     <ProjectReference Include="..\Payment.YFBPay\Payment.YFBPay.csproj" />
     <ProjectReference Include="..\PaymentService\PaymentService.csproj" />
     <ProjectReference Include="..\Payment.QuickPay\Payment.QuickPay.csproj" />
