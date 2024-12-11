@@ -1067,7 +1067,7 @@ namespace PaymentService.Controllers
             var isSuccess = CheckIsSuccess(status);
             if (isSuccess)
             {
-                var responseXml = $"<Payout><status>000</status><billno>XPaybillno</billno><displaypage>http://www.google.com</displaypage></Payout>";
+                var responseXml = $"<xml><status>000</status><billno>XPaybillno</billno><displaypage>http://www.google.com</displaypage></xml>";
 
                 // Clear existing response headers if necessary
                 Response.Clear();
