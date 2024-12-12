@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using PaymentCore.Models;
 
 namespace PaymentCore.Interface
 {
