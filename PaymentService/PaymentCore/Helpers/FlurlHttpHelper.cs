@@ -112,7 +112,8 @@ namespace PaymentCore.Helpers
         {
             switch (contentType)
             {
-                case ContentType.Xml: 
+                case "application/xml":
+                case "text/xml":
                     var xmlSerializer = new XmlSerializer(typeof(T));
                     using (var reader = new StringReader(content))
                         return (T)xmlSerializer.Deserialize(reader);
