@@ -1073,7 +1073,8 @@ namespace PaymentService.Controllers
                 Response.Clear();
                 
                 // Return the XML response
-                return Content(responseXml, "text/xml");
+                // return Content(responseXml, "text/xml");
+                return Content(responseXml, "application/xml");
             }
             
             return BadRequest();
