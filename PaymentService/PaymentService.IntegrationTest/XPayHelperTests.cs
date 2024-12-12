@@ -52,12 +52,41 @@ namespace PaymentService.IntegrationTest
             AssertGetSign(parameters, expectSignConcatSourceString, expectedSignResult);
         }
         
+        [Test]
+        public void B01_VerifySign_CallBackCredit()
+        {
+            var receiveModel = new Dictionary<string, string>
+            {
+                { "service_version", "1.0" },
+                { "billno", "FO2019042515000002" },
+                { "partner_orderid", "2019062100008883" },
+                { "currency", "CNY" },
+                { "amount", "5000" },
+                { "account_name", "黄晓明" },
+                { "account_number", "1234567890" },
+                { "bank_code", "ICBC" },
+                { "status", "000" },
+                { "error_code", "" },
+                { "error_description", "" }
+            };
+            
+            var expectSignConcatSourceString = "service_version=1.0&billno=FO2019042515000002&partner_orderid=2019062100008883&currency=CNY&amount=5000&account_name=黄晓明&account_number=1234567890&bank_code=ICBC&status=000&key=abc12345";
+            AssertVerifySign(receiveModel, expectSignConcatSourceString, "739B7D5EE6973AD835BD973C304C3EB301418A25");
+        }
+        
         private void AssertGetSign(Dictionary<string, string> testData, string expectSignConcatSourceString,
             string expectedSignResult)
         {
             var actual = _target.GetSign(testData, _secretKey);
             PayHelper.SignConcatSourceString.Should().Be(expectSignConcatSourceString);
             actual.Should().Be(expectedSignResult);
+        }
+        
+        private void AssertVerifySign(Dictionary<string, string> receiveModel, string expectSignConcatSourceString, string receivedSign)
+        {
+            var actual = _target.VerifySign(receiveModel, _secretKey, receivedSign);
+            PayHelper.SignConcatSourceString.Should().Be(expectSignConcatSourceString);
+            actual.Should().Be(true);
         }
     }
 }
