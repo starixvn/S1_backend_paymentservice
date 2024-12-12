@@ -250,6 +250,7 @@ namespace Payment.XPay
         internal string GetSign(IEnumerable<KeyValuePair<string, string>> param, string key)
         {
             SignConcatSourceString = string.Join("&", param
+                    .Where(x => !string.IsNullOrEmpty(x.Value))
                     .Select(x => $"{x.Key}={x.Value}")) + $"&key={key}";
 
             _logger.LogInformation("SignConcatSourceString: " + SignConcatSourceString);
@@ -258,7 +259,7 @@ namespace Payment.XPay
             return sign;
         }
 
-        private bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string key , string target)
+        internal bool VerifySign(IEnumerable<KeyValuePair<string, string>> param, string key , string target)
         {
             var sign = GetSign(param, key);
 
