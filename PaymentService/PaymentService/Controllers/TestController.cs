@@ -1071,10 +1071,7 @@ namespace PaymentService.Controllers
 
                 // Clear existing response headers if necessary
                 Response.Clear();
-
-                // Add the content type header for XML
-                Response.Headers["Content-Type"] = "text/xml";
-
+                
                 // Return the XML response
                 return Content(responseXml, "text/xml");
             }

@@ -1,8 +1,9 @@
-﻿using System.Xml.Serialization;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PaymentCore;
 using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
+using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
 namespace Payment.XPay
@@ -11,11 +12,12 @@ namespace Payment.XPay
     {
         internal static string? SignConcatSourceString;
 
+        private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
-
         public PayHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+            _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
         }
 
         #region Deposit
@@ -42,25 +44,25 @@ namespace Payment.XPay
                     { "notify_url", input["CallBackUrl"] },
                 };
                 req.Add("sign", GetSign(req, input["Key"]));
+
+                var (result, statusCode) =
+                    _httpHelper.PostUrlEncoded<Dictionary<string, string>, CreatOrderResp>(url, req);
+                if (!statusCode.IsSuccessStatus())
+                {
+                    throw new CustomException($"Code={statusCode}");
+                }
                 
-                var postData = string.Join("&", req.Select(kp => $"{kp.Key}={kp.Value}"));
-                var result = HttpPost(url, postData, "application/x-www-form-urlencoded", transId);
-                
-                var xmlSerializer = new XmlSerializer(typeof(CreatOrderResp));
-                using var reader = new StringReader(result);
-                var resp = (CreatOrderResp)xmlSerializer.Deserialize(reader);
-                
-                if (string.IsNullOrEmpty(resp.displaypage))
+                if (string.IsNullOrEmpty(result.displaypage))
                 {
                     throw new CustomException($"XPay deposit failed! displaypage no value)");
                 }
-                
+               
                 var response = new DepositResult
                 {
                     Success = true,
                     ErrorCode = "0",
-                    Url = resp.displaypage,
-                    ThirdId = resp.billno
+                    Url = result.displaypage,
+                    ThirdId = result.billno
                 };
 
                 return response;
@@ -151,24 +153,23 @@ namespace Payment.XPay
                 req.Add("bank_city", "N/A");
                 req.Add("bank_branch", "N/A");
                 
-                var postData = string.Join("&", req.Select(kp => $"{kp.Key}={kp.Value}"));
-                var result = HttpPost(url, postData, "application/x-www-form-urlencoded", transId);
-                
-                var xmlSerializer = new XmlSerializer(typeof(CreatPayoutResp));
-                using var reader = new StringReader(result);
-                var resp = (CreatPayoutResp)xmlSerializer.Deserialize(reader);
-
-                var successStatus = new List<string> { "000", "001" };
-                if (!successStatus.Contains(resp.status))
+                var (result, statusCode) =
+                    _httpHelper.PostUrlEncoded<Dictionary<string, string>, CreatPayoutResp>(url, req);
+                if (!statusCode.IsSuccessStatus())
                 {
-                    throw new CustomException($"XPay withdrawal failed! status={resp.status}, error_code={resp.error_code}, error_description={resp.error_description}");
+                    throw new CustomException($"Code={statusCode}");
                 }
                 
+                var successStatus = new List<string> { "000", "001" };
+                if (!successStatus.Contains(result.status))
+                {
+                    throw new CustomException($"XPay withdrawal failed! status={result.status}, error_code={result.error_code}, error_description={result.error_description}");
+                }
+               
                 return new WithdrawResult
                 {
                     Success = true,
-                    WithdrawId = transId,
-                    RawContent = result
+                    WithdrawId = transId
                 };
             }
             catch (CustomException ex)
