@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Net;
+using System.Xml.Serialization;
 using Flurl.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -26,10 +27,10 @@ namespace PaymentCore.Helpers
             _header = new Dictionary<string, string>();
         }
         
-        public (TResult Result, HttpStatusCode StatusCode) Get<TResult>(string url, string query, bool withProxy = false)
-            where TResult : class
+        public (TResult Result, HttpStatusCode StatusCode) Get<TResult>
+            (string url, string query, bool withProxy = false, string responseContentType = ContentType.Json) where TResult : class
         {
-            var result = GetAsync<TResult>(url, query, withProxy)
+            var result = GetAsync<TResult>(url, query, withProxy, responseContentType)
                 .ConfigureAwait(false)
                 .GetAwaiter()
                 .GetResult();
@@ -37,37 +38,22 @@ namespace PaymentCore.Helpers
             return result;
         }
 
-        public async Task<(TResult Result, HttpStatusCode StatusCode)> GetAsync<TResult>(string url, string query, bool withProxy = false)
-            where TResult : class
+        private async Task<(TResult Result, HttpStatusCode StatusCode)> GetAsync<TResult>
+            (string url, string query, bool withProxy = false, string respContentType = ContentType.Json) where TResult : class
         {
             var tResult = default(TResult);
-            var result = await GetDataAsync(url, query, withProxy);
+            var (content, statusCode) = await GetDataAsync(url, query, withProxy);
 
-            if (result.StatusCode == HttpStatusCode.OK)
-                tResult = JsonExtension.DeserializeObject<TResult>(result.Content);
+            if (statusCode == HttpStatusCode.OK)
+                tResult = DeserializeData<TResult>(content, respContentType);
 
-            return (tResult, result.StatusCode);
+            return (tResult, statusCode);
         }
 
-        public async Task<(TResult Result, HttpStatusCode StatusCode)> PostUrlEncodedAsync<TBody, TResult>(
-            string url, TBody body, bool withProxy = false)
+        public (TResult Result, HttpStatusCode StatusCode) PostUrlEncoded<TBody, TResult>
+            (string url, TBody body, bool withProxy = false, string responseContentType = ContentType.Json) where TResult : class
         {
-            var (str, statusCode) = await PostDataAsync(url, body, ContentType.UrlEncoded, withProxy);
-            
-            if (!JsonExtension.IsJson(str))
-            {
-                throw new CustomException($"Invalid JSON string={str}, Cannot DeserializeObject.");
-            }
-            
-            var result = JsonExtension.DeserializeObject<TResult>(str);
-            
-            return (result, statusCode);
-        }
-
-        public (TResult Result, HttpStatusCode StatusCode) PostUrlEncoded<TBody, TResult>(string url, TBody body, bool withProxy = false)
-            where TResult : class
-        {
-            var result = PostUrlEncodedAsync<TBody, TResult>(url, body, withProxy)
+            var result = PostDataAsync<TBody, TResult>(url, body, ContentType.UrlEncoded, responseContentType, withProxy)
                 .ConfigureAwait(false)
                 .GetAwaiter()
                 .GetResult();
@@ -75,35 +61,10 @@ namespace PaymentCore.Helpers
             return result;
         }
 
-        public (TResult Result, HttpStatusCode StatusCode) PostJson<TBody, TResult>(string url, TBody body, bool withProxy = false)
-            where TResult : class
+        public (TResult Result, HttpStatusCode StatusCode) PostJson<TBody, TResult>
+            (string url, TBody body, bool withProxy = false, string responseContentType = ContentType.Json) where TResult : class
         {
-            var result = PostJsonAsync<TBody, TResult>(url, body, withProxy)
-                .ConfigureAwait(false)
-                .GetAwaiter()
-                .GetResult();
-
-            return result;
-        }
-
-        private async Task<(TResult Result, HttpStatusCode StatusCode)> PostJsonAsync<TBody, TResult>(string url, TBody data, bool withProxy = false)
-            where TResult : class
-        {
-            var (json, statusCode) = await PostDataAsync(url, data, ContentType.Json, withProxy);
-            
-            if (!JsonExtension.IsJson(json))
-            {
-                throw new CustomException($"Invalid JSON string={json}, Cannot DeserializeObject.");
-            }
-            
-            var result = JsonExtension.DeserializeObject<TResult>(json);
-            
-            return (result, statusCode);
-        }
-        public (TResult Result, HttpStatusCode StatusCode) PostFormData<TBody, TResult>(string url, TBody body, bool withProxy = false)
-            where TResult : class
-        {
-            var result = PostFormDataAsync<TBody, TResult>(url, body, withProxy)
+            var result = PostDataAsync<TBody, TResult>(url, body, ContentType.Json, responseContentType, withProxy)
                 .ConfigureAwait(false)
                 .GetAwaiter()
                 .GetResult();
@@ -111,19 +72,15 @@ namespace PaymentCore.Helpers
             return result;
         }
         
-        private async Task<(TResult Result, HttpStatusCode StatusCode)> PostFormDataAsync<TBody, TResult>(
-            string url, TBody body, bool withProxy = false)
+        public (TResult Result, HttpStatusCode StatusCode) PostFormData<TBody, TResult>
+            (string url, TBody body, bool withProxy = false, string responseContentType = ContentType.Json) where TResult : class
         {
-            var (str, statusCode) = await PostDataAsync(url, body, ContentType.FormData, withProxy);
-            
-            if (!JsonExtension.IsJson(str))
-            {
-                throw new CustomException($"Invalid JSON string={str}, Cannot DeserializeObject.");
-            }
-            
-            var result = JsonExtension.DeserializeObject<TResult>(str);
-            
-            return (result, statusCode);
+            var result = PostDataAsync<TBody, TResult>(url, body, ContentType.FormData, responseContentType, withProxy)
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
+
+            return result;
         }
         
         public IFlurlHttpHelper WithOAuthBearerToken(string token)
@@ -144,6 +101,33 @@ namespace PaymentCore.Helpers
         }
 
         #region Private Methods
+        
+        private async Task<(TResult Result, HttpStatusCode StatusCode)> PostDataAsync<TBody, TResult>
+            (string url, TBody body, string reqContentType, string respContentType, bool withProxy) where TResult : class
+        {
+            var (content, statusCode) = await PostDataAsync(url, body, reqContentType, withProxy);
+            var result = DeserializeData<TResult>(content, respContentType);
+            
+            return (result, statusCode);
+        }
+
+        private static T DeserializeData<T>(string content, string contentType)
+        {
+            switch (contentType)
+            {
+                case ContentType.Json:
+                    if (!JsonExtension.IsJson(content))
+                        throw new CustomException($"Invalid JSON string={content}, Cannot DeserializeObject.");
+                    return JsonExtension.DeserializeObject<T>(content);
+                
+                case ContentType.Xml: 
+                    var xmlSerializer = new XmlSerializer(typeof(T));
+                    using (var reader = new StringReader(content))
+                        return (T)xmlSerializer.Deserialize(reader);
+                default:
+                    throw new CustomException($"DeserializeData unsupported ContentType: {contentType}");
+            }
+        }
 
         private IFlurlRequest CreateFlurlRequest(string url, bool withProxy)
         {
