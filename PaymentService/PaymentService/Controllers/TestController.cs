@@ -992,6 +992,35 @@ namespace PaymentService.Controllers
             };
             return BadRequest(errorMessage);
         }
+        
+        [Route("ZiuPay/{status}/transaction/deposit/request")]
+        [Route("ZiuPay/{status}/transaction/withdraw/request")]
+        public IActionResult ZiuPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    code = 0,
+                    msg = "Success",
+                    data = new
+                    {
+                        redirectUrl = "https://www.google.com",
+                        oder_no = "123456"
+                    }
+                };
+
+                return new JsonResult(response);
+            }
+
+            var errorMessage = new
+            {
+                code = 3,
+                msg = "Other errors"
+            };
+            return BadRequest(errorMessage);
+        }
 
         [Route("OneDayPay/{status}/api/Deposit/Submit{method}")]
         [Route("OneDayPay/{status}/api/Withdrawal/Submit{method}")]
@@ -1029,6 +1058,28 @@ namespace PaymentService.Controllers
                 }
             };
             return new JsonResult(creditResponse);
+        }
+
+        [Route("XPay/{status}/fundtransfer.php")]
+        [Route("XPay/{status}/withdrawal.php")]
+        public IActionResult XPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var responseXml = $"<xml><status>000</status><billno>XPaybillno</billno><displaypage>http://www.google.com</displaypage></xml>";
+
+                // Clear existing response headers if necessary
+                Response.Clear();
+
+                // Add the content type header for XML
+                Response.Headers["Content-Type"] = "text/xml";
+
+                // Return the XML response
+                return Content(responseXml, "text/xml");
+            }
+            
+            return BadRequest();
         }
 
         private static bool CheckIsSuccess(string status)
