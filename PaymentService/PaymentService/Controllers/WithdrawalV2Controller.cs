@@ -24,7 +24,7 @@ public class WithdrawalV2Controller : ControllerBase
 {
     private readonly CustInfoBLL _custInfoBll;
     private readonly PayBLL _payBll;
-    private readonly string _outgoingIp;
+   // private readonly string _outgoingIp;
     private readonly ILogger<WithdrawalV2Controller> _logger;
     private readonly Common _common;
     private readonly PaymentBLL _paymentBll;
@@ -40,7 +40,7 @@ public class WithdrawalV2Controller : ControllerBase
     public WithdrawalV2Controller(IServiceProvider provider)
     {
         var configBll = provider.GetRequiredService<ConfigBLL>();
-        _outgoingIp = configBll.GetConfigValue("OutgoingIp");
+        //_outgoingIp = configBll.GetConfigValue("OutgoingIp");
         _callBackUrl = configBll.GetConfigValue("CallBack");
         _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
         _payBll = provider.GetRequiredService<PayBLL>();
@@ -105,7 +105,7 @@ public class WithdrawalV2Controller : ControllerBase
             input.Add("AccountNo", withdrawalInfo.AccountNo);
             input.Add("Lang", custInfo.UserLang);
             input.Add("ClientIP", _common.GetClientIP(HttpContext));
-            input.Add("OutgoingIp", _outgoingIp);
+           // input.Add("OutgoingIp", _outgoingIp);
             input.Add("PhoneNo", custInfo.PhoneNo);
             input.Add("PhoneVerified", custInfo.PhoneVerified.ToString());
             input.Add("AreaCode", custInfo.AreaCode);
