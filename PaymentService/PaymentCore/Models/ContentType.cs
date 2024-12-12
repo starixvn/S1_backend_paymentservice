@@ -1,6 +1,6 @@
 namespace PaymentCore.Models;
 
-public class ContentType
+public static class ContentType
 {
     public const string Text = "text/plain";
 
@@ -9,6 +9,4 @@ public class ContentType
     public const string UrlEncoded = "application/x-www-form-urlencoded";
 
     public const string FormData = "multipart/form-data";
-    
-    public const string Xml = "application/xml";
 }
