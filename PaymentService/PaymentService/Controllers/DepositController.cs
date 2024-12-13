@@ -18,13 +18,16 @@ namespace PaymentService.Controllers
         private readonly PaymentBLL _paymentBll;
         private readonly Common _common;
         private readonly WhitelistBLL _whitelistBll;
+        private readonly string _manualKey;
 
         public DepositController(IServiceProvider provider)
         {
+            var configBll = provider.GetRequiredService<ConfigBLL>();
             _logger = provider.GetRequiredService<ILogger<DepositController>>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
             _common = provider.GetRequiredService<Common>();
             _whitelistBll = provider.GetRequiredService<WhitelistBLL>();
+            _manualKey = configBll.GetConfigValue("ManualPaymentKey");
         }
 
         [Route("Payment/GetClientIp")]
@@ -57,17 +60,31 @@ namespace PaymentService.Controllers
                 };
 
                 const string payName = "Manual";
-                var clientIp = _common.GetClientIP(HttpContext);
-                if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod())
-                    && !_common.IsInnerIP(clientIp))
+                //var clientIp = _common.GetClientIP(HttpContext);
+                //if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod())
+                //    && !_common.IsInnerIP(clientIp))
+                //{
+                //    _logger.LogInformation(
+                //        $"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
+                //    response.ErrorCode = (int) ErrorCode.Fail;
+                //    response.Message = "Invalid IP!";
+                //    response.Amount = 0;
+                //    return response;
+                //}
+
+                var manualkey = $"{_manualKey}{request.TransId}";
+
+                if (!_common.IsManualRequestValid(HttpContext, manualkey))
                 {
                     _logger.LogInformation(
-                        $"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
-                    response.ErrorCode = (int) ErrorCode.Fail;
-                    response.Message = "Invalid IP!";
+                     $"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} is Invalid token!");
+                    response.ErrorCode = (int)ErrorCode.Fail;
+                    response.Message = "Invalid token!";
                     response.Amount = 0;
                     return response;
                 }
+
+                _logger.LogInformation($"Token Validate: {payName} requested of {request.TransId} is success!");
 
                 var depositInfo = _paymentBll.GetDepositInfo(request.TransId);
 

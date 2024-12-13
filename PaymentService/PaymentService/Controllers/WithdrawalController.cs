@@ -22,14 +22,17 @@ namespace PaymentService.Controllers
         private readonly Common _common;
         private readonly PaymentBLL _paymentBll;
         private readonly WhitelistBLL _whitelistBll;
+        private readonly string _manualKey;
 
         public WithdrawalController(IServiceProvider provider)
         {
+            var configBll = provider.GetRequiredService<ConfigBLL>();
             _payBll = provider.GetRequiredService<PayBLL>();
             _logger = provider.GetRequiredService<ILogger<WithdrawalController>>();
             _common = provider.GetRequiredService<Common>();
             _paymentBll = provider.GetRequiredService<PaymentBLL>();
             _whitelistBll = provider.GetRequiredService<WhitelistBLL>();
+            _manualKey = configBll.GetConfigValue("ManualPaymentKey");
         }
 
         [Route("Payment/VerifyTransaction/{PayName}")]
@@ -76,16 +79,28 @@ namespace PaymentService.Controllers
 
             // 檢查 IP 是否在白名單內
             const string payName = "Manual";
-            var clientIp = _common.GetClientIP(HttpContext);
-            if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod())
-                && !_common.IsInnerIP(clientIp))
+            //var clientIp = _common.GetClientIP(HttpContext);
+            //if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod())
+            //    && !_common.IsInnerIP(clientIp))
+            //{
+            //    _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
+            //    apiResult.ErrorCode = (int)ErrorCode.Fail;
+            //    apiResult.Message = "Invalid IP!";
+            //    return apiResult;
+            //}
+
+            var manualRequestKey = $"{_manualKey}{request.TransId}";
+
+            if (!_common.IsManualRequestValid(HttpContext, manualRequestKey))
             {
-                _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
+                _logger.LogInformation(
+                 $"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId}  is Invalid token!");
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
-                apiResult.Message = "Invalid IP!";
+                apiResult.Message = "Invalid token!";
                 return apiResult;
             }
 
+            _logger.LogInformation($"Token Validate: {payName} requested of {request.TransId} is success!");
             // 查詢訂單在不在db
             var withdrawalRequest = _paymentBll.GetWithdrawalRequest(request.TransId);
             if (withdrawalRequest == null)
@@ -144,15 +159,27 @@ namespace PaymentService.Controllers
 
             // 檢查 IP 是否在白名單內
             const string payName = "Manual";
-            var clientIp = _common.GetClientIP(HttpContext);
-            if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod())
-                && !_common.IsInnerIP(clientIp))
+            //var clientIp = _common.GetClientIP(HttpContext);
+            //if (!_whitelistBll.IsWhitelist(clientIp, payName, request.TransId, GetCurrentMethod())
+            //    && !_common.IsInnerIP(clientIp))
+            //{
+            //    _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
+            //    apiResult.ErrorCode = (int)ErrorCode.Fail;
+            //    apiResult.Message = "Invalid IP!";
+            //    return apiResult;
+            //}
+
+            var manualRequestKey = $"{_manualKey}{request.TransId}";
+            if (!_common.IsManualRequestValid(HttpContext, manualRequestKey))
             {
-                _logger.LogInformation($"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} from {clientIp} is Invalid IP!");
+                _logger.LogInformation(
+                 $"Method={GetCurrentAsyncMethod()}, {payName} requested of {request.TransId} is Invalid token!");
                 apiResult.ErrorCode = (int)ErrorCode.Fail;
-                apiResult.Message = "Invalid IP!";
+                apiResult.Message = "Invalid token!";
                 return apiResult;
             }
+
+            _logger.LogInformation($"Token Validate: {payName} requested of {request.TransId} is success!");
 
             // 查詢訂單在不在db
             var withdrawalRequest = _paymentBll.GetWithdrawalRequest(request.TransId);

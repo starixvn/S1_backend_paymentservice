@@ -1,6 +1,8 @@
 ﻿namespace PaymentService.Service.Library
 {
+    using System.Security.Cryptography;
     using System;
+    using System.Text;
     using System.Text.RegularExpressions;
 
     public class Common
@@ -68,6 +70,25 @@
             }
 
             return httpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+        }
+
+        public bool IsManualRequestValid(HttpContext httpContext, string key )
+        {
+            string requestKey = httpContext.Request.Headers["ManualKey"];
+            
+            return MD5Encrypt(key) == requestKey;
+        }
+
+        public string MD5Encrypt(string key)
+        {
+            var md5Hasher = new MD5CryptoServiceProvider();
+            var data = md5Hasher.ComputeHash(Encoding.Default.GetBytes(key));
+            var sBuilder = new StringBuilder();
+            for (var i = 0; i < data.Length; i++)
+            {
+                sBuilder.Append(data[i].ToString("x2"));
+            }
+            return sBuilder.ToString();
         }
 
         public int GetId(string transId)
