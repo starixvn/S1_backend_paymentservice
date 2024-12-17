@@ -1142,6 +1142,30 @@ namespace PaymentService.Controllers
             return BadRequest();
         }
 
+        [Route("MTPay/{status}/Index")]
+        [Route("MTPay/{status}/Payment")]
+        public JsonResult MTPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    code = 1,
+                    msg = "success",
+                    payurl = "https://example.com/cashier"
+                };
+                return new JsonResult(response);
+            }
+
+            var errorResponse = new
+            {
+                code = 2,
+                msg = "error"
+            };
+            return new JsonResult(errorResponse);
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
