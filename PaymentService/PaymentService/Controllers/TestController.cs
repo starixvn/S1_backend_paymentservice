@@ -1118,6 +1118,29 @@ namespace PaymentService.Controllers
                 return UnprocessableEntity(response);
             }
         }
+        
+        [Route("SojuPay/{status}/gateway/api/v1/payments")]
+        [Route("SojuPay/{status}/gateway/api/v2/payouts")]
+        public IActionResult SojuPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    error_code = "0000",
+                    error_msg = "success",
+                    data = new
+                    {
+                        link = "http://www.google.com",
+                        payout_id = "12345"
+                    }
+                };
+                return new JsonResult(response);
+            }
+            
+            return BadRequest();
+        }
 
         private static bool CheckIsSuccess(string status)
         {
