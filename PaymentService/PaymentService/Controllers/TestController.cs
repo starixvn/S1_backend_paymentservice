@@ -7,6 +7,8 @@ namespace PaymentService.Controllers
 {
     public class TestController : Controller
     {
+        private readonly string DateNowString = DateTime.Now.ToString("yyyyMMddHHmmss");
+
         [Route("RarepidPay/Api/QRDeposit")]
         public JsonResult RarepidPayDepositResponse()
         {
@@ -307,7 +309,7 @@ namespace PaymentService.Controllers
             var isSuccess = CheckIsSuccess(status);
             var statusCode = isSuccess ? "002" : "001";
             var statusMessage = isSuccess ? "SUCCESS" : "test msg";
-            var dateNow = DateTime.Now.ToString("yyyyMMddHHmmss");
+            var dateNow = DateNowString;
 
             var response = new
             {
@@ -361,7 +363,7 @@ namespace PaymentService.Controllers
                     msg,
                     data = new
                     {
-                        orderId = DateTime.Now.ToString("yyyyMMddHHmmss")
+                        orderId = DateNowString
                     }
                 };
 
@@ -500,7 +502,7 @@ namespace PaymentService.Controllers
                 {
                     code,
                     text,
-                    tradeNo = DateTime.Now.ToString("yyyyMMddHHmmss"),
+                    tradeNo = DateNowString,
                     targetUrl = "http://www.google.com"
                 };
 
@@ -523,7 +525,7 @@ namespace PaymentService.Controllers
                 {
                     code,
                     text,
-                    tradeNo = DateTime.Now.ToString("yyyyMMddHHmmss")
+                    tradeNo = DateNowString
                 };
 
                 return new JsonResult(response);
@@ -664,7 +666,7 @@ namespace PaymentService.Controllers
                 errorCode,
                 message,
                 qrString = "abcd",
-                referenceId = $"PP{DateTime.Now.ToString("yyyyMMddHHmmss")}"
+                referenceId = $"PP{DateNowString}"
             };
 
             return new JsonResult(response);
@@ -683,7 +685,7 @@ namespace PaymentService.Controllers
                 status = statusCode,
                 errorCode,
                 message,
-                referenceId = $"PP{DateTime.Now.ToString("yyyyMMddHHmmss")}"
+                referenceId = $"PP{DateNowString}"
             };
 
             return new JsonResult(response);
@@ -1029,7 +1031,7 @@ namespace PaymentService.Controllers
             var isSuccess = CheckIsSuccess(status);
             var successCode = isSuccess ? 200 : -1;
             var errorMessage = isSuccess ? "ok" : "not ok";
-            var transactionId = DateTime.Now.ToString("yyyyMMddHHmmss");
+            var transactionId = DateNowString;
 
             if (method.Equals("deposit", StringComparison.OrdinalIgnoreCase))
             {
@@ -1078,6 +1080,43 @@ namespace PaymentService.Controllers
             }
             
             return BadRequest();
+        }
+
+        [Route("DaYangPay/{status}/api/v1/trades")]
+        [Route("DaYangPay/{status}/api/v1/transfers")]
+        public IActionResult DayangPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var dateNow = DateNowString;
+                var response = new
+                {
+                    client_key = "01h6tn69wfcpy5q5x3vpb3x9me",
+                    amount = "100.00",
+                    trade_no = DateNowString,
+                    transfer_no = DateNowString,
+                    out_trade_no = "20230101000000",
+                    payment_url = "https://example.com/cashier",
+                    created_at = "2023-01-01T01:01:01.000000Z"
+                };
+                return new JsonResult(response);
+            }
+            else
+            {
+                var errors = new
+                {
+                    client_key = new[] { "Invalid client key." }
+                };
+                
+                var response = new
+                {
+                    message = "Invalid client key",
+                    errors = ToJson(errors),
+                    code = 422
+                };
+                return UnprocessableEntity(response);
+            }
         }
 
         private static bool CheckIsSuccess(string status)

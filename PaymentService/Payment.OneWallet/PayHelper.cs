@@ -37,7 +37,8 @@ namespace Payment.OneWallet
                     ShOrderNo = inputs["TransID"],
                     OrderAmount = decimal.Parse(inputs["Amount"]),
                     OrderType = inputs["PayCode"],
-                    BankCode = inputs["BankCode"]
+                    BankCode = inputs["BankCode"],
+                    NotifyUrl = inputs["CallBackUrl"]
                 };
 
                 var url = $"{host.TrimEnd('/')}{Path.Deposit}";
