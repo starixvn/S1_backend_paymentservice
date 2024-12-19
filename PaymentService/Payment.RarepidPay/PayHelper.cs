@@ -21,8 +21,7 @@ public class PayHelper: PayHelperBase
 
     public override DepositResult Debit(Dictionary<string, string> inputs)
     {
-        // var url = inputs["Host"];
-        var url = "https://api.{domain}.com/v2/Deposit";
+        var url = inputs["Host"] + Definition.Path.Deposit;
         try
         {
             var req = new PaymentRequest
@@ -33,19 +32,7 @@ public class PayHelper: PayHelperBase
                 CallbackUrl = inputs["CallBackUrl"]
             };
 
-            var (result, statusCode) = _httpHelper
-                .WithHeader("Authorization", "APIKEY{SPACE}{API_KEY}")
-                .PostJson<PaymentRequest, PaymentResponse>(url, req);
-            
-            if (!statusCode.IsSuccessStatus())
-            {
-                throw new CustomException($"RarepidPay deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
-            }
-            
-            if (result.StatusCode != 0)
-            {
-                throw new CustomException($"RarepidPay deposit failed, StatusCode:{result.StatusCode} Message: {result.Message}");
-            }
+            var result = CreateOrder(url, req, inputs["ApiKey"]);
 
             return new DepositResult
             {
@@ -60,6 +47,25 @@ public class PayHelper: PayHelperBase
 
             return new DepositResult(false, ex.Code, ex.Message);
         }
+    }
+
+    private PaymentResponse CreateOrder(string url, PaymentRequest req, string apiKey)
+    {
+        var (result, statusCode) = _httpHelper
+            .WithHeader("Authorization", $"APIKEY {apiKey}")
+            .PostJson<PaymentRequest, PaymentResponse>(url, req);
+            
+        if (!statusCode.IsSuccessStatus())
+        {
+            throw new CustomException($"RarepidPay deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
+        }
+
+        if (result.StatusCode != Definition.SuccessResponseCode)
+        {
+            throw new CustomException($"RarepidPay deposit failed, StatusCode:{result.StatusCode} Message: {result.Message}");
+        }
+
+        return result;
     }
 
     public override WithdrawResult Credit(Dictionary<string, string> inputs)
