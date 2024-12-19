@@ -1166,6 +1166,32 @@ namespace PaymentService.Controllers
             return new JsonResult(errorResponse);
         }
 
+        [Route("JDPay/{status}/api/Pay/orderadd")]
+        [Route("JDPay/{status}/api/Pay/dfadd")]
+        public JsonResult JDPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    status = "success",
+                    msg = "success",
+                    ordernum = DateNowString,
+                    payurl = "https://example.com/desktop",
+                    payurls = "https://example.com/mobile"
+                };
+                return new JsonResult(response);
+            }
+
+            var errorResponse = new
+            {
+                status = "error",
+                msg = "error msg"
+            };
+            return new JsonResult(errorResponse);
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
