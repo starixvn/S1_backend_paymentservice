@@ -72,6 +72,7 @@
     <ProjectReference Include="..\Payment.PowerBankPay\Payment.PowerBankPay.csproj" />
     <ProjectReference Include="..\Payment.PPPay\Payment.PPPay.csproj" />
     <ProjectReference Include="..\Payment.RapidPay\Payment.RapidPay.csproj" />
+    <ProjectReference Include="..\Payment.RarepidPay\Payment.RarepidPay.csproj" />
     <ProjectReference Include="..\Payment.SojuPay\Payment.SojuPay.csproj" />
     <ProjectReference Include="..\Payment.SpeedPay\Payment.SpeedPay.csproj" />
     <ProjectReference Include="..\Payment.SulifuPay\Payment.SulifuPay.csproj" />
