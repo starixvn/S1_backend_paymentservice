@@ -1,13 +1,65 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using PaymentCore;
+using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
+using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
 namespace Payment.RarepidPay;
 
 public class PayHelper: PayHelperBase
 {
+    private readonly IFlurlHttpHelper _httpHelper;
+    private readonly ILogger<PayHelper> _logger;
+
+    public PayHelper(IServiceProvider provider)
+    {
+        _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
+        _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+    }
+
     public override DepositResult Debit(Dictionary<string, string> inputs)
     {
-        throw new NotImplementedException();
+        // var url = inputs["Host"];
+        var url = "https://api.{domain}.com/v2/Deposit";
+        try
+        {
+            var req = new PaymentRequest
+            {
+                Name = inputs["AccountName"],
+                Amount = int.Parse(inputs["Amount"]),
+                TxnId = inputs["TransID"],
+                CallbackUrl = inputs["CallBackUrl"]
+            };
+
+            var (result, statusCode) = _httpHelper
+                .WithHeader("Authorization", "APIKEY{SPACE}{API_KEY}")
+                .PostJson<PaymentRequest, PaymentResponse>(url, req);
+            
+            if (!statusCode.IsSuccessStatus())
+            {
+                throw new CustomException($"RarepidPay deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
+            }
+            
+            if (result.StatusCode != 0)
+            {
+                throw new CustomException($"RarepidPay deposit failed, StatusCode:{result.StatusCode} Message: {result.Message}");
+            }
+
+            return new DepositResult
+            {
+                Success = true,
+                ErrorCode = "0",
+                Url = result.Url
+            };
+        }
+        catch (CustomException ex)
+        {
+            _logger.LogInformation($"RarepidPay deposit failed, Code:{ex.Code}, Message:{ex.Message}");
+
+            return new DepositResult(false, ex.Code, ex.Message);
+        }
     }
 
     public override WithdrawResult Credit(Dictionary<string, string> inputs)
