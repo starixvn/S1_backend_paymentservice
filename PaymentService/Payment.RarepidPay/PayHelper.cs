@@ -67,7 +67,17 @@ public class PayHelper: PayHelperBase
             };
         }
 
-        throw new NotImplementedException();
+        var depositResult = new NotifyDepositResult
+        {
+            DepositId = depositReceive.TxnId,
+            ActualAmount = decimal.Parse(depositReceive.Amount),
+            ThirdId = depositReceive.Token,
+            TransStatus = Definition.GetTransStatus(depositReceive.Status),
+            Comment = depositReceive.Status,
+            Response = Definition.CallBackResponse
+        };
+        
+        return depositResult;
     }
 
     internal bool VerifySign(DepositReceive receive, string apiKey)
