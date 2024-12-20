@@ -48,6 +48,29 @@ public class PayHelper: PayHelperBase
             return new DepositResult(false, ex.Code, ex.Message);
         }
     }
+    
+    public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
+    {
+        var depositReceive = FromJson<DepositReceive>(bodyContent);
+        var key = payResource["ApiKey"];
+        
+        if (!VerifySign(depositReceive, key))
+        {
+            return new NotifyDepositResult
+            {
+                DepositId = depositReceive.TxnId,
+                TransStatus = TransStatus.Pending,
+                Response = "Signature does not match."
+            };
+        }
+
+        throw new NotImplementedException();
+    }
+
+    private bool VerifySign(DepositReceive receive, string apiKey)
+    {
+        throw new NotImplementedException();
+    }
 
     private PaymentResponse CreateOrder(string url, PaymentRequest req, string apiKey)
     {
@@ -84,11 +107,6 @@ public class PayHelper: PayHelperBase
     }
 
     public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
         throw new NotImplementedException();
     }
