@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PaymentCore;
@@ -10,6 +12,7 @@ namespace Payment.RarepidPay;
 
 public class PayHelper: PayHelperBase
 {
+    internal static string? SignSourceString;
     private readonly IFlurlHttpHelper _httpHelper;
     private readonly ILogger<PayHelper> _logger;
 
@@ -67,9 +70,23 @@ public class PayHelper: PayHelperBase
         throw new NotImplementedException();
     }
 
-    private bool VerifySign(DepositReceive receive, string apiKey)
+    internal bool VerifySign(DepositReceive receive, string apiKey)
     {
-        throw new NotImplementedException();
+        SignSourceString = $"{receive.TxnId}{receive.Amount}{receive.Status}{apiKey}";
+        var sign = HashSha256(SignSourceString);
+        return receive.Signature.Equals(sign, StringComparison.OrdinalIgnoreCase);
+    }
+    
+    private static string HashSha256(string sourceString)
+    {
+        string hash;
+        using (var sha256Hash = SHA256.Create())
+        {
+            var sourceBytes = Encoding.UTF8.GetBytes(sourceString);
+            var hashBytes = sha256Hash.ComputeHash(sourceBytes);
+            hash = BitConverter.ToString(hashBytes).Replace("-", string.Empty).ToLower();
+        }
+        return hash;
     }
 
     private PaymentResponse CreateOrder(string url, PaymentRequest req, string apiKey)

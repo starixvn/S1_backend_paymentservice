@@ -33,7 +33,7 @@ namespace Payment.RarepidPay
         [JsonProperty("token")] 
         public string Token { get; set; }
         [JsonProperty("amount")] 
-        public int Amount { get; set; }
+        public string Amount { get; set; }
         [JsonProperty("txnid")] 
         public string TxnId { get; set; }
         [JsonProperty("status")] 
