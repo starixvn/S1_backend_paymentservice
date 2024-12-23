@@ -1192,6 +1192,43 @@ namespace PaymentService.Controllers
             return new JsonResult(errorResponse);
         }
 
+        [Route("WorldPay/{status}/api/createOrder")]
+        [Route("WorldPay/{status}/api/createPaymentOrder")]
+        public IActionResult WorldPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    AccountName = "AccountName",
+                    AccountNumber = "123455",
+                    Amount = "500",
+                    BankName = "工商银行",
+                    BankRegion = "Q.3",
+                    CreatedAt = "2006-01-02 15:04:05",
+                    ExpiredAt = "2006-01-02 15:04:05",
+                    FileName = "string",
+                    IFSCCode = "abc123",
+                    PayUrl = $"https://example.com/createOrder",
+                    QrCodeData = "string",
+                    RealAmount = "499.99",
+                    Success = true,
+                    TrackingNumber = "b6552f00-ecff-409c-b3f4-896394e682ae"
+                };
+                return new JsonResult(response);
+            }
+
+            var errorResponse = new
+            {
+                ErrorMessage = "PairingFailed",
+                Success = false,
+                TrackingNumber = "b6552f00-ecff-409c-b3f4-896394e682ae"
+            };
+
+            return BadRequest(errorResponse);
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
