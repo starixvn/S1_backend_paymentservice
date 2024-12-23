@@ -50,7 +50,7 @@ public class WithdrawalV2Controller : ControllerBase
         _whitelistBll = provider.GetRequiredService<WhitelistBLL>();
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
         //_faceBookPixelBll = provider.GetRequiredService<FaceBookPixelBLL>();
-        _cRMBLL = provider.GetRequiredService<CRMBLL>();
+        // _cRMBLL = provider.GetRequiredService<CRMBLL>();
 
         #region ActionMapper
 
@@ -124,22 +124,22 @@ public class WithdrawalV2Controller : ControllerBase
                 _paymentBll.UpdateWithdrawalInfo(req.TransId, result.WithdrawalInfo);
             }
 
-            if (result.Success)
-            {
-                _ = Task.Run(() =>
-                {
-                    var para = new CRMRequest()
-                    {
-                        Event = (int)CRMEvent.withdrawal_initiated,
-                        CustId = custInfo.CustId,
-                        SiteId = custInfo.SiteId,
-                        OrderAmount = withdrawalInfo.Amount,
-                        CurrencyId = custInfo.CurrencyId,
-                        Environment = _common.GetEnv()
-                    };
-                    _ = _cRMBLL.Send(para);
-                });
-            }
+            //if (result.Success)
+            //{
+            //    _ = Task.Run(() =>
+            //    {
+            //        var para = new CRMRequest()
+            //        {
+            //            Event = (int)CRMEvent.withdrawal_initiated,
+            //            CustId = custInfo.CustId,
+            //            SiteId = custInfo.SiteId,
+            //            OrderAmount = withdrawalInfo.Amount,
+            //            CurrencyId = custInfo.CurrencyId,
+            //            Environment = _common.GetEnv()
+            //        };
+            //        _ = _cRMBLL.Send(para);
+            //    });
+            //}
 
             return new ApiResult(result.Success
                 ? ErrorCode.Success
@@ -376,22 +376,22 @@ public class WithdrawalV2Controller : ControllerBase
                 case TransStatus.Success when withdrawalInfo.Amount > 0:
                     _paymentBll.WithdrawalSuccess(withdrawalInfo, result);
                     #region 埋點
-                    if (withdrawalInfo.SiteId > 0 )
-                    {
-                        _ = Task.Run(() =>
-                        {
-                            var para = new CRMRequest()
-                            {
-                                Event = (int)CRMEvent.withdrawal_sucessful,
-                                CustId = withdrawalInfo.CustId,
-                                SiteId = withdrawalInfo.SiteId,
-                                OrderAmount = withdrawalInfo.Amount,
-                                CurrencyId = withdrawalInfo.CurrencyId,
-                                Environment = _common.GetEnv()
-                            };
-                            _ = _cRMBLL.Send(para);
-                        });
-                    }
+                    //if (withdrawalInfo.SiteId > 0 )
+                    //{
+                    //    _ = Task.Run(() =>
+                    //    {
+                    //        var para = new CRMRequest()
+                    //        {
+                    //            Event = (int)CRMEvent.withdrawal_sucessful,
+                    //            CustId = withdrawalInfo.CustId,
+                    //            SiteId = withdrawalInfo.SiteId,
+                    //            OrderAmount = withdrawalInfo.Amount,
+                    //            CurrencyId = withdrawalInfo.CurrencyId,
+                    //            Environment = _common.GetEnv()
+                    //        };
+                    //        _ = _cRMBLL.Send(para);
+                    //    });
+                    //}
                     #endregion
                     break;
 
