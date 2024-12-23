@@ -31,7 +31,7 @@ public class WithdrawalV2Controller : ControllerBase
     private readonly WhitelistBLL _whitelistBll;
     private readonly ICacheHelper _redisHelper;
     private readonly string _callBackUrl;
-    private readonly FaceBookPixelBLL _faceBookPixelBll;
+   // private readonly FaceBookPixelBLL _faceBookPixelBll;
     private readonly CRMBLL _cRMBLL;
 
     private readonly IDictionary<WithdrawalType, Func<WithdrawalRequest, Customer, (IPayInfo, Dictionary<string, string>)>>
@@ -49,7 +49,7 @@ public class WithdrawalV2Controller : ControllerBase
         _paymentBll = provider.GetRequiredService<PaymentBLL>();
         _whitelistBll = provider.GetRequiredService<WhitelistBLL>();
         _redisHelper = provider.GetRequiredService<ICacheHelper>();
-        _faceBookPixelBll = provider.GetRequiredService<FaceBookPixelBLL>();
+        //_faceBookPixelBll = provider.GetRequiredService<FaceBookPixelBLL>();
         _cRMBLL = provider.GetRequiredService<CRMBLL>();
 
         #region ActionMapper

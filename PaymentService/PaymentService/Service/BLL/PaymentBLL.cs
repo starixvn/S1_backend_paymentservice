@@ -17,7 +17,7 @@ namespace PaymentService.Service.BLL
         private readonly Common _common;
         private readonly ILogger<PaymentBLL> _logger;
         private readonly ConfigBLL _configBll;
-        private readonly FaceBookPixelBLL _pixelBll;
+        // private readonly FaceBookPixelBLL _pixelBll;
         private readonly TaskSettingService _taskSettingService;
 
         public PaymentBLL(IServiceProvider provider)
@@ -28,7 +28,7 @@ namespace PaymentService.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _logger = provider.GetRequiredService<ILogger<PaymentBLL>>();
             _configBll = provider.GetRequiredService<ConfigBLL>();
-            _pixelBll = provider.GetRequiredService<FaceBookPixelBLL>();
+            //_pixelBll = provider.GetRequiredService<FaceBookPixelBLL>();
         }
 
         public DepositRequest GetDepositRequest(string transId)
@@ -150,7 +150,7 @@ namespace PaymentService.Service.BLL
             };
             _withdrawalService.SetWithdrawalInfo(withdrawalRequest.TransId, withdrawalRequest.SiteId, notifyWithdrawResult.Message, notifyWithdrawResult.ThirdId, withdrawalRequest.PayName, forStatus, WithdrawalStatus.Approved);
             SetWithdrawalAccountCounter(withdrawalRequest, WithdrawalStatus.Approved);
-            _pixelBll.Send2PixelWithdrawalSuccess(withdrawalRequest.SiteId, withdrawalRequest.CustId, withdrawalRequest.CurrencyId, withdrawalRequest.Amount);
+     //  _pixelBll.Send2PixelWithdrawalSuccess(withdrawalRequest.SiteId, withdrawalRequest.CustId, withdrawalRequest.CurrencyId, withdrawalRequest.Amount);
         }
 
         private void SetWithdrawalAccountCounter(WithdrawalRequest withdrawalRequest, WithdrawalStatus changeToStatus)
@@ -197,7 +197,7 @@ namespace PaymentService.Service.BLL
                 @operator,
                 forStatus, WithdrawalStatus.Approved, withdrawalRequest);
             
-            _pixelBll.Send2PixelWithdrawalSuccess(withdrawalRequest.SiteId, withdrawalRequest.CustId, withdrawalRequest.CurrencyId, withdrawalRequest.Amount);
+            //_pixelBll.Send2PixelWithdrawalSuccess(withdrawalRequest.SiteId, withdrawalRequest.CustId, withdrawalRequest.CurrencyId, withdrawalRequest.Amount);
         }
 
 
@@ -326,7 +326,7 @@ namespace PaymentService.Service.BLL
         {
             var di = GetDepositInfo(transId);
             
-            _pixelBll.Send2PixelDepositSuccess(di.SiteId, di.CustId, di.CurrencyId, di.ActualDeposit, di.FirstDeposit);
+            //_pixelBll.Send2PixelDepositSuccess(di.SiteId, di.CustId, di.CurrencyId, di.ActualDeposit, di.FirstDeposit);
 
             if (di.FirstDeposit)
             {
