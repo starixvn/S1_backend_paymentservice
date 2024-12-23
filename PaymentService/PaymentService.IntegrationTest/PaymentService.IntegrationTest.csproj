@@ -41,10 +41,9 @@
     <ProjectReference Include="..\Payment.OKPay\Payment.OKPay.csproj" />
     <ProjectReference Include="..\Payment.RapidPay\Payment.RapidPay.csproj" />
     <ProjectReference Include="..\Payment.QuickPay\Payment.QuickPay.csproj" />
+    <ProjectReference Include="..\Payment.RarepidPay\Payment.RarepidPay.csproj" />
     <ProjectReference Include="..\Payment.SmartPay\Payment.SmartPay.csproj" />
     <ProjectReference Include="..\Payment.VaderPay\Payment.VaderPay.csproj" />
-
-    <ProjectReference Include="..\Payment.RarepidPay\Payment.RarepidPay.csproj" />
 
     <ProjectReference Include="..\Payment.XPay\Payment.XPay.csproj" />
     <ProjectReference Include="..\Payment.YFBPay\Payment.YFBPay.csproj" />

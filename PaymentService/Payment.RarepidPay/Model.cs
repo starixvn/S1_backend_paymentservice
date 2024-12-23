@@ -1,130 +1,91 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 namespace Payment.RarepidPay
 {
-    public class WithdrawalResponse
-    {
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
-        [JsonProperty("status_message")]
-        public string StatusMessage { get; set; }
-    }
-
-    public class WithdrawalPost
-    {
-        [JsonProperty("amount")]
-        public string Amount { get; set; }
-
-        [JsonProperty("http_post_url")]
-        public string HttpPostUrl { get; set; }
-
-        [JsonProperty("ifsc_code")]
-        public string IfscCode { get; set; }
-
-        [JsonProperty("remark")]
-        public string Remark { get; set; }
-
-        [JsonProperty("to_account_name")]
-        public string ToAccountName { get; set; }
-
-        [JsonProperty("to_bank_account")]
-        public string ToBankAccount { get; set; }
-
-        [JsonProperty("to_bank_code")]
-        public string ToBankCode { get; set; }
-
-        [JsonProperty("tran_id")]
-        public string TranId { get; set; }
-    }
-
-    public class WithdrawalCallBackRequest
-    {
-        [JsonProperty("tran_id")]
-        public string TranId { get; set; }
-
-        [JsonProperty("payout_tran_id")]
-        public string PayoutTranId { get; set; }
-
-        [JsonProperty("status_message")]
-        public string StatusMessage { get; set; }
-
-        [JsonProperty("payout_status")]
-        public string PayoutStatus { get; set; }
-
-        [JsonProperty("amount")]
-        public string Amount { get; set; }
-
-        [JsonProperty("currency")]
-        public string Currency { get; set; }
-
-        [JsonProperty("signature")]
-        public string Signature { get; set; }
-
-        [JsonProperty("created_at")]
-        public string CreatedAt { get; set; }
-    }
-
-    public class DepositCallBackRequest
-    {
-        [JsonProperty("amount")]
-        public string Amount { get; set; }
-
-        [JsonProperty("from_bank_code")]
-        public string FromBankCode { get; set; }
-
-        [JsonProperty("pg_tran_id")]
-        public string PgTranId { get; set; }
-
-        [JsonProperty("signature")]
-        public string Signature { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
-        [JsonProperty("token")]
-        public string Token { get; set; }
-
-        [JsonProperty("tran_id")]
-        public string TranId { get; set; }
-    }
-
     public class DepositResponse
     {
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
-        [JsonProperty("status_message")]
-        public string StatusMessage { get; set; }
-
-        [JsonProperty("pg_tran_id")]
-        public string PgTranId { get; set; }
-
-        [JsonProperty("redirect_to")]
-        public string RedirectTo { get; set; }
+        [JsonProperty("statuscode")] 
+        public int StatusCode { get; set; }
+        [JsonProperty("message")] 
+        public string Message { get; set; }
+        [JsonProperty("url")] 
+        public string Url { get; set; }
     }
 
-    public class DepositPost
+    public class DepositRequest
     {
-        [JsonProperty("http_post_url")]
-        public string HttpPostUrl { get; set; }
+        [JsonProperty("name")] 
+        public string Name { get; set; }
+        [JsonProperty("amount")] 
+        public int Amount { get; set; }
+        [JsonProperty("txnid")] 
+        public string TxnId { get; set; }
+        [JsonProperty("callback_url")] 
+        public string CallbackUrl { get; set; }
+    }
 
-        [JsonProperty("return_url")]
-        public string ReturnUrl { get; set; }
-
-        [JsonProperty("failed_return_url")]
-        public string FailedReturnUrl { get; set; }
-
-        [JsonProperty("depositer")]
-        public string Depositer { get; set; }
-
-        [JsonProperty("amount")]
+    public class PaymentReceive
+    {
+        [JsonProperty("statuscode")] 
+        public int StatusCode { get; set; }
+        [JsonProperty("message")] 
+        public string Message { get; set; }
+        [JsonProperty("token")] 
+        public string Token { get; set; }
+        [JsonProperty("amount")] 
         public string Amount { get; set; }
+        [JsonProperty("txnid")] 
+        public string TxnId { get; set; }
+        [JsonProperty("status")] 
+        public string Status { get; set; }
+        [JsonProperty("signature")] 
+        public string Signature { get; set; }
+        [JsonProperty("updated")] 
+        public string Updated { get; set; }
+    }
 
-        [JsonProperty("tran_id")]
-        public string TranId { get; set; }
+    public class WithdrawalRequest
+    {
+        [JsonProperty("name")] 
+        public string Name { get; set; }
+        [JsonProperty("bankcode")] 
+        public string BankCode { get; set; }
+        [JsonProperty("receiver")] 
+        public string Receiver { get; set; }
+        [JsonProperty("account")] 
+        public string Account { get; set; }
+        [JsonProperty("ifsc")] 
+        public string Ifsc { get; set; }
+        [JsonProperty("amount")] 
+        public int Amount { get; set; }
+        [JsonProperty("txnid")] 
+        public string TxnId { get; set; }
+        [JsonProperty("callback_url")] 
+        public string CallbackUrl { get; set; }
+    }
+    
+    public class WithdrawalResponse
+    {
+        [JsonProperty("statuscode")]
+        public int StatusCode { get; set; }
+        [JsonProperty("message")]
+        public string Message { get; set; }
+        [JsonProperty("token")]
+        public string Token { get; set; }
+    }
+    
+    internal class CallbackResponse
+    {
+        public CallbackResponse(int code, string msg)
+        {
+            Code = code;
+            Message = msg;
+        }
+    
+        [JsonProperty("code")]
+        public int Code { get; set; }
 
-        [JsonProperty("remark")]
-        public string Remark { get; set; }
+        [JsonProperty("msg")]
+        public string Message { get; set; }
     }
 }

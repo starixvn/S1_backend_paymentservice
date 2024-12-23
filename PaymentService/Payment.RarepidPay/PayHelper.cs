@@ -1,220 +1,223 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PaymentCore;
 using PaymentCore.Exceptions;
+using PaymentCore.Extensions;
 using PaymentCore.Interface;
 using PaymentCore.Models.Result;
 
-namespace Payment.RarepidPay
+namespace Payment.RarepidPay;
+
+public class PayHelper: PayHelperBase
 {
-    public class PayHelper : PayHelperBase
+    internal static string? SignSourceString;
+    private readonly IFlurlHttpHelper _httpHelper;
+    private readonly ILogger<PayHelper> _logger;
+
+    public PayHelper(IServiceProvider provider)
     {
-        private readonly IFlurlHttpHelper _httpHelper;
-        private readonly ILogger<PayHelper> _logger;
+        _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
+        _logger = provider.GetRequiredService<ILogger<PayHelper>>();
+    }
 
-        public PayHelper(IServiceProvider provider)
+    public override DepositResult Debit(Dictionary<string, string> inputs)
+    {
+        var url = inputs["Host"] + Definition.Path.Deposit;
+        try
         {
-            _logger = provider.GetRequiredService<ILogger<PayHelper>>();
-            _httpHelper = provider.GetRequiredService<IFlurlHttpHelper>();
-        }
-
-        public override DepositResult Debit(Dictionary<string, string> inputs)
-        {
-            var url = GetUrl(inputs["Host"], Path.CreateDeposit);
-            var authorization = GetAuthorization(inputs["Contract"], inputs["ApiKey"]);
-
-            try
+            var req = new DepositRequest
             {
-                var depositRequest = new DepositPost
-                {
-                    HttpPostUrl = inputs["CallBackUrl"],
-                    ReturnUrl = inputs["ReturnUrl"],
-                    FailedReturnUrl = inputs["ReturnUrl"],
-                    Depositer = inputs["CustId"],
-                    Amount = int.Parse(inputs["Amount"]).ToString("F0"),
-                    TranId = inputs["TransID"],
-                    Remark = "service"
-                };
-
-                var orderResponse = CreateOrder(url, authorization, depositRequest);
-                var result = new DepositResult
-                {
-                    Success = true,
-                    ErrorCode = "0",
-                    ThirdId = orderResponse.PgTranId,
-                    Message = orderResponse.StatusMessage,
-                    Url = orderResponse.RedirectTo
-                };
-
-                return result;
-            }
-            catch (CustomException exception)
-            {
-                _logger.LogInformation(exception.Message);
-
-                return new DepositResult(false, exception.Code, exception.Message);
-            }
-        }
-
-        private DepositResponse CreateOrder(string url, string authorization, DepositPost data)
-        {
-            var (response, _) = _httpHelper
-                .WithHeader("Authorization", authorization)
-                .PostJson<DepositPost, DepositResponse>(url, data);
-
-            if (response.Status != Definition.SuccessCode)
-            {
-                throw new CustomException(
-                    $"RarepidPay create order failed: Status={response.Status}, StatusMessage={response.StatusMessage}");
-            }
-
-            return response;
-        }
-
-        private string GetAuthorization(string contract, string apiKey)
-        {
-            return $"{contract} {apiKey}";
-        }
-
-        private string GetUrl(string baseUrl, string path)
-        {
-            return $"{baseUrl.TrimEnd('/')}{path}";
-        }
-
-        public override WithdrawResult Credit(Dictionary<string, string> inputs)
-        {
-            var url = GetUrl(inputs["Host"], Path.CreateWithdrawal);
-            var authorization = GetAuthorization(inputs["Contract"], inputs["ApiKey"]);
-
-            try
-            {
-                var withdrawalRequest = new WithdrawalPost
-                {
-                    HttpPostUrl = inputs["CallBackUrl"],
-                    Amount = int.Parse(inputs["Amount"]).ToString("F2"),
-                    ToBankCode = inputs["BankCode"],
-                    ToBankAccount = inputs["AccountNo"],
-                    ToAccountName = inputs["AccountName"],
-                    IfscCode = inputs["IFSCCode"],
-                    TranId = inputs["TransID"],
-                    Remark = "payout"
-                };
-
-                var withdrawalResponse = CreatePayout(url, authorization, withdrawalRequest);
-                var result = new WithdrawResult
-                {
-                    Success = true,
-                    Message = withdrawalResponse.StatusMessage
-                };
-
-                return result;
-            }
-            catch (CustomException exception)
-            {
-                _logger.LogInformation(exception.Message);
-
-                return new WithdrawResult(exception.Message);
-            }
-        }
-
-        private WithdrawalResponse CreatePayout(string url, string authorization, WithdrawalPost data)
-        {
-            var (response, _) = _httpHelper
-                .WithHeader("Authorization", authorization)
-                .PostJson<WithdrawalPost, WithdrawalResponse>(url, data);
-
-            if (response.Status != Definition.SuccessCode)
-            {
-                throw new CustomException(
-                    $"RarepidPay create payout failed: Status={response.Status}, StatusMessage={response.StatusMessage}");
-            }
-
-            return response;
-        }
-
-        public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override NotifyDepositResult CallBackDebit(
-            Dictionary<string, string> formData,
-            string bodyContent,
-            Dictionary<string, string> headers,
-            Dictionary<string, string> payResource)
-        {
-            var req = FromJson<DepositCallBackRequest>(bodyContent);
-            var signConcatSourceString = $"{req.Token}{req.TranId}{req.FromBankCode}{req.Amount}";
-
-            if (!VerifySign(req.Signature, signConcatSourceString, payResource["ApiKey"]))
-            {
-                return new NotifyDepositResult
-                {
-                    DepositId = req.TranId,
-                    TransStatus = TransStatus.Pending,
-                    Response = "Signature verification failed."
-                };
-            }
-
-            var result = new NotifyDepositResult
-            {
-                ThirdId = req.PgTranId,
-                DepositId = req.TranId,
-                Comment = req.Status,
-                TransStatus = req.Status.Equals("8") ? TransStatus.Success : TransStatus.Pending,
-                ActualAmount = decimal.Parse(req.Amount),
-                Response = Definition.CallbackResponse
+                Name = inputs["AccountName"],
+                Amount = int.Parse(inputs["Amount"]),
+                TxnId = inputs["TransID"],
+                CallbackUrl = inputs["CallBackUrl"]
             };
 
-            return result;
-        }
+            var result = CreateOrder(url, req, inputs["ApiKey"]);
 
-        private bool VerifySign(string sourceSignature, string signConcatSourceString, string apiKey)
-        {
-            var resultSignature = ToHMACSHA256(signConcatSourceString, apiKey);
-            return sourceSignature.Equals(resultSignature, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public override NotifyWithdrawResult CallBackCredit(
-            Dictionary<string, string> formData,
-            string bodyContent,
-            Dictionary<string, string> headers,
-            Dictionary<string, string> payResource)
-        {
-            var req = FromJson<WithdrawalCallBackRequest>(bodyContent);
-            var signConcatSourceString = $"{req.TranId}{req.Amount}{req.Currency}{req.PayoutStatus}{req.CreatedAt}";
-
-            if (!VerifySign(req.Signature, signConcatSourceString, payResource["ApiKey"]))
+            return new DepositResult
             {
-                return new NotifyWithdrawResult
-                {
-                    WithdrawId = req.TranId,
-                    TransStatus = TransStatus.Pending,
-                    Response = "Signature verification failed."
-                };
-            }
-
-            var transStatus = Definition.GetTransStatus(req.PayoutStatus);
-            var result = new NotifyWithdrawResult
-            {
-                WithdrawId = req.TranId,
-                ThirdId = req.PayoutTranId,
-                TransStatus = transStatus,
-                Response = Definition.CallbackResponse,
-                Message = req.StatusMessage
+                Success = true,
+                ErrorCode = "0",
+                Url = result.Url
             };
+        }
+        catch (CustomException ex)
+        {
+            _logger.LogInformation($"RarepidPay deposit failed, Code:{ex.Code}, Message:{ex.Message}");
 
-            return result;
+            return new DepositResult(false, ex.Code, ex.Message);
         }
     }
+    
+    public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
+    {
+        var receive = FromJson<PaymentReceive>(bodyContent);
+        var key = payResource["ApiKey"];
+        
+        if (!VerifySign(receive, key))
+        {
+            return new NotifyDepositResult
+            {
+                DepositId = receive.TxnId,
+                TransStatus = TransStatus.Pending,
+                Response = "Signature does not match."
+            };
+        }
+
+        var depositResult = new NotifyDepositResult
+        {
+            DepositId = receive.TxnId,
+            ActualAmount = decimal.Parse(receive.Amount),
+            ThirdId = receive.Token,
+            TransStatus = Definition.GetTransStatus(receive.Status),
+            Comment = receive.Status,
+            Response = Definition.CallBackResponse
+        };
+        
+        return depositResult;
+    }
+
+    internal bool VerifySign(PaymentReceive receive, string apiKey)
+    {
+        SignSourceString = $"{receive.TxnId}{receive.Amount}{receive.Status}{apiKey}";
+        var sign = HashSha256(SignSourceString);
+        return receive.Signature.Equals(sign, StringComparison.OrdinalIgnoreCase);
+    }
+    
+    private static string HashSha256(string sourceString)
+    {
+        string hash;
+        using (var sha256Hash = SHA256.Create())
+        {
+            var sourceBytes = Encoding.UTF8.GetBytes(sourceString);
+            var hashBytes = sha256Hash.ComputeHash(sourceBytes);
+            hash = BitConverter.ToString(hashBytes).Replace("-", string.Empty).ToLower();
+        }
+        return hash;
+    }
+
+    private DepositResponse CreateOrder(string url, DepositRequest req, string apiKey)
+    {
+        var (result, statusCode) = _httpHelper
+            .WithHeader("Authorization", $"APIKEY {apiKey}")
+            .PostJson<DepositRequest, DepositResponse>(url, req);
+            
+        if (!statusCode.IsSuccessStatus())
+        {
+            throw new CustomException($"RarepidPay deposit failed, HttpStatus: {(int)statusCode} {statusCode}");
+        }
+
+        if (result.StatusCode != Definition.SuccessResponseCode)
+        {
+            throw new CustomException($"RarepidPay deposit failed, StatusCode:{result.StatusCode} Message: {result.Message}");
+        }
+
+        return result;
+    }
+
+    public override WithdrawResult Credit(Dictionary<string, string> inputs)
+    {
+        var url = inputs["Host"] + Definition.Path.Withdrawal;
+        var transId = inputs["TransID"];
+        try
+        {
+            var req = new WithdrawalRequest
+            {
+                Name = inputs["AccountName"],
+                BankCode = inputs["BankCode"],
+                Receiver = inputs["AccountName"],
+                Account = inputs["AccountNo"],
+                Ifsc = inputs["IFSCCode"],
+                Amount = int.Parse(inputs["Amount"]),
+                TxnId = transId,
+                CallbackUrl = inputs["CallBackUrl"]
+            };
+        
+            var result = PayOut(url, req, inputs["ApiKey"]);
+
+            return new WithdrawResult
+            {
+                Success = true,
+                WithdrawId = transId,
+                Message = result.Token
+            };
+        }
+        catch (CustomException ex)
+        {
+            _logger.LogInformation($"RarepidPay withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
+
+            return new WithdrawResult
+            {
+                Success = false,
+                WithdrawId = transId,
+                Message = ex.Message
+            };
+        }
+    }
+
+    private WithdrawalResponse PayOut(string url, WithdrawalRequest req, string apiKey)
+    {
+        var (result, statusCode) = _httpHelper
+            .WithHeader("Authorization", $"APIKEY {apiKey}")
+            .PostJson<WithdrawalRequest, WithdrawalResponse>(url, req);
+        
+        if (!statusCode.IsSuccessStatus())
+        {
+            throw new CustomException($"RarepidPay withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
+        }
+
+        if (result.StatusCode != Definition.SuccessResponseCode)
+        {
+            throw new CustomException($"RarepidPay withdrawal failed, StatusCode:{result.StatusCode} Message: {result.Message}");
+        }
+
+        return result;
+    }
+
+    public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
+        Dictionary<string, string> payResource)
+    {
+        var receive = FromJson<PaymentReceive>(bodyContent);
+        var key = payResource["ApiKey"];
+        var transId = payResource["TransId"];
+        
+        if (!VerifySign(receive, key))
+        {
+            return new NotifyWithdrawResult
+            {
+                WithdrawId = transId,
+                TransStatus = TransStatus.Pending,
+                Response = "Signature does not match."
+            };
+        }
+
+        return new NotifyWithdrawResult
+        {
+            ThirdId = receive.Token,
+            TransStatus = Definition.GetTransStatus(receive.Status),
+            Response = Definition.CallBackResponse,
+            WithdrawId = transId,
+            Message = $"StatusCode={receive.StatusCode}, Message={receive.Message}, Status={receive.Status}"
+        };
+    }
+    
+    public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override EnquiryDepositResult EnquiryForDebit(Dictionary<string, string> inputs)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override EnquiryWithdrawResult EnquiryForCredit(Dictionary<string, string> inputs)
+    {
+        throw new NotImplementedException();
+    }
+
+
 }
