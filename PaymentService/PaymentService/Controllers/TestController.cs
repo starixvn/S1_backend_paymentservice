@@ -1186,6 +1186,32 @@ namespace PaymentService.Controllers
 
             return BadRequest(errorResponse);
         }
+        
+        [Route("RarepidPay/{status}/v2/Deposit")]
+        [Route("RarepidPay/{status}/v2/Withdraw")]
+        public IActionResult RarepidPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    statuscode = 0,
+                    message = "success",
+                    token = "e73abb15-3c89-11ef-8d67-020000e32cda",
+                    url = "http://www.google.com"
+                };
+                return new JsonResult(response);
+            }
+
+            var errorResponse = new
+            {
+                statuscode = 9999,
+                message = "error"
+            };
+
+            return new JsonResult(errorResponse);
+        }
 
         private static bool CheckIsSuccess(string status)
         {
