@@ -13,7 +13,7 @@ namespace Payment.RarepidPay
             /// <summary>
             /// 提款
             /// </summary>
-            public const string Withdrawal = "/ajax/api/withdraw";
+            public const string Withdrawal = "/v2/Withdraw";
         }
 
         public const int SuccessResponseCode = 0;

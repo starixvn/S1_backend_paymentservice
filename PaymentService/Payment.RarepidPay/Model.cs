@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace Payment.RarepidPay
 {
-    public class PaymentResponse
+    public class DepositResponse
     {
         [JsonProperty("statuscode")] 
         public int StatusCode { get; set; }
@@ -12,7 +12,7 @@ namespace Payment.RarepidPay
         public string Url { get; set; }
     }
 
-    public class PaymentRequest
+    public class DepositRequest
     {
         [JsonProperty("name")] 
         public string Name { get; set; }
@@ -44,5 +44,34 @@ namespace Payment.RarepidPay
         public string Updated { get; set; }
     }
 
+    public class WithdrawalRequest
+    {
+        [JsonProperty("name")] 
+        public string Name { get; set; }
+        [JsonProperty("bankcode")] 
+        public string BankCode { get; set; }
+        [JsonProperty("receiver")] 
+        public string Receiver { get; set; }
+        [JsonProperty("account")] 
+        public string Account { get; set; }
+        [JsonProperty("ifsc")] 
+        public string Ifsc { get; set; }
+        [JsonProperty("amount")] 
+        public int Amount { get; set; }
+        [JsonProperty("txnid")] 
+        public string TxnId { get; set; }
+        [JsonProperty("callback_url")] 
+        public string CallbackUrl { get; set; }
+    }
+    
+    public class WithdrawalResponse
+    {
+        [JsonProperty("statuscode")]
+        public int StatusCode { get; set; }
+        [JsonProperty("message")]
+        public string Message { get; set; }
+        [JsonProperty("token")]
+        public string Token { get; set; }
+    }
 
 }

@@ -27,7 +27,7 @@ public class PayHelper: PayHelperBase
         var url = inputs["Host"] + Definition.Path.Deposit;
         try
         {
-            var req = new PaymentRequest
+            var req = new DepositRequest
             {
                 Name = inputs["AccountName"],
                 Amount = int.Parse(inputs["Amount"]),
@@ -99,11 +99,11 @@ public class PayHelper: PayHelperBase
         return hash;
     }
 
-    private PaymentResponse CreateOrder(string url, PaymentRequest req, string apiKey)
+    private DepositResponse CreateOrder(string url, DepositRequest req, string apiKey)
     {
         var (result, statusCode) = _httpHelper
             .WithHeader("Authorization", $"APIKEY {apiKey}")
-            .PostJson<PaymentRequest, PaymentResponse>(url, req);
+            .PostJson<DepositRequest, DepositResponse>(url, req);
             
         if (!statusCode.IsSuccessStatus())
         {
@@ -120,9 +120,69 @@ public class PayHelper: PayHelperBase
 
     public override WithdrawResult Credit(Dictionary<string, string> inputs)
     {
-        throw new NotImplementedException();
+        var url = inputs["Host"] + Definition.Path.Withdrawal;
+        var transId = inputs["TransID"];
+        try
+        {
+            var req = new WithdrawalRequest
+            {
+                Name = inputs["AccountName"],
+                BankCode = inputs["BankCode"],
+                Receiver = inputs["AccountName"],
+                Account = inputs["AccountNo"],
+                Ifsc = inputs["IFSCCode"],
+                Amount = int.Parse(inputs["Amount"]),
+                TxnId = transId,
+                CallbackUrl = inputs["CallBackUrl"]
+            };
+        
+            var result = PayOut(url, req, inputs["ApiKey"]);
+
+            return new WithdrawResult
+            {
+                Success = true,
+                WithdrawId = transId,
+                Message = result.Token
+            };
+        }
+        catch (CustomException ex)
+        {
+            _logger.LogInformation($"RarepidPay withdrawal failed, Code:{ex.Code}, Message:{ex.Message}");
+
+            return new WithdrawResult
+            {
+                Success = false,
+                WithdrawId = transId,
+                Message = ex.Message
+            };
+        }
     }
 
+    private WithdrawalResponse PayOut(string url, WithdrawalRequest req, string apiKey)
+    {
+        var (result, statusCode) = _httpHelper
+            .WithHeader("Authorization", $"APIKEY {apiKey}")
+            .PostJson<WithdrawalRequest, WithdrawalResponse>(url, req);
+        
+        if (!statusCode.IsSuccessStatus())
+        {
+            throw new CustomException($"RarepidPay withdrawal failed, HttpStatus: {(int)statusCode} {statusCode}");
+        }
+
+        if (result.StatusCode != Definition.SuccessResponseCode)
+        {
+            throw new CustomException($"RarepidPay withdrawal failed, StatusCode:{result.StatusCode} Message: {result.Message}");
+        }
+
+        return result;
+    }
+
+    public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
+        Dictionary<string, string> payResource)
+    {
+        throw new NotImplementedException();
+    }
+    
     public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
     {
         throw new NotImplementedException();
@@ -138,9 +198,5 @@ public class PayHelper: PayHelperBase
         throw new NotImplementedException();
     }
 
-    public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
-        Dictionary<string, string> payResource)
-    {
-        throw new NotImplementedException();
-    }
+
 }
