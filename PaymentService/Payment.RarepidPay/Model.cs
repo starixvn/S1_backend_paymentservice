@@ -24,7 +24,7 @@ namespace Payment.RarepidPay
         public string CallbackUrl { get; set; }
     }
 
-    public class DepositReceive
+    public class PaymentReceive
     {
         [JsonProperty("statuscode")] 
         public int StatusCode { get; set; }
@@ -73,5 +73,19 @@ namespace Payment.RarepidPay
         [JsonProperty("token")]
         public string Token { get; set; }
     }
+    
+    internal class CallbackResponse
+    {
+        public CallbackResponse(int code, string msg)
+        {
+            Code = code;
+            Message = msg;
+        }
+    
+        [JsonProperty("code")]
+        public int Code { get; set; }
 
+        [JsonProperty("msg")]
+        public string Message { get; set; }
+    }
 }

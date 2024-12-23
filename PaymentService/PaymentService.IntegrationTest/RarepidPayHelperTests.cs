@@ -27,7 +27,7 @@ public class RarepidPayHelperTests
     [Test]
     public void A01_VerifySign_CallBackDebit()
     {
-        var depositReceive = new DepositReceive
+        var depositReceive = new PaymentReceive
         {
             StatusCode = 0,
             Message = "NO_ERROR",
@@ -42,9 +42,9 @@ public class RarepidPayHelperTests
         AssertVerifySignShouldBeTrue(depositReceive);
     }
 
-    private void AssertVerifySignShouldBeTrue(DepositReceive depositReceive)
+    private void AssertVerifySignShouldBeTrue(PaymentReceive paymentReceive)
     {
-        var actual = _target.VerifySign(depositReceive, "36842c52711c46f5680ee85129f534a70b54df5beafee944d4dd7f7e8de20313");
+        var actual = _target.VerifySign(paymentReceive, "36842c52711c46f5680ee85129f534a70b54df5beafee944d4dd7f7e8de20313");
 
         actual.Should().BeTrue();
         PayHelper.SignSourceString.Should().Be("26271323200.00completed36842c52711c46f5680ee85129f534a70b54df5beafee944d4dd7f7e8de20313");

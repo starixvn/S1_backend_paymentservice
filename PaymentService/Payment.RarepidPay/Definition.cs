@@ -24,6 +24,7 @@ namespace Payment.RarepidPay
             {
                 { CallBackStatus.Initiated, TransStatus.Pending },
                 { CallBackStatus.Pending, TransStatus.Pending},
+                { CallBackStatus.Rejected, TransStatus.Fail},
                 { CallBackStatus.Closed, TransStatus.Pending },
                 { CallBackStatus.Completed, TransStatus.Success }
             };
@@ -33,6 +34,7 @@ namespace Payment.RarepidPay
         {
             public const string Initiated = "initiated";
             public const string Pending = "pending";
+            public const string Rejected = "rejected";
             public const string Closed = "closed";
             public const string Completed = "completed";
         }

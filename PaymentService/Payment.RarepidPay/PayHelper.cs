@@ -54,14 +54,14 @@ public class PayHelper: PayHelperBase
     
     public override NotifyDepositResult CallBackDebit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers, Dictionary<string, string> payResource)
     {
-        var depositReceive = FromJson<DepositReceive>(bodyContent);
+        var receive = FromJson<PaymentReceive>(bodyContent);
         var key = payResource["ApiKey"];
         
-        if (!VerifySign(depositReceive, key))
+        if (!VerifySign(receive, key))
         {
             return new NotifyDepositResult
             {
-                DepositId = depositReceive.TxnId,
+                DepositId = receive.TxnId,
                 TransStatus = TransStatus.Pending,
                 Response = "Signature does not match."
             };
@@ -69,18 +69,18 @@ public class PayHelper: PayHelperBase
 
         var depositResult = new NotifyDepositResult
         {
-            DepositId = depositReceive.TxnId,
-            ActualAmount = decimal.Parse(depositReceive.Amount),
-            ThirdId = depositReceive.Token,
-            TransStatus = Definition.GetTransStatus(depositReceive.Status),
-            Comment = depositReceive.Status,
+            DepositId = receive.TxnId,
+            ActualAmount = decimal.Parse(receive.Amount),
+            ThirdId = receive.Token,
+            TransStatus = Definition.GetTransStatus(receive.Status),
+            Comment = receive.Status,
             Response = Definition.CallBackResponse
         };
         
         return depositResult;
     }
 
-    internal bool VerifySign(DepositReceive receive, string apiKey)
+    internal bool VerifySign(PaymentReceive receive, string apiKey)
     {
         SignSourceString = $"{receive.TxnId}{receive.Amount}{receive.Status}{apiKey}";
         var sign = HashSha256(SignSourceString);
@@ -180,7 +180,28 @@ public class PayHelper: PayHelperBase
     public override NotifyWithdrawResult CallBackCredit(Dictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers,
         Dictionary<string, string> payResource)
     {
-        throw new NotImplementedException();
+        var receive = FromJson<PaymentReceive>(bodyContent);
+        var key = payResource["ApiKey"];
+        var transId = payResource["TransId"];
+        
+        if (!VerifySign(receive, key))
+        {
+            return new NotifyWithdrawResult
+            {
+                WithdrawId = transId,
+                TransStatus = TransStatus.Pending,
+                Response = "Signature does not match."
+            };
+        }
+
+        return new NotifyWithdrawResult
+        {
+            ThirdId = receive.Token,
+            TransStatus = Definition.GetTransStatus(receive.Status),
+            Response = Definition.CallBackResponse,
+            WithdrawId = transId,
+            Message = $"StatusCode={receive.StatusCode}, Message={receive.Message}, Status={receive.Status}"
+        };
     }
     
     public override Dictionary<string, string> CheckHealthForChannels(Dictionary<string, string> inputs)
