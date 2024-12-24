@@ -38,6 +38,7 @@
     <ProjectReference Include="..\Payment.DirePay\Payment.DirePay.csproj" />
     <ProjectReference Include="..\Payment.DoitnowPay\Payment.DoitnowPay.csproj" />
     <ProjectReference Include="..\Payment.DouDouPay\Payment.DouDouPay.csproj" />
+    <ProjectReference Include="..\Payment.DsPay\Payment.DsPay.csproj" />
     <ProjectReference Include="..\Payment.EasyPay3\Payment.EasyPay3.csproj" />
     <ProjectReference Include="..\Payment.EBPay\Payment.EBPay.csproj" />
     <ProjectReference Include="..\Payment.EPay\Payment.EPay.csproj" />
