@@ -87,7 +87,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         
             var (result, statusCode) = _httpHelper
                 .WithOAuthBearerToken(authToken)
-                .PostJson<PayoutReq, PayResp<PayoutData>>(apiUrl + Path.CreatePayout, req);
+                .PostJson<PayoutReq, PayResp<PayoutData>>(apiUrl + Path.CreatePayout, req, true);
 
             if (!statusCode.IsSuccessStatus())
                 throw new CustomException(
@@ -160,7 +160,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         
         var (result, statusCode) = _httpHelper
             .WithHeader("Authorization", "Basic " + token)
-            .PostJson<string, PayResp<AuthData>>(apiUrl + Path.Auth, string.Empty);
+            .PostJson<string, PayResp<AuthData>>(apiUrl + Path.Auth, string.Empty,true);
 
         if (!statusCode.IsSuccessStatus())
             throw new CustomException(
@@ -200,7 +200,7 @@ public class PayHelper : PayHelperBase, IPayHelperNoCallBackUrl
         
         var (result, statusCode) = _httpHelper
             .WithOAuthBearerToken(authToken)
-            .PostJson<DepositReq, PayResp<TResult>>(apiUrl + path, req);
+            .PostJson<DepositReq, PayResp<TResult>>(apiUrl + path, req, true);
 
         if (!statusCode.IsSuccessStatus())
             throw new CustomException(
