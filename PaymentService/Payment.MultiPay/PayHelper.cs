@@ -283,27 +283,14 @@ namespace Payment.MultiPay
 
         private string EncryptData(string httpQuery, string publicKey)
         {
-            var publicKeyXml = ConvertPemPublicKeyToXml(publicKey);
-            byte[] dataToEncrypt = Encoding.UTF8.GetBytes(httpQuery);
-            var rsa = new RSACryptoServiceProvider(4096);
-            rsa.FromXmlString(publicKeyXml);
+            var publicKeysBytes = Convert.FromBase64String(publicKey);
             
-            // Encrypt the byte array using the public key with PKCS#1 v1.5 padding
-            byte[] encryptedData = rsa.Encrypt(dataToEncrypt, false); // false indicates PKCS#1 v1.5 padding
-            // Return the encrypted data as a base64 string
-            return Convert.ToBase64String(encryptedData);
-        }
-
-        private static string ConvertPemPublicKeyToXml(string pemKey)
-        {
-            var stringReader = new StringReader(pemKey);
-            var pemReader = new PemReader(stringReader);
-            var keyPair = (RsaKeyParameters)pemReader.ReadObject();
-
-            var rsaParameters = DotNetUtilities.ToRSAParameters(keyPair);
-            var rsa = new RSACryptoServiceProvider(4096);
-            rsa.ImportParameters(rsaParameters);
-            return rsa.ToXmlString(false);
+            var rsa = RSA.Create();
+            rsa.ImportSubjectPublicKeyInfo(publicKeysBytes, out _);
+            
+            var dataBytes = Encoding.UTF8.GetBytes(httpQuery);
+            var encryptedBytes = rsa.Encrypt(dataBytes, RSAEncryptionPadding.Pkcs1);
+            return Convert.ToBase64String(encryptedBytes);
         }
 
         private string GetQueryString(Dictionary<string, object> parameters)
