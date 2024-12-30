@@ -1213,6 +1213,35 @@ namespace PaymentService.Controllers
             return new JsonResult(errorResponse);
         }
 
+        [Route("MultiPay/{status}/api/payin/order")]
+        [Route("MultiPay/{status}/api/payout/order")]
+        public IActionResult MultiPayResponse(string status)
+        {
+            var isSuccess = CheckIsSuccess(status);
+            if (isSuccess)
+            {
+                var response = new
+                {
+                    code = 200,
+                    msg = "success",
+                    data = new
+                    {
+                        pay_url = "https://example.com/payin",
+                        status = 1
+                    }
+                };
+                return new JsonResult(response);
+            }
+
+            var errorResponse = new
+            {
+                code = 400,
+                msg = "Request Failed"
+            };
+
+            return BadRequest(errorResponse);
+        }
+
         private static bool CheckIsSuccess(string status)
         {
             return status.Equals("success", StringComparison.OrdinalIgnoreCase);
