@@ -18,12 +18,11 @@ namespace Payment.MultiPay
 
         internal static TransStatus GetTransStatus(string status)
             => StatusMap.GetValueOrDefault(status, TransStatus.Pending);
-        
+
         internal class Path
         {
             public const string Deposit = "/api/payin/order";
             public const string Withdrawal = "/api/payout/order";
         }
-
     }
 }

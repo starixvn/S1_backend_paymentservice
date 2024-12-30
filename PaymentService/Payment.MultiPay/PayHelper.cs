@@ -2,9 +2,6 @@
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.OpenSsl;
-using Org.BouncyCastle.Security;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Extensions;
@@ -245,14 +242,12 @@ namespace Payment.MultiPay
         {
             var queryString = GetQueryString(parameters);
             SignConcatSourceString = queryString;
-            publicKey = publicKey.Replace("\\n", "\n");
             return EncryptData(queryString, publicKey);
         }
 
         internal (bool, string) ValidateSign(Dictionary<string, object> parameters, string privateKey)
         {
             var queryString = GetQueryString(parameters);
-            privateKey = privateKey.Replace("\\n", "\n");
             var signature = parameters["sign"].ToString();
             var decryptData = DecryptData(signature, privateKey);
 
@@ -261,33 +256,24 @@ namespace Payment.MultiPay
 
         private string DecryptData(string signature, string privateKey)
         {
-            string xmlPrivateKey = ConvertPemPrivateKeyToXml(privateKey);
-            byte[] encryptedBytes = Convert.FromBase64String(signature);
+            var privateKeyBytes = Convert.FromBase64String(privateKey);
+
             var rsa = new RSACryptoServiceProvider();
-            rsa.FromXmlString(xmlPrivateKey);
-            byte[] decryptedBytes = rsa.Decrypt(encryptedBytes, false);
+            rsa.ImportPkcs8PrivateKey(privateKeyBytes, out _); // Requires .NET 5 or later
+
+            var encryptedBytes = Convert.FromBase64String(signature);
+            var decryptedBytes = rsa.Decrypt(encryptedBytes, RSAEncryptionPadding.Pkcs1);
+
             return Encoding.UTF8.GetString(decryptedBytes);
-        }
-
-        private static string ConvertPemPrivateKeyToXml(string pemKey)
-        {
-            var stringReader = new StringReader(pemKey);
-            var pemReader = new PemReader(stringReader);
-            var keyPair = (RsaPrivateCrtKeyParameters)pemReader.ReadObject();
-
-            var rsaParameters = DotNetUtilities.ToRSAParameters(keyPair);
-            var rsa = new RSACryptoServiceProvider();
-            rsa.ImportParameters(rsaParameters);
-            return rsa.ToXmlString(true); // true for private key
         }
 
         private string EncryptData(string httpQuery, string publicKey)
         {
             var publicKeysBytes = Convert.FromBase64String(publicKey);
-            
+
             var rsa = RSA.Create();
             rsa.ImportSubjectPublicKeyInfo(publicKeysBytes, out _);
-            
+
             var dataBytes = Encoding.UTF8.GetBytes(httpQuery);
             var encryptedBytes = rsa.Encrypt(dataBytes, RSAEncryptionPadding.Pkcs1);
             return Convert.ToBase64String(encryptedBytes);
