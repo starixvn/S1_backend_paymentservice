@@ -151,6 +151,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.GoPay", "Payment.Go
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.EasyPay3", "Payment.EasyPay3\Payment.EasyPay3.csproj", "{AF7C2921-2279-4E2E-985C-7062DEF6BF89}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Payment.GameWallet", "Payment.GameWallet\Payment.GameWallet.csproj", "{3BD8735A-2381-4347-B75C-43648C7FE612}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -449,6 +451,10 @@ Global
 		{AF7C2921-2279-4E2E-985C-7062DEF6BF89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF7C2921-2279-4E2E-985C-7062DEF6BF89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF7C2921-2279-4E2E-985C-7062DEF6BF89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BD8735A-2381-4347-B75C-43648C7FE612}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BD8735A-2381-4347-B75C-43648C7FE612}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BD8735A-2381-4347-B75C-43648C7FE612}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BD8735A-2381-4347-B75C-43648C7FE612}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -524,6 +530,7 @@ Global
 		{0C6E2791-6B36-47F1-9999-35C2F9A52640} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{F99E30B3-8012-405D-83E4-1A9322894617} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 		{AF7C2921-2279-4E2E-985C-7062DEF6BF89} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
+		{3BD8735A-2381-4347-B75C-43648C7FE612} = {3FC2E200-57AF-4AA2-BB20-12630CE3A826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EB7BDA67-F24D-4340-ADF4-D33F85ED1676}
