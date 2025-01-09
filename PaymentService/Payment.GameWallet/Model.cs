@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Threading.Channels;
-
+using PaymentCore.Models.Result;
 namespace Payment.GameWallet
 {
     internal class DepositCallbackRequest
@@ -99,5 +99,22 @@ namespace Payment.GameWallet
         public string statusCode { get; set; }
         public string statusMessage { get; set; }
         public string transactionId { get; set; }
+    }
+
+    internal class VerifyWithdrawalResp
+    {       
+        public string Message { get; set; }
+
+        public bool Verified { get; set; }
+    }
+
+    public  class VerifyTransactionResultGW : VerifyTransactionResult
+    {
+        //public VerifyTransactionResultGW(int status, string contentType, string response)
+        //: base(contentType, response)
+        //{
+        //    Status = status;
+        //}
+        public int Status { get; set; }
     }
 }

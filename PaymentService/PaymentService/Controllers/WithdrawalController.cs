@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 using Newtonsoft.Json;
 using PaymentCore.Extensions;
@@ -45,23 +46,23 @@ namespace PaymentService.Controllers
 
                 _logger.LogInformation(
                     $"Method={GetCurrentAsyncMethod()}, IP={_common.GetClientIP(HttpContext)}, Url={Request.Path}, form={JsonConvert.SerializeObject(dicParams)}, bodyText={bodyContent}");
-                var payHelper = (IVerifyTransaction)_payBll.GetPayHelper(payName);
+                var payHelper = (IVerifyTransaction)_payBll.GetPayHelper(payName.Trim());
 
 
-                var (transId, data) = payHelper.FetchTransIdAndDataBeforeVerify(dicParams, bodyContent, header);
+                 var (transId, data) = payHelper.FetchTransIdAndDataBeforeVerify(dicParams, bodyContent, header);
 
-                var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
-                var input = withdrawalRequest == null ? new Dictionary<string, string>() : withdrawalRequest.ISetting;
-                input.Add("TransIdExists", (withdrawalRequest != null).ToString());
+                 var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
+                 var input = withdrawalRequest == null ? new Dictionary<string, string>() : withdrawalRequest.ISetting;
+                  input.Add("TransIdExists", (withdrawalRequest != null).ToString());
 
-                var result = payHelper.VerifyTransaction(data, input);
+                 var result = payHelper.VerifyTransaction(data, input);
 
                 return Content(result.Response, result.ContentType);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, GetCurrentMethod());
-                return Content(false.ToString());
+                return BadRequest(false.ToString());
             }
         }
 

@@ -3,14 +3,16 @@ using System.Text;
 using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using PaymentCore;
 using PaymentCore.Exceptions;
 using PaymentCore.Interface;
+using PaymentCore.Models;
 using PaymentCore.Models.Result;
 
 namespace Payment.GameWallet
 {
-    public class PayHelper : PayHelperBase
+    public class PayHelper : PayHelperBase, IVerifyTransaction
     {
         private readonly IFlurlHttpHelper _httpHelper;
         private readonly ILogger<PayHelper> _logger;
@@ -264,7 +266,68 @@ namespace Payment.GameWallet
                 _ => throw new NotImplementedException()
             };
         }
+        public (string TransId, IDictionary<string, string> Data) FetchTransIdAndDataBeforeVerify(
+         IDictionary<string, string> formData, string bodyContent, Dictionary<string, string> headers)
+        {
+            var dicReq = FromJson<Dictionary<string, string>>(bodyContent);
 
+            return (dicReq["Reference"], dicReq);
+        }
+
+        public VerifyTransactionResult VerifyTransaction(IDictionary<string, string> data,
+            IDictionary<string, string> input)
+        {
+            var transExists = bool.Parse(input["TransIdExists"]);
+
+            if (!transExists)
+            {
+                return new VerifyTransactionResultGW
+                {
+                    Status = 404,
+                    ContentType = ContentType.Json,
+                    Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
+                    {
+                        Message = $"Transaction Reference: {data["Reference"]} not exists.",
+                        Verified = false
+                    })
+                };
+
+            }
+
+            var str = $"{data["Merchant"]}{data["Reference"]}{data["Amount"]}";
+
+            if (!VerifySign(str, data["Sign"], input["Key"]))
+            {
+                return new VerifyTransactionResultGW
+                {
+                    Status = 404,
+                    ContentType = ContentType.Json,
+                    Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
+                    {
+                        Message = $"Transaction Reference: {data["Reference"]} signature verification failed.",
+                        Verified = false
+                    })
+                };
+            }
+
+            return new VerifyTransactionResultGW
+            {
+                Status = 200,
+                ContentType = ContentType.Json,
+                Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
+                {
+                    Message = "Success.",
+                    Verified = true
+                })
+            };
+        }
+
+        public bool VerifySign(string str, string sign, string key)
+        {
+            var signConcatSourceString = $"{str}{key}";
+
+            return ToMD5(signConcatSourceString).ToLower().Equals(sign, StringComparison.OrdinalIgnoreCase);
+        }
 
     }
     public class ParameterEncoder
