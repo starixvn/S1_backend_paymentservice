@@ -233,7 +233,7 @@ namespace Payment.GameWallet
             var (response, _) = _httpHelper
                 .PostJson<WithdrawalPost, WithdrawalResponse>(url, post);
 
-            if (response.statusCode != Definition.SuccessCode)
+            if (response.statusCode != Definition.WithDrawalSuccessCode)
             {
                 throw new CustomException(
                     $"GameWallet create payout failed: statusCode={response.statusCode}, statusMessage={response.statusMessage}");
