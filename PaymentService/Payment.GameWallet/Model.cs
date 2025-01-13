@@ -107,14 +107,4 @@ namespace Payment.GameWallet
 
         public bool Verified { get; set; }
     }
-
-    public  class VerifyTransactionResultGW : VerifyTransactionResult
-    {
-        //public VerifyTransactionResultGW(int status, string contentType, string response)
-        //: base(contentType, response)
-        //{
-        //    Status = status;
-        //}
-        public int Status { get; set; }
-    }
 }

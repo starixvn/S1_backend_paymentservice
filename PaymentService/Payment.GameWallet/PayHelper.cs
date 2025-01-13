@@ -125,8 +125,8 @@ namespace Payment.GameWallet
                 };
                 post.key = GetCreditPostSign(post, inputs["Key"]);
                 post.datetime = CurrentTimeStamp.ToString("yyyy-MM-dd HH:mm:sstt", new CultureInfo("en-us")); // for post to 3rdParty format
-
-                var withdrawalResponse = CreatePayout(inputs["WithdrawalUrl"], post);
+                var creditUrl = inputs["WithdrawalUrl"] + "/api/MerchantTransfer/withdraw";
+                var withdrawalResponse = CreatePayout(creditUrl, post);
                 var result = new WithdrawResult
                 {
                     Success = true,
@@ -194,7 +194,6 @@ namespace Payment.GameWallet
         {
             var signConcatSourceString =
                 $"{data.merchant}{data.reference}{data.customer}{data.amount}{data.currency}{data.datetime}{key}";
-            SignConcatSourceString = signConcatSourceString;
 
             return ToMD5(signConcatSourceString).ToLower();
         }
@@ -203,8 +202,6 @@ namespace Payment.GameWallet
         {
             var signConcatSourceString =
                 $"{data.Merchant}{data.Reference}{data.Customer}{data.Amount}{data.Currency}{data.Datetime}{key}{data.ClientIP}";
-            SignConcatSourceString = signConcatSourceString;
-
             return ToMD5(signConcatSourceString).ToLower();
         }
 
@@ -212,8 +209,6 @@ namespace Payment.GameWallet
         {
             var signConcatSourceString =
                 $"{data.merchant}{data.reference}{data.customer}{data.amount}{data.currency}{data.statusCode}{key}";
-            SignConcatSourceString = signConcatSourceString;
-
             return ToMD5(signConcatSourceString)
                 .Equals(data.key, StringComparison.OrdinalIgnoreCase);
         }
@@ -222,7 +217,7 @@ namespace Payment.GameWallet
         {
             var signConcatSourceString = 
                 $"{data.Merchant}{data.Reference}{data.Customer}{data.Amount}{data.Currency}{data.StatusCode}{key}";
-            SignConcatSourceString = signConcatSourceString;
+
 
             return ToMD5(signConcatSourceString)
                 .Equals(data.key, StringComparison.OrdinalIgnoreCase);
@@ -231,7 +226,7 @@ namespace Payment.GameWallet
         private WithdrawalResponse CreatePayout(string url, WithdrawalPost post)
         {
             var (response, _) = _httpHelper
-                .PostJson<WithdrawalPost, WithdrawalResponse>(url, post);
+                .PostJson<WithdrawalPost, WithdrawalResponse>(url, post, true);
 
             if (response.statusCode != Definition.WithDrawalSuccessCode)
             {
@@ -281,9 +276,9 @@ namespace Payment.GameWallet
 
             if (!transExists)
             {
-                return new VerifyTransactionResultGW
+                return new VerifyTransactionResult
                 {
-                    Status = 404,
+                    StatusCode = 404,
                     ContentType = ContentType.Json,
                     Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
                     {
@@ -298,9 +293,9 @@ namespace Payment.GameWallet
 
             if (!VerifySign(str, data["Sign"], input["Key"]))
             {
-                return new VerifyTransactionResultGW
+                return new VerifyTransactionResult
                 {
-                    Status = 404,
+                    StatusCode = 404,
                     ContentType = ContentType.Json,
                     Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
                     {
@@ -310,9 +305,9 @@ namespace Payment.GameWallet
                 };
             }
 
-            return new VerifyTransactionResultGW
+            return new VerifyTransactionResult
             {
-                Status = 200,
+                StatusCode = 200,
                 ContentType = ContentType.Json,
                 Response = JsonConvert.SerializeObject(new VerifyWithdrawalResp
                 {

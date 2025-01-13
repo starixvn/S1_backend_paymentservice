@@ -52,12 +52,23 @@ namespace PaymentService.Controllers
                  var (transId, data) = payHelper.FetchTransIdAndDataBeforeVerify(dicParams, bodyContent, header);
 
                  var withdrawalRequest = _paymentBll.GetWithdrawalRequest(transId);
+                 if ( withdrawalRequest?.Amount != Convert.ToDecimal(data["Amount"]) )
+                 {
+                     return BadRequest(false.ToString());
+                 }
+                
                  var input = withdrawalRequest == null ? new Dictionary<string, string>() : withdrawalRequest.ISetting;
-                  input.Add("TransIdExists", (withdrawalRequest != null).ToString());
-
+                 input.Add("TransIdExists", (withdrawalRequest != null).ToString());
+                  
                  var result = payHelper.VerifyTransaction(data, input);
 
-                return Content(result.Response, result.ContentType);
+
+                return new ContentResult
+                {
+                    Content = result.Response,
+                    ContentType = result.ContentType,
+                    StatusCode = result.StatusCode
+                }; 
             }
             catch (Exception e)
             {
