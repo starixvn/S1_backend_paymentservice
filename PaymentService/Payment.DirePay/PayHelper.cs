@@ -312,12 +312,12 @@ namespace Payment.DirePay
 
             var accessToken = GetAccessToken(inputs);
             var method0 = splitMethod[0];
-            var bank_code = splitMethod.Length > 1 ? splitMethod[1] : inputs["BankCode"];
+            var bankCode = splitMethod.Length > 1 ? splitMethod[1] : inputs["BankCode"];
 
             // 目前设定方面 method = qr 时， bank_code 只需要放空就可以
             if (method0 == "qr")
             {
-                bank_code = "";
+                bankCode = inputs["BankCode"];
             }
 
             var req = new Dictionary<string, string>
@@ -332,7 +332,9 @@ namespace Payment.DirePay
                 { "depositor_name", inputs["AccountName"] },
                 { "amount", amount.ToString("G29") },
                 { "txid", inputs["TransID"] },
-                { "bank_code", bank_code }
+                { "bank_code", bankCode},
+                { "account_name",inputs["AccountName"] },
+                { "account_number",inputs["PayAccount"] }
             };
 
             var (resp, statusCode) = _httpHelper
